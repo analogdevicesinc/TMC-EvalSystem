@@ -1,6 +1,10 @@
 # TMC-Evaluation-System
 
-## TMC-EvalSystem
+## Setup
+To clone this repository, simply use the following command in order to clone submodules recursively:  
+`git clone --recurse-submodules git@github.com:trinamic/TMC-EvalSystem.git`
+
+## Changelog
 
 ### Version 3.06: (Beta)
 * Full TMC2160 support
