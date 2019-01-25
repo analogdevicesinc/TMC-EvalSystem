@@ -1,0 +1,85 @@
+******************
+ToDo:
+
+CHECK 3:	Determine maximum Vel/Acc values for all chips & add those
+
+REM 3:		Remove the deInit() functions and any deInit logic - we do not support unplugging an evaluation module without
+            requiring a firmware restart.
+
+ADD 2:		Single wire UART is asynchronous and has the potential for race conditions including both sides sending. Currently
+			a per-chip workaround is implemented that adds a delay but this should be done properly in the UART.c files.
+
+ADD 2:      Modify the StepDir Generator to allow running with any chip supporting StepDir. (LH)
+
+CHECK 2:	Change function pointers that never change to normal functions (mostly in HAL, stuff like HAL.IOs->config->isHigh())
+
+CHECK 2:	Check for useless usage of volatile. We shouldnt blindly declaring volatile until it works, but sometimes do.
+
+CHECK 2:	#include path cleanup (avoid cyclic includes) (LH)
+
+QOL 2:		Change Landungsbrücke/Startrampe selection to a gcc commandline define instead of makeFor.h files?
+
+QOL 1:		Check comments - remove old ones, check for typo's, unclear messages etc. (LH)
+
+******************
+Zur Formatierung der inline-ToDo's:
+Jedes Todo sollte ein Kommentar sein, auch wenn es hinter einem Kommentar steht
+	z.B switch(mode) // Modusauswahl // todo: Variable umbenennen
+
+Es sollte nichts hinter einem ToDo in der gleichen Zeile stehen, was nicht Teil des ToDo's ist
+
+Bestimmte Sonderzeichen (z.B. *) sorgen dafür, dass in der Eclipse-ToDo-Liste der ToDo nur bis vor dem Sonderzeichen angezeigt wird - unbedingt vermeiden.
+
+
+
+
+
+Format von Inline ToDo's:
+// todo [Kategorie] [Priorität]: [Beschreibung] [(Autor)] [#Nummerierung]
+
+	Kategorie:
+		Stichwort, was das ToDo beinhaltet. Es können auch mehrere Stichworte genutzt werden, möglichst aber nur eins.
+		Beispiele für Stichwörter:
+			API		Änderungen im Zusammenhang mit der TMC-API
+			ADD		Hinzufügen neuer Features/Funktionen etc.
+			BUG		Programmfehler
+			LOW		Low-Level Konfiguration oä. (in den Prozessor-Dateien)
+			QOL 	Quality of life - Formatierung anpassen, Codestruktur ändern, Makros oder #define-Konstanten einbauen, umbenennen oä
+			REM		Entfernen überflüssiger Features/Funktionen etc.
+			XML		XML Dateien müssen angepasst/verglichen werden
+			// 		ToDo ist zurzeit irrelevant, sollte aber nicht gelöscht werden - z.B. in auskommentiertem Code
+
+	Priorität (Optional):
+		Zahl zwischen 1 und 5. Keine Zahl entspricht niedrigster Priorität (1):
+			5: Kritisch 		- Vollständiger Softwarecrash oä. - so früh wie möglich drum kümmern
+			4: Gefährlich 		- Softwarecrash bei sehr speziellen Bedingungen, Fehlfunktion oä. (z.B. Motor wechselt abrupt Geschwindigkeiten)
+			3: Normal			- Durchschnittliche Priorität, sollte vor Release erledigt sein
+			2: Gering			- Leicht umgehbare Fehlfunktion des Programms, strukturelle Umstellung
+			1: Nebensache		- Variablen umbenennen, Einrückung oä. schöner formatieren - Sachen die auf jeden Fall warten können
+
+	Beschreibung:
+		Hauptteil der Todo-Notiz
+
+	Autor (Optional):
+		Initialen des Verfassers des ToDo's. Vor allem bei hohen Prioritäten dazuschreiben
+
+	Nummerierung (Optional):
+		Sollte ein ToDo wiederholt auftreten (z.B. an mehreren cases in einem switch() ),
+		so kann man hinter alles andere im ToDo eine Nummerierung ergänzen,
+		sodass bei späterer Bearbeitung sofort erkennbar ist, dass man wiederholt gleiche Änderungen vorzunehmen hat.
+		Am besten den ToDo-Text an allen Stellen komplett identisch lassen, so ist es am leichtesten zusammenzuhalten
+
+
+
+
+
+Beispiele:
+// todo XML 3: read/Write in XML Datei korrigieren (LH)
+
+// todo QOL 2: MaskShift Makro manuell ergänzen (LK) #1
+// todo QOL 2: MaskShift Makro manuell ergänzen (LK) #2
+// todo QOL 2: MaskShift Makro manuell ergänzen (LK) #3
+
+// todo BUG 4: Anschließen von diesem Board hängt die Landungsbrücke auf (EK)
+
+// todo BUG 5: Landungsbrücke startet nicht, da hier falsch initialisiert wird. (LH)

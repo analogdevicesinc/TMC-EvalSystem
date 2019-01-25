@@ -1,0 +1,7 @@
+eclipse.preferences.version=1
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146/PATH/delimiter=;
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146/PATH/operation=append
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146/PATH/value=${ProjDirPath}/gcc_tools
+>>>>>>> General, TMC7531_eval
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146/append=true
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146/appendContributed=true
