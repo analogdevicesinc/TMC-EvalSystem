@@ -559,11 +559,11 @@ void tmcl_boot()
 	ADC_DeInit();
 	EXTI_DeInit();
 	SysTick->CTRL=0;
+	HAL.reset(FALSE);
 #elif defined(Landungsbruecke)
 	BLMagic = 0x12345678;
-#endif
-
 	HAL.reset(TRUE);
+#endif
 }
 
 /*
