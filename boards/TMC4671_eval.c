@@ -1501,4 +1501,4 @@ void TMC4671_init(void)
 
 	// enable the driver
 	enableDriver(DRIVER_ENABLE);
-};
+}
