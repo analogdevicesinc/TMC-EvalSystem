@@ -55,11 +55,11 @@ uint8 rxN(uint8 *str, uint8 number)
 		for(int32 i = 0; i < number; i++)
 		{
 			if(CDC1_GetChar(&str[i])!= ERR_OK)
-				return FALSE;
+				return false;
 		}
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 void tx(uint8 ch)

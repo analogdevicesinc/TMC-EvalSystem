@@ -174,14 +174,14 @@ int32 spi_readInt(SPIChannelTypeDef *SPIChannel, uint8 address)
 	// clear write bit
 	address &= 0x7F;
 
-	SPIChannel->readWrite(address, FALSE);
-	int value = SPIChannel->readWrite(0, FALSE);
+	SPIChannel->readWrite(address, false);
+	int value = SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= SPIChannel->readWrite(0, FALSE);
+	value |= SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= SPIChannel->readWrite(0, FALSE);
+	value |= SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= SPIChannel->readWrite(0, TRUE);
+	value |= SPIChannel->readWrite(0, true);
 
 	return value;
 }
@@ -198,11 +198,11 @@ int32 spi_ch2_readInt(uint8 address)
 
 void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8 address, int value)
 {
-	SPIChannel->readWrite(address|0x80, FALSE);
-	SPIChannel->readWrite(0xFF & (value>>24), FALSE);
-	SPIChannel->readWrite(0xFF & (value>>16), FALSE);
-	SPIChannel->readWrite(0xFF & (value>>8), FALSE);
-	SPIChannel->readWrite(0xFF & (value>>0), TRUE);
+	SPIChannel->readWrite(address|0x80, false);
+	SPIChannel->readWrite(0xFF & (value>>24), false);
+	SPIChannel->readWrite(0xFF & (value>>16), false);
+	SPIChannel->readWrite(0xFF & (value>>8), false);
+	SPIChannel->readWrite(0xFF & (value>>0), true);
 }
 
 void spi_ch1_writeInt(uint8 address, int value)
@@ -229,7 +229,7 @@ static void spi_ch1_readWriteArray(uint8 *data, size_t length)
 {
 	for(size_t i = 0; i < length; i++)
 	{
-		data[i] = readWrite(&SPI.ch1, data[i], (i == (length - 1))? TRUE:FALSE);
+		data[i] = readWrite(&SPI.ch1, data[i], (i == (length - 1))? true:false);
 	}
 }
 
@@ -237,7 +237,7 @@ static void spi_ch2_readWriteArray(uint8 *data, size_t length)
 {
 	for(size_t i = 0; i < length; i++)
 	{
-		data[i] = readWrite(&SPI.ch2, data[i], (i == (length - 1))? TRUE:FALSE);
+		data[i] = readWrite(&SPI.ch2, data[i], (i == (length - 1))? true:false);
 	}
 }
 

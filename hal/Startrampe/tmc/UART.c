@@ -173,7 +173,7 @@ void USART2_IRQHandler(void)
 	{
 		if(buffers.tx.read != buffers.tx.wrote)
 		{
-			UARTSendFlag = TRUE;
+			UARTSendFlag = true;
 			USART2->DR  = buffers.tx.buffer[buffers.tx.read];
 			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
 		}
@@ -191,7 +191,7 @@ void USART2_IRQHandler(void)
 		if(buffers.tx.read == buffers.tx.wrote) 
 		{
   		byte = USART2->DR;  //Ignore spurios echos of the last sent byte that sometimes occur.
-			UARTSendFlag = FALSE;
+			UARTSendFlag = false;
 		}
 		USART_ClearITPendingBit(USART2, USART_IT_TC);
 	}

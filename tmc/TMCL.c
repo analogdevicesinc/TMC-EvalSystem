@@ -440,7 +440,7 @@ void tmcl_process()
 		tx(&interfaces[currentInterface]);
 
 	if(resetRequest)
-		HAL.reset(TRUE);
+		HAL.reset(true);
 
 	ActualReply.IsSpecial = 0;
 
@@ -559,10 +559,10 @@ void tmcl_boot()
 	ADC_DeInit();
 	EXTI_DeInit();
 	SysTick->CTRL=0;
-	HAL.reset(FALSE);
+	HAL.reset(false);
 #elif defined(Landungsbruecke)
 	BLMagic = 0x12345678;
-	HAL.reset(TRUE);
+	HAL.reset(true);
 #endif
 }
 
@@ -600,7 +600,7 @@ static void readIdEeprom(void)
  * @param bytes Pointer to byte array that are to be written. The first byte is always written
  * 				following bytes are written as long as they are not null.
  *
- * @return FALSE if everything went successful
+ * @return false if everything went successful
  * 		   1 if selected channel is not available
  * 		   the status bits of the eeprom if eeprom is not ready
  */
@@ -714,6 +714,8 @@ static void boardAssignment(void)
 		ids.ch2.state  = ID_STATE_WAIT_LOW;
 		break;
 	case 2:  // id for channel 1 not changed, reset maybe
+		ids.ch2.id     = (ActualCommand.Value.Int32 >> 0)  & 0xFF;
+		ids.ch2.state  = (ActualCommand.Value.Int32 >> 8)  & 0xFF;
 		ids.ch1.id     = Evalboards.ch1.id;
 		ids.ch1.state  = ID_STATE_WAIT_LOW;
 		break;
@@ -835,7 +837,7 @@ static void checkIDs(void)
 static void SoftwareReset(void)
 {
 	if(ActualCommand.Value.Int32 == 1234)
-		resetRequest = TRUE;
+		resetRequest = true;
 }
 
 static void GetVersion(void)

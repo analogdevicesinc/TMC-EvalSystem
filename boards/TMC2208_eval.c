@@ -267,7 +267,7 @@ static void periodicJob(uint32 tick)
 
 void TMC2208_init(void)
 {
-	tmc_fillCRC8Table(0x07, TRUE, 1);
+	tmc_fillCRC8Table(0x07, true, 1);
 
 	Pins.DRV_ENN  = &HAL.IOs->pins->DIO0;
 	Pins.STEP     = &HAL.IOs->pins->DIO6;

@@ -126,7 +126,7 @@ void TIM5_IRQHandler(void)
 /* Initialise timer and GPIO edge-triggered interrupts */
 void IDDetection_init(void)
 {
-	isScanning = FALSE;
+	isScanning = false;
 
 	// ====== Pin initialisation ======
 	// Pin ID_CLK
@@ -304,20 +304,20 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 		IdState.ch1.detectedBy  = FOUND_BY_NONE;
 		IdState.ch2.state       = ID_STATE_WAIT_LOW;
 		IdState.ch2.detectedBy  = FOUND_BY_NONE;
-		isScanning = TRUE;
+		isScanning = true;
 
 		TIM_Cmd(TIM5, ENABLE);   // start timer
 		ID_CLK_HIGH();
 
-		return FALSE;
+		return false;
 	}
 
 	// Abort if we're still scanning
 	if(!IDSTATE_SCAN_DONE(IdState))
-		return FALSE;
+		return false;
 
 	// Scan done, disable ID_CLK and the timer
-	isScanning = FALSE;
+	isScanning = false;
 	ID_CLK_LOW();
 	TIM_Cmd(TIM5, DISABLE);
 
@@ -403,7 +403,7 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 		HAL.IOs->config->toOutput(&HAL.IOs->pins->ID_CH1);
 	}
 
-	return TRUE;
+	return true;
 }
 
 void IDDetection_initialScan(IdAssignmentTypeDef *ids)

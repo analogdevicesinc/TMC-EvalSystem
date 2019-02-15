@@ -31,8 +31,8 @@ uint8 checkEeprom(SPIChannelTypeDef *SPIChannel)
 
 	IOs.toOutput(SPIChannel->CSN);
 
-	SPIChannel->readWrite(0x05, FALSE);  // Befehl "Get Status"
-	uint8 out = SPIChannel->readWrite(0x00, TRUE);
+	SPIChannel->readWrite(0x05, false);  // Befehl "Get Status"
+	uint8 out = SPIChannel->readWrite(0x00, true);
 	// check whether bits 6, 5, 4 and 0 are cleared
 	if((out & 0x71) != 0)
 		goto end;
@@ -78,30 +78,30 @@ void writeBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8
 	IOs.toOutput(SPIChannel->CSN);
 
 	// Schreiben erlauben
-	SPIChannel->readWrite(0x06, TRUE); // Befehl "Write Enable"
+	SPIChannel->readWrite(0x06, true); // Befehl "Write Enable"
 	do
 	{
-		SPIChannel->readWrite(0x05, FALSE); // Befehl "Get Status"
-	} while((SPIChannel->readWrite(0x00, TRUE) & 0x02) == 0x00);  // Warte bis "Write Enable"-Bit gesetzt ist
+		SPIChannel->readWrite(0x05, false); // Befehl "Get Status"
+	} while((SPIChannel->readWrite(0x00, true) & 0x02) == 0x00);  // Warte bis "Write Enable"-Bit gesetzt ist
 
 	// Eigentliches Schreiben
-	SPIChannel->readWrite(0x02, FALSE); // Befehl "Write"
-	SPIChannel->readWrite(Address >> 8, FALSE);
-	SPIChannel->readWrite(Address & 0xFF, FALSE);
-	SPIChannel->readWrite(Value, TRUE);
+	SPIChannel->readWrite(0x02, false); // Befehl "Write"
+	SPIChannel->readWrite(Address >> 8, false);
+	SPIChannel->readWrite(Address & 0xFF, false);
+	SPIChannel->readWrite(Value, true);
 
 	// Warten bis Schreibvorgang beendet ist
 	do
 	{
-		SPIChannel->readWrite(0x05, FALSE); //Befehl "Get Status"
-	} while(SPIChannel->readWrite(0x00, TRUE) & 0x01);
+		SPIChannel->readWrite(0x05, false); //Befehl "Get Status"
+	} while(SPIChannel->readWrite(0x00, true) & 0x01);
 
 	//block writing
-	SPIChannel->readWrite(0x04, TRUE); //Befehl "Write Disable"
+	SPIChannel->readWrite(0x04, true); //Befehl "Write Disable"
 	do
 	{
-		SPIChannel->readWrite(0x05, FALSE); //Befehl "Get Status"
-	} while((SPIChannel->readWrite(0x00, TRUE) & 0x02) == 0x01); //Warte bis "Write Enable"-Bit zurückgesetzt wird
+		SPIChannel->readWrite(0x05, false); //Befehl "Get Status"
+	} while((SPIChannel->readWrite(0x00, true) & 0x02) == 0x01); //Warte bis "Write Enable"-Bit zurückgesetzt wird
 
 	HAL.IOs->config->toInput(SPIChannel->CSN);
 	SPIChannel->CSN = io;
@@ -136,16 +136,16 @@ void writeBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint
 	IOs.toOutput(SPIChannel->CSN);
 
 	// Schreiben erlauben
-	SPIChannel->readWrite(0x06, TRUE); // Befehl "Write Enable"
+	SPIChannel->readWrite(0x06, true); // Befehl "Write Enable"
 	do
 	{
-		SPIChannel->readWrite( 0x05, FALSE); //Befehl "Get Status"
-	} while((SPIChannel->readWrite(0x00, TRUE) & 0x02)==0x00); //Warte bis "Write Enable"-Bit gesetzt
+		SPIChannel->readWrite( 0x05, false); //Befehl "Get Status"
+	} while((SPIChannel->readWrite(0x00, true) & 0x02)==0x00); //Warte bis "Write Enable"-Bit gesetzt
 
 	// Schreibvorgang (Startadresse)
-	SPIChannel->readWrite(0x02, FALSE); // Befehl "Write"
-	SPIChannel->readWrite(Address >> 8, FALSE);
-	SPIChannel->readWrite(Address & 0xFF, FALSE);
+	SPIChannel->readWrite(0x02, false); // Befehl "Write"
+	SPIChannel->readWrite(Address >> 8, false);
+	SPIChannel->readWrite(Address & 0xFF, false);
 
 	// Eigentliches Schreiben der Daten
 	for(i = 0; i < Size; i++)
@@ -162,35 +162,35 @@ void writeBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint
 			// Warte bis Schreibvorgang beendet
 			do
 			{
-				SPIChannel->readWrite(0x05, FALSE);  // Befehl "Get Status"
-			} while(SPIChannel->readWrite(0x00, TRUE) & 0x01);
+				SPIChannel->readWrite(0x05, false);  // Befehl "Get Status"
+			} while(SPIChannel->readWrite(0x00, true) & 0x01);
 
 			// Neuer "Write Enable"-Befehl
-			SPIChannel->readWrite(0x06, TRUE);  // Befehl "Write Enable"
+			SPIChannel->readWrite(0x06, true);  // Befehl "Write Enable"
 			do
 			{
-				SPIChannel->readWrite(0x05, FALSE);  // Befehl "Get Status"
-			} while((SPIChannel->readWrite(0x00, TRUE) & 0x02)==0x00); //Warte bis "Write Enable"-Bit gesetzt
+				SPIChannel->readWrite(0x05, false);  // Befehl "Get Status"
+			} while((SPIChannel->readWrite(0x00, true) & 0x02)==0x00); //Warte bis "Write Enable"-Bit gesetzt
 
 			// Neuer "Write"-Befehl (mit der nächsten Adresse)
-			SPIChannel->readWrite(0x02, FALSE); // Befehl "Write"
-			SPIChannel->readWrite(Address >> 8, FALSE);
-			SPIChannel->readWrite(Address & 0xFF, FALSE);
+			SPIChannel->readWrite(0x02, false); // Befehl "Write"
+			SPIChannel->readWrite(Address >> 8, false);
+			SPIChannel->readWrite(Address & 0xFF, false);
 		}
 	}
 
 	// Warte bis Schreibvorgang beendet
 	do
 	{
-		SPIChannel->readWrite(0x05, FALSE); // Befehl "Get Status"
-	} while(SPIChannel->readWrite(0x00, TRUE) & 0x01);
+		SPIChannel->readWrite(0x05, false); // Befehl "Get Status"
+	} while(SPIChannel->readWrite(0x00, true) & 0x01);
 
 	// block writing
-	SPIChannel->readWrite(0x04, TRUE); // Befehl "Write Disable"
+	SPIChannel->readWrite(0x04, true); // Befehl "Write Disable"
 	do
 	{
-		SPIChannel->readWrite(0x05, FALSE); // Befehl "Get Status"
-	} while((SPIChannel->readWrite(0x00, TRUE) & 0x02) == 0x01);  // Warte bis "Write Enable"-Bit zurückgesetzt wird
+		SPIChannel->readWrite(0x05, false); // Befehl "Get Status"
+	} while((SPIChannel->readWrite(0x00, true) & 0x02) == 0x01);  // Warte bis "Write Enable"-Bit zurückgesetzt wird
 
 	HAL.IOs->config->toInput(SPIChannel->CSN);
 	SPIChannel->CSN = io;
@@ -217,11 +217,11 @@ uint8 readBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address)
 
 	IOs.toOutput(SPIChannel->CSN);
 
-	SPIChannel->readWrite(0x03, FALSE); //Befehl "Read"
-	SPIChannel->readWrite(Address >> 8, FALSE);
-	SPIChannel->readWrite(Address & 0xFF, FALSE);
+	SPIChannel->readWrite(0x03, false); //Befehl "Read"
+	SPIChannel->readWrite(Address >> 8, false);
+	SPIChannel->readWrite(Address & 0xFF, false);
 
-	uint8 out = SPIChannel->readWrite(0, TRUE);
+	uint8 out = SPIChannel->readWrite(0, true);
 
 	HAL.IOs->config->toInput(SPIChannel->CSN);
 	SPIChannel->CSN = io;
@@ -256,9 +256,9 @@ void readBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8
 
 	IOs.toOutput(SPIChannel->CSN);
 
-	SPIChannel->readWrite(0x03, FALSE); // Befehl "Read"
-	SPIChannel->readWrite(Address >> 8, FALSE);
-	SPIChannel->readWrite(Address & 0xFF, FALSE);
+	SPIChannel->readWrite(0x03, false); // Befehl "Read"
+	SPIChannel->readWrite(Address >> 8, false);
+	SPIChannel->readWrite(Address & 0xFF, false);
 
 	for(i = 0; i < Size; i++)
 		*(Block+i) = SPIChannel->readWrite(0, i == Size-1); // beim letzten Byte EEPROM deselektieren

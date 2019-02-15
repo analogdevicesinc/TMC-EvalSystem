@@ -337,7 +337,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 			*value = TMC262_1420.runCurrentScale;
 		} else if(readWrite == WRITE) {
 			TMC262_1420.runCurrentScale = *value;
-			if(standstill == FALSE)
+			if(standstill == false)
 				TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT, TMC262_1420.runCurrentScale);
 		}
 		break;
@@ -347,7 +347,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 			*value = TMC262_1420.standStillCurrentScale;
 		} else if(readWrite == WRITE) {
 			TMC262_1420.standStillCurrentScale = *value;
-			if(standstill == TRUE)
+			if(standstill == true)
 				TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT, TMC262_1420.standStillCurrentScale);
 		}
 		break;
@@ -745,10 +745,10 @@ static void deInit(void)
 
 static void on_standstill_changed(uint8 newStandstill)
 {
-	if(newStandstill == TRUE) {
+	if(newStandstill == true) {
 		TMC262_1420.runCurrentScale = TMC262_1420_FIELD_READ(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT);
 		TMC262_1420_FIELD_UPDATE(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT, TMC262_1420.standStillCurrentScale);
-	} else if(newStandstill == FALSE) {
+	} else if(newStandstill == false) {
 		TMC262_1420.standStillCurrentScale = TMC262_1420_FIELD_READ(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT);
 		TMC262_1420_FIELD_UPDATE(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT, TMC262_1420.runCurrentScale);
 	}

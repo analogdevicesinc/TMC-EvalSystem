@@ -15,11 +15,11 @@ u8 tmcc160_spi_readwriteByte(u8 data, u8 lastTransfer)
 
 void tmcc160_writeDatagram(uint8 address, uint8 x3, uint8 x2, uint8 x1, uint8 x0)
 {
-	tmcc160_spi_readwriteByte(address | 0x80, FALSE);
-	tmcc160_spi_readwriteByte(x3, FALSE);
-	tmcc160_spi_readwriteByte(x2, FALSE);
-	tmcc160_spi_readwriteByte(x1, FALSE);
-	tmcc160_spi_readwriteByte(x0, TRUE);
+	tmcc160_spi_readwriteByte(address | 0x80, false);
+	tmcc160_spi_readwriteByte(x3, false);
+	tmcc160_spi_readwriteByte(x2, false);
+	tmcc160_spi_readwriteByte(x1, false);
+	tmcc160_spi_readwriteByte(x0, true);
 }
 
 static uint32 rotate(uint8 motor, int32 velocity)

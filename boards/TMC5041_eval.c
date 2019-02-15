@@ -46,11 +46,11 @@ static PinsTypeDef Pins;
 void tmc5041_writeDatagram(u8 motor, uint8 address, uint8 x1, uint8 x2, uint8 x3, uint8 x4)
 {
 	UNUSED(motor);
-	TMC5041_SPIChannel->readWrite(address|TMC5041_WRITE_BIT, FALSE);
-	TMC5041_SPIChannel->readWrite(x1, FALSE);
-	TMC5041_SPIChannel->readWrite(x2, FALSE);
-	TMC5041_SPIChannel->readWrite(x3, FALSE);
-	TMC5041_SPIChannel->readWrite(x4, TRUE);
+	TMC5041_SPIChannel->readWrite(address|TMC5041_WRITE_BIT, false);
+	TMC5041_SPIChannel->readWrite(x1, false);
+	TMC5041_SPIChannel->readWrite(x2, false);
+	TMC5041_SPIChannel->readWrite(x3, false);
+	TMC5041_SPIChannel->readWrite(x4, true);
 
 	int value = x1;
 	value <<= 8;
@@ -77,20 +77,20 @@ int tmc5041_readInt(u8 motor, uint8 address)
 	if(!TMC_IS_READABLE(TMC5041.registerAccess[address]))
 		return TMC5041_config->shadowRegister[address];
 
-	TMC5041_SPIChannel->readWrite(address, FALSE);
-	TMC5041_SPIChannel->readWrite(0, FALSE);
-	TMC5041_SPIChannel->readWrite(0, FALSE);
-	TMC5041_SPIChannel->readWrite(0, FALSE);
-	TMC5041_SPIChannel->readWrite(0, TRUE);
+	TMC5041_SPIChannel->readWrite(address, false);
+	TMC5041_SPIChannel->readWrite(0, false);
+	TMC5041_SPIChannel->readWrite(0, false);
+	TMC5041_SPIChannel->readWrite(0, false);
+	TMC5041_SPIChannel->readWrite(0, true);
 
-	TMC5041_SPIChannel->readWrite(address, FALSE);
-	int value = TMC5041_SPIChannel->readWrite(0, FALSE);
+	TMC5041_SPIChannel->readWrite(address, false);
+	int value = TMC5041_SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= TMC5041_SPIChannel->readWrite(0, FALSE);
+	value |= TMC5041_SPIChannel->readWrite(0, false);
 	value <<=	8;
-	value |= TMC5041_SPIChannel->readWrite(0, FALSE);
+	value |= TMC5041_SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= TMC5041_SPIChannel->readWrite(0, TRUE);
+	value |= TMC5041_SPIChannel->readWrite(0, true);
 
 	return value;
 }
@@ -102,7 +102,7 @@ static uint32 rotate(uint8 motor, int32 velocity)
 		return TMC_ERROR_MOTOR;
 
 	tmc5041_writeInt(motor, TMC5041_VMAX(motor), abs(velocity));
-	TMC5041.vMaxModified[motor] = TRUE;
+	TMC5041.vMaxModified[motor] = true;
 	tmc5041_writeDatagram(motor, TMC5041_RAMPMODE(motor), 0, 0, 0, (velocity >= 0)? TMC5041_MODE_VELPOS:TMC5041_MODE_VELNEG);
 	return TMC_ERROR_NONE;
 }
@@ -130,7 +130,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	if(TMC5041.vMaxModified[motor])
 	{
 		tmc5041_writeInt(motor, TMC5041_VMAX(motor), TMC5041_config->shadowRegister[TMC5041_VMAX(motor)]);
-		TMC5041.vMaxModified[motor] = FALSE;
+		TMC5041.vMaxModified[motor] = false;
 	}
 	tmc5041_writeInt(motor, TMC5041_XTARGET(motor), position);
 	tmc5041_writeDatagram(motor, TMC5041_RAMPMODE(motor), 0, 0, 0, TMC5041_MODE_POSITION);
@@ -177,7 +177,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		if(readWrite == READ) {
 			*value = tmc5041_readInt(motor, TMC5041_VMAX(motor));
 		} else if(readWrite == WRITE) {
-			TMC5041.vMaxModified[motor] = TRUE;
+			TMC5041.vMaxModified[motor] = true;
 			tmc5041_writeInt(motor, TMC5041_VMAX(motor), abs(*value));
 		}
 		break;

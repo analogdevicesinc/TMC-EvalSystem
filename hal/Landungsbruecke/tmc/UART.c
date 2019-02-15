@@ -127,7 +127,7 @@ static void deInit()
 
 void UART2_RX_TX_IRQHandler(void)
 {
-	static uint8 isSending = FALSE;
+	static uint8 isSending = false;
 	uint32 status = UART2_S1;
 
 	// Receive interrupt
@@ -147,7 +147,7 @@ void UART2_RX_TX_IRQHandler(void)
 	if(status & UART_S1_TC_MASK)
 	{
 		// Last bit has been sent
-		isSending = FALSE;
+		isSending = false;
 		UART2_C2 &= ~UART_C2_TCIE_MASK;
 	}
 
@@ -160,7 +160,7 @@ void UART2_RX_TX_IRQHandler(void)
 			UART2_D = buffers.tx.buffer[buffers.tx.read];
 			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
 
-			isSending = TRUE; // Ignore echo
+			isSending = true; // Ignore echo
 			UART2_C2 |= UART_C2_TCIE_MASK; // Turn on transmission complete interrupt
 		}
 		else

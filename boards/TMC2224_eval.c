@@ -269,7 +269,7 @@ static void periodicJob(uint32 tick)
 
 void TMC2224_init(void)
 {
-	tmc_fillCRC8Table(0x07, TRUE, 1);
+	tmc_fillCRC8Table(0x07, true, 1);
 
 	tmc2224_initConfig(&TMC2224);
 

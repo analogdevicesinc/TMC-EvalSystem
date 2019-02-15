@@ -224,11 +224,11 @@ uint32 checkReadyToSend()
 {
 	if(checkCmdModeEnabled())
 	{
-		return FALSE;
+		return false;
 	}
 	else
 	{
-		return (wlanState == WLAN_INIT_CMD_MODE)? FALSE:TRUE;
+		return (wlanState == WLAN_INIT_CMD_MODE)? false:true;
 	}
 }
 
@@ -252,9 +252,9 @@ void enableWLANCommandMode()
 uint32 checkCmdModeEnabled()
 {
 	if(wlanState == WLAN_CMD_MODE)
-		return TRUE;
+		return true;
 	else if(wlanState == WLAN_DATA_MODE)
-		return FALSE;
+		return false;
 
 	uint8 reply[4] = { 0 };	// expected reply: {'C','M','D'}, we're appending \0 so we have a NULL-terminated string that we can use in strcmp()
 	if(rxN(reply, 3))
@@ -262,12 +262,12 @@ uint32 checkCmdModeEnabled()
 		if(strcmp((const char *)reply, "CMD") == 0)
 		{
 			wlanState = WLAN_CMD_MODE;
-			return TRUE;
+			return true;
 		}
 		else
 		{	// Unexpected answer - going back to data mode
 			wlanState = WLAN_DATA_MODE;
-			return FALSE;
+			return false;
 		}
 	}
 	else
@@ -275,11 +275,11 @@ uint32 checkCmdModeEnabled()
 		if(timeSince(cmdEnabledTime) > 350)	// 250 ms from chip spec + 100ms, just to be safe
 		{	// Too much time passed since attempted cmd mode switching happened - assuming it failed
 			wlanState = WLAN_DATA_MODE;
-			return FALSE;
+			return false;
 		}
 		else
 		{	// Not enough time passed, we're not in command mode yet but we're still giving the chip time
-			return FALSE;
+			return false;
 		}
 	}
 }

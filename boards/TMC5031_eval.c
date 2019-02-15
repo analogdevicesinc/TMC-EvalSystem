@@ -11,7 +11,7 @@
 #define MOTORS 2
 
 static int vMax[MOTORS] = {0, 0};
-static uint8 vMaxModified[MOTORS] = {TRUE, TRUE};
+static uint8 vMaxModified[MOTORS] = {true, true};
 
 static uint32 right(uint8 motor, int32 velocity);
 static uint32 left(uint8 motor, int32 velocity);
@@ -57,11 +57,11 @@ void tmc5031_writeDatagram(u8 motor, uint8 address, uint8 x1, uint8 x2, uint8 x3
 	UNUSED(motor);
 	int value;
 
-	TMC5031_SPIChannel->readWrite(address | TMC5031_WRITE_BIT, FALSE);
-	TMC5031_SPIChannel->readWrite(x1, FALSE);
-	TMC5031_SPIChannel->readWrite(x2, FALSE);
-	TMC5031_SPIChannel->readWrite(x3, FALSE);
-	TMC5031_SPIChannel->readWrite(x4, TRUE);
+	TMC5031_SPIChannel->readWrite(address | TMC5031_WRITE_BIT, false);
+	TMC5031_SPIChannel->readWrite(x1, false);
+	TMC5031_SPIChannel->readWrite(x2, false);
+	TMC5031_SPIChannel->readWrite(x3, false);
+	TMC5031_SPIChannel->readWrite(x4, true);
 
 	value = x1;
 	value <<= 8;
@@ -89,20 +89,20 @@ int tmc5031_readInt(u8 motor, uint8 address)
 	if(!TMC_IS_READABLE(TMC5031.registerAccess[address]))
 		return TMC5031_config->shadowRegister[address];
 
-	TMC5031_SPIChannel->readWrite(address, FALSE);
-	TMC5031_SPIChannel->readWrite(0, FALSE);
-	TMC5031_SPIChannel->readWrite(0, FALSE);
-	TMC5031_SPIChannel->readWrite(0, FALSE);
-	TMC5031_SPIChannel->readWrite(0, TRUE);
+	TMC5031_SPIChannel->readWrite(address, false);
+	TMC5031_SPIChannel->readWrite(0, false);
+	TMC5031_SPIChannel->readWrite(0, false);
+	TMC5031_SPIChannel->readWrite(0, false);
+	TMC5031_SPIChannel->readWrite(0, true);
 
-	TMC5031_SPIChannel->readWrite(address, FALSE);
-	value = TMC5031_SPIChannel->readWrite(0, FALSE);
+	TMC5031_SPIChannel->readWrite(address, false);
+	value = TMC5031_SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= TMC5031_SPIChannel->readWrite(0, FALSE);
+	value |= TMC5031_SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= TMC5031_SPIChannel->readWrite(0, FALSE);
+	value |= TMC5031_SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= TMC5031_SPIChannel->readWrite(0, TRUE);
+	value |= TMC5031_SPIChannel->readWrite(0, true);
 
 	return value;
 }
@@ -113,7 +113,7 @@ static uint32 rotate(uint8 motor, int32 velocity)
 		return TMC_ERROR_MOTOR;
 
 	tmc5031_writeInt(motor, TMC5031_VMAX(motor), abs(velocity));
-	vMaxModified[motor] = TRUE;
+	vMaxModified[motor] = true;
 	if(velocity >= 0)
 	{
 		tmc5031_writeDatagram(motor, TMC5031_RAMPMODE(motor), 0, 0, 0, TMC5031_MODE_VELPOS);
@@ -148,7 +148,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	if(vMaxModified[motor])
 	{
 		tmc5031_writeInt(motor, TMC5031_VMAX(motor), vMax[motor]);
-		vMaxModified[motor] = FALSE;
+		vMaxModified[motor] = false;
 	}
 	tmc5031_writeInt(motor, TMC5031_XTARGET(motor), position);
 	tmc5031_writeDatagram(motor, TMC5031_RAMPMODE(motor), 0, 0, 0, TMC5031_MODE_POSITION);
@@ -195,7 +195,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		if(readWrite == READ) {
 			*value=tmc5031_readInt(motor, TMC5031_VMAX(motor));
 		} else if(readWrite == WRITE) {
-			vMaxModified[motor] = TRUE;
+			vMaxModified[motor] = true;
 			tmc5031_writeInt(motor, TMC5031_VMAX(motor), abs(*value));
 		}
 		break;

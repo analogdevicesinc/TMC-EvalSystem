@@ -148,7 +148,7 @@ void FTM2_IRQHandler()
 
 void IDDetection_init(void)
 {
-	isScanning = FALSE;
+	isScanning = false;
 
 	// ====== Timer initialisation =======
 	// Enable clock for FTM2
@@ -260,19 +260,19 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 		IdState.ch1.detectedBy  = FOUND_BY_NONE;
 		IdState.ch2.state       = ID_STATE_WAIT_LOW;
 		IdState.ch2.detectedBy  = FOUND_BY_NONE;
-		isScanning = TRUE;
+		isScanning = true;
 
 		FTM2_SC |= FTM_SC_CLKS(1);  // start timer
 		ID_CLK_HIGH();
 
-		return FALSE;
+		return false;
 	}
 
 	if(!IDSTATE_SCAN_DONE(IdState))
-		return FALSE;
+		return false;
 
 	// Scan complete
-	isScanning = FALSE;
+	isScanning = false;
 	ID_CLK_LOW();
 	FTM2_SC &= ~FTM_SC_CLKS_MASK; // stop timer
 
@@ -362,7 +362,7 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 		PORT_PCR_REG(HAL.IOs->pins->ID_CH1.portBase, HAL.IOs->pins->ID_CH1.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
 	}
 
-	return TRUE;
+	return true;
 }
 
 void IDDetection_initialScan(IdAssignmentTypeDef *ids)

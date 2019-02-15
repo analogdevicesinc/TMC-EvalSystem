@@ -12,9 +12,9 @@
 
 #define TMC5160_TIMEOUT 50 // UART Timeout in ms
 
-static bool vMaxModified = FALSE;
+static bool vMaxModified = false;
 //static uint32 vMax		   = 1;
-static bool uart_mode = TRUE;
+static bool uart_mode = true;
 
 static uint32 right(uint8 motor, int32 velocity);
 static uint32 left(uint8 motor, int32 velocity);
@@ -103,11 +103,11 @@ static void writeDatagram_spi(uint8 motor, uint8 address, uint8 x1, uint8 x2, ui
 {
 	UNUSED(motor);
 	address = TMC_ADDRESS(address);
-	TMC5160_SPIChannel->readWrite(address|0x80, FALSE);
-	TMC5160_SPIChannel->readWrite(x1, FALSE);
-	TMC5160_SPIChannel->readWrite(x2, FALSE);
-	TMC5160_SPIChannel->readWrite(x3, FALSE);
-	TMC5160_SPIChannel->readWrite(x4, TRUE);
+	TMC5160_SPIChannel->readWrite(address|0x80, false);
+	TMC5160_SPIChannel->readWrite(x1, false);
+	TMC5160_SPIChannel->readWrite(x2, false);
+	TMC5160_SPIChannel->readWrite(x3, false);
+	TMC5160_SPIChannel->readWrite(x4, true);
 
 	int value = x1;
 	value <<= 8;
@@ -129,20 +129,20 @@ static int32 readInt_spi(u8 motor, uint8 address)
 	if(!TMC_IS_READABLE(TMC5160.registerAccess[address]))
 		return TMC5160_config->shadowRegister[address];
 
-	TMC5160_SPIChannel->readWrite(address, FALSE);
-	TMC5160_SPIChannel->readWrite(0, FALSE);
-	TMC5160_SPIChannel->readWrite(0, FALSE);
-	TMC5160_SPIChannel->readWrite(0, FALSE);
-	TMC5160_SPIChannel->readWrite(0, TRUE);
+	TMC5160_SPIChannel->readWrite(address, false);
+	TMC5160_SPIChannel->readWrite(0, false);
+	TMC5160_SPIChannel->readWrite(0, false);
+	TMC5160_SPIChannel->readWrite(0, false);
+	TMC5160_SPIChannel->readWrite(0, true);
 
-	TMC5160_SPIChannel->readWrite(address, FALSE);
-	int value = TMC5160_SPIChannel->readWrite(0, FALSE);
+	TMC5160_SPIChannel->readWrite(address, false);
+	int value = TMC5160_SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= TMC5160_SPIChannel->readWrite(0, FALSE);
+	value |= TMC5160_SPIChannel->readWrite(0, false);
 	value <<=	8;
-	value |= TMC5160_SPIChannel->readWrite(0, FALSE);
+	value |= TMC5160_SPIChannel->readWrite(0, false);
 	value <<= 8;
-	value |= TMC5160_SPIChannel->readWrite(0, TRUE);
+	value |= TMC5160_SPIChannel->readWrite(0, true);
 
 	return value;
 }
@@ -232,7 +232,7 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	if(motor >= TMC5160_MOTORS)
 		return TMC_ERROR_MOTOR;
 
-	vMaxModified = TRUE;
+	vMaxModified = true;
 
 	// set absolute velocity, independant from direction
 	tmc5160_writeInt(motor, TMC5160_VMAX, abs(velocity));
@@ -266,7 +266,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	if(vMaxModified)
 	{
 		tmc5160_writeInt(motor, TMC5160_VMAX, TMC5160_config->shadowRegister[TMC5160_VMAX]);
-		vMaxModified = FALSE;
+		vMaxModified = false;
 	}
 
 	// set position
@@ -318,7 +318,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 			*value = tmc5160_readInt(motor, TMC5160_VMAX);
 		} else if(readWrite == WRITE) {
 			tmc5160_writeInt(motor, TMC5160_VMAX, abs(*value));
-			vMaxModified = TRUE;
+			vMaxModified = true;
 		}
 		break;
 	case 3:
