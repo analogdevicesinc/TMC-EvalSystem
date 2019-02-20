@@ -813,6 +813,7 @@ static void configCallback(TMC2160TypeDef *tmc2160, ConfigState state)
 	if(state == CONFIG_RESET)
 	{	// Change hardware-preset registers here
 		tmc2160_writeInt(tmc2160, TMC2160_PWMCONF, 0xC40C001E);
+		tmc2160_writeInt(tmc2160, TMC2160_DRV_CONF, 0x00080400);
 		//tmc2160_writeInt(tmc2160, TMC2160_PWMCONF, 0x000504C8);
 
 		tmc2160_fillShadowRegisters(tmc2160);
