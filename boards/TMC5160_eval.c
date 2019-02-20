@@ -14,7 +14,7 @@
 
 static bool vMaxModified = false;
 //static uint32 vMax		   = 1;
-static bool uart_mode = true;
+static bool uart_mode = false;
 
 static uint32 right(uint8 motor, int32 velocity);
 static uint32 left(uint8 motor, int32 velocity);
