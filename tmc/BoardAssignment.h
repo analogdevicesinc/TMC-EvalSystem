@@ -62,7 +62,6 @@
 	#define ID_TMC2041         5
 	#define ID_TMC2208         6
 	#define ID_TMC2224         7
-	#define ID_TMC2209         8
 	#define ID_TMCC160         9
 	#define ID_TMC6200        10
 	#define ID_TMC2160        11
@@ -75,7 +74,6 @@
 	extern void TMC2130_init();
 	extern void TMC2160_init();
 	extern void TMC2208_init();
-	extern void TMC2209_init();
 	extern void TMC2224_init();
 	extern void TMC2660_init();
 	extern void TMC262_1420_init();
@@ -134,7 +132,6 @@
 		{ .id = ID_TMC2041,     .init = TMC2041_init     },
 		{ .id = ID_TMC2208,     .init = TMC2208_init     },
 		{ .id = ID_TMC2224,     .init = TMC2224_init     },
-		{ .id = ID_TMC2209,     .init = TMC2209_init     },
 		{ .id = ID_TMCC160,     .init = TMCC160_init     },
 		{ .id = ID_TMC6200,     .init = TMC6200_init     },
 		{ .id = ID_TMC2160,     .init = TMC2160_init     },
