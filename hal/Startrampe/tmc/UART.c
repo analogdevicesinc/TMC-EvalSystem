@@ -21,18 +21,22 @@ static volatile uint8 txBuffer[BUFFER_SIZE];
 
 static volatile uint32 available = 0;
 
-RXTXTypeDef UART =
+UART_Config UART =
 {
-	.init            = init,
-	.deInit          = deInit,
-	.rx              = rx,
-	.tx              = tx,
-	.rxN             = rxN,
-	.txN             = txN,
-	.clearBuffers    = clearBuffers,
-	.baudRate        = 115200,
-	.bytesAvailable  = bytesAvailable,
-	.uart_mode       = UART_MODE_DUAL_WIRE
+	.mode = UART_MODE_DUAL_WIRE,
+	.pinout = UART_PINS_1,
+	.rxtx =
+	{
+		.init            = init,
+		.deInit          = deInit,
+		.rx              = rx,
+		.tx              = tx,
+		.rxN             = rxN,
+		.txN             = txN,
+		.clearBuffers    = clearBuffers,
+		.baudRate        = 115200,
+		.bytesAvailable  = bytesAvailable
+	}
 };
 
 static RXTXBufferingTypeDef buffers =
@@ -53,49 +57,6 @@ static RXTXBufferingTypeDef buffers =
 };
 
 void __attribute__ ((interrupt)) USART2_IRQHandler(void);
-
-void UART_init(UART_Pins pinout)
-{
-	switch(pinout) {
-	case UART_PINS_2:
-		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_13;
-		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-		GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
-		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
-		GPIO_Init(GPIOE, &GPIO_InitStructure);
-
-		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_12;
-		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-		GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
-		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
-		GPIO_Init(GPIOE, &GPIO_InitStructure);
-
-		GPIO_PinAFConfig(GPIOE, GPIO_PinSource12, GPIO_AF_USART2);
-		GPIO_PinAFConfig(GPIOE, GPIO_PinSource13, GPIO_AF_USART2);
-		break;
-	case UART_PINS_1:
-	default:
-		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_6;
-		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-		GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
-		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
-		GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_5;
-		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-		GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
-		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
-		GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-		GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
-		GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
-		break;
-	}
-}
 
 static void init()
 {
@@ -122,23 +83,23 @@ static void init()
 	//GPIOD aktivieren
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
-//	//UART2-Pins zuweisen (PD5 und PD6)
-//	GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_6;
-//	GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-//	GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
-//	GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-//	GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
-//	GPIO_Init(GPIOD, &GPIO_InitStructure);
-//
-//	GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_5;
-//	GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-//	GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
-//	GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-//	GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
-//	GPIO_Init(GPIOD, &GPIO_InitStructure);
-//
-//	GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
-//	GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
+	//UART2-Pins zuweisen (PD5 und PD6)
+	GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_6;
+	GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
+	GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_5;
+	GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
 
 	USART_StructInit(&UART_InitStructure);
 	UART_InitStructure.USART_BaudRate = 115200;
@@ -240,7 +201,7 @@ void USART2_IRQHandler(void)
 	}
 }
 
-void UART_readInt(RXTXTypeDef *channel, uint8 slave, uint8 address, int32 *value)
+void UART_readInt(UART_Config *channel, uint8 slave, uint8 address, int32 *value)
 {
 	uint8 readData[8], dataRequest[4];
 	uint32 timeout;
@@ -250,16 +211,16 @@ void UART_readInt(RXTXTypeDef *channel, uint8 slave, uint8 address, int32 *value
 	dataRequest[2] = address;                     // Register address
 	dataRequest[3] = tmc_CRC8(dataRequest, 3, 1); // Cyclic redundancy check
 
-	channel->clearBuffers();
-	channel->txN(dataRequest, ARRAY_SIZE(dataRequest));
+	channel->rxtx.clearBuffers();
+	channel->rxtx.txN(dataRequest, ARRAY_SIZE(dataRequest));
 
 	// Wait for reply with timeout limit
 	timeout = systick_getTick();
-	while(channel->bytesAvailable() < ARRAY_SIZE(readData))
+	while(channel->rxtx.bytesAvailable() < ARRAY_SIZE(readData))
 		if(timeSince(timeout) > UART_TIMEOUT_VALUE) // Timeout
 			return;
 
-	channel->rxN(readData, ARRAY_SIZE(readData));
+	channel->rxtx.rxN(readData, ARRAY_SIZE(readData));
 	// Check if the received data is correct (CRC, Sync, Slave address, Register address)
 	// todo CHECK 2: Only keep CRC check? Should be sufficient for wrong transmissions (LH) #1
 	if(readData[7] != tmc_CRC8(readData, 7, 1) || readData[0] != 0x05 || readData[1] != 0xFF || readData[2] != address)
@@ -269,7 +230,7 @@ void UART_readInt(RXTXTypeDef *channel, uint8 slave, uint8 address, int32 *value
 	return;
 }
 
-void UART_writeInt(RXTXTypeDef *channel, uint8 slave, uint8 address, int32 value)
+void UART_writeInt(UART_Config *channel, uint8 slave, uint8 address, int32 value)
 {
 	uint8 writeData[8];
 
@@ -282,9 +243,9 @@ void UART_writeInt(RXTXTypeDef *channel, uint8 slave, uint8 address, int32 value
 	writeData[6] = value & 0xFF;                 // Register Data
 	writeData[7] = tmc_CRC8(writeData, 7, 1);    // Cyclic redundancy check
 
-	channel->clearBuffers();
+	channel->rxtx.clearBuffers();
 	for(uint32 i = 0; i < ARRAY_SIZE(writeData); i++)
-		channel->tx(writeData[i]);
+		channel->rxtx.tx(writeData[i]);
 
 	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
 	 * before we're done. This currently is an issue with the IDE when using the Register browser and the

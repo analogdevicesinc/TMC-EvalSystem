@@ -3,10 +3,13 @@
 
 #include "tmc/helpers/API_Header.h"
 
+#if defined(Landungsbruecke)
 typedef enum {
 	UART0_INTERRUPT_UART,
 	UART0_INTERRUPT_WLAN
 } UART0_Interrupt;
+UART0_Interrupt uart0_interrupt;
+#endif
 
 typedef struct
 {
@@ -33,7 +36,5 @@ typedef struct
 	BufferingTypeDef tx;
 	BufferingTypeDef rx;
 } RXTXBufferingTypeDef;
-
-UART0_Interrupt uart0_interrupt;
 
 #endif /* RXTX_H_ */

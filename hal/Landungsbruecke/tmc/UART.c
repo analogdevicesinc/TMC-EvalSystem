@@ -21,19 +21,6 @@ static volatile uint8
 
 static volatile uint32 available = 0;
 
-RXTXTypeDef UART_RXTX =
-{
-	.init            = init,
-	.deInit          = deInit,
-	.rx              = rx,
-	.tx              = tx,
-	.rxN             = rxN,
-	.txN             = txN,
-	.clearBuffers    = clearBuffers,
-	.baudRate        = 115200,
-	.bytesAvailable  = bytesAvailable
-};
-
 UART_Config UART =
 {
 	.mode = UART_MODE_DUAL_WIRE,
@@ -75,41 +62,14 @@ static void init()
 
 	// One wire UART communication needs the TxD pin to be in open drain mode
 	// and a pull-up resistor on the RxD pin.
-	switch(UART.mode) {
-	case UART_MODE_SINGLE_WIRE:
-		HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
-		HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-		HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
-		HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-		break;
-	case UART_MODE_DUAL_WIRE:
-	default:
-		switch(UART.pinout) {
-		case UART_PINS_2:
-			HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
-			HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
-			HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
-			HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
-			break;
-		case UART_PINS_1:
-		default:
-			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
-			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-			HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
-			HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-			break;
-		}
-		break;
-	}
-
 	switch(UART.pinout) {
 	case UART_PINS_2:
+		HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
+		HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
+		HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+		HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+		HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
+		HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
 		SIM_SCGC4 |= SIM_SCGC4_UART0_MASK;
 		UART_C2_REG(UART0_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
 		UART_C1_REG(UART0_BASE_PTR) = 0;
@@ -120,19 +80,35 @@ static void init()
 		break;
 	case UART_PINS_1:
 	default:
-		SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
-		UART_C2_REG(UART2_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
 		UART_C1_REG(UART2_BASE_PTR) = 0;
-		UART_BDH_REG(UART2_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
-		UART_BDL_REG(UART2_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
-		UART_C2_REG(UART2_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
-		if(UART.mode == UART_MODE_SINGLE_WIRE) {
+		switch(UART.mode) {
+		case UART_MODE_SINGLE_WIRE:
+			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+			HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
 			// Enable single wire UART
 			UART_C1_REG(UART2_BASE_PTR) |= (UART_C1_LOOPS_MASK | UART_C1_RSRC_MASK);
 			// Set TxD as output in single wire UART
 			UART_C3_REG(UART2_BASE_PTR) |= UART_C3_TXDIR_MASK;
+			break;
+		case UART_MODE_DUAL_WIRE:
+		default:
+			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+			HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+			break;
 		}
-		enable_irq(INT_UART2_RX_TX-16);
+		SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
+		UART_C2_REG(UART2_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
+		UART_BDH_REG(UART2_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
+		UART_BDL_REG(UART2_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
+		UART_C2_REG(UART2_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
 		break;
 	}
 

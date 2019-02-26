@@ -20,7 +20,6 @@ typedef struct {
 	RXTXTypeDef rxtx;
 } UART_Config;
 
-RXTXTypeDef UART_RXTX;
 UART_Config UART;
 
 void UART0_RX_TX_IRQHandler_UART(void);
