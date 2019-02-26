@@ -1,10 +1,12 @@
 #ifndef RXTX_H_
 #define RXTX_H_
 
+#include "tmc/helpers/API_Header.h"
+
 typedef enum {
-	UART_MODE_DUAL_WIRE,
-	UART_MODE_SINGLE_WIRE
-} UARTMode;
+	UART0_INTERRUPT_UART,
+	UART0_INTERRUPT_WLAN
+} UART0_Interrupt;
 
 typedef struct
 {
@@ -17,7 +19,6 @@ typedef struct
 	void (*clearBuffers)(void);
 	uint32 (*bytesAvailable)(void);
 	uint32 baudRate;
-	UARTMode uart_mode;
 } RXTXTypeDef;
 
 typedef struct
@@ -32,5 +33,7 @@ typedef struct
 	BufferingTypeDef tx;
 	BufferingTypeDef rx;
 } RXTXBufferingTypeDef;
+
+UART0_Interrupt uart0_interrupt;
 
 #endif /* RXTX_H_ */

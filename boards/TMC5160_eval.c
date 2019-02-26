@@ -46,7 +46,7 @@ static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
 static uint8 reset();
 static void enableDriver(DriverState state);
 
-static RXTXTypeDef *TMC5160_UARTChannel;
+static UART_Config *TMC5160_UARTChannel;
 static SPIChannelTypeDef *TMC5160_SPIChannel;
 static TMC5160TypeDef TMC5160;
 static ConfigurationTypeDef *TMC5160_config;
@@ -163,9 +163,9 @@ static void writeDatagram_uart(uint8 motor, uint8 address, uint8 x1, uint8 x2, u
 	writeData[6] = x4;                           // Register Data
 	writeData[7] = tmc_CRC8(writeData, 7, 1);    // Cyclic redundancy check
 
-	TMC5160_UARTChannel->clearBuffers();
+	TMC5160_UARTChannel->rxtx.clearBuffers();
 	for(uint32 i = 0; i < ARRAY_SIZE(writeData); i++)
-		TMC5160_UARTChannel->tx(writeData[i]);
+		TMC5160_UARTChannel->rxtx.tx(writeData[i]);
 
 	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
 	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
@@ -193,16 +193,16 @@ static int32 readInt_uart(u8 motor, uint8 address)
 	dataRequest[2] = address;                      // Register address
 	dataRequest[3] = tmc_CRC8(dataRequest, 3, 1);  // Cyclic redundancy check
 
-	TMC5160_UARTChannel->clearBuffers();
-	TMC5160_UARTChannel->txN(dataRequest, ARRAY_SIZE(dataRequest));
+	TMC5160_UARTChannel->rxtx.clearBuffers();
+	TMC5160_UARTChannel->rxtx.txN(dataRequest, ARRAY_SIZE(dataRequest));
 
 	// Wait for reply with timeout limit
 	timeout = systick_getTick();
-	while(TMC5160_UARTChannel->bytesAvailable() < ARRAY_SIZE(readData))
+	while(TMC5160_UARTChannel->rxtx.bytesAvailable() < ARRAY_SIZE(readData))
 		if(timeSince(timeout) > TMC5160_TIMEOUT) // Timeout
 			return -1;
 
-	TMC5160_UARTChannel->rxN(readData, ARRAY_SIZE(readData));
+	TMC5160_UARTChannel->rxtx.rxN(readData, ARRAY_SIZE(readData));
 	// Check if the received data is correct (CRC, Sync, Slave address, Register address)
 	// todo CHECK 2: Only keep CRC check? Should be sufficient for wrong transmissions (LH) #1
 	if(readData[7] != tmc_CRC8(readData, 7, 1) || readData[0] != 0x05 || readData[1] != 0xFF || readData[2] != address)
@@ -1089,10 +1089,10 @@ static void enableDriver(DriverState state)
 static void init_comm(bool mode)
 {
 	if(mode) {
-		HAL.UART->init();
 		TMC5160_UARTChannel = HAL.UART;
+		TMC5160_UARTChannel->rxtx.init();
 	} else {
-		HAL.UART->deInit();
+		TMC5160_UARTChannel->rxtx.deInit();
 		TMC5160_SPIChannel = &HAL.SPI->ch1;
 		TMC5160_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
 	}

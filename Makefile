@@ -55,6 +55,7 @@ SRC 			+= hal/$(DEVICE)/tmc/RS232.c
 SRC 			+= hal/$(DEVICE)/tmc/WLAN.c
 SRC 			+= hal/$(DEVICE)/tmc/Timer.c
 SRC 			+= hal/$(DEVICE)/tmc/UART.c
+SRC 			+= hal/$(DEVICE)/tmc/RXTX.c
 
 # Control
 SRC 			+= main.c

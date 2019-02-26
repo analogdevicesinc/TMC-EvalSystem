@@ -47,6 +47,7 @@ RXTXTypeDef WLAN =
 	.clearBuffers    = clearBuffers,
 	.baudRate        = 57600,
 	.bytesAvailable  = bytesAvailable
+
 };
 
 static RXTXBufferingTypeDef buffers =
@@ -112,8 +113,8 @@ static void deInit()
 
 	clearBuffers();
 }
-/*
-void UART0_RX_TX_IRQHandler(void)
+
+void UART0_RX_TX_IRQHandler_WLAN(void)
 {
 	uint32 status = UART0_S1;
 
@@ -141,7 +142,7 @@ void UART0_RX_TX_IRQHandler(void)
 		}
 		UART0_S1 &= ~(UART_S1_TDRE_MASK); // Zurücksetzen InterruptFlag
 	}
-}*/
+}
 
 // Send without checking for CMD/Data mode
 static void rawTx(uint8 ch)

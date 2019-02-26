@@ -33,7 +33,7 @@
 		RXTXTypeDef                *RS232;
 		RXTXTypeDef                *WLAN;
 		TimerTypeDef               *Timer;
-		RXTXTypeDef                *UART;
+		UART_Config                *UART;
 	} HALTypeDef;
 
 	const HALTypeDef HAL;

@@ -31,7 +31,7 @@ static void periodicJob(uint32 tick);
 static uint8 reset(void);
 static void enableDriver(DriverState state);
 
-static RXTXTypeDef *TMC2208_UARTChannel;
+static UART_Config *TMC2208_UARTChannel;
 static TMC2208TypeDef TMC2208;
 static ConfigurationTypeDef *TMC2208_config;
 
@@ -285,9 +285,9 @@ void TMC2208_init(void)
 	HAL.IOs->config->toInput(Pins.DIAG);
 	HAL.IOs->config->toInput(Pins.INDEX);
 
-	HAL.UART->init();
-
 	TMC2208_UARTChannel = HAL.UART;
+	TMC2208_UARTChannel->pinout = UART_PINS_1;
+	TMC2208_UARTChannel->rxtx.init();
 
 	TMC2208_config = Evalboards.ch2.config;
 

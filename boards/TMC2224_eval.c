@@ -33,7 +33,7 @@ static void periodicJob(uint32 tick);
 static uint8 reset(void);
 static void enableDriver(DriverState state);
 
-static RXTXTypeDef *TMC2224_UARTChannel;
+static UART_Config *TMC2224_UARTChannel;
 static TMC2224TypeDef TMC2224;
 static ConfigurationTypeDef *TMC2224_config;
 
@@ -230,7 +230,7 @@ static void deInit(void)
 	HAL.IOs->config->reset(Pins.DIAG);
 	HAL.IOs->config->reset(Pins.INDEX);
 
-	HAL.UART->deInit();
+	TMC2224_UARTChannel->rxtx.deInit();
 	StepDir_deInit();
 };
 
@@ -289,8 +289,8 @@ void TMC2224_init(void)
 	HAL.IOs->config->toInput(Pins.DIAG);
 	HAL.IOs->config->toInput(Pins.INDEX);
 
-	HAL.UART->init();
 	TMC2224_UARTChannel = HAL.UART;
+	TMC2224_UARTChannel->rxtx.init();
 
 	TMC2224_config = Evalboards.ch2.config;
 
