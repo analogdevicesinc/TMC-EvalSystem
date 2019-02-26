@@ -6,7 +6,7 @@
 #include "IdDetection.h"
 #include "VitalSignsMonitor.h"
 #include "../tmc/StepDir.h"
-#include "IdEeprom.h"
+#include "EEPROM.h"
 
 // these addresses are fixed
 #define SERIAL_MODULE_ADDRESS  1
@@ -588,7 +588,7 @@ static void readIdEeprom(void)
 	}
 
 	uint8 array[4];
-	readBoardIdEepromBlock(spi, ActualCommand.Value.Int32, array, 4);
+	eeprom_read_array(spi, ActualCommand.Value.Int32, array, 4);
 	ActualReply.Value.Int32 = array[3] << 24 | array[2] << 16 | array[1] << 8 | array[0];
 }
 
@@ -617,7 +617,7 @@ static void writeIdEeprom(void)
 		return;
 	}
 
-	uint8 out = checkEeprom(spi);
+	uint8 out = eeprom_check(spi);
 	// ignore when check did not find magic number, quit on other errors
 	if(out != ID_CHECKERROR_MAGICNUMBER && out != 0)
 	{
@@ -625,7 +625,7 @@ static void writeIdEeprom(void)
 		return;
 	}
 
-	writeBoardIdEepromByte(spi, ActualCommand.Value.Int32, ActualCommand.Motor);
+	eeprom_write_byte(spi, ActualCommand.Value.Int32, ActualCommand.Motor);
 
 	return;
 }

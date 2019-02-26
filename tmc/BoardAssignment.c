@@ -117,6 +117,11 @@ static uint8 assignCh2(uint8 id, uint8 justCheck)
 //	if(!justCheck)
 //		tmcdriver_init();
 
+#if defined(Startrampe)
+	if(id == ID_TMC2208 && EEPROM.ch2.hw == 0x0103)
+		return ok;
+#endif
+
 	for(size_t i = 0, sz = ARRAY_SIZE(init_ch2); i < sz; i++)
 	{
 		if(init_ch2[i].id == id)

@@ -1,14 +1,56 @@
 /*
- * IdEeprom.c
+ * EEPROM.c
  *
  *  Created on: 13.04.2017
  *      Author: je
+ *  Modified on: 26.02.2019
+ *      Author: LK
  */
 
-#include "IdEeprom.h"
+#include "EEPROM.h"
+#include <string.h>
+
+EEPROM_Channels EEPROM =
+{
+	.ch1 =
+	{
+		.init = false,
+		.name = { 0 },
+		.id = 0,
+		.hw = 0,
+		.magic = 0
+	},
+	.ch2 =
+	{
+		.init = false,
+		.name = { 0 },
+		.id = 0,
+		.hw = 0,
+		.magic = 0
+	}
+};
+
+// Perform initial scan and store to struct
+void eeprom_init(SPIChannelTypeDef *SPIChannel)
+{
+	uint8 buffer[EEPROM_SIZE_META] = { 0 };
+	EEPROM_Data *eep = (SPIChannel == &SPI.ch1) ? &EEPROM.ch1 : &EEPROM.ch2;
+	eeprom_read_array(SPIChannel, EEPROM_ADDR_META, buffer, EEPROM_SIZE_META);
+	memcpy(eep->name, &buffer[EEPROM_ADDR_NAME - EEPROM_ADDR_META], EEPROM_SIZE_NAME);
+	eep->id = _8_16(buffer[EEPROM_ADDR_ID - EEPROM_ADDR_META], buffer[(EEPROM_ADDR_ID + 1) - EEPROM_ADDR_META]);
+	eep->hw = _8_16(buffer[EEPROM_ADDR_HW - EEPROM_ADDR_META], buffer[(EEPROM_ADDR_HW + 1) - EEPROM_ADDR_META]);
+	eep->magic = _8_16(buffer[EEPROM_ADDR_MAGIC - EEPROM_ADDR_META], buffer[(EEPROM_ADDR_MAGIC + 1) - EEPROM_ADDR_META]);
+	eep->init = true;
+//	eeprom_read_array(&SPI.ch2, EEPROM_ADDR_META, buffer, EEPROM_SIZE_META);
+//	memcpy(EEPROM.ch2.name, &buffer[EEPROM_ADDR_NAME - EEPROM_ADDR_META], EEPROM_SIZE_NAME);
+//	EEPROM.ch2.id = _8_16(buffer[EEPROM_ADDR_ID - EEPROM_ADDR_META], buffer[(EEPROM_ADDR_ID + 1) - EEPROM_ADDR_META]);
+//	EEPROM.ch2.hw = _8_16(buffer[EEPROM_ADDR_HW - EEPROM_ADDR_META], buffer[(EEPROM_ADDR_HW + 1) - EEPROM_ADDR_META]);
+//	EEPROM.ch2.magic = _8_16(buffer[EEPROM_ADDR_MAGIC - EEPROM_ADDR_META], buffer[(EEPROM_ADDR_MAGIC + 1) - EEPROM_ADDR_META]);
+//	EEPROM.ch2.init = true;
+}
 
 /*******************************************************************
-	Function: checkEeprom
+	Function: eeprom_check
 	Parameters: SPI channel the Eeprom should be checked on
 
 	Returns: false when an Eeprom has been successfully detected and is in ready status
@@ -16,7 +58,7 @@
 
 	Purpose: checking whether Eeprom is connected and ready
 ********************************************************************/
-uint8 checkEeprom(SPIChannelTypeDef *SPIChannel)
+uint8 eeprom_check(SPIChannelTypeDef *SPIChannel)
 {
 	// Prüfen, ob der SPI-Bus schon funktioniert: Im Status-Register des EEPROMs
 	// müssen Bit 6, 5, 4 und 0 auf jedem Fall 0 sein und nicht 1.
@@ -42,9 +84,9 @@ uint8 checkEeprom(SPIChannelTypeDef *SPIChannel)
 	//check for magic number in eeprom
 	u8 number[2];
 
-	readBoardIdEepromBlock(SPIChannel, IDEEPROM_ADDR_MAGIC, number, 2);
+	eeprom_read_array(SPIChannel, EEPROM_ADDR_MAGIC, number, 2);
 
-	if(number[0] != ID_MAGICNUMBER_LOW || number[1] != ID_MAGICNUMBER_HIGH)
+	if(number[0] != MAGICNUMBER_LOW || number[1] != MAGICNUMBER_HIGH)
 	{
 		out = ID_CHECKERROR_MAGICNUMBER;
 	}
@@ -52,28 +94,37 @@ uint8 checkEeprom(SPIChannelTypeDef *SPIChannel)
 	end:
 	HAL.IOs->config->toInput(SPIChannel->CSN);
 	SPIChannel->CSN = io;
+
+	if(out && ((SPIChannel == &SPI.ch1 && !EEPROM.ch1.init)
+			|| (SPIChannel == &SPI.ch2 && !EEPROM.ch2.init))) {
+		eeprom_init(SPIChannel);
+	}
+
 	return out;
 }
 
 
 /*******************************************************************
-	Funktion: WriteBoardIdEepromByte
+	Funktion: eeprom_write_byte
 	Parameter: 	Channel: EEP_CH1 oder EEP_CH2
-				Address: Adresse im EEPROM (0..16383)
-				Value: der zu schreibende Wert
+				address: Adresse im EEPROM (0..16383)
+				value: der zu schreibende Wert
 
 	Rückgabewert: ---
 
 	Zweck: Schreiben eines Bytes in das EEPROM auf dem Evalboard.
 ********************************************************************/
-void writeBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8 Value)
+void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 value)
 {
 	// select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
-	if(SPIChannel == &SPI.ch1)
+	if(SPIChannel == &SPI.ch1) {
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH0;
-	else
+		EEPROM.ch1.init = false;
+	} else {
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH1;
+		EEPROM.ch2.init = false;
+	}
 
 	IOs.toOutput(SPIChannel->CSN);
 
@@ -86,9 +137,9 @@ void writeBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8
 
 	// Eigentliches Schreiben
 	SPIChannel->readWrite(0x02, false); // Befehl "Write"
-	SPIChannel->readWrite(Address >> 8, false);
-	SPIChannel->readWrite(Address & 0xFF, false);
-	SPIChannel->readWrite(Value, true);
+	SPIChannel->readWrite(address >> 8, false);
+	SPIChannel->readWrite(address & 0xFF, false);
+	SPIChannel->readWrite(value, true);
 
 	// Warten bis Schreibvorgang beendet ist
 	do
@@ -109,11 +160,11 @@ void writeBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8
 
 
 /*******************************************************************
-	Funktion: WriteBoardIdEepromBlock
+	Funktion: eeprom_write_array
 	Parameter:	Channel: EEP_CH1 oder EEP_CH2
-				Address: Adresse im EEPROM (0..16383)
-				Block: Startadresse des zu schreibenden Blocks
-				Size: Länge des Blocks in Bytes
+				address: Adresse im EEPROM (0..16383)
+				data: Startadresse des zu schreibenden Blocks
+				size: Länge des Blocks in Bytes
 
 	Rückgabewert: ---
 
@@ -122,16 +173,19 @@ void writeBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8
 	beschrieben werden (die speziellen Eigenschaften des 25128 werden
 	dabei beachtet).
 ********************************************************************/
-void writeBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8 *Block, uint16 Size)
+void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 *data, uint16 size)
 {
 	uint16 i;
 
 	//select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
-	if(SPIChannel == &SPI.ch1)
+	if(SPIChannel == &SPI.ch1) {
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH0;
-	else
+		EEPROM.ch1.init = false;
+	} else {
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH1;
+		EEPROM.ch2.init = false;
+	}
 
 	IOs.toOutput(SPIChannel->CSN);
 
@@ -144,20 +198,20 @@ void writeBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint
 
 	// Schreibvorgang (Startadresse)
 	SPIChannel->readWrite(0x02, false); // Befehl "Write"
-	SPIChannel->readWrite(Address >> 8, false);
-	SPIChannel->readWrite(Address & 0xFF, false);
+	SPIChannel->readWrite(address >> 8, false);
+	SPIChannel->readWrite(address & 0xFF, false);
 
 	// Eigentliches Schreiben der Daten
-	for(i = 0; i < Size; i++)
+	for(i = 0; i < size; i++)
 	{
 		// Adresse mitzählen und bei Überlauf der untersten sechs Bits das EEPROM deselektieren
 		// und neuen Write-Befehl senden (bzw. beim letzten Datenbyte einfach nur EEPROM
 		// deselektieren).
 		// Dies ist erforderlich, da beim Beschreiben im 25128 nur die untersten sechs Bits der
 		// Adresse hochgezählt werden (anders als beim Lesen).
-		Address++;
-		SPIChannel->readWrite(*(Block+i), (Address & 0x0000003F)==0 || i==Size-1);
-		if((Address & 0x0000003F)==0 && i<Size-1)  // Adressbits übergelaufen, aber noch Bytes zu schreiben?
+		address++;
+		SPIChannel->readWrite(*(data+i), (address & 0x0000003F)==0 || i==size-1);
+		if((address & 0x0000003F)==0 && i<size-1)  // Adressbits übergelaufen, aber noch Bytes zu schreiben?
 		{
 			// Warte bis Schreibvorgang beendet
 			do
@@ -174,8 +228,8 @@ void writeBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint
 
 			// Neuer "Write"-Befehl (mit der nächsten Adresse)
 			SPIChannel->readWrite(0x02, false); // Befehl "Write"
-			SPIChannel->readWrite(Address >> 8, false);
-			SPIChannel->readWrite(Address & 0xFF, false);
+			SPIChannel->readWrite(address >> 8, false);
+			SPIChannel->readWrite(address & 0xFF, false);
 		}
 	}
 
@@ -198,15 +252,15 @@ void writeBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint
 
 
 /*******************************************************************
-	Funktion: ReadBoardIdEepromByte
+	Funktion: eeprom_read_byte
 	Parameter:	Channel: EEP_CH1 oder EEP_CH2
-				Address: Adresse im EEPROM (0..16383)
+				address: Adresse im EEPROM (0..16383)
 
 	Rückgabewert: der gelesene Wert
 
 	Zweck: Lesen eines Bytes aus dem EEPROM des Evalboards.
 ********************************************************************/
-uint8 readBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address)
+uint8 eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16 address)
 {
 	//select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
@@ -218,8 +272,8 @@ uint8 readBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address)
 	IOs.toOutput(SPIChannel->CSN);
 
 	SPIChannel->readWrite(0x03, false); //Befehl "Read"
-	SPIChannel->readWrite(Address >> 8, false);
-	SPIChannel->readWrite(Address & 0xFF, false);
+	SPIChannel->readWrite(address >> 8, false);
+	SPIChannel->readWrite(address & 0xFF, false);
 
 	uint8 out = SPIChannel->readWrite(0, true);
 
@@ -231,11 +285,11 @@ uint8 readBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address)
 
 
 /*******************************************************************
-	Funktion: ReadBoardIdEepromBlock
+	Funktion: eeprom_read_array
 	Parameter:	Channel: EEP_CH1 oder EEP_CH2
-				Address: Adresse im EEPROM (0..16383)
-				Block: Startadresse des zu lesenden Blocks
-				Size: Länge des Blocks in Bytes
+				address: Adresse im EEPROM (0..16383)
+				data: Startadresse des zu lesenden Blocks
+				size: Länge des Blocks in Bytes
 
 	Rückgabewert: ---
 
@@ -243,7 +297,7 @@ uint8 readBoardIdEepromByte(SPIChannelTypeDef *SPIChannel, uint16 Address)
 	Dabei dürfen ab beliebiger Adresse beliebig viele Bytes gelesen
 	werden.
 ********************************************************************/
-void readBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8 *Block, uint16 Size)
+void eeprom_read_array(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 *data, uint16 size)
 {
 	uint16 i;
 
@@ -257,11 +311,11 @@ void readBoardIdEepromBlock(SPIChannelTypeDef *SPIChannel, uint16 Address, uint8
 	IOs.toOutput(SPIChannel->CSN);
 
 	SPIChannel->readWrite(0x03, false); // Befehl "Read"
-	SPIChannel->readWrite(Address >> 8, false);
-	SPIChannel->readWrite(Address & 0xFF, false);
+	SPIChannel->readWrite(address >> 8, false);
+	SPIChannel->readWrite(address & 0xFF, false);
 
-	for(i = 0; i < Size; i++)
-		*(Block+i) = SPIChannel->readWrite(0, i == Size-1); // beim letzten Byte EEPROM deselektieren
+	for(i = 0; i < size; i++)
+		*(data+i) = SPIChannel->readWrite(0, i == size-1); // beim letzten Byte EEPROM deselektieren
 
 	HAL.IOs->config->toInput(SPIChannel->CSN);
 	SPIChannel->CSN = io;

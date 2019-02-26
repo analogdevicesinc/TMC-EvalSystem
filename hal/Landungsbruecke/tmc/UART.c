@@ -80,6 +80,7 @@ static void init()
 		break;
 	case UART_PINS_1:
 	default:
+		SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
 		UART_C1_REG(UART2_BASE_PTR) = 0;
 		switch(UART.mode) {
 		case UART_MODE_SINGLE_WIRE:
@@ -104,11 +105,11 @@ static void init()
 			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
 			break;
 		}
-		SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
 		UART_C2_REG(UART2_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
 		UART_BDH_REG(UART2_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
 		UART_BDL_REG(UART2_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
 		UART_C2_REG(UART2_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
+		enable_irq(INT_UART2_RX_TX-16);
 		break;
 	}
 

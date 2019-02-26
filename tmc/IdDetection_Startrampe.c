@@ -17,8 +17,8 @@
 
 #include "../hal/derivative.h"
 #include "../hal/HAL.h"
-#include "IdEeprom.h"
 #include "BoardAssignment.h"
+#include "EEPROM.h"
 #include "IdDetection.h"
 #include "VitalSignsMonitor.h"
 #include "TMCL.h"
@@ -369,9 +369,9 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 	if(!out->ch1.id)
 	{
 		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
-		if(!checkEeprom(&SPI.ch1))
+		if(!eeprom_check(&SPI.ch1))
 		{
-			readBoardIdEepromBlock(&SPI.ch1, IDEEPROM_ADDR_ID, &idBuffer[0], 1);
+			eeprom_read_array(&SPI.ch1, EEPROM_ADDR_ID, &idBuffer[0], 1);
 			out->ch1.id = idBuffer[0];
 			// ID was correctly detected via EEPROM
 			if(out->ch1.id)
@@ -388,9 +388,9 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 	if(!out->ch2.id)
 	{
 		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
-		if(!checkEeprom(&SPI.ch2))
+		if(!eeprom_check(&SPI.ch2))
 		{
-			readBoardIdEepromBlock(&SPI.ch2, IDEEPROM_ADDR_ID, &idBuffer[0], 1);
+			eeprom_read_array(&SPI.ch2, EEPROM_ADDR_ID, &idBuffer[0], 1);
 			out->ch2.id = idBuffer[0];
 			// ID was correctly detected via EEPROM
 			if(out->ch2.id)
