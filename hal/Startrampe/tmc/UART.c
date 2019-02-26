@@ -54,6 +54,49 @@ static RXTXBufferingTypeDef buffers =
 
 void __attribute__ ((interrupt)) USART2_IRQHandler(void);
 
+void UART_init(UART_Pins pinout)
+{
+	switch(pinout) {
+	case UART_PINS_2:
+		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_13;
+		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
+		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
+		GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_12;
+		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
+		GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+		GPIO_PinAFConfig(GPIOE, GPIO_PinSource12, GPIO_AF_USART2);
+		GPIO_PinAFConfig(GPIOE, GPIO_PinSource13, GPIO_AF_USART2);
+		break;
+	case UART_PINS_1:
+	default:
+		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_6;
+		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
+		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
+		GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_5;
+		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
+		GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+		GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
+		GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
+		break;
+	}
+}
+
 static void init()
 {
 	USART_InitTypeDef UART_InitStructure;
@@ -79,23 +122,23 @@ static void init()
 	//GPIOD aktivieren
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
-	//UART2-Pins zuweisen (PD5 und PD6)
-	GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_6;
-	GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
-	GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_5;
-	GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
-	GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-	GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
-	GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
+//	//UART2-Pins zuweisen (PD5 und PD6)
+//	GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_6;
+//	GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+//	GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
+//	GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+//	GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
+//	GPIO_Init(GPIOD, &GPIO_InitStructure);
+//
+//	GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_5;
+//	GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+//	GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
+//	GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+//	GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
+//	GPIO_Init(GPIOD, &GPIO_InitStructure);
+//
+//	GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
+//	GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
 
 	USART_StructInit(&UART_InitStructure);
 	UART_InitStructure.USART_BaudRate = 115200;

@@ -52,22 +52,67 @@ static RXTXBufferingTypeDef buffers =
 	}
 };
 
+void UART_init(UART_Pins pinout)
+{
+	switch(pinout) {
+	case UART_PINS_2:
+		if(UART.uart_mode == UART_MODE_DUAL_WIRE) {
+			HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+			HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+			HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
+		} else if(UART.uart_mode == UART_MODE_SINGLE_WIRE) {
+			HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+			HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+			HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
+		}
+		break;
+	case UART_PINS_1:
+	default:
+		if(UART.uart_mode == UART_MODE_DUAL_WIRE) {
+			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+			HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+		} else if(UART.uart_mode == UART_MODE_SINGLE_WIRE) {
+			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+			HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+		}
+		break;
+	}
+}
+
 static void init()
 {
 	register uint16 ubd;
 
-	SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
+	SIM_SCGC4 |= SIM_SCGC4_UART0_MASK;
 
 	// One wire UART communication needs the TxD pin to be in open drain mode
 	// and a pull-up resistor on the RxD pin.
 	if(UART.uart_mode == UART_MODE_DUAL_WIRE) {
-		HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
-		HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-		HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
-		HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+		HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+		HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+		HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+		HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
 
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+		HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
+		HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
 	} else if(UART.uart_mode == UART_MODE_SINGLE_WIRE) {
 		HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
 		HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
@@ -76,23 +121,22 @@ static void init()
 
 		HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
 		HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-
 	}
 
 	/* Disable the transmitter and receiver */
-	UART_C2_REG(UART2_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
+	UART_C2_REG(UART0_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
 
 	/* Configure the UART for 8-bit mode, no parity */
 	/* We need all default settings, so entire register is cleared */
-	UART_C1_REG(UART2_BASE_PTR) = 0;
+	UART_C1_REG(UART0_BASE_PTR) = 0;
 
 	ubd = (CPU_BUS_CLK_HZ / 16) / UART.baudRate;
 
-	UART_BDH_REG(UART2_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
-	UART_BDL_REG(UART2_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
+	UART_BDH_REG(UART0_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
+	UART_BDL_REG(UART0_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
 
 	/* Enable receiver and transmitter */
-	UART_C2_REG(UART2_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
+	UART_C2_REG(UART0_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
 
 	if(UART.uart_mode == UART_MODE_SINGLE_WIRE) {
 
@@ -107,7 +151,7 @@ static void init()
 	//(void)UART2_D;
 	//(void)UART2_S1;
 
-	enable_irq(INT_UART2_RX_TX-16);
+	enable_irq(INT_UART0_RX_TX-16);
 }
 
 static void deInit()
@@ -125,16 +169,16 @@ static void deInit()
 	clearBuffers();
 }
 
-void UART2_RX_TX_IRQHandler(void)
+void UART0_RX_TX_IRQHandler(void)
 {
 	static uint8 isSending = false;
-	uint32 status = UART2_S1;
+	uint32 status = UART0_S1;
 
 	// Receive interrupt
 	if(status & UART_S1_RDRF_MASK)
 	{
 		// One-wire UART communication:
-		buffers.rx.buffer[buffers.rx.wrote] = UART2_D;
+		buffers.rx.buffer[buffers.rx.wrote] = UART0_D;
 		if(!isSending) // Only move ring buffer index & available counter when the received byte wasn't the send echo
 		{
 			buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
@@ -148,7 +192,7 @@ void UART2_RX_TX_IRQHandler(void)
 	{
 		// Last bit has been sent
 		isSending = false;
-		UART2_C2 &= ~UART_C2_TCIE_MASK;
+		UART0_C2 &= ~UART_C2_TCIE_MASK;
 	}
 
 	// Transmit buffer empty interrupt => send next byte if there is something
@@ -157,15 +201,15 @@ void UART2_RX_TX_IRQHandler(void)
 	{
 		if(buffers.tx.read != buffers.tx.wrote)
 		{
-			UART2_D = buffers.tx.buffer[buffers.tx.read];
+			UART0_D = buffers.tx.buffer[buffers.tx.read];
 			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
 
 			isSending = true; // Ignore echo
-			UART2_C2 |= UART_C2_TCIE_MASK; // Turn on transmission complete interrupt
+			UART0_C2 |= UART_C2_TCIE_MASK; // Turn on transmission complete interrupt
 		}
 		else
 		{
-			UART2_C2 &= ~UART_C2_TIE_MASK; // empty buffer -> turn off transmit buffer empty interrupt
+			UART0_C2 &= ~UART_C2_TIE_MASK; // empty buffer -> turn off transmit buffer empty interrupt
 		}
 	}
 }
@@ -229,7 +273,7 @@ static void tx(uint8 ch)
 	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
 
 	// enable send interrupt
-	UART2_C2 |= UART_C2_TIE_MASK;
+	UART0_C2 |= UART_C2_TIE_MASK;
 }
 
 static uint8 rx(uint8 *ch)
@@ -263,14 +307,14 @@ static uint8 rxN(uint8 *str, uint8 number)
 
 static void clearBuffers(void)
 {
-	disable_irq(INT_UART2_RX_TX-16);
+	disable_irq(INT_UART0_RX_TX-16);
 	available         = 0;
 	buffers.rx.read   = 0;
 	buffers.rx.wrote  = 0;
 
 	buffers.tx.read   = 0;
 	buffers.tx.wrote  = 0;
-	enable_irq(INT_UART2_RX_TX-16);
+	enable_irq(INT_UART0_RX_TX-16);
 }
 
 static uint32 bytesAvailable()
