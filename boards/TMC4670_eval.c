@@ -1227,7 +1227,7 @@ void TMC4670_init(void)
 	// configure ENABLE-PIN for TMC4670
 	PIN_DRV_ENN = &HAL.IOs->pins->DIO0;
 	HAL.IOs->config->toOutput(PIN_DRV_ENN);
-	HAL.IOs->config->setHigh(PIN_DRV_ENN);
+	enableDriver(DRIVER_ENABLE);
 
 	TMC4670_SPIChannel = &HAL.SPI->ch1;
 	TMC4670_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
@@ -1268,7 +1268,4 @@ void TMC4670_init(void)
 		motorConfig[i].initMode                 = 0;
 		motorConfig[i].torqueMeasurementFactor  = 256;
 	}
-
-	// enable the driver
-	enableDriver(DRIVER_ENABLE);
 };
