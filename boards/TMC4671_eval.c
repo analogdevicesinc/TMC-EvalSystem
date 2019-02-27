@@ -1473,7 +1473,7 @@ void TMC4671_init(void)
 	// configure ENABLE-PIN for TMC4671
 	PIN_DRV_ENN = &HAL.IOs->pins->DIO0;
 	HAL.IOs->config->toOutput(PIN_DRV_ENN);
-	HAL.IOs->config->setHigh(PIN_DRV_ENN);
+	enableDriver(DRIVER_ENABLE);
 
 	TMC4671_SPIChannel = &HAL.SPI->ch1;
 	TMC4671_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
@@ -1537,7 +1537,4 @@ void TMC4671_init(void)
 		rampGenerator[motor].acceleration = (u32)tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
 	}
 #endif
-
-	// enable the driver
-	enableDriver(DRIVER_ENABLE);
 }
