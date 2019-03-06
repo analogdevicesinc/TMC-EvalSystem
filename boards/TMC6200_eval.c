@@ -172,11 +172,17 @@ static void deInit(void)
 
 static uint8 reset()
 {
+	// set default PWM configuration for evaluation board use with TMC467x-EVAL
+	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, TMC6200_GCONF, 0x0);
+
 	return 1;
 }
 
 static uint8 restore()
 {
+	// set default PWM configuration for evaluation board use with TMC467x-EVAL
+	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, TMC6200_GCONF, 0x0);
+
 	return 1;
 }
 
@@ -214,6 +220,9 @@ void TMC6200_init(void)
 	Evalboards.ch2.VMMin                = VM_MIN;
 	Evalboards.ch2.VMMax                = VM_MAX;
 	Evalboards.ch2.deInit               = deInit;
+
+	// set default PWM configuration for evaluation board use with TMC467x-EVAL
+	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, TMC6200_GCONF, 0x0);
 
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 }
