@@ -6,8 +6,8 @@
 
 static void init(void);
 static void deInit(void);
-static void setDuty(uint16);
-static uint16 getDuty(void);
+static void setDuty(timer_channel, uint16);
+static uint16 getDuty(timer_channel);
 
 TimerTypeDef Timer =
 {
@@ -100,13 +100,37 @@ static void deInit(void)
 	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
 }
 
-static void setDuty(uint16 duty)
+static void setDuty(timer_channel channel, uint16 duty)
 {
-	 FTM0_C7V = (duty < TIMER_MAX) ? duty : TIMER_MAX;
-	 FTM0_PWMLOAD = FTM_PWMLOAD_LDOK_MASK;
+	switch(channel) {
+	case TIMER_CHANNEL_2:
+		FTM0_C1V = (duty < TIMER_MAX) ? duty : TIMER_MAX;
+		break;
+	case TIMER_CHANNEL_3:
+		FTM0_C5V = (duty < TIMER_MAX) ? duty : TIMER_MAX;
+		break;
+	case TIMER_CHANNEL_1:
+	default:
+		FTM0_C7V = (duty < TIMER_MAX) ? duty : TIMER_MAX;
+		break;
+	}
+	FTM0_PWMLOAD = FTM_PWMLOAD_LDOK_MASK;
 }
 
-static uint16 getDuty(void)
+static uint16 getDuty(timer_channel channel)
 {
-	 return (FTM0_C7V - FTM0_C6V);
+	uint16 duty = 0;
+	switch(channel) {
+	case TIMER_CHANNEL_2:
+		duty = (FTM0_C1V - FTM0_C0V);
+		break;
+	case TIMER_CHANNEL_3:
+		duty = (FTM0_C5V - FTM0_C4V);
+		break;
+	case TIMER_CHANNEL_1:
+	default:
+		duty = (FTM0_C7V - FTM0_C6V);
+		break;
+	}
+	return duty;
 }

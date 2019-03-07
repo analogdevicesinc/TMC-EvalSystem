@@ -789,7 +789,7 @@ static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
 			else
 				HAL.IOs->config->setLow(Pins.AIN_REF_SW);
 
-			Timer.setDuty(*value % 10001);
+			Timer.setDuty(TIMER_CHANNEL_1, *value % 10001);
 		}
 		else
 			errors |= TMC_ERROR_VALUE;
@@ -988,5 +988,5 @@ void TMC5130_init(void)
 
 	HAL.IOs->config->set(Pins.AIN_REF_PWM);
 	Timer.init();
-	Timer.setDuty(0);
+	Timer.setDuty(TIMER_CHANNEL_1, 0);
 };

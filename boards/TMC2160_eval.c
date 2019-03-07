@@ -710,7 +710,7 @@ static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
 		if(uvalue <= 20000)
 		{
 			//HAL.IOs->config->setToState(Pins.AIN_REF_SW, (uvalue > 10000) ? IOS_HIGH : IOS_LOW);
-			Timer.setDuty(uvalue%10001);
+			Timer.setDuty(TIMER_CHANNEL_1, uvalue%10001);
 		}
 		else
 		{
@@ -900,5 +900,5 @@ void TMC2160_init(void)
 	init_state = 1;
 
 	Timer.init();
-	Timer.setDuty(0);
+	Timer.setDuty(TIMER_CHANNEL_1, 0);
 }

@@ -195,7 +195,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 			if(((uint32) *value) > 10000)
 				errors |= TMC_ERROR_TYPE;
 			else
-				Timer.setDuty(*value);
+				Timer.setDuty(TIMER_CHANNEL_1, *value);
 		}
 	break;
 
@@ -554,7 +554,7 @@ void TMC2100_init(void)
 
 	HAL.IOs->config->set(Pins.AIN_REF_PWM);
 	Timer.init();
-	Timer.setDuty(0);
+	Timer.setDuty(TIMER_CHANNEL_1, 0);
 }
 
 static void deInit(void)

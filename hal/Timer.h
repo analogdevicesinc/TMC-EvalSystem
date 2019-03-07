@@ -3,12 +3,18 @@
 
 #include "derivative.h"
 
+typedef enum {
+	TIMER_CHANNEL_1,
+	TIMER_CHANNEL_2,
+	TIMER_CHANNEL_3
+} timer_channel;
+
 typedef struct
 {
 	void (*init) (void);
 	void (*deInit) (void);
-	void (*setDuty) (uint16 duty);
-	uint16 (*getDuty) (void);
+	void (*setDuty) (timer_channel channel, uint16 duty);
+	uint16 (*getDuty) (timer_channel channel);
 } TimerTypeDef;
 
 TimerTypeDef Timer;
