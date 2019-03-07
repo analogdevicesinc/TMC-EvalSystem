@@ -26,6 +26,8 @@ TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
 #ifdef USE_LINEAR_RAMP
 	TMC_LinearRamp rampGenerator[TMC4671_MOTORS];
 	u8 actualMotionMode[TMC4671_MOTORS];
+	s32 lastRampTargetPosition[TMC4671_MOTORS];
+	s32 lastRampTargetVelocity[TMC4671_MOTORS];
 #endif
 
 // => SPI wrapper
@@ -1356,26 +1358,33 @@ static void periodicJob(uint32 actualSystick)
 				{
 					tmc_linearRamp_computeRampPosition(&rampGenerator[motor]);
 
-					// set new target position
-					tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, rampGenerator[motor].rampPosition);
+					// set new target position (only if changed)
+					if (rampGenerator[motor].rampPosition != lastRampTargetPosition[motor])
+					{
+						tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, rampGenerator[motor].rampPosition);
+						lastRampTargetPosition[motor] = rampGenerator[motor].rampPosition;
+					}
 				}
 				else if (actualMotionMode[motor] == TMC4671_MOTION_MODE_VELOCITY)
 				{
 					tmc_linearRamp_computeRampVelocity(&rampGenerator[motor]);
 
-					// keep position ramp in reset
-					rampGenerator[motor].rampPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL);
-					tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, rampGenerator[motor].rampPosition);
-					rampGenerator[motor].lastdXRest = 0;
+					// set new target velocity (only if changed)
+					if (rampGenerator[motor].rampVelocity != lastRampTargetVelocity[motor])
+					{
+						// set new target velocity
+						tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_TARGET, rampGenerator[motor].rampVelocity);
+						lastRampTargetVelocity[motor] = rampGenerator[motor].rampVelocity;
 
-					// set new target velocity
-					tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_TARGET, rampGenerator[motor].rampVelocity);
+						// keep position ramp on track
+						rampGenerator[motor].rampPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL);
+						rampGenerator[motor].lastdXRest = 0;
+					}
 				}
 				else if (actualMotionMode[motor] == TMC4671_MOTION_MODE_TORQUE)
 				{
-					// only keep position ramp in reset
+					// only keep position ramp on track
 					rampGenerator[motor].rampPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL);
-					tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, rampGenerator[motor].rampPosition);
 					rampGenerator[motor].lastdXRest = 0;
 				}
 			}
@@ -1531,6 +1540,8 @@ void TMC4671_init(void)
 	{
 		tmc_linearRamp_init(&rampGenerator[motor]);
 		actualMotionMode[motor] = TMC4671_MOTION_MODE_STOPPED;
+		lastRampTargetPosition[motor] = 0;
+		lastRampTargetVelocity[motor] = 0;
 
 		// update ramp generator default values
 		rampGenerator[motor].maxVelocity = (u32)tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
