@@ -3,6 +3,7 @@
 
 #include "TMCL.h"
 #include "IdDetection.h"
+#include "EEPROM.h"
 #include "BoardAssignment.h"
 
 static uint8 assignCh1(uint8 id, uint8 justCheck);
