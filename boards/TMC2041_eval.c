@@ -665,5 +665,5 @@ void TMC2041_init(void)
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 
 	Timer.init();
-	Timer.setDuty(0);
+	Timer.setDuty(TIMER_CHANNEL_1, 0);
 }

@@ -1,5 +1,6 @@
 ### Generic settings ###
-VERSION			= 3.06
+#VERSION			= 3.06
+include version.txt
 #DEVICE			= Startrampe
 #DEVICE			= Landungsbruecke
 LINK			= BL
