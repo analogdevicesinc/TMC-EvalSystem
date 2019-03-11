@@ -1,7 +1,9 @@
+#!/bin/bash
+
 verbosity=0
 version=0.0.0
 owner="trinamic"
-repo="TMC-EvalSystem-DEV"
+repo="TMC-EvalSystem"
 api="https://api.github.com/repos/${owner}/${repo}"
 token="changeme"
 notify=""

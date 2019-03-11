@@ -1,4 +1,6 @@
-# TMC-Evaluation-System
+# TMC-EvalSystem
+
+Trinamic Evaluation System
 
 ## Setup
 To clone this repository, simply use the following command in order to clone submodules recursively:  
@@ -6,13 +8,12 @@ To clone this repository, simply use the following command in order to clone sub
 
 ## Changelog
 
+For detailed changelog, see commit history.
+
 ### Version 3.06: (Beta)
 * Full TMC2160 support
 * Landungsbruecke HW v2.0 support with internal HWID detection for future revisions
 * Internal/external step/dir generator handling in FW and IDE
-* Begin TMC7531-EVAL support
-* Begin TMC4672-EVAL support
-* Begin TMC2590-EVAL support
 * Begin TMC-Minion-EVAL support
 * Various bugfixes
 * Internal optimizations
