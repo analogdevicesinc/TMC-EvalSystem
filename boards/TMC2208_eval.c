@@ -57,12 +57,16 @@ void tmc2208_writeRegister(u8 motor, uint8 address, int32 value)
 {
 	UNUSED(motor);
 	UART_writeInt(TMC2208_UARTChannel, tmc2208_get_slave(&TMC2208), address, value);
+	TMC2208.config->shadowRegister[TMC_ADDRESS(address)] = value;
 }
 
 void tmc2208_readRegister(u8 motor, uint8 address, int32 *value)
 {
 	UNUSED(motor);
-	UART_readInt(TMC2208_UARTChannel, tmc2208_get_slave(&TMC2208), address, value);
+	if(TMC_IS_READABLE(TMC2208.registerAccess[TMC_ADDRESS(address)]))
+		UART_readInt(TMC2208_UARTChannel, tmc2208_get_slave(&TMC2208), address, value);
+	else
+		*value = TMC2208.config->shadowRegister[TMC_ADDRESS(address)];
 }
 
 static uint32 rotate(uint8 motor, int32 velocity)
