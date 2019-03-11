@@ -15,23 +15,23 @@ typedef struct
 	u16  startVoltage;
 	u16  initWaitTime;
 	u16  actualInitWaitTime;
-	u8   initState;
-	u8   initMode;
-	u16  torqueMeasurementFactor;  // u8.u8
-	u8	 motionMode;
+	uint8_t   initState;
+	uint8_t   initMode;
+	u16  torqueMeasurementFactor;  // uint8_t.uint8_t
+	uint8_t	 motionMode;
 } TMinimalMotorConfig;
 
 TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
 
 #ifdef USE_LINEAR_RAMP
 	TMC_LinearRamp rampGenerator[TMC4671_MOTORS];
-	u8 actualMotionMode[TMC4671_MOTORS];
+	uint8_t actualMotionMode[TMC4671_MOTORS];
 	s32 lastRampTargetPosition[TMC4671_MOTORS];
 	s32 lastRampTargetVelocity[TMC4671_MOTORS];
 #endif
 
 // => SPI wrapper
-u8 tmc4671_readwriteByte(u8 motor, u8 data, u8 lastTransfer)
+uint8_t tmc4671_readwriteByte(uint8_t motor, uint8_t data, uint8_t lastTransfer)
 {
 	if (motor == DEFAULT_MOTOR)
 		return TMC4671_SPIChannel->readWrite(data, lastTransfer);
@@ -40,7 +40,7 @@ u8 tmc4671_readwriteByte(u8 motor, u8 data, u8 lastTransfer)
 }
 // <= SPI wrapper
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32 rotate(uint8_t motor, int32 velocity)
 {
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -70,22 +70,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32 right(uint8_t motor, int32 velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32 left(uint8_t motor, int32 velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32 stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32 moveTo(uint8_t motor, int32 position)
 {
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -115,7 +115,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32 moveBy(uint8_t motor, int32 *ticks)
 {
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -145,7 +145,7 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32 *value)
 {
 	u32 errors = TMC_ERROR_NONE;
 
@@ -1322,7 +1322,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32 getMeasuredSpeed(uint8_t motor, int32 *value)
 {
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -1401,29 +1401,29 @@ static void periodicJob(uint32 actualSystick)
 #endif
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32 value)
 {
 	UNUSED(motor);
 	tmc4671_writeInt(DEFAULT_MOTOR, address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32 *value)
 {
 	UNUSED(motor);
 	*value = tmc4671_readInt(DEFAULT_MOTOR, address);
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32 SAP(uint8_t type, uint8_t motor, int32 value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32 GAP(uint8_t type, uint8_t motor, int32 *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32 userFunction(uint8_t type, uint8_t motor, int32 *value)
 {
 	UNUSED(type);
 	UNUSED(motor);
@@ -1448,23 +1448,27 @@ static void deInit(void)
 	HAL.IOs->config->setLow(PIN_DRV_ENN);
 };
 
-static uint8 reset()
+static uint8_t reset()
 {
 	// set default polarity for evaluation board's power stage after VW reset
-	for(size_t motor = 0; motor < TMC4671_MOTORS; motor++) {
+	for(size_t motor = 0; motor < TMC4671_MOTORS; motor++)
+	{
 		tmc4671_writeInt(motor, TMC4671_PWM_POLARITIES, 0);
 		tmc4671_writeInt(motor, TMC4671_PWM_SV_CHOP, 0x0);
+		tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 	}
 
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	// set default polarity for evaluation board's power stage after VW reset
-	for(size_t motor = 0; motor < TMC4671_MOTORS; motor++) {
+	for(size_t motor = 0; motor < TMC4671_MOTORS; motor++)
+	{
 		tmc4671_writeInt(motor, TMC4671_PWM_POLARITIES, 0);
 		tmc4671_writeInt(motor, TMC4671_PWM_SV_CHOP, 0x0);
+		tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 	}
 
 	//enableDriver(DRIVER_DISABLE);
@@ -1511,7 +1515,7 @@ void TMC4671_init(void)
 	Evalboards.ch1.checkErrors          = checkErrors;
 	Evalboards.ch1.numberOfMotors       = TMC4671_MOTORS;
 	Evalboards.ch1.deInit               = deInit;
-	Evalboards.ch1.VMMin                = 140;
+	Evalboards.ch1.VMMin                = 70;
 	Evalboards.ch1.VMMax                = 650;
 
 	// init motor config
@@ -1528,6 +1532,8 @@ void TMC4671_init(void)
 	// set default polarity for evaluation board's power stage on init
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_POLARITIES, 0x0);
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_SV_CHOP, 0x0);
+	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
+
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_dsADC_MCLK_B, 0x0);
 
 	// set default acceleration and max velocity
