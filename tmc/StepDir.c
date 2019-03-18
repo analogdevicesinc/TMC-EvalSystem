@@ -134,7 +134,7 @@ StepDirectionTypedef StepDir[STEP_DIR_CHANNELS];
 
 IOPinTypeDef DummyPin = { .bitWeight = DUMMY_BITWEIGHT };
 
-int calculateStepDifference(int velocity, uint32 oldAccel, uint32 newAccel);
+int32_t calculateStepDifference(int32_t velocity, uint32_t oldAccel, uint32_t newAccel);
 
 void TIMER_INTERRUPT()
 {
@@ -664,14 +664,14 @@ void StepDir_deInit()
  *   oldSteps: s1
  *   newSteps: s2
  */
-int calculateStepDifference(int velocity, uint32 oldAccel, uint32 newAccel)
+int32_t calculateStepDifference(int32_t velocity, uint32_t oldAccel, uint32_t newAccel)
 {
-	int64 tmp = velocity;
+	int64_t tmp = velocity;
 	tmp = tmp * 2 + 1;
 	tmp = (tmp * tmp) / 4;
 	tmp = tmp / 2;
-	uint32 oldSteps = tmp / oldAccel;
-	uint32 newSteps = tmp / newAccel;
+	uint32_t oldSteps = tmp / oldAccel;
+	uint32_t newSteps = tmp / newAccel;
 
 	return newSteps - oldSteps;
 }
