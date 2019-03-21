@@ -15,26 +15,26 @@
 
 static void init();
 static void deInit();
-static void tx(uint8 ch);
-static uint8 rx(uint8 *ch);
-static void txN(uint8 *str, uint8 number);
-static uint8 rxN(uint8 *ch, uint8 number);
+static void tx(uint8_t ch);
+static uint8_t rx(uint8_t *ch);
+static void txN(uint8_t *str, uint8_t number);
+static uint8_t rxN(uint8_t *ch, uint8_t number);
 static void clearBuffers(void);
-static uint32 bytesAvailable();
+static uint32_t bytesAvailable();
 
 // ring buffers (used in BufferingTypedef struct)
-static volatile uint8 rxBuffer[BUFFER_SIZE];
-static volatile uint8 txBuffer[BUFFER_SIZE];
+static volatile uint8_t rxBuffer[BUFFER_SIZE];
+static volatile uint8_t txBuffer[BUFFER_SIZE];
 
-static int8 cmdBuffer[WLAN_CMD_BUFFER_SIZE];
-static uint32 cmdBufferSize = 0;
-static uint32 cmdEnabledTime; // systick timestamp when command mode sequence has been sent
+static int8_t cmdBuffer[WLAN_CMD_BUFFER_SIZE];
+static uint32_t cmdBufferSize = 0;
+static uint32_t cmdEnabledTime; // systick timestamp when command mode sequence has been sent
 
 static WLANStateTypedef wlanState = WLAN_DATA_MODE;
 
-static volatile uint32 available = 0;
+static volatile uint32_t available = 0;
 
-uint32 UART0_TimeoutTimer;
+uint32_t UART0_TimeoutTimer;
 
 RXTXTypeDef WLAN =
 {
@@ -69,7 +69,7 @@ static RXTXBufferingTypeDef buffers =
 
 static void init()
 {
-	register uint16 ubd;
+	register uint16_t ubd;
 
 	HAL.IOs->config->toOutput(&HAL.IOs->pins->MIXED6);
 	HAL.IOs->config->setLow(&HAL.IOs->pins->MIXED6);
@@ -116,7 +116,7 @@ static void deInit()
 
 void UART0_RX_TX_IRQHandler_WLAN(void)
 {
-	uint32 status = UART0_S1;
+	uint32_t status = UART0_S1;
 
 	if(status & UART_S1_RDRF_MASK)
 	{
@@ -145,7 +145,7 @@ void UART0_RX_TX_IRQHandler_WLAN(void)
 }
 
 // Send without checking for CMD/Data mode
-static void rawTx(uint8 ch)
+static void rawTx(uint8_t ch)
 {
 	if(wlanState == WLAN_INIT_CMD_MODE)
 		return;
@@ -160,13 +160,13 @@ static void rawTx(uint8 ch)
 
 // Wrapper for rawTx, will silently fail if we're not in data mode
 // todo CHECK ADD 3: Should tx be given a return type in order to report failure to send? (LH) #1
-static void tx(uint8 ch)
+static void tx(uint8_t ch)
 {
 	if(checkReadyToSend())
 		rawTx(ch);
 }
 
-static uint8 rawRx(uint8 *ch)
+static uint8_t rawRx(uint8_t *ch)
 {
 	if(buffers.rx.read == buffers.rx.wrote)
 		return 0;
@@ -178,7 +178,7 @@ static uint8 rawRx(uint8 *ch)
 	return 1;
 }
 
-static uint8 rx(uint8 *ch)
+static uint8_t rx(uint8_t *ch)
 {
 	if(wlanState != WLAN_DATA_MODE)
 		return 0;
@@ -187,18 +187,18 @@ static uint8 rx(uint8 *ch)
 }
 
 // todo CHECK ADD 3: Should txN be given a return type in order to report failure to send? (LH) #2
-static void txN(uint8 *str, uint8 number)
+static void txN(uint8_t *str, uint8_t number)
 {
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 		tx(str[i]);
 }
 
-static uint8 rxN(uint8 *str, uint8 number)
+static uint8_t rxN(uint8_t *str, uint8_t number)
 {
 	if(available < number)
 		return 0;
 
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 		rx(&str[i]);
 
 	return 1;
@@ -216,12 +216,12 @@ static void clearBuffers(void)
 	enable_irq(INT_UART0_RX_TX-16);
 }
 
-static uint32 bytesAvailable()
+static uint32_t bytesAvailable()
 {
 	return available;
 }
 
-uint32 checkReadyToSend()
+uint32_t checkReadyToSend()
 {
 	if(checkCmdModeEnabled())
 	{
@@ -250,14 +250,14 @@ void enableWLANCommandMode()
 	cmdEnabledTime = systick_getTick();
 }
 
-uint32 checkCmdModeEnabled()
+uint32_t checkCmdModeEnabled()
 {
 	if(wlanState == WLAN_CMD_MODE)
 		return true;
 	else if(wlanState == WLAN_DATA_MODE)
 		return false;
 
-	uint8 reply[4] = { 0 };	// expected reply: {'C','M','D'}, we're appending \0 so we have a NULL-terminated string that we can use in strcmp()
+	uint8_t reply[4] = { 0 };	// expected reply: {'C','M','D'}, we're appending \0 so we have a NULL-terminated string that we can use in strcmp()
 	if(rxN(reply, 3))
 	{
 		if(strcmp((const char *)reply, "CMD") == 0)
@@ -285,7 +285,7 @@ uint32 checkCmdModeEnabled()
 	}
 }
 
-uint32 handleWLANCommand(BufferCommandTypedef cmd, uint32 value)
+uint32_t handleWLANCommand(BufferCommandTypedef cmd, uint32_t value)
 {
 	switch(cmd)
 	{
@@ -311,7 +311,7 @@ uint32 handleWLANCommand(BufferCommandTypedef cmd, uint32 value)
 		if(!checkCmdModeEnabled())
 			return 1;
 
-		for(uint32 i = 0; i < cmdBufferSize; i++)
+		for(uint32_t i = 0; i < cmdBufferSize; i++)
 			rawTx(cmdBuffer[i]); // Can't use txN since its blocked from sending while in command mode
 		rawTx('\r'); // End of command character
 
@@ -322,10 +322,10 @@ uint32 handleWLANCommand(BufferCommandTypedef cmd, uint32 value)
 	return 0;
 }
 
-uint32 getCMDReply()
+uint32_t getCMDReply()
 {
-	uint8 cmdReply;
-	uint32 result = 0;
+	uint8_t cmdReply;
+	uint32_t result = 0;
 
 	for(int i = 0; i < 4; i++)
 	{

@@ -19,32 +19,32 @@
 
 #define DEFAULT_MOTOR 0
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
-static uint32 rotate(uint8 motor, int32 velocity);
-static uint32 right(uint8 motor, int32 velocity);
-static uint32 left(uint8 motor, int32 velocity);
-static uint32 stop(uint8 motor);
-static uint32 moveTo(uint8 motor, int32 position);
-static uint32 moveBy(uint8 motor, int32 *ticks);
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 getLimit(AxisParameterLimit limit, uint8 type, uint8 motor, int32 *value);
-static uint32 getMin(uint8 type, uint8 motor, int32 *value);
-static uint32 getMax(uint8 type, uint8 motor, int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
-static void readRegister(u8 motor, uint8 address, int32 *value);
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t getMin(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void deInit(void);
-static void periodicJob(uint32 tick);
-static uint8 reset();
-static uint8 restore();
+static void periodicJob(uint32_t tick);
+static uint8_t reset();
+static uint8_t restore();
 static void enableDriver(DriverState state);
 
-static void on_standstill_changed(uint8 newStandstill);
+static void on_standstill_changed(uint8_t newStandstill);
 
-static uint32 compatibilityMode = 1;
-static uint8 standstill = 1;
+static uint32_t compatibilityMode = 1;
+static uint8_t standstill = 1;
 
 static SPIChannelTypeDef *TMC262_1420_SPIChannel;
 static TMC262_1420TypeDef TMC262_1420;
@@ -52,7 +52,7 @@ static ConfigurationTypeDef *TMC262_1420_config;
 
 // Translate motor number to TMC262_1420TypeDef
 // When using multiple ICs you can map them here
-static inline TMC262_1420TypeDef *motorToIC(uint8 motor)
+static inline TMC262_1420TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
 
@@ -61,7 +61,7 @@ static inline TMC262_1420TypeDef *motorToIC(uint8 motor)
 
 // Translate channel number to SPI channel
 // When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
+static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 {
 	UNUSED(channel);
 
@@ -69,7 +69,7 @@ static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
 }
 
 // SPI Wrapper for API
-void tmc262_1420_readWriteArray(uint8 channel, uint8 *data, size_t length)
+void tmc262_1420_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 {
 	if(Evalboards.ch1.fullCover != NULL) {
 		UNUSED(channel);
@@ -91,9 +91,9 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-//static void readWrite(uint32 value)
+//static void readWrite(uint32_t value)
 //{	// sending data (value) via spi to TMC262, coping written and received data to shadow register
-//	static uint8 rdsel = 0; // number of expected read response
+//	static uint8_t rdsel = 0; // number of expected read response
 //
 //// if SGCONF should be written, check whether stand still, or run current should be used
 //	if(TMC262_1420_GET_ADDRESS(value) == TMC262_1420_SGCSCONF)
@@ -120,9 +120,9 @@ static PinsTypeDef Pins;
 //	TMC262_1420_config->shadowRegister[TMC262_1420_GET_ADDRESS(value) | TMC262_1420_WRITE_BIT ] = value;
 //}
 //
-//static void readImmediately(uint8 rdsel)
+//static void readImmediately(uint8_t rdsel)
 //{ // sets desired reply in DRVCONF register, resets it to previous settings whilst reading desired reply
-//	uint32 value, drvConf;
+//	uint32_t value, drvConf;
 //
 //// additional reading to keep all replies up to date
 //	value = tmc262_1420_readInt(&TMC262_1420, TMC262_1420_WRITE_BIT | TMC262_1420_DRVCONF);  // buffer value amd  drvConf to write back later
@@ -134,7 +134,7 @@ static PinsTypeDef Pins;
 //}
 //
 //// => SPI wrapper
-//void tmc262_1420_writeInt(uint8 motor, uint8 address, int value)
+//void tmc262_1420_writeInt(uint8_t motor, uint8_t address, int value)
 //{
 //	UNUSED(motor);
 //
@@ -150,7 +150,7 @@ static PinsTypeDef Pins;
 //		readWrite(value);
 //}
 //
-//uint32 tmc262_1420_readInt(uint8 motor, uint8 address)
+//uint32_t tmc262_1420_readInt(uint8_t motor, uint8_t address)
 //{
 //	UNUSED(motor);
 //
@@ -160,11 +160,11 @@ static PinsTypeDef Pins;
 //	return TMC262_1420_config->shadowRegister[0x7F & address];
 //}
 //
-//void tmc262_1420_readWrite(uint8 motor, uint32 value)
+//void tmc262_1420_readWrite(uint8_t motor, uint32_t value)
 //{
 //	UNUSED(motor);
 //
-//	static uint8 rdsel = 0; // number of expected read response
+//	static uint8_t rdsel = 0; // number of expected read response
 //
 //	// if SGCONF should be written, check whether stand still, or run current should be used
 //	if(TMC262_1420_GET_ADDRESS(value) == TMC262_1420_SGCSCONF)
@@ -193,9 +193,9 @@ static PinsTypeDef Pins;
 
 
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 errors = 0;
+	uint32_t errors = 0;
 
 	UNUSED(motor);
 
@@ -225,7 +225,7 @@ static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
 	return errors;
 }
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -238,22 +238,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -263,7 +263,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -274,9 +274,9 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return moveTo(motor, *ticks);
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -652,20 +652,20 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 getLimit(AxisParameterLimit limit, uint8 type, uint8 motor, int32 *value)
+static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(motor);
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 	switch(type) {
 	case 2:
 	case 3:
@@ -691,27 +691,27 @@ static uint32 getLimit(AxisParameterLimit limit, uint8 type, uint8 motor, int32 
 	return errors;
 }
 
-static uint32 getMin(uint8 type, uint8 motor, int32 *value)
+static uint32_t getMin(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return getLimit(LIMIT_MIN, type, motor, value);
 }
 
-static uint32 getMax(uint8 type, uint8 motor, int32 *value)
+static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return getLimit(LIMIT_MAX, type, motor, value);
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	tmc262_1420_writeInt(motorToIC(motor), address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	*value = tmc262_1420_readInt(motorToIC(motor), address);
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -743,7 +743,7 @@ static void deInit(void)
 	StepDir_deInit();
 }
 
-static void on_standstill_changed(uint8 newStandstill)
+static void on_standstill_changed(uint8_t newStandstill)
 {
 	if(newStandstill == true) {
 		TMC262_1420.runCurrentScale = TMC262_1420_FIELD_READ(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT);
@@ -754,10 +754,10 @@ static void on_standstill_changed(uint8 newStandstill)
 	}
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
-	static uint8 lastCoolStepState = 0;
-	uint8 stst;
+	static uint8_t lastCoolStepState = 0;
+	uint8_t stst;
 
 	if((stst = TMC262_1420_FIELD_READ(&TMC262_1420, TMC262_1420_DRVCTRL, TMC262_1420_STST_MASK, TMC262_1420_STST_SHIFT)) != standstill) {
 		on_standstill_changed(stst);
@@ -767,10 +767,10 @@ static void periodicJob(uint32 tick)
 	Evalboards.ch2.errors = (TMC262_1420.isStandStillOverCurrent) 	? (Evalboards.ch2.errors | ERRORS_I_STS) 			: (Evalboards.ch2.errors & ~ERRORS_I_STS);
 	Evalboards.ch2.errors = (TMC262_1420.isStandStillCurrentLimit) 	? (Evalboards.ch2.errors | ERRORS_I_TIMEOUT_STS) 	: (Evalboards.ch2.errors & ~ERRORS_I_TIMEOUT_STS);
 
-	uint8 currCoolStepState = (abs(StepDir_getActualVelocity(DEFAULT_MOTOR)) >= TMC262_1420.coolStepThreshold);
+	uint8_t currCoolStepState = (abs(StepDir_getActualVelocity(DEFAULT_MOTOR)) >= TMC262_1420.coolStepThreshold);
 	if(currCoolStepState != lastCoolStepState)
 	{
-		uint8 value = (currCoolStepState)? TMC262_1420.coolStepActiveValue : TMC262_1420.coolStepInactiveValue;
+		uint8_t value = (currCoolStepState)? TMC262_1420.coolStepActiveValue : TMC262_1420.coolStepInactiveValue;
 		TMC262_1420_FIELD_UPDATE(&TMC262_1420, TMC262_1420_SMARTEN, TMC262_1420_SEMIN_MASK, TMC262_1420_SEMIN_SHIFT, value);
 
 		lastCoolStepState = currCoolStepState;
@@ -780,7 +780,7 @@ static void periodicJob(uint32 tick)
 	StepDir_periodicJob(DEFAULT_MOTOR);
 }
 
-static uint8 reset()
+static uint8_t reset()
 {
 	if(StepDir_getActualVelocity(0) != 0)
 		return 0;
@@ -795,7 +795,7 @@ static uint8 reset()
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return tmc262_1420_restore(&TMC262_1420);
 }

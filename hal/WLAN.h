@@ -19,10 +19,10 @@ typedef enum
 } WLANStateTypedef;
 
 void UART0_RX_TX_IRQHandler_WLAN(void);
-uint32 checkReadyToSend();
+uint32_t checkReadyToSend();
 void enableWLANCommandMode();
-uint32 checkCmdModeEnabled();
-uint32 handleWLANCommand(BufferCommandTypedef cmd, uint32 value);
-uint32 getCMDReply();
+uint32_t checkCmdModeEnabled();
+uint32_t handleWLANCommand(BufferCommandTypedef cmd, uint32_t value);
+uint32_t getCMDReply();
 
 #endif /* __WLAN_H_ */

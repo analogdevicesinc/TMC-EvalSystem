@@ -34,10 +34,10 @@
 
 typedef struct {
 	bool init;
-	uint8 name[EEPROM_SIZE_NAME];
-	uint16 id;
-	uint16 hw;
-	uint16 magic;
+	uint8_t name[EEPROM_SIZE_NAME];
+	uint16_t id;
+	uint16_t hw;
+	uint16_t magic;
 } EEPROM_Data;
 
 typedef struct {
@@ -49,12 +49,12 @@ EEPROM_Channels EEPROM;
 
 void eeprom_init(SPIChannelTypeDef *SPIChannel);
 
-uint8 eeprom_check(SPIChannelTypeDef *SPIChannel);
+uint8_t eeprom_check(SPIChannelTypeDef *SPIChannel);
 
-void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 value);
-void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 *data, uint16 size);
+void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t value);
+void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t *data, uint16_t size);
 
-uint8 eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16 address);
-void eeprom_read_array(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 *block, uint16 size);
+uint8_t eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16_t address);
+void eeprom_read_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t *block, uint16_t size);
 
 #endif /* TMC_EEPROM_H_ */

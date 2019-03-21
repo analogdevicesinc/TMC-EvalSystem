@@ -2,24 +2,24 @@
 #include "tmc/BoardAssignment.h"
 #include "tmc/ic/TMC4330/TMC4330.h"
 
-static uint32 right(uint8 motor, int32 velocity);
-static uint32 left(uint8 motor, int32 velocity);
-static uint32 rotate(uint8 motor, int32 velocity);
-static uint32 stop(uint8 motor);
-static uint32 moveTo(uint8 motor, int32 position);
-static uint32 moveBy(uint8 motor, int32 *ticks);
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static void readRegister(u8 motor, uint8 address, int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
 
-static void periodicJob(uint32 tick);
-static void checkErrors(uint32 tick);
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
-static uint8 reset();
-static uint8 restore();
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+static uint8_t reset();
+static uint8_t restore();
 
 typedef struct
 {
@@ -39,11 +39,11 @@ static PinsTypeDef Pins;
 static SPIChannelTypeDef *TMC4330_SPIChannel;
 static TMC4330TypeDef TMC4330;
 
-static uint32 vmax_position = 0;
+static uint32_t vmax_position = 0;
 
 // Translate motor number to TMC4330TypeDef
 // When using multiple ICs you can map them here
-static inline TMC4330TypeDef *motorToIC(uint8 motor)
+static inline TMC4330TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
 
@@ -52,7 +52,7 @@ static inline TMC4330TypeDef *motorToIC(uint8 motor)
 
 // Translate channel number to SPI channel
 // When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
+static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 {
 	UNUSED(channel);
 
@@ -60,14 +60,14 @@ static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
 }
 
 // => SPI Wrapper
-void tmc4330_readWriteArray(uint8 channel, uint8 *data, size_t length)
+void tmc4330_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 {
 	channelToSPI(channel)->readWriteArray(data, length);
 }
 // <= SPI Wrapper
 
 // => Functions forwarded to API
-static uint32 rotate(u8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	UNUSED(motor);
 	tmc4330_rotate(motorToIC(motor), velocity);
@@ -75,35 +75,35 @@ static uint32 rotate(u8 motor, int32 velocity)
 	return 0;
 }
 
-static uint32 right(u8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	rotate(motor, velocity);
 
 	return 0;
 }
 
-static uint32 left(u8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	rotate(motor, -velocity);
 
 	return 0;
 }
 
-static uint32 stop(u8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	rotate(motor, 0);
 
 	return 0;
 }
 
-static uint32 moveTo(u8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	tmc4330_moveTo(motorToIC(motor), position, vmax_position);
 
 	return 0;
 }
 
-static uint32 moveBy(u8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	tmc4330_moveBy(motorToIC(motor), ticks, vmax_position);
 
@@ -111,10 +111,10 @@ static uint32 moveBy(u8 motor, int32 *ticks)
 }
 // <= Functions forwarded to API
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
-	uint32 uvalue;
+	uint32_t errors = TMC_ERROR_NONE;
+	uint32_t uvalue;
 
 	if(motor >= TMC4330_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -586,40 +586,40 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	tmc4330_writeInt(motorToIC(motor), address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	*value	= tmc4330_readInt(motorToIC(motor), address);
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	tmc4330_periodicJob(&TMC4330, tick);
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 errors = 0;
+	uint32_t errors = 0;
 
 	switch(type)
 	{
@@ -716,7 +716,7 @@ static void deInit(void)
 	HAL.SPI->ch2.reset();
 }
 
-static uint8 reset()
+static uint8_t reset()
 {
 	// Pulse the low-active hardware reset pin
 	HAL.IOs->config->setLow(Pins.NRST);
@@ -728,7 +728,7 @@ static uint8 reset()
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	// Pulse the low-active hardware reset pin
 	HAL.IOs->config->setLow(Pins.NRST);

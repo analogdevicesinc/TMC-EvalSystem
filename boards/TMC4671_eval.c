@@ -218,14 +218,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 171:
 		// PID_TORQUE_TARGET
 		if(readWrite == READ)
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_16_TO_31);
+			*value = (int16_t) tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_16_TO_31);
 		else if(readWrite == WRITE)
 			tmc4671_writeRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_16_TO_31, *value);
 		break;
 	case 172:
 		// PID_FLUX_TARGET
 		if(readWrite == READ)
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_0_TO_15);
+			*value = (int16_t) tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_0_TO_15);
 		else if(readWrite == WRITE)
 			tmc4671_writeRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_0_TO_15, *value);
 		break;

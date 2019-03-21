@@ -11,7 +11,7 @@ const char *VersionString = MODULE_ID"V306"; // module id and version of the fir
 
 /* Keep as is! This lines are important for the update functionality. */
 #if defined(Landungsbruecke)
-	const uint8 Protection[] __attribute__ ((section(".cfmconfig")))=
+	const uint8_t Protection[] __attribute__ ((section(".cfmconfig")))=
 	{
 		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  //Backdoor key
 		0xFF, 0xFF, 0xFF, 0xFF,                          //Flash protection (FPPROT)
@@ -21,7 +21,7 @@ const char *VersionString = MODULE_ID"V306"; // module id and version of the fir
 		0xFF                                             //reserved
 	};
 
-	__attribute__ ((section(".bldata"))) uint32 BLMagic;
+	__attribute__ ((section(".bldata"))) uint32_t BLMagic;
 #endif
 
 

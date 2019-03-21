@@ -1,7 +1,7 @@
 #include "../../HAL.h"
 #include "hal/SysTick.h"
 
-volatile u32 systick = 0;
+volatile uint32_t systick = 0;
 
 void __attribute__ ((interrupt)) SysTick_Handler(void);
 
@@ -16,7 +16,7 @@ void systick_init()
 	SYST_CSR  = 7;
 }
 
-u32 systick_getTick()
+uint32_t systick_getTick()
 {
 	return systick;
 }
@@ -33,15 +33,15 @@ u32 systick_getTick()
  * to UINT32_MAX, returning 0 in that case (Saturated subtraction).
  *
  */
-void wait(uint32 delay)	// wait for [delay] ms/systicks
+void wait(uint32_t delay)	// wait for [delay] ms/systicks
 {
-	uint32 startTick = systick;
+	uint32_t startTick = systick;
 	while((systick-startTick) <= delay) {}
 }
 
-uint32 timeSince(uint32 tick)	// time difference since the [tick] timestamp in ms/systicks
+uint32_t timeSince(uint32_t tick)	// time difference since the [tick] timestamp in ms/systicks
 {
-	uint32 tickDiff = systick - tick;
+	uint32_t tickDiff = systick - tick;
 
 	// Prevent subtraction underflow - saturate to 0 instead
 	if(tickDiff != 0)

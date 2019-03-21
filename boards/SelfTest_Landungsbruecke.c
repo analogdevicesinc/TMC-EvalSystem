@@ -4,8 +4,8 @@
 #include "../tmc/IdDetection.h"
 
 static void deInit();
-static uint32 selfTest(uint8 type, uint8 motor, int32 *value);
-static void periodicJob(uint32 tick);
+static uint32_t selfTest(uint8_t type, uint8_t motor, int32_t *value);
+static void periodicJob(uint32_t tick);
 
 
 IOPinTypeDef
@@ -66,11 +66,11 @@ static void deInit()
 	HAL.LEDs->error.off();
 }
 
-static uint32 selfTest(uint8 type, uint8 motor, int32 *value)  // Aufrufen des Selftest durch Command 143 , Type 3 und Value 0xFF00FF in dezimal => 16711935
+static uint32_t selfTest(uint8_t type, uint8_t motor, int32_t *value)  // Aufrufen des Selftest durch Command 143 , Type 3 und Value 0xFF00FF in dezimal => 16711935
 {                                                              // LEDs blinken gleichmäßig
-	uint32 i;
-	uint32 result = 0xFFFFFFFF;
-	uint32 errors = TMC_ERROR_NONE;
+	uint32_t i;
+	uint32_t result = 0xFFFFFFFF;
+	uint32_t errors = TMC_ERROR_NONE;
 	IOPinTypeDef **inGroup, **outGroup;
 
 	// 1 40 1 0 0 10 C9 45 60
@@ -301,9 +301,9 @@ static uint32 selfTest(uint8 type, uint8 motor, int32 *value)  // Aufrufen des S
 	return errors;
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
-	static uint32 lastTick = 0;
+	static uint32_t lastTick = 0;
 
 	if((tick - lastTick) >= 500)
 	{

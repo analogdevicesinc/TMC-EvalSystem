@@ -2,24 +2,24 @@
 #include "tmc/BoardAssignment.h"
 #include "tmc/ic/TMC4361/TMC4361.h"
 
-static uint32 right(uint8 motor, int32 velocity);
-static uint32 left(uint8 motor, int32 velocity);
-static uint32 rotate(uint8 motor, int32 velocity);
-static uint32 stop(uint8 motor);
-static uint32 moveTo(uint8 motor, int32 position);
-static uint32 moveBy(uint8 motor, int32 *ticks);
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static void readRegister(u8 motor, uint8 address, int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
 
-static void periodicJob(uint32 tick);
-static void checkErrors(uint32 tick);
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
-static uint8 reset();
-static uint8 restore();
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+static uint8_t reset();
+static uint8_t restore();
 
 typedef struct
 {
@@ -39,11 +39,11 @@ static PinsTypeDef Pins;
 static SPIChannelTypeDef *TMC4361_SPIChannel;
 static TMC4361TypeDef TMC4361;
 
-static uint32 vmax_position = 0;
+static uint32_t vmax_position = 0;
 
 // Translate motor number to TMC4361TypeDef
 // When using multiple ICs you can map them here
-static inline TMC4361TypeDef *motorToIC(uint8 motor)
+static inline TMC4361TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
 
@@ -52,7 +52,7 @@ static inline TMC4361TypeDef *motorToIC(uint8 motor)
 
 // Translate channel number to SPI channel
 // When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
+static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 {
 	UNUSED(channel);
 
@@ -60,7 +60,7 @@ static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
 }
 
 // => SPI Wrapper
-void tmc4361_readWriteArray(uint8 channel, uint8 *data, size_t length)
+void tmc4361_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 {
 	channelToSPI(channel)->readWriteArray(data, length);
 }
@@ -69,19 +69,19 @@ void tmc4361_readWriteArray(uint8 channel, uint8 *data, size_t length)
 // Route the generic cover function to the TMC4361 function
 // This also provides the TMC4361TypeDef, which the generic
 // cover function doesn't know.
-static void tmc4361_fullCover(uint8 *data, size_t length)
+static void tmc4361_fullCover(uint8_t *data, size_t length)
 {
 	tmc4361_readWriteCover(&TMC4361, data, length);
 }
 
 // The cover function emulates the SPI readWrite function
-static uint8 tmc4361_cover(uint8 data, uint8 lastTransfer)
+static uint8_t tmc4361_cover(uint8_t data, uint8_t lastTransfer)
 {
 	static uint64_t coverIn = 0;     // read from squirrel
 	static uint64_t coverOut = 0;    // write to squirrel
-	static uint8 coverLength = 0;  // data to be written
+	static uint8_t coverLength = 0;  // data to be written
 
-	uint8 out = 0; // return value of this function
+	uint8_t out = 0; // return value of this function
 
 	// buffer outgoing data
 	coverOut <<= 8;    // shift left by one byte to make room for the next byte
@@ -127,7 +127,7 @@ static uint8 tmc4361_cover(uint8 data, uint8 lastTransfer)
 }
 
 // => Functions forwarded to API
-static uint32 rotate(u8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	UNUSED(motor);
 	tmc4361_rotate(motorToIC(motor), velocity);
@@ -135,35 +135,35 @@ static uint32 rotate(u8 motor, int32 velocity)
 	return 0;
 }
 
-static uint32 right(u8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	rotate(motor, velocity);
 
 	return 0;
 }
 
-static uint32 left(u8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	rotate(motor, -velocity);
 
 	return 0;
 }
 
-static uint32 stop(u8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	rotate(motor, 0);
 
 	return 0;
 }
 
-static uint32 moveTo(u8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	tmc4361_moveTo(motorToIC(motor), position, vmax_position);
 
 	return 0;
 }
 
-static uint32 moveBy(u8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	tmc4361_moveBy(motorToIC(motor), ticks, vmax_position);
 
@@ -171,10 +171,10 @@ static uint32 moveBy(u8 motor, int32 *ticks)
 }
 // <= Functions forwarded to API
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
-	uint32 uvalue;
+	uint32_t errors = TMC_ERROR_NONE;
+	uint32_t uvalue;
 
 	if(motor >= TMC4361_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -662,20 +662,20 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	// Notify driver shadows about register changes made via cover
-	static int32 high;
+	static int32_t high;
 	switch(address) {
 	case TMC4361_COVER_HIGH_WR:
 		high = value;
@@ -687,25 +687,25 @@ static void writeRegister(u8 motor, uint8 address, int32 value)
 	tmc4361_writeInt(motorToIC(motor), address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	*value	= tmc4361_readInt(motorToIC(motor), address);
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	tmc4361_periodicJob(&TMC4361, tick);
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 errors = 0;
+	uint32_t errors = 0;
 
 	switch(type)
 	{
@@ -802,7 +802,7 @@ static void deInit(void)
 	HAL.SPI->ch2.reset();
 }
 
-static uint8 reset()
+static uint8_t reset()
 {
 	// Pulse the low-active hardware reset pin
 	HAL.IOs->config->setLow(Pins.NRST);
@@ -814,7 +814,7 @@ static uint8 reset()
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	// Pulse the low-active hardware reset pin
 	HAL.IOs->config->setLow(Pins.NRST);
@@ -828,8 +828,8 @@ static uint8 restore()
 
 static void configCallback(TMC4361TypeDef *tmc4361, ConfigState state)
 {
-	uint8 driver, dataLength;
-	uint32 value;
+	uint8_t driver, dataLength;
+	uint32_t value;
 
 	// Setup SPI
 	switch(Evalboards.ch2.id)

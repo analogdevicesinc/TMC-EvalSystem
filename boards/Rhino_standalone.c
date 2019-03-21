@@ -3,14 +3,14 @@
 #include "Board.h"
 #include "tmc/ic/TMC5130/TMC5130_Register.h"
 
-static uint32 getInt();
+static uint32_t getInt();
 static void set();
 static void reset();
 static void setConfig(TMCRhinoTypeStandAloneConfigDef *config);
 static void getConfig(TMCRhinoTypeStandAloneConfigDef *config);
 static void setPins(IO_States *CFG);
 static void getPins(IO_States *CFG);
-static void setInt(uint32 state);
+static void setInt(uint32_t state);
 
 static IOPinTypeDef IODummy = { .bitWeight = DUMMY_BITWEIGHT };
 static IOPinTypeDef *CFGPins[] = { &IODummy, &IODummy, &IODummy, &IODummy, &IODummy, &IODummy, &IODummy};
@@ -73,9 +73,9 @@ static void reset()
 	setInt(TMCRhinoSA.resetSettings);
 }
 
-static void setInt(uint32 state)
+static void setInt(uint32_t state)
 {
-	for(uint8 i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < 7; i++)
 	{
 		settings[i] = state & 0x03;
 		state >>= 2;
@@ -83,11 +83,11 @@ static void setInt(uint32 state)
 	set();
 }
 
-static uint32 getInt()
+static uint32_t getInt()
 {
-	uint32 state = 0;
+	uint32_t state = 0;
 
-	for(uint8 i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < 7; i++)
 	{
 		state |= (settings[i] & 0x03) << (i<<1);
 	}
@@ -97,14 +97,14 @@ static uint32 getInt()
 
 static void setPins(IO_States *CFG)
 {
-	for(uint8 i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < 7; i++)
 		settings[i] = CFG[i] & 0x03;
 	set();
 }
 
 static void getPins(IO_States *CFG)
 {
-	for(uint8 i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < 7; i++)
 		CFG[i] = settings[i] & 0x03;
 }
 
@@ -133,7 +133,7 @@ static void getConfig(TMCRhinoTypeStandAloneConfigDef *config)
 
 static void set()
 {
-	for(uint8 i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < 7; i++)
 		HAL.IOs->config->setToState(TMCRhinoSA.CFGPins[i], settings[i] & 0x03);
 }
 

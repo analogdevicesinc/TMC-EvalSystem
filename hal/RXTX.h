@@ -15,20 +15,20 @@ typedef struct
 {
 	void (*init)();
 	void (*deInit)(void);
-	void (*tx)(uint8 ch);
-	uint8 (*rx)(uint8 *ch);
-	void (*txN)(uint8 *ch, unsigned char number);
-	uint8 (*rxN)(uint8 *ch, unsigned char number);
+	void (*tx)(uint8_t ch);
+	uint8_t (*rx)(uint8_t *ch);
+	void (*txN)(uint8_t *ch, unsigned char number);
+	uint8_t (*rxN)(uint8_t *ch, unsigned char number);
 	void (*clearBuffers)(void);
-	uint32 (*bytesAvailable)(void);
-	uint32 baudRate;
+	uint32_t (*bytesAvailable)(void);
+	uint32_t baudRate;
 } RXTXTypeDef;
 
 typedef struct
 {
 	unsigned int read;
 	unsigned int wrote;
-	volatile uint8 *buffer;
+	volatile uint8_t *buffer;
 } BufferingTypeDef;
 
 typedef struct

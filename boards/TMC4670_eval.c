@@ -10,19 +10,19 @@ static SPIChannelTypeDef *TMC4670_SPIChannel;
 
 typedef struct
 {
-	u32  startVoltage;
-	u16  initWaitTime;
-	u16  actualInitWaitTime;
-	u8   initState;
-	u8   initMode;
-	u16  torqueMeasurementFactor; // u8.u8
-	u8   motionMode;
+	uint32_t  startVoltage;
+	uint16_t  initWaitTime;
+	uint16_t  actualInitWaitTime;
+	uint8_t   initState;
+	uint8_t   initMode;
+	uint16_t  torqueMeasurementFactor; // u8.u8
+	uint8_t   motionMode;
 } TMinimalMotorConfig;
 
 TMinimalMotorConfig motorConfig[TMC4670_MOTORS];
 
 // => SPI wrapper
-u8 tmc4670_readwriteByte(u8 motor, u8 data, u8 lastTransfer)
+uint8_t tmc4670_readwriteByte(uint8_t motor, uint8_t data, uint8_t lastTransfer)
 {
 	if (motor == DEFAULT_MOTOR)
 		return TMC4670_SPIChannel->readWrite(data, lastTransfer);
@@ -31,7 +31,7 @@ u8 tmc4670_readwriteByte(u8 motor, u8 data, u8 lastTransfer)
 }
 // <= SPI wrapper
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= TMC4670_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -41,22 +41,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= TMC4670_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -66,7 +66,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	if(motor >= TMC4670_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -76,9 +76,9 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= TMC4670_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -88,7 +88,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 4:
 		// Maximum speed
 		if(readWrite == READ)
-			*value = (u32)tmc4670_readInt(motor, TMC4670_PID_VELOCITY_LIMIT);
+			*value = (uint32_t)tmc4670_readInt(motor, TMC4670_PID_VELOCITY_LIMIT);
 		else if(readWrite == WRITE)
 			tmc4670_writeInt(motor, TMC4670_PID_VELOCITY_LIMIT, *value);
 		break;
@@ -96,14 +96,14 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 50:
 		// ADC_I1_OFFSET
 		if(readWrite == READ)
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I1_SCALE_OFFSET, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I1_SCALE_OFFSET, BIT_0_TO_15);
 		else if(readWrite == WRITE)
 			tmc4670_writeRegister16BitValue(motor, TMC4670_ADC_I1_SCALE_OFFSET, BIT_0_TO_15, *value);
 		break;
 	case 51:
 		// ADC_I0_OFFSET
 		if(readWrite == READ)
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I0_SCALE_OFFSET, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I0_SCALE_OFFSET, BIT_0_TO_15);
 		else if(readWrite == WRITE)
 			tmc4670_writeRegister16BitValue(motor, TMC4670_ADC_I0_SCALE_OFFSET, BIT_0_TO_15, *value);
 		break;
@@ -111,14 +111,14 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 53:
 		// ADC_I1_SCALE
 		if(readWrite == READ)
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I1_SCALE_OFFSET, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I1_SCALE_OFFSET, BIT_16_TO_31);
 		else if(readWrite == WRITE)
 			tmc4670_writeRegister16BitValue(motor, TMC4670_ADC_I1_SCALE_OFFSET, BIT_16_TO_31, *value);
 		break;
 	case 54:
 		// ADC_I0_SCALE
 		if(readWrite == READ)
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I0_SCALE_OFFSET, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I0_SCALE_OFFSET, BIT_16_TO_31);
 		else if(readWrite == WRITE)
 			tmc4670_writeRegister16BitValue(motor, TMC4670_ADC_I0_SCALE_OFFSET, BIT_16_TO_31, *value);
 		break;
@@ -126,7 +126,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_I_U_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 1);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -135,7 +135,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_I_V_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 1);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -145,7 +145,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_I_B_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 2);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -154,7 +154,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_I_UX_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 0);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -163,7 +163,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_I_WY_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 0);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -172,7 +172,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_VM_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 3);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -181,7 +181,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_T_MOSFETS_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 4);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -190,7 +190,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_T_MOTOR_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 4);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -199,7 +199,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_U_UX_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 5);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -208,7 +208,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_U_WY_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 5);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -217,7 +217,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_U_V_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 6);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -226,7 +226,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// AENC_UX_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 7);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -235,7 +235,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// AENC_WY_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 7);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -244,7 +244,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// AENC_V_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 8);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -253,7 +253,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// AENC_N_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 8);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -262,7 +262,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ANALOG_GPI_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 9);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -270,7 +270,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 116:
 		// ADC_I0_scaled
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_IWY_IUX, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_IWY_IUX, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -278,7 +278,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 117:
 		// ADC_I2_scaled
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_IWY_IUX, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_IWY_IUX, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -286,7 +286,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 118:
 		// ADC_I1_scaled
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_IV, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_IV, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -294,7 +294,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 120:
 		// AENC_UX
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_WY_UX, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_WY_UX, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -302,7 +302,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 121:
 		// AENC_WY
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_WY_UX, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_WY_UX, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -310,7 +310,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 122:
 		// AENC_VN
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_N_VN, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_N_VN, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -318,7 +318,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 123:
 		// AENC_N
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_N_VN, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_N_VN, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -327,7 +327,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADCSD_I0_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 10);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -336,7 +336,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADCSD_I1_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 10);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -345,7 +345,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADCSD_I_B_RAW
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_ADC_RAW_ADDR, 11);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_RAW_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -353,7 +353,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 127:
 		// ADC_I0_EXT
 		if(readWrite == READ) {
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I1_I0_EXT, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I1_I0_EXT, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -361,7 +361,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 128:
 		// ADC_I1_EXT
 		if(readWrite == READ) {
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I1_I0_EXT, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ADC_I1_I0_EXT, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -369,7 +369,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 132:
 		// AENC_DECODER_COUNT
 		if(readWrite == READ) {
-			*value = (s32) tmc4670_readInt(motor, TMC4670_AENC_DECODER_COUNT);
+			*value = (int32_t) tmc4670_readInt(motor, TMC4670_AENC_DECODER_COUNT);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -377,7 +377,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 133:
 		// AENC_DECODER_COUNT_N
 		if(readWrite == READ) {
-			*value = (s32) tmc4670_readInt(motor, TMC4670_AENC_DECODER_COUNT_N);
+			*value = (int32_t) tmc4670_readInt(motor, TMC4670_AENC_DECODER_COUNT_N);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -385,7 +385,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 134:
 		// AENC_DECODER_PHI_E
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_DECODER_PHI_E_PHI_M, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_DECODER_PHI_E_PHI_M, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -393,7 +393,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 135:
 		// AENC_DECODER_PHI_M
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_DECODER_PHI_E_PHI_M, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_DECODER_PHI_E_PHI_M, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -401,7 +401,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 136:
 		// AENC_DECODER_POSITION
 		if(readWrite == READ) {
-			*value = (s32) tmc4670_readInt(motor, TMC4670_AENC_DECODER_POSITION);
+			*value = (int32_t) tmc4670_readInt(motor, TMC4670_AENC_DECODER_POSITION);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -409,7 +409,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 140:
 		// OPENLOOP_VELOCITY_TARGET
 		if(readWrite == READ) {
-			*value = (s32) tmc4670_readInt(motor, TMC4670_OPENLOOP_VELOCITY_TARGET);
+			*value = (int32_t) tmc4670_readInt(motor, TMC4670_OPENLOOP_VELOCITY_TARGET);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -417,7 +417,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 141:
 		// OPENLOOP_VELOCITY_ACTUAL
 		if(readWrite == READ) {
-			*value = (s32) tmc4670_readInt(motor, TMC4670_OPENLOOP_VELOCITY_ACTUAL);
+			*value = (int32_t) tmc4670_readInt(motor, TMC4670_OPENLOOP_VELOCITY_ACTUAL);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -425,7 +425,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 142:
 		// OPENLOOP_PHI
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_OPENLOOP_PHI, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_OPENLOOP_PHI, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -449,7 +449,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 152:
 		// ABN_DECODER_PHI_E
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ABN_DECODER_PHI_E_PHI_M, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ABN_DECODER_PHI_E_PHI_M, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -457,7 +457,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 153:
 		// ABN_DECODER_PHI_M
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_ABN_DECODER_PHI_E_PHI_M, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_ABN_DECODER_PHI_E_PHI_M, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -465,7 +465,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 160:
 		// HALL_PHI_E
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_HALL_PHI_E_INTERPOLATED_PHI_E, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_HALL_PHI_E_INTERPOLATED_PHI_E, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -473,7 +473,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 161:
 		// HALL_PHI_E_INTERPOLATED
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_HALL_PHI_E_INTERPOLATED_PHI_E, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_HALL_PHI_E_INTERPOLATED_PHI_E, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -481,7 +481,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 162:
 		// AENC_DECODER_PHI_A_RAW
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_DECODER_PHI_A_RAW, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_DECODER_PHI_A_RAW, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -489,7 +489,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 163:
 		// AENC_DECODER_PHI_A
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_DECODER_PHI_A, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_AENC_DECODER_PHI_A, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -497,7 +497,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 164:
 		// HALL_PHI_M
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_HALL_PHI_M, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_HALL_PHI_M, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -505,7 +505,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 170:
 		// PHI_E
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_PHI_E, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_PHI_E, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -513,21 +513,21 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 171:
 		// PID_TORQUE_TARGET
 		if(readWrite == READ)
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_TARGET, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_TARGET, BIT_16_TO_31);
 		else if(readWrite == WRITE)
 			tmc4670_writeRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_TARGET, BIT_16_TO_31, *value);
 		break;
 	case 172:
 		// PID_FLUX_TARGET
 		if(readWrite == READ)
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_TARGET, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_TARGET, BIT_0_TO_15);
 		else if(readWrite == WRITE)
 			tmc4670_writeRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_TARGET, BIT_0_TO_15, *value);
 		break;
 	case 173:
 		// PID_VELOCITY_TARGET
 		if(readWrite == READ) {
-			*value = (s32) tmc4670_readInt(motor, TMC4670_PID_VELOCITY_TARGET);
+			*value = (int32_t) tmc4670_readInt(motor, TMC4670_PID_VELOCITY_TARGET);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -535,7 +535,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 174:
 		// PID_POSITION_TARGET
 		if(readWrite == READ) {
-			*value = (s32) tmc4670_readInt(motor, TMC4670_PID_POSITION_TARGET);
+			*value = (int32_t) tmc4670_readInt(motor, TMC4670_PID_POSITION_TARGET);
 		} else if(readWrite == WRITE) {
 			tmc4670_setAbsolutTargetPosition(motor, *value);
 		}
@@ -543,7 +543,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 175:
 		// PID_TORQUE_ACTUAL
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_ACTUAL, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_ACTUAL, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -559,7 +559,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 177:
 		// PID_FLUX_ACTUAL
 		if(readWrite == READ) {
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_ACTUAL, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_PID_TORQUE_FLUX_ACTUAL, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -733,7 +733,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_IUX
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 8);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -742,7 +742,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_IWY
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 8);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -751,7 +751,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_IV
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 9);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -760,7 +760,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_IA
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 10);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -769,7 +769,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_IB
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 10);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -778,7 +778,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_ID
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 11);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -787,7 +787,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_IQ
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 11);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -796,7 +796,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UD
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 12);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -805,7 +805,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UQ
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 12);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -814,7 +814,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UD_LIMITED
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 13);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -823,7 +823,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UQ_LIMITED
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 13);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -832,7 +832,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UA
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 14);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -841,7 +841,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UB
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 14);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -850,7 +850,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UUX
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 15);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -859,7 +859,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UWY
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 15);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -868,7 +868,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// FOC_UV
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 16);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -877,7 +877,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// PWM_UX
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 17);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -886,7 +886,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// PWM_WY
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 17);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -895,7 +895,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// PWM_UV
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 18);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -904,7 +904,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_I_0
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 19);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -913,7 +913,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// ADC_I_1
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 19);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -922,7 +922,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_0
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 192);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -931,7 +931,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_1
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 192);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -940,7 +940,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_2
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 193);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -949,7 +949,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_3
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 193);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -958,7 +958,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_4
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 194);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -967,7 +967,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_5
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 194);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -976,7 +976,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_6
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 195);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -985,7 +985,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_7
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 195);
-			*value = (s16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (int16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -994,7 +994,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_8
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 196);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1003,7 +1003,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_9
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 196);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1012,7 +1012,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_10
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 197);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1021,7 +1021,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_11
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 197);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1030,7 +1030,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_12
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 198);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1039,7 +1039,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_13
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 198);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1048,7 +1048,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_14
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 199);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1057,7 +1057,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_15
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 199);
-			*value = (u16) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
+			*value = (uint16_t) tmc4670_readRegister16BitValue(motor, TMC4670_INTERIM_DATA, BIT_16_TO_31);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1066,7 +1066,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_16
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 200);
-			*value =  (s32)tmc4670_readInt(motor, TMC4670_INTERIM_DATA);
+			*value =  (int32_t)tmc4670_readInt(motor, TMC4670_INTERIM_DATA);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1075,7 +1075,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_17
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 201);
-			*value =  (s32)tmc4670_readInt(motor, TMC4670_INTERIM_DATA);
+			*value =  (int32_t)tmc4670_readInt(motor, TMC4670_INTERIM_DATA);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1084,7 +1084,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_18
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 202);
-			*value =  (s32) tmc4670_readInt(motor, TMC4670_INTERIM_DATA);
+			*value =  (int32_t) tmc4670_readInt(motor, TMC4670_INTERIM_DATA);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1093,7 +1093,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		// DEBUG_VALUE_19
 		if(readWrite == READ) {
 			tmc4670_writeInt(motor, TMC4670_INTERIM_ADDR, 203);
-			*value =  (s32) tmc4670_readInt(motor, TMC4670_INTERIM_DATA);
+			*value =  (int32_t) tmc4670_readInt(motor, TMC4670_INTERIM_DATA);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1137,7 +1137,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= TMC4670_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -1147,7 +1147,7 @@ static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
 	return TMC_ERROR_NONE;
 }
 
-static void periodicJob(uint32 actualSystick)
+static void periodicJob(uint32_t actualSystick)
 {
 	// do encoder initialization if necessary
 	int motor;
@@ -1159,29 +1159,29 @@ static void periodicJob(uint32 actualSystick)
 	}
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	tmc4670_writeInt(DEFAULT_MOTOR, address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	*value = tmc4670_readInt(DEFAULT_MOTOR, address);
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(type);
 	UNUSED(motor);
@@ -1206,17 +1206,17 @@ static void deInit(void)
 	HAL.IOs->config->setLow(PIN_DRV_ENN);
 };
 
-static uint8 reset()
+static uint8_t reset()
 {
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return 1;
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;

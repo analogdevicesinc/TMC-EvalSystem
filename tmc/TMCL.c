@@ -158,15 +158,15 @@ extern const char *VersionString;
 // TMCL request
 typedef struct
 {
-	uint8   Opcode;
-	uint8   Type;
-	uint8   Motor;
-	uint32  Error;
+	uint8_t   Opcode;
+	uint8_t   Type;
+	uint8_t   Motor;
+	uint32_t  Error;
 	union
 	{
-		uint8 Byte[4];
-		uint32 UInt32;
-		int32 Int32;
+		uint8_t Byte[4];
+		uint32_t UInt32;
+		int32_t Int32;
 		float32_t Float32;
 	} Value;
 } TMCLCommandTypeDef;
@@ -174,22 +174,22 @@ typedef struct
 // TMCL reply
 typedef struct
 {
-	uint8 Status;
-	uint8 Opcode;
+	uint8_t Status;
+	uint8_t Opcode;
 	union
 	{
-		uint8 Byte[4];
-		uint32 UInt32;
-		int32 Int32;
+		uint8_t Byte[4];
+		uint32_t UInt32;
+		int32_t Int32;
 		float32_t Float32;
 	} Value;
 
-	uint8 Special[9];
-	uint8 IsSpecial;  // next transfer will not use the serial address and the checksum bytes - instead the whole datagram is filled with data (used to transmit ASCII version string)
+	uint8_t Special[9];
+	uint8_t IsSpecial;  // next transfer will not use the serial address and the checksum bytes - instead the whole datagram is filled with data (used to transmit ASCII version string)
 } TMCLReplyTypeDef;
 
 void ExecuteActualCommand();
-uint8 setTMCLStatus(uint8 evalError);
+uint8_t setTMCLStatus(uint8_t evalError);
 void rx(RXTXTypeDef *RXTX);
 void tx(RXTXTypeDef *RXTX);
 
@@ -213,15 +213,15 @@ static void HandleWlanCommand(void);
 TMCLCommandTypeDef ActualCommand;
 TMCLReplyTypeDef ActualReply;
 RXTXTypeDef interfaces[4];
-uint32 numberOfInterfaces;
-uint32 resetRequest = 0;
+uint32_t numberOfInterfaces;
+uint32_t resetRequest = 0;
 
 #if defined(Landungsbruecke)
-extern uint32 BLMagic;
+extern uint32_t BLMagic;
 #endif
 
 // Sets TMCL status from Evalboard error. Returns the parameter given to allow for compact error handling
-uint8 setTMCLStatus(uint8 evalError)
+uint8_t setTMCLStatus(uint8_t evalError)
 {
 	if(evalError == TMC_ERROR_NONE)          ActualReply.Status = REPLY_OK;
 	else if(evalError & TMC_ERROR_FUNCTION)  ActualReply.Status = REPLY_INVALID_CMD;
@@ -444,7 +444,7 @@ void tmcl_process()
 
 	ActualReply.IsSpecial = 0;
 
-	for(uint32 i = 0; i < numberOfInterfaces; i++)
+	for(uint32_t i = 0; i < numberOfInterfaces; i++)
 	{
 		rx(&interfaces[i]);
 		if(ActualCommand.Error != TMCL_RX_ERROR_NODATA)
@@ -458,9 +458,9 @@ void tmcl_process()
 
 void tx(RXTXTypeDef *RXTX)
 {
-	uint8 checkSum = 0;
+	uint8_t checkSum = 0;
 
-	uint8 reply[9];
+	uint8_t reply[9];
 
 	if(ActualReply.IsSpecial)
 	{
@@ -494,8 +494,8 @@ void tx(RXTXTypeDef *RXTX)
 
 void rx(RXTXTypeDef *RXTX)
 {
-	uint8 checkSum = 0;
-	uint8 cmd[9];
+	uint8_t checkSum = 0;
+	uint8_t cmd[9];
 
 	if(!RXTX->rxN(cmd, 9))
 	{
@@ -587,7 +587,7 @@ static void readIdEeprom(void)
 		return;
 	}
 
-	uint8 array[4];
+	uint8_t array[4];
 	eeprom_read_array(spi, ActualCommand.Value.Int32, array, 4);
 	ActualReply.Value.Int32 = array[3] << 24 | array[2] << 16 | array[1] << 8 | array[0];
 }
@@ -617,7 +617,7 @@ static void writeIdEeprom(void)
 		return;
 	}
 
-	uint8 out = eeprom_check(spi);
+	uint8_t out = eeprom_check(spi);
 	// ignore when check did not find magic number, quit on other errors
 	if(out != ID_CHECKERROR_MAGICNUMBER && out != 0)
 	{
@@ -695,7 +695,7 @@ static void GetGlobalParameter()
 
 static void boardAssignment(void)
 {
-	uint8 testOnly = 0;
+	uint8_t testOnly = 0;
 
 	IdAssignmentTypeDef ids;
 	ids.ch1.id     = (ActualCommand.Value.Int32 >> 0)   & 0xFF;
@@ -818,7 +818,7 @@ static void checkIDs(void)
 
 	if(IDDetection_detect(&ids))
 	{
-		ActualReply.Value.Int32	= (uint32)
+		ActualReply.Value.Int32	= (uint32_t)
 		(
 			(ids.ch1.id)
 			| (ids.ch1.state << 8)
@@ -852,27 +852,27 @@ static void GetVersion(void)
 	}
 	else if(ActualCommand.Type == VERSION_FORMAT_BINARY)
 	{
-		uint8 tmpVal;
+		uint8_t tmpVal;
 
 		// module version high
-		tmpVal = (uint8) VersionString[0] - '0';	// Ascii digit - '0' = digit value
+		tmpVal = (uint8_t) VersionString[0] - '0';	// Ascii digit - '0' = digit value
 		tmpVal *= 10;
-		tmpVal += (uint8) VersionString[1] - '0';
+		tmpVal += (uint8_t) VersionString[1] - '0';
 		ActualReply.Value.Byte[3] = tmpVal;
 
 		// module version low
-		tmpVal = (uint8) VersionString[2] - '0';
+		tmpVal = (uint8_t) VersionString[2] - '0';
 		tmpVal *= 10;
-		tmpVal += (uint8) VersionString[3] - '0';
+		tmpVal += (uint8_t) VersionString[3] - '0';
 		ActualReply.Value.Byte[2] = tmpVal;
 
 		// fw version high
-		ActualReply.Value.Byte[1] = (uint8) VersionString[5] - '0';
+		ActualReply.Value.Byte[1] = (uint8_t) VersionString[5] - '0';
 
 		// fw version low
-		tmpVal = (uint8) VersionString[6] - '0';
+		tmpVal = (uint8_t) VersionString[6] - '0';
 		tmpVal *= 10;
-		tmpVal += (uint8) VersionString[7] - '0';
+		tmpVal += (uint8_t) VersionString[7] - '0';
 		ActualReply.Value.Byte[0] = tmpVal;
 	}
 	//how were the boards detected?	// todo CHECK 2: Doesn't fit into GetVersion. Move somewhere else? Or maybe change GetVersion to GetBoardInfo or something (LH)

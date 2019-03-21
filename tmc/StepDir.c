@@ -91,12 +91,12 @@
  *   Max Velocity: 2^17 pps = 131072 pps
  *
  * Each tick the acceleration value gets added to the velocity accumulator
- * variable (uint32). The upper 15 digits are added to the velocity, the lower
+ * variable (uint32_t). The upper 15 digits are added to the velocity, the lower
  * 17 digits are kept in the accumulator between ticks. The maximum
  * acceleration will result in the upper 15 digits being 1 each tick, increasing
  * the velocity by 32767 (0x7FFF) per tick. The accumulator digits stay unchanged,
  * otherwise the overflow of the lower 17 accumulator digits into the upper 15
- * digits would cause the uint32 to overflow, loosing an acceleration tick.
+ * digits would cause the uint32_t to overflow, loosing an acceleration tick.
  * In other words: The upper 15 digits are 1, the lower 17 digits are 0:
  *   Max Acceleration: 0xFFFE0000 = 4294836224 pps^2
  *
@@ -146,7 +146,7 @@ void TIMER_INTERRUPT()
 	FTM1_SC &= ~FTM_SC_TOF_MASK; // clear timer overflow flag
 #endif
 
-	for(uint8 ch = 0; ch < STEP_DIR_CHANNELS; ch++)
+	for(uint8_t ch = 0; ch < STEP_DIR_CHANNELS; ch++)
 	{
 		// Temporary variable for the current channel
 		StepDirectionTypedef *currCh = &StepDir[ch];
@@ -194,7 +194,7 @@ skipStep:
 	}
 }
 
-void StepDir_rotate(uint8 channel, int velocity)
+void StepDir_rotate(uint8_t channel, int velocity)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -212,7 +212,7 @@ void StepDir_rotate(uint8 channel, int velocity)
 	}
 }
 
-void StepDir_moveTo(uint8 channel, int position)
+void StepDir_moveTo(uint8_t channel, int position)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -221,7 +221,7 @@ void StepDir_moveTo(uint8 channel, int position)
 	tmc_ramp_linear_set_targetPosition(&StepDir[channel].ramp, position);
 }
 
-void StepDir_periodicJob(uint8 channel)
+void StepDir_periodicJob(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -230,7 +230,7 @@ void StepDir_periodicJob(uint8 channel)
 		StepDir_stallGuard(channel, HAL.IOs->config->isHigh(StepDir[channel].stallGuardPin));
 }
 
-void StepDir_stop(uint8 channel, StepDirStop stopType)
+void StepDir_stop(uint8_t channel, StepDirStop stopType)
 {
 	switch(stopType)
 	{
@@ -251,12 +251,12 @@ void StepDir_stop(uint8 channel, StepDirStop stopType)
 	}
 }
 
-uint8 StepDir_getStatus(uint8 channel)
+uint8_t StepDir_getStatus(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
 
-	uint8 status = StepDir[channel].haltingCondition;
+	uint8_t status = StepDir[channel].haltingCondition;
 
 	status |= (StepDir[channel].targetReached) ? STATUS_TARGET_REACHED : 0;
 	status |= (StepDir[channel].stallGuardActive) ? STATUS_STALLGUARD_ACTIVE : 0;
@@ -266,7 +266,7 @@ uint8 StepDir_getStatus(uint8 channel)
 }
 
 // Register the pins to be used by a StepDir channel. NULL will leave the pin unchanged
-void StepDir_setPins(uint8 channel, IOPinTypeDef *stepPin, IOPinTypeDef *dirPin, IOPinTypeDef *stallPin)
+void StepDir_setPins(uint8_t channel, IOPinTypeDef *stepPin, IOPinTypeDef *dirPin, IOPinTypeDef *stallPin)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -293,7 +293,7 @@ void StepDir_setPins(uint8 channel, IOPinTypeDef *stepPin, IOPinTypeDef *dirPin,
 		StepDir[channel].stallGuardPin = stallPin;
 }
 
-void StepDir_stallGuard(uint8 channel, bool sg)
+void StepDir_stallGuard(uint8_t channel, bool sg)
 {
 	static bool sg_old = false;
 
@@ -314,7 +314,7 @@ void StepDir_stallGuard(uint8 channel, bool sg)
 // The setters are responsible to access their respective variables while keeping the ramp generation stable
 
 // Set actual and target position (Not during an active position ramp)
-void StepDir_setActualPosition(uint8 channel, int actualPosition)
+void StepDir_setActualPosition(uint8_t channel, int actualPosition)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -330,7 +330,7 @@ void StepDir_setActualPosition(uint8 channel, int actualPosition)
 
 		// todo CHECK 2: Use a haltingCondition to prevent movement instead of VMAX? (LH)
 		// Temporarity set VMAX to 0 to prevent movement between setting actualPosition and targetPosition
-//		uint32 tmp = StepDir[channel].velocityMax;
+//		uint32_t tmp = StepDir[channel].velocityMax;
 //		StepDir[channel].velocityMax = 0;
 
 		// Also update target position to prevent movement
@@ -347,7 +347,7 @@ void StepDir_setActualPosition(uint8 channel, int actualPosition)
 	}
 }
 
-void StepDir_setAcceleration(uint8 channel, uint32 acceleration)
+void StepDir_setAcceleration(uint8_t channel, uint32_t acceleration)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -365,7 +365,7 @@ void StepDir_setAcceleration(uint8 channel, uint32 acceleration)
 	tmc_ramp_linear_set_acceleration(&StepDir[channel].ramp, acceleration);
 
 	// Store the old acceleration
-	uint32 oldAcceleration = tmc_ramp_linear_get_acceleration(&StepDir[channel].ramp);
+	uint32_t oldAcceleration = tmc_ramp_linear_get_acceleration(&StepDir[channel].ramp);
 
 	// If the channel is not halted we need to synchronise with the interrupt
 	if(StepDir[channel].haltingCondition == 0)
@@ -384,7 +384,7 @@ void StepDir_setAcceleration(uint8 channel, uint32 acceleration)
 		StepDir[channel].oldVelocity = tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp);
 	}
 
-	int32 stepDifference = calculateStepDifference(StepDir[channel].oldVelocity, oldAcceleration, acceleration);
+	int32_t stepDifference = calculateStepDifference(StepDir[channel].oldVelocity, oldAcceleration, acceleration);
 
 	if(StepDir[channel].haltingCondition == 0)
 	{
@@ -400,7 +400,7 @@ void StepDir_setAcceleration(uint8 channel, uint32 acceleration)
 	}
 }
 
-void StepDir_setVelocityMax(uint8 channel, int velocityMax)
+void StepDir_setVelocityMax(uint8_t channel, int velocityMax)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -409,7 +409,7 @@ void StepDir_setVelocityMax(uint8 channel, int velocityMax)
 }
 
 // Set the velocity threshold for active StallGuard. Also reset the stall flag
-void StepDir_setStallGuardThreshold(uint8 channel, int stallGuardThreshold)
+void StepDir_setStallGuardThreshold(uint8_t channel, int stallGuardThreshold)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -418,7 +418,7 @@ void StepDir_setStallGuardThreshold(uint8 channel, int stallGuardThreshold)
 	StepDir[channel].haltingCondition &= ~STATUS_STALLED;
 }
 
-void StepDir_setMode(uint8 channel, StepDirMode mode)
+void StepDir_setMode(uint8_t channel, StepDirMode mode)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -429,7 +429,7 @@ void StepDir_setMode(uint8 channel, StepDirMode mode)
 		StepDir_setFrequency(channel, STEPDIR_FREQUENCY);
 }
 
-void StepDir_setFrequency(uint8 channel, uint32 frequency)
+void StepDir_setFrequency(uint8_t channel, uint32_t frequency)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
@@ -438,7 +438,7 @@ void StepDir_setFrequency(uint8 channel, uint32 frequency)
 }
 
 // ===== Getters =====
-int StepDir_getActualPosition(uint8 channel)
+int StepDir_getActualPosition(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -446,7 +446,7 @@ int StepDir_getActualPosition(uint8 channel)
 	return tmc_ramp_linear_get_rampPosition(&StepDir[channel].ramp);
 }
 
-int StepDir_getTargetPosition(uint8 channel)
+int StepDir_getTargetPosition(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -454,7 +454,7 @@ int StepDir_getTargetPosition(uint8 channel)
 	return tmc_ramp_linear_get_targetPosition(&StepDir[channel].ramp);
 }
 
-int StepDir_getActualVelocity(uint8 channel)
+int StepDir_getActualVelocity(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -462,7 +462,7 @@ int StepDir_getActualVelocity(uint8 channel)
 	return tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp);
 }
 
-int StepDir_getTargetVelocity(uint8 channel)
+int StepDir_getTargetVelocity(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -470,7 +470,7 @@ int StepDir_getTargetVelocity(uint8 channel)
 	return tmc_ramp_linear_get_targetVelocity(&StepDir[channel].ramp);
 }
 
-uint32 StepDir_getAcceleration(uint8 channel)
+uint32_t StepDir_getAcceleration(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -478,7 +478,7 @@ uint32 StepDir_getAcceleration(uint8 channel)
 	return tmc_ramp_linear_get_acceleration(&StepDir[channel].ramp);
 }
 
-int StepDir_getVelocityMax(uint8 channel)
+int StepDir_getVelocityMax(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -486,7 +486,7 @@ int StepDir_getVelocityMax(uint8 channel)
 	return tmc_ramp_linear_get_maxVelocity(&StepDir[channel].ramp);
 }
 
-int StepDir_getStallGuardThreshold(uint8 channel)
+int StepDir_getStallGuardThreshold(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -494,7 +494,7 @@ int StepDir_getStallGuardThreshold(uint8 channel)
 	return StepDir[channel].stallGuardThreshold;
 }
 
-StepDirMode StepDir_getMode(uint8 channel)
+StepDirMode StepDir_getMode(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -502,7 +502,7 @@ StepDirMode StepDir_getMode(uint8 channel)
 	return StepDir[channel].mode;
 }
 
-uint32 StepDir_getFrequency(uint8 channel)
+uint32_t StepDir_getFrequency(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -510,7 +510,7 @@ uint32 StepDir_getFrequency(uint8 channel)
 	return StepDir[channel].frequency;
 }
 
-int32 StepDir_getMaxAcceleration(uint8 channel)
+int32_t StepDir_getMaxAcceleration(uint8_t channel)
 {
 	if(channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -596,7 +596,7 @@ void StepDir_init()
 		FTM1_C0SC |= FTM_CnSC_MSB_MASK | FTM_CnSC_ELSB_MASK; //FTM_CnSC_CHIE_MASK //
 
 		// enable FTM1 Timer Overflow interrupt
-		FTM1_SC |= (uint32) (FTM_SC_TOIE_MASK);
+		FTM1_SC |= (uint32_t) (FTM_SC_TOIE_MASK);
 
 		// set FTM1 interrupt handler
 		enable_irq(INT_FTM1-16);

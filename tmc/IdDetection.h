@@ -14,7 +14,7 @@
 
 	void IDDetection_init(void);
 	void IDDetection_deInit(void);
-	uint8 IDDetection_detect(IdAssignmentTypeDef *out);
+	uint8_t IDDetection_detect(IdAssignmentTypeDef *out);
 	void IDDetection_initialScan(IdAssignmentTypeDef *ids);
 
 #endif /* ID_DETECTION_H */

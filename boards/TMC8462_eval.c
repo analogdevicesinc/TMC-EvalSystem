@@ -27,20 +27,20 @@ typedef enum {
 
 void TMC8462_init_ch1(void);
 void TMC8462_init_ch2(void);
-static void periodicJob(uint32 actualSystick);
-static void register_write(u8 motor, uint8 address, int32 value);
-static void register_read(u8 motor, uint8 address, int32 *value);
-static void memory_read(u8 motor, uint8 address, int32 *value);
-static void memory_write(u8 motor, uint8 address, int32 value);
+static void periodicJob(uint32_t actualSystick);
+static void register_write(uint8_t motor, uint8_t address, int32_t value);
+static void register_read(uint8_t motor, uint8_t address, int32_t *value);
+static void memory_read(uint8_t motor, uint8_t address, int32_t *value);
+static void memory_write(uint8_t motor, uint8_t address, int32_t value);
 static void pdi_reset(void);
-static u32 eep_read(s32 *value);
-static u32 eep_write(s32 value);
-static uint32 user_function(uint8 type, uint8 motor, int32 *value);
+static uint32_t eep_read(int32_t *value);
+static uint32_t eep_write(int32_t value);
+static uint32_t user_function(uint8_t type, uint8_t motor, int32_t *value);
 static void enableDriver(DriverState state);
 static void deInit(void);
-static uint8 reset();
-static uint8 restore();
-static void checkErrors(uint32 tick);
+static uint8_t reset();
+static uint8_t restore();
+static void checkErrors(uint32_t tick);
 
 IOPinTypeDef *PIN_DRV_ENN;
 TMC8462TypeDef tmc8462;
@@ -54,9 +54,9 @@ SPIChannelTypeDef *tmc8462_spi_mfc, *tmc8462_spi_esc;
  *
  * Here the first method is used.
  */
-u8 tmc8462_readWrite(u8 channel, u8 data, u8 lastTransfer)
+uint8_t tmc8462_readWrite(uint8_t channel, uint8_t data, uint8_t lastTransfer)
 {
-	u8 out = 0;
+	uint8_t out = 0;
 
 	switch(channel)
 	{
@@ -71,7 +71,7 @@ u8 tmc8462_readWrite(u8 channel, u8 data, u8 lastTransfer)
 	return out;
 }
 
-static void periodicJob(uint32 actualSystick)
+static void periodicJob(uint32_t actualSystick)
 {
 	UNUSED(actualSystick);
 }
@@ -82,9 +82,9 @@ static void periodicJob(uint32 actualSystick)
  * 32-bit access on: TMC8462_MFC_SPI_RX_DATA, TMC8462_MFC_SPI_TX_DATA, TMC8462_MFC_PWM4
  */
 
-static void register_write(u8 motor, uint8 address, int32 value)
+static void register_write(uint8_t motor, uint8_t address, int32_t value)
 {
-	static u8 write_buffer[8];
+	static uint8_t write_buffer[8];
 
 	address = TMC8462_MFC(address);
 
@@ -113,9 +113,9 @@ static void register_write(u8 motor, uint8 address, int32 value)
 	tmc8462_mfc_write_auto(&tmc8462, address, write_buffer);
 }
 
-static void register_read(u8 motor, uint8 address, int32 *value)
+static void register_read(uint8_t motor, uint8_t address, int32_t *value)
 {
-	static u8 readBuffer[8];
+	static uint8_t readBuffer[8];
 
 	address = TMC8462_MFC(address);
 
@@ -135,12 +135,12 @@ static void register_read(u8 motor, uint8 address, int32 *value)
 	}
 }
 
-static void memory_read(u8 motor, uint8 address, int32 *value)
+static void memory_read(uint8_t motor, uint8_t address, int32_t *value)
 {
 	*value = tmc8462_esc_read_16(&tmc8462, (motor << 8) | address);
 }
 
-static void memory_write(u8 motor, uint8 address, int32 value)
+static void memory_write(uint8_t motor, uint8_t address, int32_t value)
 {
 	tmc8462_esc_write_8(&tmc8462, (motor << 8) | address, BYTE(value, 0));
 }
@@ -152,7 +152,7 @@ static void pdi_reset(void)
 	tmc8462_esc_write_8(&tmc8462, TMC8462_ESC_RESET_PDI, TMC8462_MAGIC_RESET_2);
 }
 
-static u32 eep_read(s32 *value)
+static uint32_t eep_read(int32_t *value)
 {
 	// Check if PDI has EEPROM control offered
 	if (!TMC8462_FIELD_READ(&tmc8462, tmc8462_esc_read_8, TMC8462_ESC_EEP_CFG, TMC8462_ESC_EEP_PDI_MASK, TMC8462_ESC_EEP_PDI_SHIFT))
@@ -178,7 +178,7 @@ static u32 eep_read(s32 *value)
 	return TMC_ERROR_NONE;
 }
 
-static u32 eep_write(s32 value)
+static uint32_t eep_write(int32_t value)
 {
 	// Check if PDI has EEPROM control offered
 	if (!TMC8462_FIELD_READ(&tmc8462, tmc8462_esc_read_8, TMC8462_ESC_EEP_CFG, TMC8462_ESC_EEP_PDI_MASK, TMC8462_ESC_EEP_PDI_SHIFT))
@@ -203,11 +203,11 @@ static u32 eep_write(s32 value)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 user_function(uint8 type, uint8 motor, int32 *value)
+static uint32_t user_function(uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(motor);
 
-	u32 reply = TMC_ERROR_NONE;
+	uint32_t reply = TMC_ERROR_NONE;
 
 	switch(type)
 	{
@@ -238,17 +238,17 @@ static void deInit(void)
 
 }
 
-static uint8 reset()
+static uint8_t reset()
 {
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return 1;
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 

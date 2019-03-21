@@ -3,49 +3,41 @@
 static void deInit(void) {}
 
 // Evalboard channel function dummies
-static uint32 dummy_Motor(uint8 motor)
+static uint32_t dummy_Motor(uint8_t motor)
 {
 	UNUSED(motor);
 	return TMC_ERROR_FUNCTION;
 }
 
-static uint32 dummy_MotorValue(uint8 motor, int32 value)
+static uint32_t dummy_MotorValue(uint8_t motor, int32_t value)
 {
 	UNUSED(motor);
 	UNUSED(value);
 	return TMC_ERROR_FUNCTION;
 }
 
-static void dummy_AddressRef(u8 motor, uint8 address, int32 *value)
+static void dummy_AddressRef(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	UNUSED(address);
 	UNUSED(value);
 }
 
-static void dummy_AddressValue(u8 motor, uint8 address, int32 value)
+static void dummy_AddressValue(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	UNUSED(address);
 	UNUSED(value);
 }
 
-static uint32 dummy_MotorRef(uint8 motor, int32 *value)
+static uint32_t dummy_MotorRef(uint8_t motor, int32_t *value)
 {
 	UNUSED(motor);
 	UNUSED(value);
 	return TMC_ERROR_FUNCTION;
 }
 
-static uint32 dummy_TypeMotorValue(uint8 type, uint8 motor, int32 value)
-{
-	UNUSED(type);
-	UNUSED(motor);
-	UNUSED(value);
-	return TMC_ERROR_FUNCTION;
-}
-
-static uint32 dummy_TypeMotorRef(uint8 type, uint8 motor, int32 *value)
+static uint32_t dummy_TypeMotorValue(uint8_t type, uint8_t motor, int32_t value)
 {
 	UNUSED(type);
 	UNUSED(motor);
@@ -53,7 +45,7 @@ static uint32 dummy_TypeMotorRef(uint8 type, uint8 motor, int32 *value)
 	return TMC_ERROR_FUNCTION;
 }
 
-static uint32 dummy_getLimit(uint8 type, uint8 motor, int32 *value)
+static uint32_t dummy_TypeMotorRef(uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(type);
 	UNUSED(motor);
@@ -61,7 +53,15 @@ static uint32 dummy_getLimit(uint8 type, uint8 motor, int32 *value)
 	return TMC_ERROR_FUNCTION;
 }
 
-static uint8 delegationReturn(void)
+static uint32_t dummy_getLimit(uint8_t type, uint8_t motor, int32_t *value)
+{
+	UNUSED(type);
+	UNUSED(motor);
+	UNUSED(value);
+	return TMC_ERROR_FUNCTION;
+}
+
+static uint8_t delegationReturn(void)
 {
 	return 1;
 }
@@ -71,7 +71,7 @@ static void enableDriver(DriverState state)
 	UNUSED(state);
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	UNUSED(tick);
 }
@@ -105,7 +105,7 @@ void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel)
 	channel->getMax            = dummy_getLimit;
 }
 
-void periodicJobDummy(uint32 tick)
+void periodicJobDummy(uint32_t tick)
 {
 	UNUSED(tick);
 }

@@ -10,35 +10,35 @@
 
 #define DEFAULT_CHANNEL 0
 
-static u32 right(u8 motor, s32 velocity);
-static u32 left(u8 motor, s32 velocity);
-static u32 rotate(u8 motor, s32 velocity);
-static u32 stop(u8 motor);
-static u32 moveTo(u8 motor, s32 position);
-static u32 moveBy(u8 motor, s32 *ticks);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
-static void readRegister(u8 motor, uint8 address, int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
-static void periodicJob(uint32 tick);
-static void checkErrors	(uint32 tick);
+static void periodicJob(uint32_t tick);
+static void checkErrors	(uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
-static uint8 reset();
+static uint8_t reset();
 static void configCallback(TMC5072TypeDef *tmc5072, ConfigState state);
 static void enableDriver(DriverState state);
 
 static SPIChannelTypeDef *TMC5072_SPIChannel;
 static TMC5072TypeDef TMC5072;
-static uint32 vmax_position[TMC5072_MOTORS];
+static uint32_t vmax_position[TMC5072_MOTORS];
 
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here
-static inline TMC5072TypeDef *motorToIC(uint8 motor)
+static inline TMC5072TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
 
@@ -47,7 +47,7 @@ static inline TMC5072TypeDef *motorToIC(uint8 motor)
 
 // Translate channel number to SPI channel
 // When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
+static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 {
 	UNUSED(channel);
 
@@ -55,7 +55,7 @@ static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
 }
 
 // SPI Wrapper for API
-void tmc5072_readWriteArray(uint8 channel, uint8 *data, size_t length)
+void tmc5072_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 {
 	// Map the channel to the corresponding SPI channel
 	channelToSPI(channel)->readWriteArray(data, length);
@@ -76,42 +76,42 @@ typedef struct
 static PinsTypeDef Pins;
 
 // => Functions forwarded to API
-static u32 rotate(u8 motor, s32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	tmc5072_rotate(motorToIC(motor), motor, velocity);
 
 	return 0;
 }
 
-static u32 right(u8 motor, s32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	tmc5072_right(motorToIC(motor), motor, velocity);
 
 	return 0;
 }
 
-static u32 left(u8 motor, s32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	tmc5072_left(motorToIC(motor), motor, velocity);
 
 	return 0;
 }
 
-static u32 stop(u8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	tmc5072_stop(motorToIC(motor), motor);
 
 	return 0;
 }
 
-static u32 moveTo(u8 motor, s32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	tmc5072_moveTo(motorToIC(motor), motor, position, vmax_position[motor]);
 
 	return 0;
 }
 
-static u32 moveBy(u8 motor, s32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	tmc5072_moveBy(motorToIC(motor), motor, vmax_position[motor], ticks);
 
@@ -119,9 +119,9 @@ static u32 moveBy(u8 motor, s32 *ticks)
 }
 // <= Functions forwarded to API
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 	int tempValue;
 
 	if(motor >= TMC5072_MOTORS)
@@ -619,17 +619,17 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= TMC5072_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -639,19 +639,19 @@ static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	tmc5072_writeInt(motorToIC(motor), address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	*value = tmc5072_readInt(motorToIC(motor), address);
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	for(int motor = 0; motor < TMC5072_MOTORS; motor++)
 	{
@@ -659,15 +659,15 @@ static void periodicJob(uint32 tick)
 	}
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 errors = 0;
+	uint32_t errors = 0;
 
 	UNUSED(motor);
 
@@ -705,16 +705,16 @@ static void deInit(void)
 	HAL.IOs->config->reset(Pins.SWSEL);
 };
 
-static uint8 reset()
+static uint8_t reset()
 {
-	for(uint8 motor = 0; motor < TMC5072_MOTORS; motor++)
+	for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
 		if(tmc5072_readInt(motorToIC(motor), TMC5072_VACTUAL(motor)) != 0)
 			return 0;
 
 	return tmc5072_reset(&TMC5072);
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return tmc5072_restore(&TMC5072);
 }
@@ -734,7 +734,7 @@ static void configCallback(TMC5072TypeDef *tmc5072, ConfigState state)
 {
 	if(state == CONFIG_RESET)
 	{	// Change hardware-preset registers here
-		for(u8 motor = 0; motor < TMC5072_MOTORS; motor++)
+		for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
 			tmc5072_writeInt(tmc5072, TMC5072_PWMCONF(motor), 0x000504C8);
 
 		// Fill missing shadow registers (hardware preset registers)
@@ -797,7 +797,7 @@ void TMC5072_init(void)
 	Evalboards.ch1.VMMax                = VM_MAX;
 	Evalboards.ch1.deInit               = deInit;
 
-	for(u8 motor = 0; motor < TMC5072_MOTORS; motor++)
+	for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
 	{
 		vmax_position[motor] = motorToIC(motor)->config->shadowRegister[TMC5072_VMAX(motor)];
 	}

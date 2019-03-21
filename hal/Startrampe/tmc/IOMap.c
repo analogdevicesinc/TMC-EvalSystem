@@ -8,10 +8,10 @@ IOPinMapTypeDef IOMap =
 	.init   = init,
 	.ID_CLK =  // IOPinTypeDef ID_CLK
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_9,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_9,       // uint32_t pinBitWeight
 		.bit                 = 9,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -24,10 +24,10 @@ IOPinMapTypeDef IOMap =
 
 	.ID_CH0 =  // IOPinTypeDef ID_CH0
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_0,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_0,       // uint32_t pinBitWeight
 		.bit                 = 0,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -40,10 +40,10 @@ IOPinMapTypeDef IOMap =
 
 	.ID_CH1 =  // IOPinTypeDef ID_CH1
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_1,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_1,       // uint32_t pinBitWeight
 		.bit                 = 1,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -56,10 +56,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO0 =  // IOPinTypeDef DIO0
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_0,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_0,       // uint32_t pinBitWeight
 		.bit                 = 0,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -72,10 +72,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO1 =  // IOPinTypeDef DIO1
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_1,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_1,       // uint32_t pinBitWeight
 		.bit                 = 1,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -88,10 +88,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO2 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_2,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_2,       // uint32_t pinBitWeight
 		.bit                 = 2,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -104,10 +104,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO3 =  // IOPinTypeDef DIO3
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_3,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_3,       // uint32_t pinBitWeight
 		.bit                 = 3,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -120,10 +120,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO4 =  // IOPinTypeDef DIO4
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_4,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_4,       // uint32_t pinBitWeight
 		.bit                 = 4,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -136,10 +136,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO5 =  // IOPinTypeDef DIO5
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_5,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_5,       // uint32_t pinBitWeight
 		.bit                 = 5,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -152,10 +152,10 @@ IOPinMapTypeDef IOMap =
 
 	.AIN0 =  // IOPinTypeDef AIN0
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_7,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_7,       // uint32_t pinBitWeight
 		.bit                 = 7,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -168,10 +168,10 @@ IOPinMapTypeDef IOMap =
 
 	.AIN1 =  // IOPinTypeDef AIN1
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_0,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_0,       // uint32_t pinBitWeight
 		.bit                 = 0,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -184,10 +184,10 @@ IOPinMapTypeDef IOMap =
 
 	.AIN2 =  // IOPinTypeDef AIN2
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_1,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_1,       // uint32_t pinBitWeight
 		.bit                 = 1,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -200,10 +200,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO6 =  // IOPinTypeDef DIO6
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_8,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_8,       // uint32_t pinBitWeight
 		.bit                 = 8,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -216,10 +216,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO7 =  // IOPinTypeDef DIO7
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_9,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_9,       // uint32_t pinBitWeight
 		.bit                 = 9,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -232,10 +232,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO8 =  // IOPinTypeDef DIO8
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_10,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_10,      // uint32_t pinBitWeight
 		.bit                 = 10,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -248,10 +248,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO9 =  // IOPinTypeDef DIO9
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_11,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_11,      // uint32_t pinBitWeight
 		.bit                 = 11,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -264,10 +264,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO10 =  // IOPinTypeDef DIO10
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_12,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_12,      // uint32_t pinBitWeight
 		.bit                 = 12,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -280,10 +280,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO11 =  // IOPinTypeDef DIO11
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_13,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_13,      // uint32_t pinBitWeight
 		.bit                 = 13,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -296,10 +296,10 @@ IOPinMapTypeDef IOMap =
 
 	.CLK16 =  // IOPinTypeDef CLK16
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_8,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_8,       // uint32_t pinBitWeight
 		.bit                 = 8,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -312,10 +312,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_CSN0 =  // IOPinTypeDef SPI2_CSN0
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_15,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_15,      // uint32_t pinBitWeight
 		.bit                 = 15,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -328,10 +328,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_CSN1 =  // IOPinTypeDef SPI2_CSN1
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_11,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_11,      // uint32_t pinBitWeight
 		.bit                 = 11,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -344,10 +344,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_CSN2 =  // IOPinTypeDef SPI2_CSN2
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_12,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_12,      // uint32_t pinBitWeight
 		.bit                 = 12,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -360,10 +360,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_SCK =  // IOPinTypeDef SPI2_SCK
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_13,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_13,      // uint32_t pinBitWeight
 		.bit                 = 13,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -376,10 +376,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_SDO =  // IOPinTypeDef SPI2_SDO
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_14,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_14,      // uint32_t pinBitWeight
 		.bit                 = 14,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -392,10 +392,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_SDI =  // IOPinTypeDef SPI2_SDI
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_15,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_15,      // uint32_t pinBitWeight
 		.bit                 = 15,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -408,10 +408,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI1_CSN =  // IOPinTypeDef SPI1_CSN
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_15,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_15,      // uint32_t pinBitWeight
 		.bit                 = 15,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -424,10 +424,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI1_SCK =  // IOPinTypeDef SPI1_SCK
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_10,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_10,      // uint32_t pinBitWeight
 		.bit                 = 10,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -440,10 +440,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI1_SDI =  // IOPinTypeDef SPI1_SDI
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_12,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_12,      // uint32_t pinBitWeight
 		.bit                 = 12,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -456,10 +456,10 @@ IOPinMapTypeDef IOMap =
 
 	.SPI1_SDO =  // IOPinTypeDef SPI1_SDO
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_11,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_11,      // uint32_t pinBitWeight
 		.bit                 = 11,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -472,10 +472,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO12 =  // IOPinTypeDef DIO12
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_0,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_0,       // uint32_t pinBitWeight
 		.bit                 = 0,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -488,10 +488,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO13 =  // IOPinTypeDef DIO13
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_1,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_1,       // uint32_t pinBitWeight
 		.bit                 = 1,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -504,10 +504,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO14 =  // IOPinTypeDef DIO14
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_2,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_2,       // uint32_t pinBitWeight
 		.bit                 = 2,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -520,10 +520,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO15 =  // IOPinTypeDef DIO15
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_3,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_3,       // uint32_t pinBitWeight
 		.bit                 = 3,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -536,10 +536,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO16 =  // IOPinTypeDef DIO016
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_4,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_4,       // uint32_t pinBitWeight
 		.bit                 = 4,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -552,10 +552,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO17 =  // IOPinTypeDef DIO017
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_5,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_5,       // uint32_t pinBitWeight
 		.bit                 = 5,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -568,10 +568,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO18 =  // IOPinTypeDef DIO18
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_6,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_6,       // uint32_t pinBitWeight
 		.bit                 = 6,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -584,10 +584,10 @@ IOPinMapTypeDef IOMap =
 
 	.DIO19 =  // IOPinTypeDef DIO19
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_7,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_7,       // uint32_t pinBitWeight
 		.bit                 = 7,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -600,10 +600,10 @@ IOPinMapTypeDef IOMap =
 
 	.WIRELESS_TX =  // IOPinTypeDef WIRELESS_TX
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_8,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_8,       // uint32_t pinBitWeight
 		.bit                 = 8,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -616,10 +616,10 @@ IOPinMapTypeDef IOMap =
 
 	.WIRELESS_RX =  // IOPinTypeDef WIRELESS_RX
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_9,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_9,       // uint32_t pinBitWeight
 		.bit                 = 9,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -632,10 +632,10 @@ IOPinMapTypeDef IOMap =
 
 	.WIRELESS_NRST =  // IOPinTypeDef WIRELESS_NRST
 	{
-		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_10,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_10,      // uint32_t pinBitWeight
 		.bit                 = 10,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -648,10 +648,10 @@ IOPinMapTypeDef IOMap =
 
 	.RS232_TX =  // IOPinTypeDef RS232_TX
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_6,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_6,       // uint32_t pinBitWeight
 		.bit                 = 6,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -664,10 +664,10 @@ IOPinMapTypeDef IOMap =
 
 	.RS232_RX =  // IOPinTypeDef RS232_RX
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_7,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_7,       // uint32_t pinBitWeight
 		.bit                 = 7,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -680,10 +680,10 @@ IOPinMapTypeDef IOMap =
 
 	.USB_V_BUS =  // IOPinTypeDef USB_V_BUS
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_9,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_9,       // uint32_t pinBitWeight
 		.bit                 = 9,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -696,10 +696,10 @@ IOPinMapTypeDef IOMap =
 
 	.USB_V_DM =  // IOPinTypeDef USB_V_DM
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_11,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_11,      // uint32_t pinBitWeight
 		.bit                 = 11,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -712,10 +712,10 @@ IOPinMapTypeDef IOMap =
 
 	.USB_V_DP =  // IOPinTypeDef USB_V_DP
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_12,      // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_12,      // uint32_t pinBitWeight
 		.bit                 = 12,               // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -728,10 +728,10 @@ IOPinMapTypeDef IOMap =
 
 	.VM_MEAS =  // IOPinTypeDef VM_MEAS
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_2,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_2,       // uint32_t pinBitWeight
 		.bit                 = 2,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -744,10 +744,10 @@ IOPinMapTypeDef IOMap =
 
 	.LED_STAT =  // IOPinTypeDef LED_STAT
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_0,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_0,       // uint32_t pinBitWeight
 		.bit                 = 0,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -760,10 +760,10 @@ IOPinMapTypeDef IOMap =
 
 	.LED_ERROR =  // IOPinTypeDef LED_ERROR
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_1,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_1,       // uint32_t pinBitWeight
 		.bit                 = 1,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -776,10 +776,10 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_2 =  // IOPinTypeDef EXTIO_2
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_3,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_3,       // uint32_t pinBitWeight
 		.bit                 = 3,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -792,10 +792,10 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_3 =  // IOPinTypeDef EXTIO_3
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_4,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_4,       // uint32_t pinBitWeight
 		.bit                 = 4,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -808,10 +808,10 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_4 =  // IOPinTypeDef EXTIO_4
 	{
-		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOE->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOE->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_5,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_5,       // uint32_t pinBitWeight
 		.bit                 = 5,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -824,10 +824,10 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_5 =  // IOPinTypeDef EXTIO_5
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_4,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_4,       // uint32_t pinBitWeight
 		.bit                 = 4,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -840,10 +840,10 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_6 =  // IOPinTypeDef EXTIO_6
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_5,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_5,       // uint32_t pinBitWeight
 		.bit                 = 5,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -856,10 +856,10 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_7 =  // IOPinTypeDef EXTIO_7
 	{
-		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOC,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_5,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_5,       // uint32_t pinBitWeight
 		.bit                 = 5,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -872,10 +872,10 @@ IOPinMapTypeDef IOMap =
 
 	.EEPROM_SCK =  // IOPinTypeDef EEPROM_SCK
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_3,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_3,       // uint32_t pinBitWeight
 		.bit                 = 3,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -888,10 +888,10 @@ IOPinMapTypeDef IOMap =
 
 	.EEPROM_SI =  // IOPinTypeDef EEPROM_SI
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_4,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_4,       // uint32_t pinBitWeight
 		.bit                 = 4,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -904,10 +904,10 @@ IOPinMapTypeDef IOMap =
 
 	.EEPROM_SO =  // IOPinTypeDef EEPROM_SO
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_5,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_5,       // uint32_t pinBitWeight
 		.bit                 = 5,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -920,10 +920,10 @@ IOPinMapTypeDef IOMap =
 
 	.EEPROM_NCS =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_6,       // uint32 pinBitWeight
+		.bitWeight           = GPIO_Pin_6,       // uint32_t pinBitWeight
 		.bit                 = 6,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -936,8 +936,8 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED0 =  // !!! DUMMY -> NOT IN HADWARE !!!
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = DUMMY_BITWEIGHT,  // invalid
 		.bit                 = -1,               // invalid
@@ -952,8 +952,8 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED1 =  // !!! DUMMY -> NOT IN HADWARE !!!
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = DUMMY_BITWEIGHT,  // invalid
 		.bit                 = -1,               // invalid
@@ -968,8 +968,8 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED2 =  // !!! DUMMY -> NOT IN HADWARE !!!
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = DUMMY_BITWEIGHT,  // invalid
 		.bit                 = -1,               // invalid
@@ -984,8 +984,8 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED3 =  // !!! DUMMY -> NOT IN HADWARE !!!
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = DUMMY_BITWEIGHT,  // invalid
 		.bit                 = -1,               // invalid
@@ -1000,8 +1000,8 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED4 =  // !!! DUMMY -> NOT IN HADWARE !!!
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = DUMMY_BITWEIGHT,  // invalid
 		.bit                 = -1,               // invalid
@@ -1016,8 +1016,8 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED5 =  // !!! DUMMY -> NOT IN HADWARE !!!
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = DUMMY_BITWEIGHT,  // invalid
 		.bit                 = -1,               // invalid
@@ -1032,8 +1032,8 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED6 =  // !!! DUMMY -> NOT IN HADWARE !!!
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = DUMMY_BITWEIGHT,  // invalid
 		.bit                 = -1,               // invalid
@@ -1048,8 +1048,8 @@ IOPinMapTypeDef IOMap =
 
 	.DUMMY =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16 *setBitRegister
-		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16 *resetBitRegister
+		.setBitRegister      = &(GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = DUMMY_BITWEIGHT,  // invalid
 		.bit                 = -1,               // invalid

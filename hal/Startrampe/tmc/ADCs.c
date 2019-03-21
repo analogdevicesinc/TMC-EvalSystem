@@ -2,7 +2,7 @@
 #include "../../HAL.h"
 #include "../../ADCs.h"
 
-#define ADC1_DR_ADDRESS  ((uint32)0x4001204C)
+#define ADC1_DR_ADDRESS  ((uint32_t)0x4001204C)
 
 static void init(void);
 static void deInit(void);
@@ -40,8 +40,8 @@ void init(void)
 	/* DMA2_Stream0 channel0 configuration **************************************/
 	DMA_DeInit(DMA2_Stream0);
 	DMA_InitStructure.DMA_Channel             = DMA_Channel_0;
-	DMA_InitStructure.DMA_PeripheralBaseAddr  = (uint32)ADC1_DR_ADDRESS;
-	DMA_InitStructure.DMA_Memory0BaseAddr     = (uint32)&ADCValue;
+	DMA_InitStructure.DMA_PeripheralBaseAddr  = (uint32_t)ADC1_DR_ADDRESS;
+	DMA_InitStructure.DMA_Memory0BaseAddr     = (uint32_t)&ADCValue;
 	DMA_InitStructure.DMA_DIR                 = DMA_DIR_PeripheralToMemory;
 	DMA_InitStructure.DMA_BufferSize          = N_O_ADC_CHANNELS;
 	DMA_InitStructure.DMA_PeripheralInc       = DMA_PeripheralInc_Disable;

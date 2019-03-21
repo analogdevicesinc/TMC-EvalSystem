@@ -4,8 +4,8 @@
 	#include "tmc/helpers/API_Header.h"
 
 	void systick_init();
-	u32 systick_getTick();
-	void wait(uint32 delay);
-	uint32 timeSince(uint32 tick);
+	uint32_t systick_getTick();
+	void wait(uint32_t delay);
+	uint32_t timeSince(uint32_t tick);
 
 #endif /* SysTick_H */

@@ -34,7 +34,7 @@
                 (ID_STATE.ch2.state != ID_STATE_WAIT_HIGH)      \
             )
 
-static uint8 assign(uint32 pulse);
+static uint8_t assign(uint32_t pulse);
 
 #define TIMER_START  5537
 #define FULLCOUNTER  60000 // 65536 - TIMER_START + 1
@@ -50,7 +50,7 @@ static uint8 assign(uint32 pulse);
  */
 #define TICK_FACTOR 10/6
 
-static uint32 counter = 0;
+static uint32_t counter = 0;
 
 static bool isScanning;
 IdAssignmentTypeDef IdState = { 0 };
@@ -59,11 +59,11 @@ IdAssignmentTypeDef IdState = { 0 };
 void PORTB_IRQHandler(void)
 {
 	// Store the timing values
-	uint32 timerVal = FTM2_CNT;
-	uint32 counterVal = counter;
+	uint32_t timerVal = FTM2_CNT;
+	uint32_t counterVal = counter;
 
 	// Store the interrupt flag state and then reset the flags
-	uint32 interruptFlags = PORTB_ISFR;
+	uint32_t interruptFlags = PORTB_ISFR;
 	PORTB_ISFR = PORT_ISFR_ISF_MASK;
 
 	// Abort if we're not scanning
@@ -205,7 +205,7 @@ void IDDetection_deInit()
 }
 
 //returns ID assigned to given pulse (length in 0.1us)
-static uint8 assign(uint32 pulse)
+static uint8_t assign(uint32_t pulse)
 {
 	if(     pulse < 5      ) return 0; // error
 	else if(pulse < 110    ) return 1;
@@ -249,7 +249,7 @@ static uint8 assign(uint32 pulse)
 }
 
 // Detect IDs of attached boards - returns true when done
-uint8 IDDetection_detect(IdAssignmentTypeDef *out)
+uint8_t IDDetection_detect(IdAssignmentTypeDef *out)
 {
 	if(!isScanning)
 	{
@@ -283,7 +283,7 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 	if(IdState.ch1.state == ID_STATE_DONE)
 	{
 		// Assign the ID derived from the ID pulse duration
-		uint32 tickDiff =    (IdState.ch1.counter_2 - IdState.ch1.counter_1) * FULLCOUNTER
+		uint32_t tickDiff =    (IdState.ch1.counter_2 - IdState.ch1.counter_1) * FULLCOUNTER
 						   + (IdState.ch1.timer_2   - IdState.ch1.timer_1);
 		out->ch1.id = assign(tickDiff * TICK_FACTOR);
 
@@ -304,7 +304,7 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 	if(IdState.ch2.state == ID_STATE_DONE)
 	{
 		// Assign the ID derived from the ID pulse duration
-		uint32 tickDiff =    (IdState.ch2.counter_2 - IdState.ch2.counter_1) * FULLCOUNTER
+		uint32_t tickDiff =    (IdState.ch2.counter_2 - IdState.ch2.counter_1) * FULLCOUNTER
 						   + (IdState.ch2.timer_2   - IdState.ch2.timer_1);
 		out->ch2.id = assign(tickDiff * TICK_FACTOR);
 
@@ -322,8 +322,8 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 	// EEPROM spec reserves 2 bytes for the ID buffer.
 	// Currently we only use one byte for IDs, both here in the firmware
 	// and in the IDE - once we deplete that ID pool, this needs to be extended
-	// (uint8 to uint16 and change EEPROM read to read two bytes instead of one)
-	uint8 idBuffer[2];
+	// (uint8_t to uint16_t and change EEPROM read to read two bytes instead of one)
+	uint8_t idBuffer[2];
 	// ====== CH1 ======
 	if(!out->ch1.id)
 	{

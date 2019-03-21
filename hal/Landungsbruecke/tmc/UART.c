@@ -8,18 +8,18 @@
 
 static void init();
 static void deInit();
-static void tx(uint8 ch);
-static uint8 rx(uint8 *ch);
-static void txN(uint8 *str, uint8 number);
-static uint8 rxN(uint8 *ch, uint8 number);
+static void tx(uint8_t ch);
+static uint8_t rx(uint8_t *ch);
+static void txN(uint8_t *str, uint8_t number);
+static uint8_t rxN(uint8_t *ch, uint8_t number);
 static void clearBuffers(void);
-static uint32 bytesAvailable();
+static uint32_t bytesAvailable();
 
-static volatile uint8
+static volatile uint8_t
 	rxBuffer[BUFFER_SIZE],
 	txBuffer[BUFFER_SIZE];
 
-static volatile uint32 available = 0;
+static volatile uint32_t available = 0;
 
 UART_Config UART =
 {
@@ -58,7 +58,7 @@ static RXTXBufferingTypeDef buffers =
 
 static void init()
 {
-	register uint16 ubd = (CPU_BUS_CLK_HZ / 16) / UART.rxtx.baudRate;
+	register uint16_t ubd = (CPU_BUS_CLK_HZ / 16) / UART.rxtx.baudRate;
 
 	// One wire UART communication needs the TxD pin to be in open drain mode
 	// and a pull-up resistor on the RxD pin.
@@ -157,8 +157,8 @@ static void deInit()
 
 void UART0_RX_TX_IRQHandler_UART(void)
 {
-	static uint8 isSending = false;
-	uint32 status = UART0_S1;
+	static uint8_t isSending = false;
+	uint32_t status = UART0_S1;
 
 	// Receive interrupt
 	if(status & UART_S1_RDRF_MASK)
@@ -202,8 +202,8 @@ void UART0_RX_TX_IRQHandler_UART(void)
 
 void UART2_RX_TX_IRQHandler(void)
 {
-	static uint8 isSending = false;
-	uint32 status = UART2_S1;
+	static uint8_t isSending = false;
+	uint32_t status = UART2_S1;
 
 	// Receive interrupt
 	if(status & UART_S1_RDRF_MASK)
@@ -245,10 +245,10 @@ void UART2_RX_TX_IRQHandler(void)
 	}
 }
 
-void UART_readInt(UART_Config *channel, uint8 slave, uint8 address, int32 *value)
+void UART_readInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t *value)
 {
-	uint8 readData[8], dataRequest[4];
-	uint32 timeout;
+	uint8_t readData[8], dataRequest[4];
+	uint32_t timeout;
 
 	dataRequest[0] = 0x05;                        // Sync byte
 	dataRequest[1] = slave;                       // Slave address
@@ -274,9 +274,9 @@ void UART_readInt(UART_Config *channel, uint8 slave, uint8 address, int32 *value
 	return;
 }
 
-void UART_writeInt(UART_Config *channel, uint8 slave, uint8 address, int32 value)
+void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t value)
 {
-	uint8 writeData[8];
+	uint8_t writeData[8];
 
 	writeData[0] = 0x05;                         // Sync byte
 	writeData[1] = slave;                        // Slave address
@@ -288,7 +288,7 @@ void UART_writeInt(UART_Config *channel, uint8 slave, uint8 address, int32 value
 	writeData[7] = tmc_CRC8(writeData, 7, 1);    // Cyclic redundancy check
 
 	channel->rxtx.clearBuffers();
-	for(uint32 i = 0; i < ARRAY_SIZE(writeData); i++)
+	for(uint32_t i = 0; i < ARRAY_SIZE(writeData); i++)
 		channel->rxtx.tx(writeData[i]);
 
 	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
@@ -298,7 +298,7 @@ void UART_writeInt(UART_Config *channel, uint8 slave, uint8 address, int32 value
 	wait(2);
 }
 
-static void tx(uint8 ch)
+static void tx(uint8_t ch)
 {
 	buffers.tx.buffer[buffers.tx.wrote] = ch;
 	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
@@ -315,7 +315,7 @@ static void tx(uint8 ch)
 	}
 }
 
-static uint8 rx(uint8 *ch)
+static uint8_t rx(uint8_t *ch)
 {
 	if(buffers.rx.read == buffers.rx.wrote)
 		return 0;
@@ -327,18 +327,18 @@ static uint8 rx(uint8 *ch)
 	return 1;
 }
 
-static void txN(uint8 *str, uint8 number)
+static void txN(uint8_t *str, uint8_t number)
 {
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 		tx(str[i]);
 }
 
-static uint8 rxN(uint8 *str, uint8 number)
+static uint8_t rxN(uint8_t *str, uint8_t number)
 {
 	if(available < number)
 		return 0;
 
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 		rx(&str[i]);
 
 	return 1;
@@ -369,7 +369,7 @@ static void clearBuffers(void)
 	}
 }
 
-static uint32 bytesAvailable()
+static uint32_t bytesAvailable()
 {
 	return available;
 }

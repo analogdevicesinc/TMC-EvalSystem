@@ -59,11 +59,11 @@ static void deInit(void);
  */
 
 // ADC Result buffers
-volatile uint16 adc0_result[3] = { 0 };
-volatile uint16 adc1_result[3] = { 0 };
+volatile uint16_t adc0_result[3] = { 0 };
+volatile uint16_t adc1_result[3] = { 0 };
 // ADC Multiplexer selection
-const uint8  adc0_mux[3] = { DAD1, AD12, AD13 };
-const uint8  adc1_mux[3] = { DAD0, DAD1, DAD3 };
+const uint8_t  adc0_mux[3] = { DAD1, AD12, AD13 };
+const uint8_t  adc1_mux[3] = { DAD0, DAD1, DAD3 };
 
 ADCTypeDef ADCs =
 {
@@ -109,7 +109,7 @@ static void init(void)
 	ADC0_SC3 |= ADC_SC3_CAL_MASK;
 	while(ADC0_SC3 & ADC_SC3_CAL_MASK);
 
-	uint16 cal = 0;
+	uint16_t cal = 0;
 	cal += ADC0_CLP0;
 	cal += ADC0_CLP1;
 	cal += ADC0_CLP2;
@@ -148,10 +148,10 @@ static void init(void)
 
 	// DMA channel 0, use for write ADC mux channel, from SRAM to ADC
 	DMAMUX_CHCFG0           = DMAMUX_CHCFG_ENBL_MASK | DMAMUX_CHCFG_SOURCE(0x36);                 // DMA source: DMA Mux channel 1 (Source Number 54)
-	DMA_TCD0_SADDR          = (uint32) &adc0_mux[0];                                              // Source address: ADC Mux Settings Array
+	DMA_TCD0_SADDR          = (uint32_t) &adc0_mux[0];                                              // Source address: ADC Mux Settings Array
 	DMA_TCD0_SOFF           = 0x01;                                                               // Source address increment (Added after each major loop step)
-	DMA_TCD0_SLAST          = (uint32) -3;                                                        // Source address decrement (Added on major loop completion)
-	DMA_TCD0_DADDR          = (uint32) &ADC0_SC1A;                                                // Destination address: ADC0 control register (containing ADC Mux bitfield)
+	DMA_TCD0_SLAST          = (uint32_t) -3;                                                        // Source address decrement (Added on major loop completion)
+	DMA_TCD0_DADDR          = (uint32_t) &ADC0_SC1A;                                                // Destination address: ADC0 control register (containing ADC Mux bitfield)
 	DMA_TCD0_DOFF           = 0x00;                                                               // Destination address increment (Added after each major loop step)
 	DMA_TCD0_DLASTSGA       = 0x00;                                                               // Destination address decrement (Added on major loop completion)
 	DMA_TCD0_NBYTES_MLNO    = 0x01;                                                               // Number of bytes transferred per request (1 Byte ADC Setting)
@@ -162,12 +162,12 @@ static void init(void)
 
 	// DMA channel 1, use for read ADC result data, from ADC to SRAM
 	DMAMUX_CHCFG1           = DMAMUX_CHCFG_ENBL_MASK | DMAMUX_CHCFG_SOURCE(0x28);                 // DMA source: ADC0 (Source Number 40)
-	DMA_TCD1_SADDR          = (uint32) &ADC0_RA;                                                  // Source address: ADC0 result register
+	DMA_TCD1_SADDR          = (uint32_t) &ADC0_RA;                                                  // Source address: ADC0 result register
 	DMA_TCD1_SOFF           = 0x00;                                                               // Source address increment (Added after each major loop step)
 	DMA_TCD1_SLAST          = 0x00;                                                               // Source address decrement (Added on major loop completion)
-	DMA_TCD1_DADDR          = (uint32) &adc0_result[0];                                           // Destination address: ADC0 result buffer
+	DMA_TCD1_DADDR          = (uint32_t) &adc0_result[0];                                           // Destination address: ADC0 result buffer
 	DMA_TCD1_DOFF           = 0x02;                                                               // Destination address increment (Added after each major loop step)
-	DMA_TCD1_DLASTSGA       = (uint32) -6;                                                        // Destination address decrement (Added on major loop completion)
+	DMA_TCD1_DLASTSGA       = (uint32_t) -6;                                                        // Destination address decrement (Added on major loop completion)
 	DMA_TCD1_NBYTES_MLNO    = 0x02;                                                               // Number of bytes transferred per request (2 Byte ADC Result)
 	DMA_TCD1_BITER_ELINKYES = (DMA_BITER_ELINKYES_ELINK_MASK|DMA_BITER_ELINKYES_LINKCH(0)|0x03);  // Enable channel link (to channel 0) on major loop step, beginning major iteration count: 3
 	DMA_TCD1_CITER_ELINKYES = (DMA_CITER_ELINKYES_ELINK_MASK|DMA_BITER_ELINKYES_LINKCH(0)|0x03);  // Enable channel link (to channel 0) on major loop step, current major iteration count: 3
@@ -181,10 +181,10 @@ static void init(void)
 
 	// DMA channel 2, use for write ADC mux channel, from SRAM to ADC
 	DMAMUX_CHCFG2           = DMAMUX_CHCFG_ENBL_MASK | DMAMUX_CHCFG_SOURCE(0x38);                   // DMA source: DMA Mux channel 2 (Source Number 56)
-	DMA_TCD2_SADDR          = (uint32) &adc1_mux[0];                                                // Source address: ADC Mux Settings
+	DMA_TCD2_SADDR          = (uint32_t) &adc1_mux[0];                                                // Source address: ADC Mux Settings
 	DMA_TCD2_SOFF           = 0x01;                                                                 // Source address increment (Added after each major loop step)
-	DMA_TCD2_SLAST          = (uint32) -3;                                                          // Source address decrement (Added on major loop completion)
-	DMA_TCD2_DADDR          = (uint32) &ADC1_SC1A;                                                  // Destination address: ADC1 control register (containing ADC Mux bitfield)
+	DMA_TCD2_SLAST          = (uint32_t) -3;                                                          // Source address decrement (Added on major loop completion)
+	DMA_TCD2_DADDR          = (uint32_t) &ADC1_SC1A;                                                  // Destination address: ADC1 control register (containing ADC Mux bitfield)
 	DMA_TCD2_DOFF           = 0x00;                                                                 // Destination address increment (Added for each major loop step)
 	DMA_TCD2_DLASTSGA       = 0x00;                                                                 // Destination address decrement (Added on major loop completion)
 	DMA_TCD2_NBYTES_MLNO    = 0x01;                                                                 // Number of bytes transferred per request (1 Byte ADC Setting)
@@ -195,12 +195,12 @@ static void init(void)
 
 	// DMA channel 3, use for read ADC result data, from ADC to SRAM
 	DMAMUX_CHCFG3           = DMAMUX_CHCFG_ENBL_MASK | DMAMUX_CHCFG_SOURCE(0x29);                   // DMA source: ADC1 (Source Number 41)
-	DMA_TCD3_SADDR          = (uint32) &ADC1_RA;                                                    // Source address: ADC1 result register
+	DMA_TCD3_SADDR          = (uint32_t) &ADC1_RA;                                                    // Source address: ADC1 result register
 	DMA_TCD3_SOFF           = 0x00;                                                                 // Source address increment (Added after each major loop step)
 	DMA_TCD3_SLAST          = 0x00;                                                                 // Source address decrement (Added on major loop completion)
-	DMA_TCD3_DADDR          = (uint32) &adc1_result[0];                                             // Destination address: ADC0 result buffer
+	DMA_TCD3_DADDR          = (uint32_t) &adc1_result[0];                                             // Destination address: ADC0 result buffer
 	DMA_TCD3_DOFF           = 0x02;                                                                 // Destination address increment (Added after each major loop step)
-	DMA_TCD3_DLASTSGA       = (uint32) -6;                                                          // Destination address decrement (Added on major loop completion)
+	DMA_TCD3_DLASTSGA       = (uint32_t) -6;                                                          // Destination address decrement (Added on major loop completion)
 	DMA_TCD3_NBYTES_MLNO    = 0x02;                                                                 // Number of bytes transferred per request (2 Byte ADC Result)
 	DMA_TCD3_BITER_ELINKYES = DMA_BITER_ELINKYES_ELINK_MASK | DMA_BITER_ELINKYES_LINKCH(2) | 0x03;  // Enable channel link (to channel 2) on major loop step, beginning major iteration count: 3
 	DMA_TCD3_CITER_ELINKYES = DMA_CITER_ELINKYES_ELINK_MASK | DMA_CITER_ELINKYES_LINKCH(2) | 0x03;  // Enable channel link (to channel 2) on major loop step, current major iteration count: 3

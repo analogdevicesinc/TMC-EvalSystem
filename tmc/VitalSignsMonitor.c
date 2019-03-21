@@ -35,9 +35,9 @@ VitalSignsMonitorTypeDef VitalSignsMonitor =
 
 // Make the status LED blink
 // Frequency informs about normal operation or busy state
-void heartBeat(uint32 tick)
+void heartBeat(uint32_t tick)
 {
-	static uint32 lastTick = 0;
+	static uint32_t lastTick = 0;
 
 	if(VitalSignsMonitor.heartRate == 0)
 		return;
@@ -52,8 +52,8 @@ void heartBeat(uint32 tick)
 // Check for over/undervoltage of motor supply VM
 void checkVM()
 {
-	uint32 VM;
-	static uint8 stable = VSM_BROWNOUT_DELAY + 1; // delay value + 1 is the state during normal voltage levels - set here to prevent restore shortly after boot
+	uint32_t VM;
+	static uint8_t stable = VSM_BROWNOUT_DELAY + 1; // delay value + 1 is the state during normal voltage levels - set here to prevent restore shortly after boot
 
 	VM = *HAL.ADCs->VM;              // read ADC value for motor supply VM
 	VM = (VM*VM_FACTOR)/ADC_VM_RES;  // calculate voltage from ADC value
@@ -100,8 +100,8 @@ void checkVM()
 void vitalsignsmonitor_checkVitalSigns()
 {
 	int errors = 0;
-	static uint32 lastTick = 0;
-	uint32 tick;
+	static uint32_t lastTick = 0;
+	uint32_t tick;
 
 	tick = systick_getTick();
 

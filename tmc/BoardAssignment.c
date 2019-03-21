@@ -6,14 +6,14 @@
 #include "EEPROM.h"
 #include "BoardAssignment.h"
 
-static uint8 assignCh1(uint8 id, uint8 justCheck);
-static uint8 assignCh2(uint8 id, uint8 justCheck);
+static uint8_t assignCh1(uint8_t id, uint8_t justCheck);
+static uint8_t assignCh2(uint8_t id, uint8_t justCheck);
 static void hookDriverSPI(IdAssignmentTypeDef *ids);
 static void unassign(IdAssignmentTypeDef *ids);
 
-int32 Board_assign(IdAssignmentTypeDef *ids)
+int32_t Board_assign(IdAssignmentTypeDef *ids)
 {
-	int32 out = 0;
+	int32_t out = 0;
 
 	// Test mode // todo REM 2: still needed? (LH)
 	if((ids->ch1.id == 0xFF) || (ids->ch2.id == 0xFF))
@@ -76,9 +76,9 @@ int32 Board_assign(IdAssignmentTypeDef *ids)
 	return out;
 }
 
-int32 Board_supported(IdAssignmentTypeDef *ids)
+int32_t Board_supported(IdAssignmentTypeDef *ids)
 {
-	int32 out = 0;
+	int32_t out = 0;
 
 	ids->ch1.state = assignCh1(ids->ch1.id, true);
 	ids->ch2.state = assignCh2(ids->ch2.id, true);
@@ -91,9 +91,9 @@ int32 Board_supported(IdAssignmentTypeDef *ids)
 	return out;
 }
 
-static uint8 assignCh1(uint8 id, uint8 justCheck)
+static uint8_t assignCh1(uint8_t id, uint8_t justCheck)
 {
-	uint8 ok = ID_STATE_NOT_IN_FW;
+	uint8_t ok = ID_STATE_NOT_IN_FW;
 	if(!justCheck)
 		tmcmotioncontroller_init();
 
@@ -111,9 +111,9 @@ static uint8 assignCh1(uint8 id, uint8 justCheck)
 	return ok;
 }
 
-static uint8 assignCh2(uint8 id, uint8 justCheck)
+static uint8_t assignCh2(uint8_t id, uint8_t justCheck)
 {
-	uint8 ok = ID_STATE_NOT_IN_FW;
+	uint8_t ok = ID_STATE_NOT_IN_FW;
 
 //	if(!justCheck)
 //		tmcdriver_init();
@@ -150,7 +150,7 @@ static void hookDriverSPI(IdAssignmentTypeDef *ids)
 				ids->ch2.id == ID_TMC262_1420)
 		{
 			// TMC2660: Disable the continuous mode via userFunction
-			int32 value = 1;
+			int32_t value = 1;
 			Evalboards.ch2.userFunction(0, 0, &value);
 		}
 	}

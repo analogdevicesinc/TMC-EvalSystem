@@ -8,18 +8,18 @@
 #include "../freescale/USB_CDC/CDC1.h"
 #include "../freescale/USB_CDC/CS1.h"
 
-extern uint8 USB_DCI_DeInit(void);
-extern uint8 USB_Class_CDC_DeInit(uint8 controller_ID);
-extern uint8 USB_Class_DeInit(uint8 controller_ID);
+extern uint8_t USB_DCI_DeInit(void);
+extern uint8_t USB_Class_CDC_DeInit(uint8_t controller_ID);
+extern uint8_t USB_Class_DeInit(uint8_t controller_ID);
 
 static void init();
 static void deInit();
-static void tx(uint8 ch);
-static uint8 rx(uint8 *ch);
-static void txN(uint8 *str, uint8 number);
-static uint8 rxN(uint8 *ch, uint8 number);
+static void tx(uint8_t ch);
+static uint8_t rx(uint8_t *ch);
+static void txN(uint8_t *str, uint8_t number);
+static uint8_t rxN(uint8_t *ch, uint8_t number);
 static void clearBuffers(void);
-static uint32 bytesAvailable();
+static uint32_t bytesAvailable();
 
 RXTXTypeDef USB =
 {
@@ -43,16 +43,16 @@ void init()
 	enable_irq(INT_USB0-16);
 }
 
-uint8 rx(uint8 *ch)
+uint8_t rx(uint8_t *ch)
 {
 	return rxN(ch,1);
 }
 
-uint8 rxN(uint8 *str, uint8 number)
+uint8_t rxN(uint8_t *str, uint8_t number)
 {
 	if(CDC1_GetCharsInRxBuf() >= number)
 	{
-		for(int32 i = 0; i < number; i++)
+		for(int32_t i = 0; i < number; i++)
 		{
 			if(CDC1_GetChar(&str[i])!= ERR_OK)
 				return false;
@@ -62,14 +62,14 @@ uint8 rxN(uint8 *str, uint8 number)
 	return false;
 }
 
-void tx(uint8 ch)
+void tx(uint8_t ch)
 {
 	CDC1_SendChar(ch);
 }
 
-void txN(uint8 *str, uint8 number)
+void txN(uint8_t *str, uint8_t number)
 {
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 	{
 		tx(str[i]);
 	}
@@ -83,7 +83,7 @@ static void clearBuffers(void)
 	EnableInterrupts;
 }
 
-static uint32 bytesAvailable()
+static uint32_t bytesAvailable()
 {
 	return CDC1_GetCharsInRxBuf();
 }

@@ -7,34 +7,34 @@
 // SPI Channel selection
 #define DEFAULT_CHANNEL  0
 
-static uint32 rotate(u8 motor, int32 velocity);
-static uint32 right(u8 motor, int32 velocity);
-static uint32 left(u8 motor, int32 velocity);
-static uint32 stop(u8 motor);
-static uint32 moveTo(u8 motor, int32 position);
-static uint32 moveBy(u8 motor, int32 *ticks);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
-static void readRegister(u8 motor, uint8 address, int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
-static void periodicJob(uint32 tick);
-static void checkErrors(uint32 tick);
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
-static uint8 reset();
+static uint8_t reset();
 static void enableDriver(DriverState state);
 
 static SPIChannelTypeDef *TMC5130_SPIChannel;
 static TMC5130TypeDef TMC5130;
-static u32 vmax_position;
+static uint32_t vmax_position;
 
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here
-static inline TMC5130TypeDef *motorToIC(uint8 motor)
+static inline TMC5130TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
 
@@ -43,7 +43,7 @@ static inline TMC5130TypeDef *motorToIC(uint8 motor)
 
 // Translate channel number to SPI channel
 // When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
+static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 {
 	UNUSED(channel);
 
@@ -51,7 +51,7 @@ static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
 }
 
 // SPI Wrapper for API
-void tmc5130_readWriteArray(uint8 channel, uint8 *data, size_t length)
+void tmc5130_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 {
 	// Map the channel to the corresponding SPI channel
 	channelToSPI(channel)->readWriteArray(data, length);
@@ -77,42 +77,42 @@ typedef struct
 static PinsTypeDef Pins;
 
 // => Functions forwarded to API
-static uint32 rotate(u8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	tmc5130_rotate(motorToIC(motor), velocity);
 
 	return 0;
 }
 
-static uint32 right(u8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	tmc5130_right(motorToIC(motor), velocity);
 
 	return 0;
 }
 
-static uint32 left(u8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	tmc5130_left(motorToIC(motor), velocity);
 
 	return 0;
 }
 
-static uint32 stop(u8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	tmc5130_stop(motorToIC(motor));
 
 	return 0;
 }
 
-static uint32 moveTo(u8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	tmc5130_moveTo(motorToIC(motor), position, vmax_position);
 
 	return 0;
 }
 
-static uint32 moveBy(u8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	tmc5130_moveBy(motorToIC(motor), ticks, vmax_position);
 
@@ -120,10 +120,10 @@ static uint32 moveBy(u8 motor, int32 *ticks)
 }
 // <= Functions forwarded to API
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	uint32 buffer;
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t buffer;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= TMC5130_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -692,17 +692,17 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= TMC5130_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -711,33 +711,33 @@ static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	tmc5130_writeInt(&TMC5130, address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	*value = tmc5130_readInt(&TMC5130, address);
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	tmc5130_periodicJob(&TMC5130, tick);
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 buffer;
-	uint32 errors = 0;
+	uint32_t buffer;
+	uint32_t errors = 0;
 
 	UNUSED(motor);
 
@@ -875,7 +875,7 @@ static void deInit(void)
 	Timer.deInit();
 };
 
-static uint8 reset()
+static uint8_t reset()
 {
 	if(!tmc5130_readInt(&TMC5130, TMC5130_VACTUAL))
 		tmc5130_reset(&TMC5130);
@@ -886,7 +886,7 @@ static uint8 reset()
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return tmc5130_restore(&TMC5130);
 }

@@ -11,13 +11,13 @@ typedef enum {
 
 typedef struct
 {
-	uint8 state;          // detection state of this board
-	uint8 id;             // id of board
+	uint8_t state;          // detection state of this board
+	uint8_t id;             // id of board
 	IDFinder detectedBy;  // Holds the method used to detect the ID (Monoflop or EEPROM)
-	uint32 counter_1;     // Timer cycles elapsed on ID pulse rising edge
-	uint32 counter_2;     // Timer cycles elapsed on ID pulse falling edge
-	uint32 timer_1;       // Current timer value on ID pulse rising edge
-	uint32 timer_2;       // Current timer value on ID pulse falling edge
+	uint32_t counter_1;     // Timer cycles elapsed on ID pulse rising edge
+	uint32_t counter_2;     // Timer cycles elapsed on ID pulse falling edge
+	uint32_t timer_1;       // Current timer value on ID pulse rising edge
+	uint32_t timer_2;       // Current timer value on ID pulse falling edge
 } IdStateTypeDef;         // interface for id and detection state of a board
 
 typedef struct
@@ -28,8 +28,8 @@ typedef struct
 
 IdAssignmentTypeDef IdState;
 
-int32 Board_assign(IdAssignmentTypeDef *ids);     // ids and states of assigned driver and motion controller board
-int32 Board_supported(IdAssignmentTypeDef *ids);  // ids and states of supported driver and motion controller board
+int32_t Board_assign(IdAssignmentTypeDef *ids);     // ids and states of assigned driver and motion controller board
+int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of supported driver and motion controller board
 
 #include "boards/SelfTest.h"
 
@@ -99,7 +99,7 @@ extern void TMC8690_init();
 extern void SelfTest_init();
 
 typedef struct {
-	uint16 id;
+	uint16_t id;
 	void (*init)(void);
 } init_assignment;
 

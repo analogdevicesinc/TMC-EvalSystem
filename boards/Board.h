@@ -25,46 +25,46 @@ typedef enum {
 // Evalboard channel struct
 typedef struct
 {
-	uint8  id;
-	uint32 errors;
-	uint32 VMMax;
-	uint32 VMMin;
+	uint8_t  id;
+	uint32_t errors;
+	uint32_t VMMax;
+	uint32_t VMMin;
 	unsigned char numberOfMotors;
 	ConfigurationTypeDef *config;
-	uint32 (*left)                (uint8 motor, int32 velocity);            // move left with velocity <velocity>
-	uint32 (*right)               (uint8 motor, int32 velocity);            // move right with velocity <velocity>
-	uint32 (*rotate)              (uint8 motor, int32 velocity);            // move right with velocity <velocity>
-	uint32 (*stop)                (uint8 motor);                            // stop motor
-	uint32 (*moveTo)              (uint8 motor, int32 position);            // move to position <position>
-	uint32 (*moveBy)              (uint8 motor, int32 *ticks);              // move by <ticks>, changes ticks to absolute target
-	uint32 (*moveProfile)         (uint8 motor, int32 position);            // move profile <position>
-	uint32 (*SAP)                 (uint8 type, uint8 motor, int32 value);   // set axis parameter -> TMCL conformance
-	uint32 (*GAP)                 (uint8 type, uint8 motor, int32 *value);  // get axis parameter -> TMCL conformance
-	uint32 (*STAP)                (uint8 type, uint8 motor, int32 value);   // store axis parameter -> TMCL conformance
-	uint32 (*RSAP)                (uint8 type, uint8 motor, int32 value);   // restore axis parameter -> TMCL conformance
-	void (*readRegister)          (u8 motor, uint8 address, int32 *value);  // Motor needed since some chips utilize it as a switch between low and high values
-	void (*writeRegister)         (u8 motor, uint8 address, int32 value);   // Motor needed since some chips utilize it as a switch between low and high values
-	uint32 (*getMeasuredSpeed)    (uint8 motor, int32 *value);
-	uint32 (*userFunction)        (uint8 type, uint8 motor, int32 *value);
+	uint32_t (*left)                (uint8_t motor, int32_t velocity);            // move left with velocity <velocity>
+	uint32_t (*right)               (uint8_t motor, int32_t velocity);            // move right with velocity <velocity>
+	uint32_t (*rotate)              (uint8_t motor, int32_t velocity);            // move right with velocity <velocity>
+	uint32_t (*stop)                (uint8_t motor);                            // stop motor
+	uint32_t (*moveTo)              (uint8_t motor, int32_t position);            // move to position <position>
+	uint32_t (*moveBy)              (uint8_t motor, int32_t *ticks);              // move by <ticks>, changes ticks to absolute target
+	uint32_t (*moveProfile)         (uint8_t motor, int32_t position);            // move profile <position>
+	uint32_t (*SAP)                 (uint8_t type, uint8_t motor, int32_t value);   // set axis parameter -> TMCL conformance
+	uint32_t (*GAP)                 (uint8_t type, uint8_t motor, int32_t *value);  // get axis parameter -> TMCL conformance
+	uint32_t (*STAP)                (uint8_t type, uint8_t motor, int32_t value);   // store axis parameter -> TMCL conformance
+	uint32_t (*RSAP)                (uint8_t type, uint8_t motor, int32_t value);   // restore axis parameter -> TMCL conformance
+	void (*readRegister)          (uint8_t motor, uint8_t address, int32_t *value);  // Motor needed since some chips utilize it as a switch between low and high values
+	void (*writeRegister)         (uint8_t motor, uint8_t address, int32_t value);   // Motor needed since some chips utilize it as a switch between low and high values
+	uint32_t (*getMeasuredSpeed)    (uint8_t motor, int32_t *value);
+	uint32_t (*userFunction)        (uint8_t type, uint8_t motor, int32_t *value);
 
-	void (*periodicJob)           (uint32 tick);
+	void (*periodicJob)           (uint32_t tick);
 	void (*deInit)                (void);
 
-	void (*checkErrors)           (uint32 tick);
+	void (*checkErrors)           (uint32_t tick);
 	void (*enableDriver)          (DriverState state);
 
-	uint8 (*cover)                (uint8 data, uint8 lastTransfer);
-	void  (*fullCover)            (uint8 *data, size_t length);
+	uint8_t (*cover)                (uint8_t data, uint8_t lastTransfer);
+	void  (*fullCover)            (uint8_t *data, size_t length);
 
-	uint32 (*getMin)              (uint8 type, uint8 motor, int32 *value);
-	uint32 (*getMax)              (uint8 type, uint8 motor, int32 *value);
+	uint32_t (*getMin)              (uint8_t type, uint8_t motor, int32_t *value);
+	uint32_t (*getMax)              (uint8_t type, uint8_t motor, int32_t *value);
 } EvalboardFunctionsTypeDef;
 
 
 // "hash" function to resolve API error <=> Map index
-inline u8 error_index(u8 error)
+inline uint8_t error_index(uint8_t error)
 {
-	u8 i = 0;
+	uint8_t i = 0;
 	for(; error != 1; i++)
 		error >>= 1;
 	return i;
@@ -94,7 +94,7 @@ typedef struct
 
 EvalboardsTypeDef Evalboards;
 
-void periodicJobDummy(uint32 tick);
+void periodicJobDummy(uint32_t tick);
 void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel);
 
 #include "TMCDriver.h"

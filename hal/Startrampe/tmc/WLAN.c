@@ -8,17 +8,17 @@
 
 static void init();
 static void deInit();
-static void tx(uint8 ch);
-static uint8 rx(uint8 *ch);
-static void txN(uint8 *str, unsigned char number);
-static uint8 rxN(uint8 *ch, unsigned char number);
+static void tx(uint8_t ch);
+static uint8_t rx(uint8_t *ch);
+static void txN(uint8_t *str, unsigned char number);
+static uint8_t rxN(uint8_t *ch, unsigned char number);
 static void clearBuffers(void);
-static uint32 bytesAvailable();
+static uint32_t bytesAvailable();
 
-static volatile uint8 rxBuffer[BUFFER_SIZE];
-static volatile uint8 txBuffer[BUFFER_SIZE];
+static volatile uint8_t rxBuffer[BUFFER_SIZE];
+static volatile uint8_t txBuffer[BUFFER_SIZE];
 
-static volatile uint32 available = 0;
+static volatile uint32_t available = 0;
 
 RXTXTypeDef WLAN =
 {
@@ -153,14 +153,14 @@ void USART3_IRQHandler(void)
 	}
 }
 
-static void tx(uint8 ch)
+static void tx(uint8_t ch)
 {
 	buffers.tx.buffer[buffers.tx.wrote] = ch;
 	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
 	USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
 }
 
-static uint8 rx(uint8 *ch)
+static uint8_t rx(uint8_t *ch)
 {
 	if(buffers.rx.read == buffers.rx.wrote)
 		return 0;
@@ -172,18 +172,18 @@ static uint8 rx(uint8 *ch)
 	return 1;
 }
 
-static void txN(uint8 *str, unsigned char number)
+static void txN(uint8_t *str, unsigned char number)
 {
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 		tx(str[i]);
 }
 
-static uint8 rxN(uint8 *str, unsigned char number)
+static uint8_t rxN(uint8_t *str, unsigned char number)
 {
 	if(bytesAvailable() < number)
 		return 0;
 
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 		rx(&str[i]);
 
 	return 1;
@@ -201,14 +201,14 @@ static void clearBuffers(void)
 	__enable_irq();
 }
 
-static uint32 bytesAvailable()
+static uint32_t bytesAvailable()
 {
 	return available;
 }
 
 // todo ADD 3: Implement WLAN Configuration functionality for Startrampe (LH)
-uint32 checkReadyToSend() { return 0; }
+uint32_t checkReadyToSend() { return 0; }
 void enableWLANCommandMode() {};
-uint32 checkCmdModeEnabled() { return 0; }
-uint32 handleWLANCommand(BufferCommandTypedef cmd, uint32 value) {UNUSED(cmd); UNUSED(value); return 1; }
-uint32 getCMDReply() { return 0; }
+uint32_t checkCmdModeEnabled() { return 0; }
+uint32_t handleWLANCommand(BufferCommandTypedef cmd, uint32_t value) {UNUSED(cmd); UNUSED(value); return 1; }
+uint32_t getCMDReply() { return 0; }

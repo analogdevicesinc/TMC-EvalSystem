@@ -1,10 +1,10 @@
 #include "../../derivative.h"
 #include "../../HAL.h"
 
-#define AIRCR_VECTKEY_MASK ((uint32)0x05FA0000)
+#define AIRCR_VECTKEY_MASK ((uint32_t)0x05FA0000)
 
 static void init(void);
-static void reset(uint8 ResetPeripherals);
+static void reset(uint8_t ResetPeripherals);
 static void NVIC_DeInit(void);
 
 static const IOsFunctionsTypeDef IOFunctions =
@@ -48,7 +48,7 @@ static void init(void)
 	WLAN.init();
 }
 
-static void __attribute((noreturn)) reset(uint8 ResetPeripherals)
+static void __attribute((noreturn)) reset(uint8_t ResetPeripherals)
 {
 	// Disable interrupts
 	__disable_irq();
@@ -65,7 +65,7 @@ static void __attribute((noreturn)) reset(uint8 ResetPeripherals)
 
 static void NVIC_DeInit(void)
 {
-	uint32 index;
+	uint32_t index;
 
 	for(index = 0; index < 8; index++)
 	{

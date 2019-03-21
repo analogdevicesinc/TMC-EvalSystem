@@ -5,8 +5,8 @@
 
 static void init(void);
 static void deInit(void);
-static void setDuty(timer_channel, uint16);
-static uint16 getDuty(timer_channel);
+static void setDuty(timer_channel, uint16_t);
+static uint16_t getDuty(timer_channel);
 
 TimerTypeDef Timer =
 {
@@ -52,13 +52,13 @@ static void deInit(void)
 	TIM_DeInit(TIM1);
 }
 
-static void setDuty(timer_channel channel, uint16 duty)
+static void setDuty(timer_channel channel, uint16_t duty)
 {
 	UNUSED(channel);
 	TIM1->CCR3 = (duty < TIMER_MAX) ? duty : TIMER_MAX;
 }
 
-static uint16 getDuty(timer_channel channel)
+static uint16_t getDuty(timer_channel channel)
 {
 	UNUSED(channel);
 	return TIM1->CCR3;

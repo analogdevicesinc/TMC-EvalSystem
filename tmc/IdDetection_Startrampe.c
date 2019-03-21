@@ -37,7 +37,7 @@
                 (ID_STATE.ch2.state != ID_STATE_WAIT_HIGH)      \
             )
 
-static uint8 assign(uint32 pulse);
+static uint8_t assign(uint32_t pulse);
 
 static bool isScanning;
 IdAssignmentTypeDef IdState = { 0 };
@@ -179,33 +179,33 @@ void IDDetection_init(void)
 
 	TIM5->CNT = 0;
 
-	TIM5->CR1 |= (uint16)
+	TIM5->CR1 |= (uint16_t)
 		(
 				TIM_CR1_ARPE  // buffered auto reload register
 				//| TIM_CR1_OPM  // stop on update
 		);
 
-	TIM5->DIER |= (uint16)
+	TIM5->DIER |= (uint16_t)
 		(
 				TIM_DIER_UIE  // update interrupt
 				//| TIM_DIER_CC1IE
 		);
 
 
-	TIM5->CCMR1 |= (uint16)
+	TIM5->CCMR1 |= (uint16_t)
 		(
 				TIM_CCMR1_CC1S  // channel as input
 				| TIM_CCMR1_CC2S  // channel as input
 		);
 
-	TIM5->CCMR2 |= (uint16)
+	TIM5->CCMR2 |= (uint16_t)
 		(
 				TIM_CCMR2_CC3S  // channel as input
 				| TIM_CCMR2_CC4S  // channel as input
 		);
 
 	// Set CCER after CCMR1 and CCMR2
-	TIM5->CCER |= (uint16)
+	TIM5->CCER |= (uint16_t)
 		(
 				TIM_CCER_CC1E   // capture enable
 				| TIM_CCER_CC2E // capture enable
@@ -216,7 +216,7 @@ void IDDetection_init(void)
 	TIM5->PSC = 5;         // prescaler -> 0.1us
 	TIM5->ARR = 13500000;  // timeout   -> 1.35s
 
-	TIM5->EGR |= (uint16)
+	TIM5->EGR |= (uint16_t)
 		(
 			TIM_EGR_UG // update event to initialize
 		);
@@ -249,7 +249,7 @@ void IDDetection_deInit()
 }
 
 // Returns ID assigned to given pulse (length in 0.1us)
-static uint8 assign(uint32 pulse)
+static uint8_t assign(uint32_t pulse)
 {
 	if(     pulse < 5)      return 0; // error
 	else if(pulse < 110)    return 1;
@@ -293,7 +293,7 @@ static uint8 assign(uint32 pulse)
 }
 
 // Detect IDs of attached boards - returns true when done
-uint8 IDDetection_detect(IdAssignmentTypeDef *out)
+uint8_t IDDetection_detect(IdAssignmentTypeDef *out)
 {
 	if(!isScanning)
 	{
@@ -363,8 +363,8 @@ uint8 IDDetection_detect(IdAssignmentTypeDef *out)
 	// EEPROM spec reserves 2 bytes for the ID buffer.
 	// Currently we only use one byte for IDs, both here in the firmware
 	// and in the IDE - once we deplete that ID pool, this needs to be extended
-	// (uint8 to uint16 and change EEPROM read to read two bytes instead of one)
-	uint8 idBuffer[2];
+	// (uint8_t to uint16_t and change EEPROM read to read two bytes instead of one)
+	uint8_t idBuffer[2];
 	// ====== CH1 ======
 	if(!out->ch1.id)
 	{

@@ -1,7 +1,7 @@
 #include "../../HAL.h"
 
 static void init(void);
-static void reset(uint8 ResetPeripherals);
+static void reset(uint8_t ResetPeripherals);
 static void NVIC_DeInit(void);
 static void get_hwid(void);
 
@@ -49,7 +49,7 @@ static void init(void)
 	get_hwid();
 }
 
-static void __attribute((noreturn)) reset(uint8 ResetPeripherals)
+static void __attribute((noreturn)) reset(uint8_t ResetPeripherals)
 {
 	DisableInterrupts;
 
@@ -65,7 +65,7 @@ static void __attribute((noreturn)) reset(uint8 ResetPeripherals)
 
 static void NVIC_DeInit(void)
 {
-	uint8 index;
+	uint8_t index;
 
 	asm volatile("CPSID I\n");	// disable interrupts
 

@@ -13,8 +13,8 @@ typedef struct
 {
 	void (*init) (void);
 	void (*deInit) (void);
-	void (*setDuty) (timer_channel channel, uint16 duty);
-	uint16 (*getDuty) (timer_channel channel);
+	void (*setDuty) (timer_channel channel, uint16_t duty);
+	uint16_t (*getDuty) (timer_channel channel);
 } TimerTypeDef;
 
 TimerTypeDef Timer;

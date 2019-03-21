@@ -18,15 +18,15 @@
 IOPinTypeDef *PIN_DRV_ENN;
 ConfigurationTypeDef *TMC8690_config;
 
-static u32 mainLoopCount = 0;
+static uint32_t mainLoopCount = 0;
 
 // => SPI wrapper
-int tmc8690_readInt(uint8 address)
+int tmc8690_readInt(uint8_t address)
 {
 	return spi_ch1_readInt(address);
 }
 
-void tmc8690_writeInt(uint8 address, int value)
+void tmc8690_writeInt(uint8_t address, int value)
 {
 	spi_ch1_writeInt(address, value);
 }
@@ -50,7 +50,7 @@ inline static float int2float(int value)
 }
 
 // Efficiency Measurement
-uint32 uSupply;
+uint32_t uSupply;
 int iSupplyOffset;
 float iSupplyGain;
 int torqueOffset;
@@ -70,7 +70,7 @@ void TMC8690_calcEfficiency()
 	//
 	float torque, iSupply, omega;
 
-	iSupply = ((s32) tmc8690_readInt(ADC_I_SUPPLY_FILT) - iSupplyOffset) * iSupplyGain;
+	iSupply = ((int32_t) tmc8690_readInt(ADC_I_SUPPLY_FILT) - iSupplyOffset) * iSupplyGain;
 
 	if(iSupply == 0 || uSupply == 0) { // avoid division by 0
 		efficiencyInPercent = 0;
@@ -83,9 +83,9 @@ void TMC8690_calcEfficiency()
 }
 
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -144,7 +144,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 27:
 		// POSITION_ACTUAL_16
 		if(readWrite == READ)
-			*value = (s32) TMC8690_FIELD_READ(POSITION_ACTUAL, 0xFFFF0000, 16);
+			*value = (int32_t) TMC8690_FIELD_READ(POSITION_ACTUAL, 0xFFFF0000, 16);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
@@ -152,7 +152,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 39:  // OSCI_status
 		if(readWrite == READ)
 		{
-			*value = (s16) TMC8690_FIELD_READ(OSCI_STATUS, TMC8690_OSCI_STATUS_MASK, TMC8690_OSCI_STATUS_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(OSCI_STATUS, TMC8690_OSCI_STATUS_MASK, TMC8690_OSCI_STATUS_SHIFT);
 		}
 		else if(readWrite == WRITE)
 		{
@@ -231,7 +231,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		break;
 	case 47:  // Pretrigger_conf
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(OSCI_PRETRIGGER_CONFIG_REG, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_MASK, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(OSCI_PRETRIGGER_CONFIG_REG, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_MASK, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(OSCI_PRETRIGGER_CONFIG_REG, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_MASK, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_SHIFT, *value);
 		break;
@@ -245,7 +245,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		break;
 	case 49:  // data address // todo AP 2: shifte die restlichen Adressen nach oben #1
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(OSCI_DATA_ADDRESS, TMC8690_OSCI_DATA_ADDRESS_MASK, TMC8690_OSCI_DATA_ADDRESS_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(OSCI_DATA_ADDRESS, TMC8690_OSCI_DATA_ADDRESS_MASK, TMC8690_OSCI_DATA_ADDRESS_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(OSCI_DATA_ADDRESS, TMC8690_OSCI_DATA_ADDRESS_MASK, TMC8690_OSCI_DATA_ADDRESS_SHIFT, *value);
 		break;
@@ -253,490 +253,490 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 51:
 		// CHIPINFO_DATA
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(CHIPINFO_DATA, TMC8690_CHIPINFO_DATA_MASK, TMC8690_CHIPINFO_DATA_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(CHIPINFO_DATA, TMC8690_CHIPINFO_DATA_MASK, TMC8690_CHIPINFO_DATA_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 52:
 		// CHIPINFO_ADDR
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(CHIPINFO_ADDR, TMC8690_CHIPINFO_ADDR_MASK, TMC8690_CHIPINFO_ADDR_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(CHIPINFO_ADDR, TMC8690_CHIPINFO_ADDR_MASK, TMC8690_CHIPINFO_ADDR_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(CHIPINFO_ADDR, TMC8690_CHIPINFO_ADDR_MASK, TMC8690_CHIPINFO_ADDR_SHIFT, *value);
 		break;
 	case 57:
 		// STATUS_WORD
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATUS_WORD);
+			*value = (int32_t) tmc8690_readInt(STATUS_WORD);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 58:
 		// COMMAND_WORD
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(COMMAND_WORD);
+			*value = (int32_t) tmc8690_readInt(COMMAND_WORD);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(COMMAND_WORD, *value);
 		break;
 	case 59:
 		// P_FAK_BRAKE
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(P_FAK_BRAKE, TMC8690_P_FAK_BRAKE_MASK, TMC8690_P_FAK_BRAKE_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(P_FAK_BRAKE, TMC8690_P_FAK_BRAKE_MASK, TMC8690_P_FAK_BRAKE_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(P_FAK_BRAKE, TMC8690_P_FAK_BRAKE_MASK, TMC8690_P_FAK_BRAKE_SHIFT, *value);
 		break;
 	case 60:
 		// I_FAK_BRAKE
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(I_FAK_BRAKE, TMC8690_I_FAK_BRAKE_MASK, TMC8690_I_FAK_BRAKE_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(I_FAK_BRAKE, TMC8690_I_FAK_BRAKE_MASK, TMC8690_I_FAK_BRAKE_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(I_FAK_BRAKE, TMC8690_I_FAK_BRAKE_MASK, TMC8690_I_FAK_BRAKE_SHIFT, *value);
 		break;
 	case 61:
 		// P_FAK_HEAT
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(P_FAK_HEAT, TMC8690_P_FAK_HEAT_MASK, TMC8690_P_FAK_HEAT_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(P_FAK_HEAT, TMC8690_P_FAK_HEAT_MASK, TMC8690_P_FAK_HEAT_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(P_FAK_HEAT, TMC8690_P_FAK_HEAT_MASK, TMC8690_P_FAK_HEAT_SHIFT, *value);
 		break;
 	case 62:
 		// I_FAK_HEAT
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(I_FAK_HEAT, TMC8690_I_FAK_HEAT_MASK, TMC8690_I_FAK_HEAT_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(I_FAK_HEAT, TMC8690_I_FAK_HEAT_MASK, TMC8690_I_FAK_HEAT_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(I_FAK_HEAT, TMC8690_I_FAK_HEAT_MASK, TMC8690_I_FAK_HEAT_SHIFT, *value);
 		break;
 	case 63:
 		// P_FAK_VEL
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(P_FAK_VEL, TMC8690_P_FAK_VEL_MASK, TMC8690_P_FAK_VEL_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(P_FAK_VEL, TMC8690_P_FAK_VEL_MASK, TMC8690_P_FAK_VEL_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(P_FAK_VEL, TMC8690_P_FAK_VEL_MASK, TMC8690_P_FAK_VEL_SHIFT, *value);
 		break;
 	case 64:
 		// I_FAK_VEL
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(I_FAK_VEL, TMC8690_I_FAK_VEL_MASK, TMC8690_I_FAK_VEL_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(I_FAK_VEL, TMC8690_I_FAK_VEL_MASK, TMC8690_I_FAK_VEL_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(I_FAK_VEL, TMC8690_I_FAK_VEL_MASK, TMC8690_I_FAK_VEL_SHIFT, *value);
 		break;
 	case 65:
 		// P_FAK_POS
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(P_FAK_POS, TMC8690_P_FAK_POS_MASK, TMC8690_P_FAK_POS_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(P_FAK_POS, TMC8690_P_FAK_POS_MASK, TMC8690_P_FAK_POS_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(P_FAK_POS, TMC8690_P_FAK_POS_MASK, TMC8690_P_FAK_POS_SHIFT, *value);
 		break;
 	case 66:
 		// ENC_Z_COMP_VAL
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(ENC_Z_COMP_VAL, TMC8690_ENC_Z_COMP_VAL_MASK, TMC8690_ENC_Z_COMP_VAL_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(ENC_Z_COMP_VAL, TMC8690_ENC_Z_COMP_VAL_MASK, TMC8690_ENC_Z_COMP_VAL_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(ENC_Z_COMP_VAL, TMC8690_ENC_Z_COMP_VAL_MASK, TMC8690_ENC_Z_COMP_VAL_SHIFT, *value);
 		break;
 	case 67:
 		// TORQUE_TARGET
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(TORQUE_TARGET, TMC8690_TORQUE_TARGET_MASK, TMC8690_TORQUE_TARGET_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(TORQUE_TARGET, TMC8690_TORQUE_TARGET_MASK, TMC8690_TORQUE_TARGET_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(TORQUE_TARGET, TMC8690_TORQUE_TARGET_MASK, TMC8690_TORQUE_TARGET_SHIFT, *value);
 		break;
 	case 68:
 		// VELOCITY_TARGET
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(VELOCITY_TARGET);
+			*value = (uint32_t) tmc8690_readInt(VELOCITY_TARGET);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(VELOCITY_TARGET, *value);
 		break;
 	case 69:
 		// POSITION_TARGET
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(POSITION_TARGET);
+			*value = (uint32_t) tmc8690_readInt(POSITION_TARGET);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(POSITION_TARGET, *value);
 		break;
 	case 70:
 		// TEMPERATURE_TARGET
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(TEMPERATURE_TARGET, TMC8690_TEMPERATURE_TARGET_MASK, TMC8690_TEMPERATURE_TARGET_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(TEMPERATURE_TARGET, TMC8690_TEMPERATURE_TARGET_MASK, TMC8690_TEMPERATURE_TARGET_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(TEMPERATURE_TARGET, TMC8690_TEMPERATURE_TARGET_MASK, TMC8690_TEMPERATURE_TARGET_SHIFT, *value);
 		break;
 	case 71:
 		// OSCI_MAIN_CONFIG_REG
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(OSCI_MAIN_CONFIG_REG);
+			*value = (int32_t) tmc8690_readInt(OSCI_MAIN_CONFIG_REG);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(OSCI_MAIN_CONFIG_REG, *value);
 		break;
 	case 72:
 		// OSCI_PRETRIGGER_CONFIG_REG
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(OSCI_PRETRIGGER_CONFIG_REG, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_MASK, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(OSCI_PRETRIGGER_CONFIG_REG, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_MASK, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(OSCI_PRETRIGGER_CONFIG_REG, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_MASK, TMC8690_OSCI_PRETRIGGER_CONFIG_REG_SHIFT, *value);
 		break;
 	case 73:
 		// OSCI_DATA_ADDRESS
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(OSCI_DATA_ADDRESS, TMC8690_OSCI_DATA_ADDRESS_MASK, TMC8690_OSCI_DATA_ADDRESS_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(OSCI_DATA_ADDRESS, TMC8690_OSCI_DATA_ADDRESS_MASK, TMC8690_OSCI_DATA_ADDRESS_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(OSCI_DATA_ADDRESS, TMC8690_OSCI_DATA_ADDRESS_MASK, TMC8690_OSCI_DATA_ADDRESS_SHIFT, *value);
 		break;
 	case 74:
 		// OSCI_STATUS
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(OSCI_STATUS, TMC8690_OSCI_STATUS_MASK, TMC8690_OSCI_STATUS_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(OSCI_STATUS, TMC8690_OSCI_STATUS_MASK, TMC8690_OSCI_STATUS_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 75:
 		// OSCI_OUTPUT_DATA
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(OSCI_OUTPUT_DATA, TMC8690_OSCI_OUTPUT_DATA_MASK, TMC8690_OSCI_OUTPUT_DATA_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(OSCI_OUTPUT_DATA, TMC8690_OSCI_OUTPUT_DATA_MASK, TMC8690_OSCI_OUTPUT_DATA_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 76:
 		// ADC_ENC_TRACK_A
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(ADC_ENC_TRACK_A, TMC8690_ADC_ENC_TRACK_A_MASK, TMC8690_ADC_ENC_TRACK_A_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(ADC_ENC_TRACK_A, TMC8690_ADC_ENC_TRACK_A_MASK, TMC8690_ADC_ENC_TRACK_A_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 77:
 		// ADC_ENC_TRACK_B
 		if(readWrite == READ)
-			*value = (s16) TMC8690_FIELD_READ(ADC_ENC_TRACK_B, TMC8690_ADC_ENC_TRACK_B_MASK, TMC8690_ADC_ENC_TRACK_B_SHIFT);
+			*value = (int16_t) TMC8690_FIELD_READ(ADC_ENC_TRACK_B, TMC8690_ADC_ENC_TRACK_B_MASK, TMC8690_ADC_ENC_TRACK_B_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 78:
 		// ADC_ENC_TRACK_Z
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(ADC_ENC_TRACK_Z, TMC8690_ADC_ENC_TRACK_Z_MASK, TMC8690_ADC_ENC_TRACK_Z_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(ADC_ENC_TRACK_Z, TMC8690_ADC_ENC_TRACK_Z_MASK, TMC8690_ADC_ENC_TRACK_Z_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 79:
 		// ADC_I_U
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(ADC_I_U, TMC8690_ADC_I_U_MASK, TMC8690_ADC_I_U_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(ADC_I_U, TMC8690_ADC_I_U_MASK, TMC8690_ADC_I_U_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 80:
 		// ADC_I_V
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(ADC_I_V, TMC8690_ADC_I_V_MASK, TMC8690_ADC_I_V_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(ADC_I_V, TMC8690_ADC_I_V_MASK, TMC8690_ADC_I_V_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 81:
 		// ADC_I_W
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(ADC_I_W, TMC8690_ADC_I_W_MASK, TMC8690_ADC_I_W_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(ADC_I_W, TMC8690_ADC_I_W_MASK, TMC8690_ADC_I_W_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 82:
 		// ADC_I_SUPPLY
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(ADC_I_SUPPLY);
+			*value = (int32_t) tmc8690_readInt(ADC_I_SUPPLY);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 83:
 		// ADC_I_SUPPLY_FILT
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(ADC_I_SUPPLY_FILT);
+			*value = (int32_t) tmc8690_readInt(ADC_I_SUPPLY_FILT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 84:
 		// ADC_TORQUE
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(ADC_TORQUE, TMC8690_ADC_TORQUE_MASK, TMC8690_ADC_TORQUE_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(ADC_TORQUE, TMC8690_ADC_TORQUE_MASK, TMC8690_ADC_TORQUE_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 85:
 		// ADC_TEMP
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(ADC_TEMP, TMC8690_ADC_TEMP_MASK, TMC8690_ADC_TEMP_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(ADC_TEMP, TMC8690_ADC_TEMP_MASK, TMC8690_ADC_TEMP_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 86:
 		// ADC_MICROPHONE
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(ADC_MICROPHONE, TMC8690_ADC_MICROPHONE_MASK, TMC8690_ADC_MICROPHONE_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(ADC_MICROPHONE, TMC8690_ADC_MICROPHONE_MASK, TMC8690_ADC_MICROPHONE_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 87:
 		// ADC_I_BRAKE
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(ADC_I_BRAKE, TMC8690_ADC_I_BRAKE_MASK, TMC8690_ADC_I_BRAKE_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(ADC_I_BRAKE, TMC8690_ADC_I_BRAKE_MASK, TMC8690_ADC_I_BRAKE_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 88:
 		// TRACK_A_OFFSET
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(TRACK_A_OFFSET, TMC8690_TRACK_A_OFFSET_MASK, TMC8690_TRACK_A_OFFSET_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(TRACK_A_OFFSET, TMC8690_TRACK_A_OFFSET_MASK, TMC8690_TRACK_A_OFFSET_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(TRACK_A_OFFSET, TMC8690_TRACK_A_OFFSET_MASK, TMC8690_TRACK_A_OFFSET_SHIFT, *value);
 		break;
 	case 89:
 		// TRACK_B_OFFSET
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(TRACK_B_OFFSET, TMC8690_TRACK_B_OFFSET_MASK, TMC8690_TRACK_B_OFFSET_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(TRACK_B_OFFSET, TMC8690_TRACK_B_OFFSET_MASK, TMC8690_TRACK_B_OFFSET_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(TRACK_B_OFFSET, TMC8690_TRACK_B_OFFSET_MASK, TMC8690_TRACK_B_OFFSET_SHIFT, *value);
 		break;
 	case 90:
 		// DAC_V_REF
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(DAC_V_REF, TMC8690_DAC_V_REF_MASK, TMC8690_DAC_V_REF_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(DAC_V_REF, TMC8690_DAC_V_REF_MASK, TMC8690_DAC_V_REF_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(DAC_V_REF, TMC8690_DAC_V_REF_MASK, TMC8690_DAC_V_REF_SHIFT, *value);
 		break;
 	case 91:
 		// T_PT1_FILTER_VEL
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(T_PT1_FILTER_VEL, TMC8690_T_PT1_FILTER_VEL_MASK, TMC8690_T_PT1_FILTER_VEL_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(T_PT1_FILTER_VEL, TMC8690_T_PT1_FILTER_VEL_MASK, TMC8690_T_PT1_FILTER_VEL_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(T_PT1_FILTER_VEL, TMC8690_T_PT1_FILTER_VEL_MASK, TMC8690_T_PT1_FILTER_VEL_SHIFT, *value);
 		break;
 	case 92:
 		// T_PT1_FILTER_I_SUPPLY
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(T_PT1_FILTER_I_SUPPLY, TMC8690_T_PT1_FILTER_I_SUPPLY_MASK, TMC8690_T_PT1_FILTER_I_SUPPLY_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(T_PT1_FILTER_I_SUPPLY, TMC8690_T_PT1_FILTER_I_SUPPLY_MASK, TMC8690_T_PT1_FILTER_I_SUPPLY_SHIFT);
 		else if(readWrite == WRITE)
 			TMC8690_FIELD_UPDATE(T_PT1_FILTER_I_SUPPLY, TMC8690_T_PT1_FILTER_I_SUPPLY_MASK, TMC8690_T_PT1_FILTER_I_SUPPLY_SHIFT, *value);
 		break;
 	case 93:
 		// DAC_BRAKE
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(DAC_BRAKE);
+			*value = (uint32_t) tmc8690_readInt(DAC_BRAKE);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 94:
 		// DAC_BRAKE_TARGET
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(DAC_BRAKE_TARGET);
+			*value = (uint32_t) tmc8690_readInt(DAC_BRAKE_TARGET);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DAC_BRAKE_TARGET, *value);
 		break;
 	case 95:
 		// VELOCITY_ACTUAL
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(VELOCITY_ACTUAL);
+			*value = (uint32_t) tmc8690_readInt(VELOCITY_ACTUAL);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 96:
 		// VELOCITY_IN_RPM_ACTUAL
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(VELOCITY_IN_RPM_ACTUAL);
+			*value = (uint32_t) tmc8690_readInt(VELOCITY_IN_RPM_ACTUAL);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 97:
 		// VELOCITY_IN_RPM_ACTUAL_PT1
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(VELOCITY_IN_RPM_ACTUAL_PT1);
+			*value = (uint32_t) tmc8690_readInt(VELOCITY_IN_RPM_ACTUAL_PT1);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 98:
 		// VELOCITY_IN_RPM_ACTUAL_MAV
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(VELOCITY_IN_RPM_ACTUAL_MAV);
+			*value = (uint32_t) tmc8690_readInt(VELOCITY_IN_RPM_ACTUAL_MAV);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 99:
 		// POSITION_ACTUAL
 		if(readWrite == READ)
-			*value = (u32) tmc8690_readInt(POSITION_ACTUAL);
+			*value = (uint32_t) tmc8690_readInt(POSITION_ACTUAL);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 100:
 		// VEL_CTRL_TORQUE_TARGET
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(VEL_CTRL_TORQUE_TARGET, TMC8690_VEL_CTRL_TORQUE_TARGET_MASK, TMC8690_VEL_CTRL_TORQUE_TARGET_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(VEL_CTRL_TORQUE_TARGET, TMC8690_VEL_CTRL_TORQUE_TARGET_MASK, TMC8690_VEL_CTRL_TORQUE_TARGET_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 101:
 		// POS_CTRL_VEL_TARGET
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(POS_CTRL_VEL_TARGET, TMC8690_POS_CTRL_VEL_TARGET_MASK, TMC8690_POS_CTRL_VEL_TARGET_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(POS_CTRL_VEL_TARGET, TMC8690_POS_CTRL_VEL_TARGET_MASK, TMC8690_POS_CTRL_VEL_TARGET_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 102:
 		// PWM_HEATER
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(PWM_HEATER, TMC8690_PWM_HEATER_MASK, TMC8690_PWM_HEATER_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(PWM_HEATER, TMC8690_PWM_HEATER_MASK, TMC8690_PWM_HEATER_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 103:
 		// U_BRAKE
 		if(readWrite == READ)
-			*value = (u16) TMC8690_FIELD_READ(U_BRAKE, TMC8690_U_BRAKE_MASK, TMC8690_U_BRAKE_SHIFT);
+			*value = (uint16_t) TMC8690_FIELD_READ(U_BRAKE, TMC8690_U_BRAKE_MASK, TMC8690_U_BRAKE_SHIFT);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 104:
 		// DEBUG_AXIS_PARAM_0
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(DEBUG_AXIS_PARAM_0);
+			*value = (int32_t) tmc8690_readInt(DEBUG_AXIS_PARAM_0);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DEBUG_AXIS_PARAM_0, *value);
 		break;
 	case 105:
 		// DEBUG_AXIS_PARAM_1
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(DEBUG_AXIS_PARAM_1);
+			*value = (int32_t) tmc8690_readInt(DEBUG_AXIS_PARAM_1);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DEBUG_AXIS_PARAM_1, *value);
 		break;
 	case 106:
 		// DEBUG_AXIS_PARAM_2
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(DEBUG_AXIS_PARAM_2);
+			*value = (int32_t) tmc8690_readInt(DEBUG_AXIS_PARAM_2);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DEBUG_AXIS_PARAM_2, *value);
 		break;
 	case 107:
 		// DEBUG_AXIS_PARAM_3
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(DEBUG_AXIS_PARAM_3);
+			*value = (int32_t) tmc8690_readInt(DEBUG_AXIS_PARAM_3);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DEBUG_AXIS_PARAM_3, *value);
 		break;
 	case 108:
 		// DEBUG_AXIS_PARAM_4
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(DEBUG_AXIS_PARAM_4);
+			*value = (int32_t) tmc8690_readInt(DEBUG_AXIS_PARAM_4);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DEBUG_AXIS_PARAM_4, *value);
 		break;
 	case 109:
 		// DEBUG_AXIS_PARAM_5
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(DEBUG_AXIS_PARAM_5);
+			*value = (int32_t) tmc8690_readInt(DEBUG_AXIS_PARAM_5);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DEBUG_AXIS_PARAM_5, *value);
 		break;
 	case 110:
 		// DEBUG_AXIS_PARAM_6
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(DEBUG_AXIS_PARAM_6);
+			*value = (int32_t) tmc8690_readInt(DEBUG_AXIS_PARAM_6);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DEBUG_AXIS_PARAM_6, *value);
 		break;
 	case 111:
 		// DEBUG_AXIS_PARAM_7
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(DEBUG_AXIS_PARAM_7);
+			*value = (int32_t) tmc8690_readInt(DEBUG_AXIS_PARAM_7);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(DEBUG_AXIS_PARAM_7, *value);
 		break;
 	case 112:
 		// STATE_VAR_PARAM_0
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATE_VAR_PARAM_0);
+			*value = (int32_t) tmc8690_readInt(STATE_VAR_PARAM_0);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 113:
 		// STATE_VAR_PARAM_1
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATE_VAR_PARAM_1);
+			*value = (int32_t) tmc8690_readInt(STATE_VAR_PARAM_1);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 114:
 		// STATE_VAR_PARAM_2
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATE_VAR_PARAM_2);
+			*value = (int32_t) tmc8690_readInt(STATE_VAR_PARAM_2);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 115:
 		// STATE_VAR_PARAM_3
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATE_VAR_PARAM_3);
+			*value = (int32_t) tmc8690_readInt(STATE_VAR_PARAM_3);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 116:
 		// STATE_VAR_PARAM_4
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATE_VAR_PARAM_4);
+			*value = (int32_t) tmc8690_readInt(STATE_VAR_PARAM_4);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 117:
 		// STATE_VAR_PARAM_5
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATE_VAR_PARAM_5);
+			*value = (int32_t) tmc8690_readInt(STATE_VAR_PARAM_5);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 118:
 		// STATE_VAR_PARAM_6
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATE_VAR_PARAM_6);
+			*value = (int32_t) tmc8690_readInt(STATE_VAR_PARAM_6);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 119:
 		// STATE_VAR_PARAM_7
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATE_VAR_PARAM_7);
+			*value = (int32_t) tmc8690_readInt(STATE_VAR_PARAM_7);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 120:
 		// SAMP_INPUTS_RAW
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(SAMP_INPUTS_RAW);
+			*value = (int32_t) tmc8690_readInt(SAMP_INPUTS_RAW);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 121:
 		// SAMP_OUTPUTS_RAW
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(SAMP_OUTPUTS_RAW);
+			*value = (int32_t) tmc8690_readInt(SAMP_OUTPUTS_RAW);
 		else if(readWrite == WRITE)
 			errors |= TMC_ERROR_TYPE;
 		break;
 	case 122:
 		// STATUS_FLAGS
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(STATUS_FLAGS);
+			*value = (int32_t) tmc8690_readInt(STATUS_FLAGS);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(STATUS_FLAGS, *value);
 		break;
 	case 123:
 		// WARNING_MASK
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(WARNING_MASK);
+			*value = (int32_t) tmc8690_readInt(WARNING_MASK);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(WARNING_MASK, *value);
 		break;
 	case 124:
 		// ERROR_MASK
 		if(readWrite == READ)
-			*value = (s32) tmc8690_readInt(ERROR_MASK);
+			*value = (int32_t) tmc8690_readInt(ERROR_MASK);
 		else if(readWrite == WRITE)
 			tmc8690_writeInt(ERROR_MASK, *value);
 		break;
@@ -755,10 +755,10 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static void periodicJob(uint32 actualSystick)
+static void periodicJob(uint32_t actualSystick)
 {
-	static u32 loopCounterCheckTime;
-	static u32 loopCounter = 0;
+	static uint32_t loopCounterCheckTime;
+	static uint32_t loopCounter = 0;
 
 	if((actualSystick - loopCounterCheckTime) >= 1000)
 	{
@@ -770,29 +770,29 @@ static void periodicJob(uint32 actualSystick)
 	loopCounter++;
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	tmc8690_writeInt(address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	*value = tmc8690_readInt(address);
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(type);
 	UNUSED(motor);
@@ -817,17 +817,17 @@ static void deInit(void)
 	HAL.IOs->config->reset(PIN_DRV_ENN);
 };
 
-static uint8 reset()
+static uint8_t reset()
 {
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return 1;
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;

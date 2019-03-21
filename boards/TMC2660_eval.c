@@ -19,31 +19,31 @@
 
 #define DEFAULT_MOTOR 0
 
-static uint32 right(uint8 motor, int32 velocity);
-static uint32 left(uint8 motor, int32 velocity);
-static uint32 rotate(uint8 motor, int32 velocity);
-static uint32 stop(uint8 motor);
-static uint32 moveTo(uint8 motor, int32 position);
-static uint32 moveBy(uint8 motor, int32 *ticks);
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
-static void readRegister(u8 motor, uint8 address,	int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint8_t address,	int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
-static void periodicJob(uint32 tick);
+static void periodicJob(uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
-static uint8 reset();
+static uint8_t reset();
 static void enableDriver(DriverState state);
 
-static void on_standstill_changed(uint8 newStandstill);
+static void on_standstill_changed(uint8_t newStandstill);
 
-void tmc2660_writeInt(uint8 motor, uint8 address, int value);
-uint32 tmc2660_readInt(uint8 motor, uint8 address);
+void tmc2660_writeInt(uint8_t motor, uint8_t address, int value);
+uint32_t tmc2660_readInt(uint8_t motor, uint8_t address);
 
-static uint32 compatibilityMode = 1;
+static uint32_t compatibilityMode = 1;
 
 static SPIChannelTypeDef *TMC2660_SPIChannel;
 static TMC2660TypeDef TMC2660;
@@ -61,9 +61,9 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-void readWrite(uint32 datagram)
+void readWrite(uint32_t datagram)
 {	// sending data (value) via spi to TMC262, coping written and received data to shadow register
-	static uint8 rdsel = 0; // number of expected read response
+	static uint8_t rdsel = 0; // number of expected read response
 
 // if SGCONF should be written, check whether stand still, or run current should be used
 //	if(TMC2660_GET_ADDRESS(datagram) == TMC2660_SGCSCONF)
@@ -90,9 +90,9 @@ void readWrite(uint32 datagram)
 	TMC2660_config->shadowRegister[TMC2660_GET_ADDRESS(datagram) | TMC2660_WRITE_BIT ] = datagram;
 }
 
-void readImmediately(uint8 rdsel)
+void readImmediately(uint8_t rdsel)
 { // sets desired reply in DRVCONF register, resets it to previous settings whilst reading desired reply
-	uint32 value, drvConf;
+	uint32_t value, drvConf;
 
 // additional reading to keep all replies up to date
 	value = tmc2660_readInt(0, TMC2660_WRITE_BIT | TMC2660_DRVCONF);  // buffer value amd  drvConf to write back later
@@ -104,7 +104,7 @@ void readImmediately(uint8 rdsel)
 }
 
 // => SPI wrapper
-void tmc2660_writeInt(uint8 motor, uint8 address, int value)
+void tmc2660_writeInt(uint8_t motor, uint8_t address, int value)
 {
 	UNUSED(motor);
 
@@ -116,7 +116,7 @@ void tmc2660_writeInt(uint8 motor, uint8 address, int value)
 		readWrite(TMC2660_DATAGRAM(address, value));
 }
 
-uint32 tmc2660_readInt(uint8 motor, uint8 address)
+uint32_t tmc2660_readInt(uint8_t motor, uint8_t address)
 {
 	UNUSED(motor);
 
@@ -126,11 +126,11 @@ uint32 tmc2660_readInt(uint8 motor, uint8 address)
 	return TMC2660_config->shadowRegister[0x7F & address];
 }
 
-void tmc2660_readWrite(uint8 motor, uint32 value)
+void tmc2660_readWrite(uint8_t motor, uint32_t value)
 {
 	UNUSED(motor);
 
-	static uint8 rdsel = 0; // number of expected read response
+	static uint8_t rdsel = 0; // number of expected read response
 
 	// if SGCONF should be written, check whether stand still, or run current should be used
 //	if(TMC2660_GET_ADDRESS(value) == TMC2660_SGCSCONF)
@@ -157,9 +157,9 @@ void tmc2660_readWrite(uint8 motor, uint32 value)
 	TMC2660_config->shadowRegister[TMC2660_GET_ADDRESS(value) | TMC2660_WRITE_BIT ] = value;
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 errors = 0;
+	uint32_t errors = 0;
 
 	UNUSED(motor);
 
@@ -187,7 +187,7 @@ static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
 	return errors;
 }
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -200,22 +200,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -225,7 +225,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -236,9 +236,9 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return moveTo(motor, *ticks);
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -614,29 +614,29 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	tmc2660_writeInt(0, address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	*value = tmc2660_readInt(0, address);
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -668,7 +668,7 @@ static void deInit(void)
 	StepDir_deInit();
 }
 
-static void on_standstill_changed(uint8 newStandstill)
+static void on_standstill_changed(uint8_t newStandstill)
 {
 	if(newStandstill == true) {
 		TMC2660.runCurrentScale = TMC2660_FIELD_READ(0, 0x0E, TMC2660_CS_MASK, TMC2660_CS_SHIFT);
@@ -679,11 +679,11 @@ static void on_standstill_changed(uint8 newStandstill)
 	}
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
-	static uint8 lastCoolStepState = 0;
-	static uint8 lastStandstillState = 0;
-	uint8 stst;
+	static uint8_t lastCoolStepState = 0;
+	static uint8_t lastStandstillState = 0;
+	uint8_t stst;
 
 	// Apply current settings
 	if((stst = TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT)) != lastStandstillState) {
@@ -694,10 +694,10 @@ static void periodicJob(uint32 tick)
 	Evalboards.ch2.errors = (TMC2660.isStandStillOverCurrent) 	? (Evalboards.ch2.errors | ERRORS_I_STS) 			: (Evalboards.ch2.errors & ~ERRORS_I_STS);
 	Evalboards.ch2.errors = (TMC2660.isStandStillCurrentLimit) 	? (Evalboards.ch2.errors | ERRORS_I_TIMEOUT_STS) 	: (Evalboards.ch2.errors & ~ERRORS_I_TIMEOUT_STS);
 
-	uint8 currCoolStepState = (abs(StepDir_getActualVelocity(DEFAULT_MOTOR)) >= TMC2660.coolStepThreshold);
+	uint8_t currCoolStepState = (abs(StepDir_getActualVelocity(DEFAULT_MOTOR)) >= TMC2660.coolStepThreshold);
 	if(currCoolStepState != lastCoolStepState)
 	{
-		uint8 value = (currCoolStepState)? TMC2660.coolStepActiveValue : TMC2660.coolStepInactiveValue;
+		uint8_t value = (currCoolStepState)? TMC2660.coolStepActiveValue : TMC2660.coolStepInactiveValue;
 		TMC2660_FIELD_UPDATE(0, TMC2660_SMARTEN, TMC2660_SEMIN_MASK, TMC2660_SEMIN_SHIFT, value);
 
 		lastCoolStepState = currCoolStepState;
@@ -707,7 +707,7 @@ static void periodicJob(uint32 tick)
 	StepDir_periodicJob(DEFAULT_MOTOR);
 }
 
-static uint8 reset()
+static uint8_t reset()
 {
 	if(StepDir_getActualVelocity(0) != 0)
 		return 0;
@@ -722,7 +722,7 @@ static uint8 reset()
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return tmc2660_restore(TMC2660_config);
 }

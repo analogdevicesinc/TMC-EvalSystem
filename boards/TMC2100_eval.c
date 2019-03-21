@@ -13,27 +13,27 @@
 
 #define MOTORS 1
 
-static uint32 right(uint8 motor, int32 velocity);
-static uint32 left(uint8 motor, int32 velocity);
-static uint32 rotate(uint8 motor, int32 velocity);
-static uint32 stop(uint8 motor);
-static uint32 moveTo(uint8 motor, int32 position);
-static uint32 moveBy(uint8 motor, int32 *ticks);
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
-static void readRegister(u8 motor, uint8 address, int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
 
-static void periodicJob(uint32 tick);
-//static void checkErrors	(uint32 tick);
+static void periodicJob(uint32_t tick);
+//static void checkErrors	(uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
-static uint8 reset();
+static uint8_t reset();
 static void enableDriver(DriverState state);
 
-static u32 setStandAloneSettings(uint8 i, int32 value);
-static u32 getStandAloneSettings(uint8 i, int32 *value);
+static uint32_t setStandAloneSettings(uint8_t i, int32_t value);
+static uint32_t getStandAloneSettings(uint8_t i, int32_t *value);
 
 static IO_States lastEnable = IOS_OPEN; //TMCRhinoSA.Enable_StandStillPowerDownSettings.ENABLED_034;
 
@@ -57,7 +57,7 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -67,22 +67,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -92,7 +92,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -103,9 +103,9 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return moveTo(motor, *ticks);
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -192,7 +192,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		if(readWrite == READ) {
 			*value = (HAL.IOs->config->isHigh(Pins.AIN_REF_PWM)) ? 1 : 0;
 		} else if(readWrite == WRITE) {
-			if(((uint32) *value) > 10000)
+			if(((uint32_t) *value) > 10000)
 				errors |= TMC_ERROR_TYPE;
 			else
 				Timer.setDuty(TIMER_CHANNEL_1, *value);
@@ -264,17 +264,17 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(address);
 	UNUSED(motor);
@@ -282,7 +282,7 @@ static void writeRegister(u8 motor, uint8 address, int32 value)
 	TMCRhinoSA.setInt(value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(address);
 	UNUSED(motor);
@@ -290,9 +290,9 @@ static void readRegister(u8 motor, uint8 address, int32 *value)
 	*value = TMCRhinoSA.getInt();
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 errors = 0;
+	uint32_t errors = 0;
 
 	switch(type)
 	{
@@ -313,7 +313,7 @@ static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
 	return errors;
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	UNUSED(tick);
 
@@ -323,11 +323,11 @@ static void periodicJob(uint32 tick)
 	}
 }
 
-static u32 setStandAloneSettings(uint8 i, int32 value)
+static uint32_t setStandAloneSettings(uint8_t i, int32_t value)
 {
 	TMCRhinoTypeStandAloneConfigDef config;
 
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(i > 6)
 	{
@@ -411,11 +411,11 @@ static u32 setStandAloneSettings(uint8 i, int32 value)
 	return errors;
 }
 
-static u32 getStandAloneSettings(uint8 i, int32 *value)
+static uint32_t getStandAloneSettings(uint8_t i, int32_t *value)
 {
 	TMCRhinoTypeStandAloneConfigDef config;
 
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(i > 6)
 	{
@@ -512,7 +512,7 @@ void TMC2100_init(void)
 	TMCRhinoSA.CFGPins[5] = Pins.CFG5;
 	TMCRhinoSA.CFGPins[6] = Pins.CFG6_ENN;
 
-	for(uint8 i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < 7; i++)
 	{
 		HAL.IOs->config->toOutput(TMCRhinoSA.CFGPins[i]);
 		HAL.IOs->config->setLow(TMCRhinoSA.CFGPins[i]);
@@ -579,7 +579,7 @@ static void deInit(void)
 	Timer.deInit();
 }
 
-static uint8 reset()
+static uint8_t reset()
 {
 	if(StepDir_getActualVelocity(0) && !VitalSignsMonitor.brownOut)
 		return 0;

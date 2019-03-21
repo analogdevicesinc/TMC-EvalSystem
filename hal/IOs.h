@@ -55,14 +55,14 @@
 
 	typedef struct
 	{
-		const uint8 DEFAULT;
-		const uint8 DI;
-		const uint8 AI;
-		const uint8 DO;
-		const uint8 PWM;
-		const uint8 SD;
-		const uint8 CLK16;
-		const uint8 SPI;
+		const uint8_t DEFAULT;
+		const uint8_t DI;
+		const uint8_t AI;
+		const uint8_t DO;
+		const uint8_t PWM;
+		const uint8_t SD;
+		const uint8_t CLK16;
+		const uint8_t SPI;
 	} IOsHighLevelFunctionTypeDef;
 
 	typedef struct
@@ -77,15 +77,15 @@
 	{
 		#if defined(Startrampe)
 			GPIO_TypeDef            *port;
-			__IO uint16             *setBitRegister;
-			__IO uint16             *resetBitRegister;
+			__IO uint16_t             *setBitRegister;
+			__IO uint16_t             *resetBitRegister;
 		#elif defined(Landungsbruecke)
 			PORT_MemMapPtr          portBase;
 			GPIO_MemMapPtr          GPIOBase;
-			volatile uint32         *setBitRegister;
-			volatile uint32         *resetBitRegister;
+			volatile uint32_t         *setBitRegister;
+			volatile uint32_t         *resetBitRegister;
 		#endif
-		uint32                      bitWeight;
+		uint32_t                      bitWeight;
 		unsigned char               bit;
 		IOPinInitTypeDef            configuration;
 		IOPinInitTypeDef            resetConfiguration;

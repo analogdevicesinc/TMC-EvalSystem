@@ -10,7 +10,7 @@ static void setPin2Input(IOPinTypeDef *pin);
 static void setPinHigh(IOPinTypeDef *pin);
 static void setPinLow(IOPinTypeDef *pin);
 static void setPinState(IOPinTypeDef *pin, IO_States state);
-static uint8 isPinHigh(IOPinTypeDef *pin);
+static uint8_t isPinHigh(IOPinTypeDef *pin);
 
 IOsTypeDef IOs =
 {
@@ -45,7 +45,7 @@ static void setPinConfiguration(IOPinTypeDef *pin)
 	if(IS_DUMMY_PIN(pin))
 		return;
 
-	uint32 config = 0;
+	uint32_t config = 0;
 	switch(pin->configuration.GPIO_Mode)
 	{
 	case GPIO_Mode_IN:
@@ -166,7 +166,7 @@ static void setPinLow(IOPinTypeDef *pin)
 	*pin->resetBitRegister = pin->bitWeight;
 }
 
-static uint8 isPinHigh(IOPinTypeDef *pin) // Die Abfrage eines Pins funktioniert nur, wenn der Pin AF1 ist
+static uint8_t isPinHigh(IOPinTypeDef *pin) // Die Abfrage eines Pins funktioniert nur, wenn der Pin AF1 ist
 {
 	if(IS_DUMMY_PIN(pin))
 		return -1;

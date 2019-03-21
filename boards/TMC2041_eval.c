@@ -10,25 +10,25 @@
 #undef  TMC2041_MAX_VELOCITY
 #define TMC2041_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
-static uint32 right(uint8 motor, int32 velocity);
-static uint32 left(uint8 motor, int32 velocity);
-static uint32 rotate(uint8 motor, int32 velocity);
-static uint32 stop(uint8 motor);
-static uint32 moveTo(uint8 motor, int32 position);
-static uint32 moveBy(uint8 motor, int32 *ticks);
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static void readRegister(u8 motor, uint8 address, int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
-static void periodicJob(uint32 tick);
-static void checkErrors(uint32 tick);
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
-static uint8 reset();
+static uint8_t reset();
 static void enableDriver(DriverState state);
 
 static SPIChannelTypeDef *TMC2041_SPIChannel;
@@ -54,7 +54,7 @@ static PinsTypeDef Pins;
 
 // Translate motor number to TMC2041TypeDef
 // When using multiple ICs you can map them here
-static inline TMC2041TypeDef *motorToIC(uint8 motor)
+static inline TMC2041TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
 
@@ -63,7 +63,7 @@ static inline TMC2041TypeDef *motorToIC(uint8 motor)
 
 // Translate channel number to SPI channel
 // When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
+static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 {
 	UNUSED(channel);
 
@@ -71,14 +71,14 @@ static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
 }
 
 // => SPI wrapper
-void tmc2041_readWriteArray(uint8 channel, uint8 *data, size_t length)
+void tmc2041_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 {
 	// Map the channel to the corresponding SPI channel
 	channelToSPI(channel)->readWriteArray(&data[0], length);
 }
 // <= SPI wrapper
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= TMC2041_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -88,22 +88,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= TMC2041_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -113,7 +113,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	if(motor >= TMC2041_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -124,9 +124,9 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return moveTo(motor, *ticks);
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 	int tempValue;
 
 	if(motor >= TMC2041_MOTORS)
@@ -447,20 +447,20 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 getLimit(AxisParameterLimit limit, uint8 type, uint8 motor, int32 *value)
+static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(motor);
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 	switch(type) {
 	case 2:
 	case 3:
@@ -486,17 +486,17 @@ static uint32 getLimit(AxisParameterLimit limit, uint8 type, uint8 motor, int32 
 	return errors;
 }
 
-static uint32 getMin(uint8 type, uint8 motor, int32 *value)
+static uint32_t getMin(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return getLimit(LIMIT_MIN, type, motor, value);
 }
 
-static uint32 getMax(uint8 type, uint8 motor, int32 *value)
+static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return getLimit(LIMIT_MAX, type, motor, value);
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= TMC2041_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -514,17 +514,17 @@ static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	tmc2041_writeInt(motorToIC(motor), address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	*value = tmc2041_readInt(motorToIC(motor), address);
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	tmc2041_periodicJob(&TMC2041, tick);
 
@@ -536,15 +536,15 @@ static void periodicJob(uint32 tick)
 	}
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch2.errors = 0;
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 errors = 0;
+	uint32_t errors = 0;
 
 	switch(type)
 	{
@@ -576,9 +576,9 @@ static void deInit(void)
 	Timer.deInit();
 }
 
-static uint8 reset()
+static uint8_t reset()
 {
-	for(uint8 motor = 0; motor < TMC2041_MOTORS; motor++)
+	for(uint8_t motor = 0; motor < TMC2041_MOTORS; motor++)
 		if(StepDir_getActualVelocity(motor) != 0)
 			return 0;
 
@@ -590,7 +590,7 @@ static uint8 reset()
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return tmc2041_restore(&TMC2041);
 }

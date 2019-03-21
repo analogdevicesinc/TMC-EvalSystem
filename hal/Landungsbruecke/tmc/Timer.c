@@ -6,8 +6,8 @@
 
 static void init(void);
 static void deInit(void);
-static void setDuty(timer_channel, uint16);
-static uint16 getDuty(timer_channel);
+static void setDuty(timer_channel, uint16_t);
+static uint16_t getDuty(timer_channel);
 
 TimerTypeDef Timer =
 {
@@ -100,7 +100,7 @@ static void deInit(void)
 	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
 }
 
-static void setDuty(timer_channel channel, uint16 duty)
+static void setDuty(timer_channel channel, uint16_t duty)
 {
 	switch(channel) {
 	case TIMER_CHANNEL_2:
@@ -117,9 +117,9 @@ static void setDuty(timer_channel channel, uint16 duty)
 	FTM0_PWMLOAD = FTM_PWMLOAD_LDOK_MASK;
 }
 
-static uint16 getDuty(timer_channel channel)
+static uint16_t getDuty(timer_channel channel)
 {
-	uint16 duty = 0;
+	uint16_t duty = 0;
 	switch(channel) {
 	case TIMER_CHANNEL_2:
 		duty = (FTM0_C1V - FTM0_C0V);

@@ -13,37 +13,37 @@
 #define TMC5160_TIMEOUT 50 // UART Timeout in ms
 
 static bool vMaxModified = false;
-//static uint32 vMax		   = 1;
+//static uint32_t vMax		   = 1;
 static bool uart_mode = false;
 
-static uint32 right(uint8 motor, int32 velocity);
-static uint32 left(uint8 motor, int32 velocity);
-static uint32 rotate(uint8 motor, int32 velocity);
-static uint32 stop(uint8 motor);
-static uint32 moveTo(uint8 motor, int32 position);
-static uint32 moveBy(uint8 motor, int32 *ticks);
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
-static void readRegister(u8 motor, uint8 address, int32 *value);
-static void writeRegister(u8 motor, uint8 address, int32 value);
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
-void tmc5160_writeDatagram(uint8 motor, uint8 address, uint8 x1, uint8 x2, uint8 x3, uint8 x4);
-void tmc5160_writeInt(uint8 motor, uint8 address, int value);
-int tmc5160_readInt(u8 motor, uint8 address);
-static void writeDatagram_spi(uint8 motor, uint8 address, uint8 x1, uint8 x2, uint8 x3, uint8 x4);
-static int32 readInt_spi(u8 motor, uint8 address);
-static void writeDatagram_uart(uint8 motor, uint8 address, uint8 x1, uint8 x2, uint8 x3, uint8 x4);
-static int32 readInt_uart(u8 motor, uint8 address);
+void tmc5160_writeDatagram(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4);
+void tmc5160_writeInt(uint8_t motor, uint8_t address, int value);
+int tmc5160_readInt(uint8_t motor, uint8_t address);
+static void writeDatagram_spi(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4);
+static int32_t readInt_spi(uint8_t motor, uint8_t address);
+static void writeDatagram_uart(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4);
+static int32_t readInt_uart(uint8_t motor, uint8_t address);
 
 static void init_comm(bool mode);
 
-static void periodicJob(uint32 tick);
-static void checkErrors(uint32 tick);
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
-static uint8 reset();
+static uint8_t reset();
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC5160_UARTChannel;
@@ -53,7 +53,7 @@ static ConfigurationTypeDef *TMC5160_config;
 
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here
-//static inline TMC5160TypeDef *motorToIC(uint8 motor)
+//static inline TMC5160TypeDef *motorToIC(uint8_t motor)
 //{
 //	UNUSED(motor);
 //
@@ -62,7 +62,7 @@ static ConfigurationTypeDef *TMC5160_config;
 //
 //// Translate channel number to SPI channel
 //// When using multiple ICs you can map them here
-//static inline SPIChannelTypeDef *channelToSPI(uint8 channel)
+//static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 //{
 //	UNUSED(channel);
 //
@@ -70,13 +70,13 @@ static ConfigurationTypeDef *TMC5160_config;
 //}
 //
 //// SPI Wrapper for API
-//void tmc5160_readWriteArray(uint8 channel, uint8 *data, size_t length)
+//void tmc5160_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 //{
 //	// Map the channel to the corresponding SPI channel
 //	channelToSPI(channel)->readWriteArray(data, length);
 //}
 
-void tmc5160_writeDatagram(uint8 motor, uint8 address, uint8 x1, uint8 x2, uint8 x3, uint8 x4)
+void tmc5160_writeDatagram(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4)
 {
 	if(uart_mode)
 		writeDatagram_uart(motor, address, x1, x2, x3, x4);
@@ -84,14 +84,14 @@ void tmc5160_writeDatagram(uint8 motor, uint8 address, uint8 x1, uint8 x2, uint8
 		writeDatagram_spi(motor, address, x1, x2, x3, x4);
 }
 
-void tmc5160_writeInt(uint8 motor, uint8 address, int value)
+void tmc5160_writeInt(uint8_t motor, uint8_t address, int value)
 {
 	tmc5160_writeDatagram(motor, address, 0xFF & (value>>24), 0xFF & (value>>16), 0xFF & (value>>8), 0xFF & (value>>0));
 }
 
-int tmc5160_readInt(u8 motor, uint8 address)
+int tmc5160_readInt(uint8_t motor, uint8_t address)
 {
-	int32 r = 0;
+	int32_t r = 0;
 	if(uart_mode)
 		r = readInt_uart(motor, address);
 	else
@@ -99,7 +99,7 @@ int tmc5160_readInt(u8 motor, uint8 address)
 	return r;
 }
 
-static void writeDatagram_spi(uint8 motor, uint8 address, uint8 x1, uint8 x2, uint8 x3, uint8 x4)
+static void writeDatagram_spi(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4)
 {
 	UNUSED(motor);
 	address = TMC_ADDRESS(address);
@@ -120,7 +120,7 @@ static void writeDatagram_spi(uint8 motor, uint8 address, uint8 x1, uint8 x2, ui
 	TMC5160_config->shadowRegister[address] = value;
 }
 
-static int32 readInt_spi(u8 motor, uint8 address)
+static int32_t readInt_spi(uint8_t motor, uint8_t address)
 {
 	UNUSED(motor);
 	address = TMC_ADDRESS(address);
@@ -147,12 +147,12 @@ static int32 readInt_spi(u8 motor, uint8 address)
 	return value;
 }
 
-static void writeDatagram_uart(uint8 motor, uint8 address, uint8 x1, uint8 x2, uint8 x3, uint8 x4)
+static void writeDatagram_uart(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4)
 {
 
 	address = TMC_ADDRESS(address);
 	UNUSED(motor);
-	uint8 writeData[8];
+	uint8_t writeData[8];
 
 	writeData[0] = 0x05;                         // Sync byte
 	writeData[1] = 0x00;                         // Slave address
@@ -164,7 +164,7 @@ static void writeDatagram_uart(uint8 motor, uint8 address, uint8 x1, uint8 x2, u
 	writeData[7] = tmc_CRC8(writeData, 7, 1);    // Cyclic redundancy check
 
 	TMC5160_UARTChannel->rxtx.clearBuffers();
-	for(uint32 i = 0; i < ARRAY_SIZE(writeData); i++)
+	for(uint32_t i = 0; i < ARRAY_SIZE(writeData); i++)
 		TMC5160_UARTChannel->rxtx.tx(writeData[i]);
 
 	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
@@ -176,12 +176,12 @@ static void writeDatagram_uart(uint8 motor, uint8 address, uint8 x1, uint8 x2, u
 	TMC5160_config->shadowRegister[address] = _8_32(x1, x2, x3, x4);
 }
 
-static int32 readInt_uart(u8 motor, uint8 address)
+static int32_t readInt_uart(uint8_t motor, uint8_t address)
 {
 	UNUSED(motor);
 	address = TMC_ADDRESS(address);
-	uint8 readData[8], dataRequest[4];
-	uint32 timeout;
+	uint8_t readData[8], dataRequest[4];
+	uint32_t timeout;
 
 	if(!TMC_IS_READABLE(TMC5160.registerAccess[address]))
 	{	// Register not readable - shadowRegister copy
@@ -227,7 +227,7 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= TMC5160_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -243,22 +243,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= TMC5160_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -278,7 +278,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	// determine actual position and add numbers of ticks to move
 	*ticks = tmc5160_readInt(motor, TMC5160_XACTUAL) + *ticks;
@@ -286,10 +286,10 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return moveTo(motor, *ticks);
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	uint32 buffer;
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t buffer;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= TMC5160_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -851,17 +851,17 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= TMC5160_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -871,19 +871,19 @@ static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	tmc5160_writeInt(DEFAULT_MOTOR, address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	*value = tmc5160_readInt(DEFAULT_MOTOR, address);
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	for(int motor = 0; motor < TMC5160_MOTORS; motor++)
 	{
@@ -891,16 +891,16 @@ static void periodicJob(uint32 tick)
 	}
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 buffer;
-	uint32 errors = 0;
+	uint32_t buffer;
+	uint32_t errors = 0;
 
 	UNUSED(motor);
 
@@ -945,7 +945,7 @@ static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
 //		 * The reference voltage will be AIN_REF = VCC_IO * *value/20000 with *value = {0..20000}
 //		 */
 //
-//		buffer = (uint32) *value;
+//		buffer = (uint32_t) *value;
 //
 //		if(buffer <= 20000)
 //		{
@@ -1059,7 +1059,7 @@ static void deInit(void)
 	HAL.IOs->config->reset(Pins.SPI_MODE);
 };
 
-static uint8 reset()
+static uint8_t reset()
 {
 	if(!tmc5160_readInt(0, TMC5160_VACTUAL))
 		tmc5160_reset(TMC5160_config);
@@ -1070,7 +1070,7 @@ static uint8 reset()
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return tmc5160_restore(TMC5160_config);
 }

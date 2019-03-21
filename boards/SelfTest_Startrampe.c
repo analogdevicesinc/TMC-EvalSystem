@@ -3,8 +3,8 @@
 #include "board.h"
 
 static void deInit();
-static uint32 selfTest(uint8 type, uint8 motor, int32 *value);
-static void periodicJob(uint32 tick);
+static uint32_t selfTest(uint8_t type, uint8_t motor, int32_t *value);
+static void periodicJob(uint32_t tick);
 
 IOPinTypeDef *groupA[SELF_TEST_PINS_PER_GROUP];
 IOPinTypeDef *groupB[SELF_TEST_PINS_PER_GROUP];
@@ -64,11 +64,11 @@ static void deInit()
 	HAL.LEDs->error.off();
 }
 
-static uint32 selfTest(uint8 type, uint8 motor, int32 *value)
+static uint32_t selfTest(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 i;
-	int32 result = 0xFFFFFFFF;
-	uint32 errors = TMC_ERROR_NONE;
+	uint32_t i;
+	int32_t result = 0xFFFFFFFF;
+	uint32_t errors = TMC_ERROR_NONE;
 	IOPinTypeDef **inGroup, **outGroup;
 
 
@@ -98,11 +98,11 @@ static uint32 selfTest(uint8 type, uint8 motor, int32 *value)
 
 			HAL.IOs->config->setHigh(outGroup[i]);
 			if(!HAL.IOs->config->isHigh(inGroup[i]))
-				result &= (uint32) (~(1<<i));
+				result &= (uint32_t) (~(1<<i));
 
 			HAL.IOs->config->setLow(outGroup[i]);
 			if(HAL.IOs->config->isHigh(inGroup[i]))
-				result &= (uint32) (~(1<<i));
+				result &= (uint32_t) (~(1<<i));
 		}
 		result &= ((1<<SELF_TEST_PINS_PER_GROUP) - 1);
 		*value = result;
@@ -113,13 +113,13 @@ static uint32 selfTest(uint8 type, uint8 motor, int32 *value)
 		switch(motor)
 		{
 		case 0:
-			*value = (uint32) (((*HAL.ADCs->AIN0)/4095.0)*5.016*10);
+			*value = (uint32_t) (((*HAL.ADCs->AIN0)/4095.0)*5.016*10);
 			break;
 		case 1:
-			*value = (uint32) (((*HAL.ADCs->AIN1)/4095.0)*5.016*10);
+			*value = (uint32_t) (((*HAL.ADCs->AIN1)/4095.0)*5.016*10);
 			break;
 		case 2:
-			*value = (uint32) (((*HAL.ADCs->AIN2)/4095.0)*5.016*10);
+			*value = (uint32_t) (((*HAL.ADCs->AIN2)/4095.0)*5.016*10);
 			break;
 		case 3:
 			*value = VitalSignsMonitor.VM;
@@ -210,9 +210,9 @@ static uint32 selfTest(uint8 type, uint8 motor, int32 *value)
 	return errors;
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
-	static uint32 lastTick = 0;
+	static uint32_t lastTick = 0;
 
 	if((tick - lastTick) >= 500)
 	{

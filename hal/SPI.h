@@ -14,7 +14,7 @@
 
 		IOPinTypeDef *CSN;
 		unsigned char (*readWrite) (unsigned char data, unsigned char lastTransfer);
-		void (*readWriteArray) (uint8 *data, size_t length);
+		void (*readWriteArray) (uint8_t *data, size_t length);
 		void (*reset) (void);
 	} SPIChannelTypeDef;
 
@@ -28,16 +28,16 @@
 	SPITypeDef SPI;
 
 	// read/write 32 bit value at address
-	int32 spi_readInt(SPIChannelTypeDef *SPIChannel, uint8 address);
-	void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8 address, int value);
+	int32_t spi_readInt(SPIChannelTypeDef *SPIChannel, uint8_t address);
+	void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int value);
 
 	// for default channels
-	uint8 spi_ch1_readWriteByte(uint8 data, uint8 lastTransfer);
+	uint8_t spi_ch1_readWriteByte(uint8_t data, uint8_t lastTransfer);
 
-	int32 spi_ch1_readInt(uint8 address);
-	void spi_ch1_writeInt(uint8 address, int value);
+	int32_t spi_ch1_readInt(uint8_t address);
+	void spi_ch1_writeInt(uint8_t address, int value);
 
-	int32 spi_ch2_readInt(uint8 address);
-	void spi_ch2_writeInt(uint8 address, int value);
+	int32_t spi_ch2_readInt(uint8_t address);
+	void spi_ch2_writeInt(uint8_t address, int value);
 
 #endif /* SPI_H */

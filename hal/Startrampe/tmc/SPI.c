@@ -5,11 +5,11 @@ static void init(void);
 static void reset_ch1();
 static void reset_ch2();
 
-static unsigned char readWrite(SPIChannelTypeDef *SPIChannel, uint8 data, uint8 lastTransfer);
-static unsigned char spi_ch1_readWrite(uint8 data, uint8 lastTransfer);
-static unsigned char spi_ch2_readWrite(uint8 data, uint8 lastTransfer);
-static void spi_ch1_readWriteArray(uint8 *data, size_t length);
-static void spi_ch2_readWriteArray(uint8 *data, size_t length);
+static unsigned char readWrite(SPIChannelTypeDef *SPIChannel, uint8_t data, uint8_t lastTransfer);
+static unsigned char spi_ch1_readWrite(uint8_t data, uint8_t lastTransfer);
+static unsigned char spi_ch2_readWrite(uint8_t data, uint8_t lastTransfer);
+static void spi_ch1_readWriteArray(uint8_t *data, size_t length);
+static void spi_ch2_readWriteArray(uint8_t *data, size_t length);
 
 SPIChannelTypeDef *SPIChannel_1_default;
 SPIChannelTypeDef *SPIChannel_2_default;
@@ -108,7 +108,7 @@ static void reset_ch2()
 	SPI.ch2.readWrite  = spi_ch2_readWrite;
 }
 
-int32 spi_readInt(SPIChannelTypeDef *SPIChannel, uint8 address)
+int32_t spi_readInt(SPIChannelTypeDef *SPIChannel, uint8_t address)
 {
 	// clear write bit
 	address &= 0x7F;
@@ -125,17 +125,17 @@ int32 spi_readInt(SPIChannelTypeDef *SPIChannel, uint8 address)
 	return value;
 }
 
-int32 spi_ch1_readInt(uint8 address)
+int32_t spi_ch1_readInt(uint8_t address)
 {
 	return spi_readInt(SPIChannel_1_default, address);
 }
 
-int32 spi_ch2_readInt(uint8 address)
+int32_t spi_ch2_readInt(uint8_t address)
 {
 	return spi_readInt(SPIChannel_2_default, address);
 }
 
-void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8 address, int value)
+void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int value)
 {
 	SPIChannel->readWrite(address | 0x80, false);
 	SPIChannel->readWrite(0xFF & (value>>24), false);
@@ -144,12 +144,12 @@ void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8 address, int value)
 	SPIChannel->readWrite(0xFF & (value>>0), true);
 }
 
-void spi_ch1_writeInt(uint8 address, int value)
+void spi_ch1_writeInt(uint8_t address, int value)
 {
 	spi_writeInt(SPIChannel_1_default, address, value);
 }
 
-void spi_ch2_writeInt(uint8 address, int value)
+void spi_ch2_writeInt(uint8_t address, int value)
 {
 	spi_writeInt(SPIChannel_2_default, address, value);
 }
@@ -164,28 +164,28 @@ static unsigned char spi_ch2_readWrite(unsigned char data, unsigned char lastTra
 	 return readWrite(&SPI.ch2, data,lastTransfer);
 }
 
-static void spi_ch1_readWriteArray(uint8 *data, size_t length)
+static void spi_ch1_readWriteArray(uint8_t *data, size_t length)
 {
-	for(uint32 i = 0; i < length; i++)
+	for(uint32_t i = 0; i < length; i++)
 	{
 		data[i] = readWrite(&SPI.ch1, data[i], (i == (length - 1))? true:false);
 	}
 }
 
-static void spi_ch2_readWriteArray(uint8 *data, size_t length)
+static void spi_ch2_readWriteArray(uint8_t *data, size_t length)
 {
-	for(uint32 i = 0; i < length; i++)
+	for(uint32_t i = 0; i < length; i++)
 	{
 		data[i] = readWrite(&SPI.ch2, data[i], (i == (length - 1))? true:false);
 	}
 }
 
-uint8 spi_ch1_readWriteByte(uint8 data, uint8 lastTransfer)
+uint8_t spi_ch1_readWriteByte(uint8_t data, uint8_t lastTransfer)
 {
 	return readWrite(SPIChannel_1_default, data, lastTransfer);
 }
 
-static unsigned char readWrite(SPIChannelTypeDef *SPIChannel, uint8 data, uint8 lastTransfer)
+static unsigned char readWrite(SPIChannelTypeDef *SPIChannel, uint8_t data, uint8_t lastTransfer)
 {
 	if(IS_DUMMY_PIN(SPIChannel->CSN))
 		return 0;

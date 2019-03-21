@@ -14,21 +14,21 @@
 
 #define MOTORS 1
 
-static uint32 right(uint8 motor, int32 velocity);
-static uint32 left(uint8 motor, int32 velocity);
-static uint32 rotate(uint8 motor, int32 velocity);
-static uint32 stop(uint8 motor);
-static uint32 moveTo(uint8 motor, int32 position);
-static uint32 moveBy(uint8 motor, int32 *ticks);
-static uint32 GAP(uint8 type, uint8 motor, int32 *value);
-static uint32 SAP(uint8 type, uint8 motor, int32 value);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static void checkErrors (uint32 tick);
+static void checkErrors (uint32_t tick);
 static void deInit(void);
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
-static void periodicJob(uint32 tick);
-static uint8 reset(void);
+static void periodicJob(uint32_t tick);
+static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC2208_UARTChannel;
@@ -51,16 +51,16 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-static uint8 restore(void);
+static uint8_t restore(void);
 
-void tmc2208_writeRegister(u8 motor, uint8 address, int32 value)
+void tmc2208_writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	UART_writeInt(TMC2208_UARTChannel, tmc2208_get_slave(&TMC2208), address, value);
 	TMC2208.config->shadowRegister[TMC_ADDRESS(address)] = value;
 }
 
-void tmc2208_readRegister(u8 motor, uint8 address, int32 *value)
+void tmc2208_readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	if(TMC_IS_READABLE(TMC2208.registerAccess[TMC_ADDRESS(address)]))
@@ -69,7 +69,7 @@ void tmc2208_readRegister(u8 motor, uint8 address, int32 *value)
 		*value = TMC2208.config->shadowRegister[TMC_ADDRESS(address)];
 }
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -79,22 +79,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -104,7 +104,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -115,9 +115,9 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return moveTo(motor, *ticks);
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -188,25 +188,25 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch2.errors = 0;
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32 errors = 0;
+	uint32_t errors = 0;
 
 	switch(type)
 	{
@@ -236,7 +236,7 @@ static void deInit(void)
 	StepDir_deInit();
 }
 
-static uint8 reset()
+static uint8_t reset()
 {
 	StepDir_init();
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
@@ -244,7 +244,7 @@ static uint8 reset()
 	return tmc2208_reset(&TMC2208);
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return tmc2208_restore(&TMC2208);
 }
@@ -260,7 +260,7 @@ static void enableDriver(DriverState state)
 		HAL.IOs->config->setLow(Pins.DRV_ENN);
 }
 
-static void periodicJob(uint32 tick)
+static void periodicJob(uint32_t tick)
 {
 	for(int motor = 0; motor < MOTORS; motor++)
 	{

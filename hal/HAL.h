@@ -23,7 +23,7 @@
 	typedef struct
 	{
 		void                       (*init) (void);
-		void                       (*reset) (uint8 ResetPeripherals);
+		void                       (*reset) (uint8_t ResetPeripherals);
 		void                       (*NVIC_DeInit)(void);
 		const IOsFunctionsTypeDef  *IOs;
 		SPITypeDef                 *SPI;
@@ -38,6 +38,6 @@
 
 	const HALTypeDef HAL;
 
-	uint8 hwid;
+	uint8_t hwid;
 
 #endif /* _HAL_H_ */

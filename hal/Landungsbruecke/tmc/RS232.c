@@ -8,18 +8,18 @@
 
 static void init();
 static void deInit();
-static void tx(uint8 ch);
-static uint8 rx(uint8 *ch);
-static void txN(uint8 *str, uint8 number);
-static uint8 rxN(uint8 *ch, uint8 number);
+static void tx(uint8_t ch);
+static uint8_t rx(uint8_t *ch);
+static void txN(uint8_t *str, uint8_t number);
+static uint8_t rxN(uint8_t *ch, uint8_t number);
 static void clearBuffers(void);
-static uint32 bytesAvailable();
+static uint32_t bytesAvailable();
 
-static volatile uint8
+static volatile uint8_t
 	rxBuffer[BUFFER_SIZE],
 	txBuffer[BUFFER_SIZE];
 
-static volatile uint32 available = 0;
+static volatile uint32_t available = 0;
 
 RXTXTypeDef RS232 =
 {
@@ -52,7 +52,7 @@ static RXTXBufferingTypeDef buffers =
 
 static void init()
 {
-	register uint16 ubd;
+	register uint16_t ubd;
 
 	SIM_SCGC1 |= (SIM_SCGC1_UART4_MASK);
 
@@ -96,7 +96,7 @@ static void deInit()
 
 void UART4_RX_TX_IRQHandler(void)
 {
-	uint32 status = UART4_S1;
+	uint32_t status = UART4_S1;
 
 	if(status & UART_S1_RDRF_MASK)
 	{
@@ -122,7 +122,7 @@ void UART4_RX_TX_IRQHandler(void)
 	}
 }
 
-static void tx(uint8 ch)
+static void tx(uint8_t ch)
 {
 	buffers.tx.buffer[buffers.tx.wrote] = ch;
 	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
@@ -131,7 +131,7 @@ static void tx(uint8 ch)
 	UART4_C2 |= UART_C2_TIE_MASK;
 }
 
-static uint8 rx(uint8 *ch)
+static uint8_t rx(uint8_t *ch)
 {
 	if(buffers.rx.read == buffers.rx.wrote)
 		return 0;
@@ -143,18 +143,18 @@ static uint8 rx(uint8 *ch)
 	return 1;
 }
 
-static void txN(uint8 *str, uint8 number)
+static void txN(uint8_t *str, uint8_t number)
 {
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 		tx(str[i]);
 }
 
-static uint8 rxN(uint8 *str, uint8 number)
+static uint8_t rxN(uint8_t *str, uint8_t number)
 {
 	if(available < number)
 		return 0;
 
-	for(int32 i = 0; i < number; i++)
+	for(int32_t i = 0; i < number; i++)
 		rx(&str[i]);
 
 	return 1;
@@ -172,7 +172,7 @@ static void clearBuffers(void)
 	enable_irq(INT_UART4_RX_TX-16);
 }
 
-static uint32 bytesAvailable()
+static uint32_t bytesAvailable()
 {
 	return available;
 }

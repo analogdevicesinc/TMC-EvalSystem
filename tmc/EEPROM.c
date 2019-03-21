@@ -33,7 +33,7 @@ EEPROM_Channels EEPROM =
 // Perform initial scan and store to struct
 void eeprom_init(SPIChannelTypeDef *SPIChannel)
 {
-	uint8 buffer[EEPROM_SIZE_META] = { 0 };
+	uint8_t buffer[EEPROM_SIZE_META] = { 0 };
 	EEPROM_Data *eep = (SPIChannel == &SPI.ch1) ? &EEPROM.ch1 : &EEPROM.ch2;
 	eeprom_read_array(SPIChannel, EEPROM_ADDR_META, buffer, EEPROM_SIZE_META);
 	memcpy(eep->name, &buffer[EEPROM_ADDR_NAME - EEPROM_ADDR_META], EEPROM_SIZE_NAME);
@@ -58,7 +58,7 @@ void eeprom_init(SPIChannelTypeDef *SPIChannel)
 
 	Purpose: checking whether Eeprom is connected and ready
 ********************************************************************/
-uint8 eeprom_check(SPIChannelTypeDef *SPIChannel)
+uint8_t eeprom_check(SPIChannelTypeDef *SPIChannel)
 {
 	// Prüfen, ob der SPI-Bus schon funktioniert: Im Status-Register des EEPROMs
 	// müssen Bit 6, 5, 4 und 0 auf jedem Fall 0 sein und nicht 1.
@@ -74,7 +74,7 @@ uint8 eeprom_check(SPIChannelTypeDef *SPIChannel)
 	IOs.toOutput(SPIChannel->CSN);
 
 	SPIChannel->readWrite(0x05, false);  // Befehl "Get Status"
-	uint8 out = SPIChannel->readWrite(0x00, true);
+	uint8_t out = SPIChannel->readWrite(0x00, true);
 	// check whether bits 6, 5, 4 and 0 are cleared
 	if((out & 0x71) != 0)
 		goto end;
@@ -82,7 +82,7 @@ uint8 eeprom_check(SPIChannelTypeDef *SPIChannel)
 	out = 0;
 
 	//check for magic number in eeprom
-	u8 number[2];
+	uint8_t number[2];
 
 	eeprom_read_array(SPIChannel, EEPROM_ADDR_MAGIC, number, 2);
 
@@ -114,7 +114,7 @@ uint8 eeprom_check(SPIChannelTypeDef *SPIChannel)
 
 	Zweck: Schreiben eines Bytes in das EEPROM auf dem Evalboard.
 ********************************************************************/
-void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 value)
+void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t value)
 {
 	// select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
@@ -173,9 +173,9 @@ void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 valu
 	beschrieben werden (die speziellen Eigenschaften des 25128 werden
 	dabei beachtet).
 ********************************************************************/
-void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 *data, uint16 size)
+void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t *data, uint16_t size)
 {
-	uint16 i;
+	uint16_t i;
 
 	//select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
@@ -260,7 +260,7 @@ void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 *da
 
 	Zweck: Lesen eines Bytes aus dem EEPROM des Evalboards.
 ********************************************************************/
-uint8 eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16 address)
+uint8_t eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16_t address)
 {
 	//select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
@@ -275,7 +275,7 @@ uint8 eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16 address)
 	SPIChannel->readWrite(address >> 8, false);
 	SPIChannel->readWrite(address & 0xFF, false);
 
-	uint8 out = SPIChannel->readWrite(0, true);
+	uint8_t out = SPIChannel->readWrite(0, true);
 
 	HAL.IOs->config->toInput(SPIChannel->CSN);
 	SPIChannel->CSN = io;
@@ -297,9 +297,9 @@ uint8 eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16 address)
 	Dabei dürfen ab beliebiger Adresse beliebig viele Bytes gelesen
 	werden.
 ********************************************************************/
-void eeprom_read_array(SPIChannelTypeDef *SPIChannel, uint16 address, uint8 *data, uint16 size)
+void eeprom_read_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t *data, uint16_t size)
 {
-	uint16 i;
+	uint16_t i;
 
 	// select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;

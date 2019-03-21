@@ -7,13 +7,13 @@ IOPinTypeDef *PIN_DRV_ENN;
 ConfigurationTypeDef *C160_config;
 
 // => SPI wrapper
-u8 tmcc160_spi_readwriteByte(u8 data, u8 lastTransfer)
+uint8_t tmcc160_spi_readwriteByte(uint8_t data, uint8_t lastTransfer)
 {
 	return spi_ch1_readWriteByte(data, lastTransfer);
 }
 // <= SPI wrapper
 
-void tmcc160_writeDatagram(uint8 address, uint8 x3, uint8 x2, uint8 x1, uint8 x0)
+void tmcc160_writeDatagram(uint8_t address, uint8_t x3, uint8_t x2, uint8_t x1, uint8_t x0)
 {
 	tmcc160_spi_readwriteByte(address | 0x80, false);
 	tmcc160_spi_readwriteByte(x3, false);
@@ -22,7 +22,7 @@ void tmcc160_writeDatagram(uint8 address, uint8 x3, uint8 x2, uint8 x1, uint8 x0
 	tmcc160_spi_readwriteByte(x0, true);
 }
 
-static uint32 rotate(uint8 motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -32,22 +32,22 @@ static uint32 rotate(uint8 motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8 motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8 motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8 motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8 motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -57,7 +57,7 @@ static uint32 moveTo(uint8 motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8 motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -67,9 +67,9 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -148,7 +148,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	return errors;
 }
 
-static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -158,34 +158,34 @@ static uint32 getMeasuredSpeed(uint8 motor, int32 *value)
 	return TMC_ERROR_NONE;
 }
 
-static void periodicJob(uint32 actualSystick)
+static void periodicJob(uint32_t actualSystick)
 {
 	tmcc160_periodicJob(actualSystick);
 }
 
-static void writeRegister(u8 motor, uint8 address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	tmcc160_writeInt(address, value);
 }
 
-static void readRegister(u8 motor, uint8 address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	*value = tmcc160_readInt(address);
 }
 
-static uint32 SAP(uint8 type, uint8 motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8 type, uint8 motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 userFunction(uint8 type, uint8 motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(type);
 	UNUSED(motor);
@@ -210,17 +210,17 @@ static void deInit(void)
 	HAL.IOs->config->reset(PIN_DRV_ENN);
 };
 
-static uint8 reset()
+static uint8_t reset()
 {
 	return 1;
 }
 
-static uint8 restore()
+static uint8_t restore()
 {
 	return 1;
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;

@@ -65,15 +65,15 @@
 		const TMCRhinoChopperHysteresisTypeDef    ChopperHysteresisSettings;
 		const TMCRhinoChopperBlankTimeTypeDef     ChopperBlankTimeSettings;
 		const TMCRhinoEnableStStPwrDnTypeDef      EnableStandStillPowerDownSettings;
-		const uint32                              resetSettings;
+		const uint32_t                              resetSettings;
 
 		void (*reset) (void);
 		void (*setConfig) (TMCRhinoTypeStandAloneConfigDef *config);
 		void (*getConfig) (TMCRhinoTypeStandAloneConfigDef *config);
 		void (*setPins) (IO_States *CFG);
 		void (*getPins) (IO_States *CFG);
-		void (*setInt) (uint32 state);
-		uint32 (*getInt) (void);
+		void (*setInt) (uint32_t state);
+		uint32_t (*getInt) (void);
 		IOPinTypeDef **CFGPins;
 
 	} TMCRhinoTypeStandAloneDef;

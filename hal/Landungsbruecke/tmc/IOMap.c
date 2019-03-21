@@ -9,12 +9,12 @@ IOPinMapTypeDef IOMap =
 	.init    = init,
 	.ID_CLK  =  // IOPinTypeDef ID_CLK
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // uint32 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // uint32 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // uint32_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // uint32_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // Peripheral Port Base Pointer
 		.GPIOBase            = PTB_BASE_PTR,         // Peripheral PTA base pointer, GPIO;
-		.bitWeight           = GPIO_PDD_PIN_20,      // uint32 pinBitWeight Pin masks;
-		.bit                 = 20,                   // uint8 bit;
+		.bitWeight           = GPIO_PDD_PIN_20,      // uint32_t pinBitWeight Pin masks;
+		.bit                 = 20,                   // uint8_t bit;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -26,12 +26,12 @@ IOPinMapTypeDef IOMap =
 
 	.ID_CH0 =  // IOPinTypeDef ID_CH0
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // uint32 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // uint32 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // uint32_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // uint32_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // Peripheral Port Base Pointer
 		.GPIOBase            = PTB_BASE_PTR,         // Peripheral PTA base pointer, GPIO;
-		.bitWeight           = GPIO_PDD_PIN_18,      // uint32 pinBitWeight;
-		.bit                 = 18,                   // uint8 bit;
+		.bitWeight           = GPIO_PDD_PIN_18,      // uint32_t pinBitWeight;
+		.bit                 = 18,                   // uint8_t bit;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -43,12 +43,12 @@ IOPinMapTypeDef IOMap =
 
 	.ID_CH1 =  // IOPinTypeDef ID_CH1
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_19,      // uint32 pinBitWeight;
-		.bit                 = 19,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_19,      // uint32_t pinBitWeight;
+		.bit                 = 19,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -60,12 +60,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO0 =  // IOPinTypeDef DIO0
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_12,      // uint32 pinBitWeight;
-		.bit                 = 12,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_12,      // uint32_t pinBitWeight;
+		.bit                 = 12,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -77,12 +77,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO1 =  // IOPinTypeDef DIO1
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_13,      // uint32 pinBitWeight;
-		.bit                 = 13,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_13,      // uint32_t pinBitWeight;
+		.bit                 = 13,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -94,12 +94,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO2 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_0,       // uint32 pinBitWeight;
-		.bit                 = 0,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_0,       // uint32_t pinBitWeight;
+		.bit                 = 0,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -111,12 +111,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO3 =  // IOPinTypeDef DIO3
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_1,       // uint32 pinBitWeight;
-		.bit                 = 1,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_1,       // uint32_t pinBitWeight;
+		.bit                 = 1,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -128,12 +128,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO4 =  // IOPinTypeDef DIO4
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_2,       // uint32 pinBitWeight;
-		.bit                 = 2,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_2,       // uint32_t pinBitWeight;
+		.bit                 = 2,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -145,12 +145,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO5 =  // IOPinTypeDef DIO5
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_3,       // uint32 pinBitWeight;
-		.bit                 = 3,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_3,       // uint32_t pinBitWeight;
+		.bit                 = 3,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -163,12 +163,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO6 =  // IOPinTypeDef DIO6
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_2,       // uint32 pinBitWeight;
-		.bit                 = 2,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_2,       // uint32_t pinBitWeight;
+		.bit                 = 2,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -180,12 +180,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO7 =  // IOPinTypeDef DIO7
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_1,       // uint32 pinBitWeight;
-		.bit                 = 1,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_1,       // uint32_t pinBitWeight;
+		.bit                 = 1,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -197,12 +197,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO8 =  // IOPinTypeDef DIO8
 	{
-		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTD_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTD_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_5,       // uint32 pinBitWeight;
-		.bit                 = 5,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_5,       // uint32_t pinBitWeight;
+		.bit                 = 5,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -214,12 +214,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO9 =  // IOPinTypeDef DIO9
 	{
-		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTD_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTD_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_4,       // uint32 pinBitWeight;
-		.bit                 = 4,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_4,       // uint32_t pinBitWeight;
+		.bit                 = 4,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -231,12 +231,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO10 =  // IOPinTypeDef DIO10
 	{
-		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTD_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTD_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_7,       // uint32 pinBitWeight;
-		.bit                 = 7,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_7,       // uint32_t pinBitWeight;
+		.bit                 = 7,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -248,12 +248,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO11 =  // IOPinTypeDef DIO11
 	{
-		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTD_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTD_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_6,       // uint32 pinBitWeight;
-		.bit                 = 6,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_6,       // uint32_t pinBitWeight;
+		.bit                 = 6,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -265,12 +265,12 @@ IOPinMapTypeDef IOMap =
 
 	.CLK16 =  // IOPinTypeDef CLK16
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_3,       // uint32 pinBitWeight;
-		.bit                 = 3,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_3,       // uint32_t pinBitWeight;
+		.bit                 = 3,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AF5,            // GPIOMode_TypeDef GPIO_Mode; ??
@@ -282,12 +282,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_CSN0 =  // IOPinTypeDef SPI2_CSN0
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_0,       // uint32 pinBitWeight;
-		.bit                 = 0,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_0,       // uint32_t pinBitWeight;
+		.bit                 = 0,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -299,12 +299,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_CSN1 =  // IOPinTypeDef SPI2_CSN1 Konflikt mit DIO5
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_5,       // uint32 pinBitWeight;
-		.bit                 = 5,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_5,       // uint32_t pinBitWeight;
+		.bit                 = 5,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -316,12 +316,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_CSN2 =  // IOPinTypeDef SPI2_CSN2
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_4,       // uint32 pinBitWeight;
-		.bit                 = 4,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_4,       // uint32_t pinBitWeight;
+		.bit                 = 4,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -333,12 +333,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_SCK =  // IOPinTypeDef SPI2_SCK
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_21,      // uint32 pinBitWeight;
-		.bit                 = 21,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_21,      // uint32_t pinBitWeight;
+		.bit                 = 21,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -350,12 +350,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_SDO =  // IOPinTypeDef SPI2_SDO
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_23,      // uint32 pinBitWeight;
-		.bit                 = 23,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_23,      // uint32_t pinBitWeight;
+		.bit                 = 23,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -367,12 +367,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI2_SDI =  // IOPinTypeDef SPI2_SDI
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_22,      // uint32 pinBitWeight;
-		.bit                 = 22,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_22,      // uint32_t pinBitWeight;
+		.bit                 = 22,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -384,12 +384,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI1_CSN =  // IOPinTypeDef SPI1_CSN
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_10,      // uint32 pinBitWeight;
-		.bit                 = 10,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_10,      // uint32_t pinBitWeight;
+		.bit                 = 10,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -401,12 +401,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI1_SCK =  // IOPinTypeDef SPI1_SCK
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_11,      // uint32 pinBitWeight;
-		.bit                 = 11,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_11,      // uint32_t pinBitWeight;
+		.bit                 = 11,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -418,12 +418,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI1_SDI =  // IOPinTypeDef SPI1_SDI
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_17,      // uint32 pinBitWeight;
-		.bit                 = 17,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_17,      // uint32_t pinBitWeight;
+		.bit                 = 17,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -435,12 +435,12 @@ IOPinMapTypeDef IOMap =
 
 	.SPI1_SDO =  // IOPinTypeDef SPI1_SDO
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_16,      // uint32 pinBitWeight;
-		.bit                 = 16,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_16,      // uint32_t pinBitWeight;
+		.bit                 = 16,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -452,12 +452,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO12 =  // IOPinTypeDef DIO12
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_16,      // uint32 pinBitWeight;
-		.bit                 = 16,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_16,      // uint32_t pinBitWeight;
+		.bit                 = 16,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -469,12 +469,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO13 =  // IOPinTypeDef DIO13
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_17,      // uint32 pinBitWeight;
-		.bit                 = 17,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_17,      // uint32_t pinBitWeight;
+		.bit                 = 17,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -487,12 +487,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO14 =  // IOPinTypeDef DIO14
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_18,      // uint32 pinBitWeight;
-		.bit                 = 18,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_18,      // uint32_t pinBitWeight;
+		.bit                 = 18,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -504,12 +504,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO15 =  // IOPinTypeDef DIO15
 	{
-		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTD_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTD_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_1,       // uint32 pinBitWeight;
-		.bit                 = 1,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_1,       // uint32_t pinBitWeight;
+		.bit                 = 1,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -521,12 +521,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO16 =  // IOPinTypeDef DIO16
 	{
-		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTD_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTD_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_0,       // uint32 pinBitWeight;
-		.bit                 = 0,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_0,       // uint32_t pinBitWeight;
+		.bit                 = 0,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -538,12 +538,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO17 =  // IOPinTypeDef DIO17
 	{
-		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTD_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTD_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_3,       // uint32 pinBitWeight;
-		.bit                 = 3,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_3,       // uint32_t pinBitWeight;
+		.bit                 = 3,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -555,12 +555,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO18 =  // IOPinTypeDef DIO18
 	{
-		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOD_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOD_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTD_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTD_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_2,       // uint32 pinBitWeight;
-		.bit                 = 2,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_2,       // uint32_t pinBitWeight;
+		.bit                 = 2,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -572,12 +572,12 @@ IOPinMapTypeDef IOMap =
 
 	.DIO19 =  // IOPinTypeDef DIO19
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_15,      // uint32 pinBitWeight;
-		.bit                 = 15,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_15,      // uint32_t pinBitWeight;
+		.bit                 = 15,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -590,12 +590,12 @@ IOPinMapTypeDef IOMap =
 
 	.WIRELESS_TX =  // IOPinTypeDef WIRELESS_TX
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_14,      // uint32 pinBitWeight;
-		.bit                 = 14,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_14,      // uint32_t pinBitWeight;
+		.bit                 = 14,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -607,12 +607,12 @@ IOPinMapTypeDef IOMap =
 
 	.WIRELESS_RX =  // IOPinTypeDef WIRELESS_RX
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_15,      // uint32 pinBitWeight;
-		.bit                 = 15,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_15,      // uint32_t pinBitWeight;
+		.bit                 = 15,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -624,12 +624,12 @@ IOPinMapTypeDef IOMap =
 
 	.WIRELESS_NRST =  // IOPinTypeDef WIRELESS_NRST
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_16,      // uint32 pinBitWeight;
-		.bit                 = 16,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_16,      // uint32_t pinBitWeight;
+		.bit                 = 16,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -641,12 +641,12 @@ IOPinMapTypeDef IOMap =
 
 	.RS232_TX =  // IOPinTypeDef RS232_TX
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_24,      // uint32 pinBitWeight;
-		.bit                 = 24,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_24,      // uint32_t pinBitWeight;
+		.bit                 = 24,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -658,12 +658,12 @@ IOPinMapTypeDef IOMap =
 
 	.RS232_RX =  // IOPinTypeDef RS232_RX
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_25,      // uint32 pinBitWeight;
-		.bit                 = 25,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_25,      // uint32_t pinBitWeight;
+		.bit                 = 25,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -675,12 +675,12 @@ IOPinMapTypeDef IOMap =
 
 	.USB_V_BUS =  // IOPinTypeDef USB_V_BU
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,         // GPIO_TypeDef *port;
-		.bitWeight           = GPIO_PDD_PIN_4,       // uint32 pinBitWeight;
-		.bit                 = 4,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_4,       // uint32_t pinBitWeight;
+		.bit                 = 4,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -693,12 +693,12 @@ IOPinMapTypeDef IOMap =
 
 	.LED_STAT =  // IOPinTypeDef LED_STAT
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_2,       // uint32 pinBitWeight;
-		.bit                 = 2,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_2,       // uint32_t pinBitWeight;
+		.bit                 = 2,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -710,12 +710,12 @@ IOPinMapTypeDef IOMap =
 
 	.LED_ERROR =  // IOPinTypeDef LED_ERROR
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_1,       // uint32 pinBitWeight;
-		.bit                 = 1,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_1,       // uint32_t pinBitWeight;
+		.bit                 = 1,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -727,12 +727,12 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_2 =  // IOPinTypeDef EXTIO_2
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_0,       // uint32 pinBitWeight;
-		.bit                 = 0,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_0,       // uint32_t pinBitWeight;
+		.bit                 = 0,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -744,12 +744,12 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_3 =  // IOPinTypeDef EXTIO_3
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_1,       // uint32 pinBitWeight;
-		.bit                 = 1,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_1,       // uint32_t pinBitWeight;
+		.bit                 = 1,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -760,12 +760,12 @@ IOPinMapTypeDef IOMap =
 	},
 	.EXTIO_4 =  // IOPinTypeDef EXTIO_4
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_2,       // uint32 pinBitWeight;
-		.bit                 = 2,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_2,       // uint32_t pinBitWeight;
+		.bit                 = 2,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -776,12 +776,12 @@ IOPinMapTypeDef IOMap =
 	},
 	.EXTIO_5 =  // IOPinTypeDef EXTIO_5
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_3,       // uint32 pinBitWeight;
-		.bit                 = 3,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_3,       // uint32_t pinBitWeight;
+		.bit                 = 3,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -793,12 +793,12 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_6 =  // IOPinTypeDef EXTIO_6
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_4,       // uint32 pinBitWeight;
-		.bit                 = 4,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_4,       // uint32_t pinBitWeight;
+		.bit                 = 4,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -810,12 +810,12 @@ IOPinMapTypeDef IOMap =
 
 	.EXTIO_7=  // IOPinTypeDef EXTIO_7
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_5,       // uint32 pinBitWeight;
-		.bit                 = 5,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_5,       // uint32_t pinBitWeight;
+		.bit                 = 5,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -828,12 +828,12 @@ IOPinMapTypeDef IOMap =
 
 	.EEPROM_SCK =  // IOPinTypeDef EEPROM_SCK
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_5,       // uint32 pinBitWeight;
-		.bit                 = 5,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_5,       // uint32_t pinBitWeight;
+		.bit                 = 5,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -846,12 +846,12 @@ IOPinMapTypeDef IOMap =
 
 	.EEPROM_SI =  // IOPinTypeDef EEPROM_SI
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_7,       // uint32 pinBitWeight;
-		.bit                 = 7,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_7,       // uint32_t pinBitWeight;
+		.bit                 = 7,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -863,12 +863,12 @@ IOPinMapTypeDef IOMap =
 
 	.EEPROM_SO =  // IOPinTypeDef EEPROM_SO
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_6,       // uint32 pinBitWeight;
-		.bit                 = 6,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_6,       // uint32_t pinBitWeight;
+		.bit                 = 6,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -880,12 +880,12 @@ IOPinMapTypeDef IOMap =
 
 	.EEPROM_NCS =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_8,       // uint32 pinBitWeight;
-		.bit                 = 8,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_8,       // uint32_t pinBitWeight;
+		.bit                 = 8,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -897,12 +897,12 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED0 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_11,      // uint32 pinBitWeight;
-		.bit                 = 11,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_11,      // uint32_t pinBitWeight;
+		.bit                 = 11,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -914,12 +914,12 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED1 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_12,      // uint32 pinBitWeight;
-		.bit                 = 12,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_12,      // uint32_t pinBitWeight;
+		.bit                 = 12,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -931,12 +931,12 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED2 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_13,      // uint32 pinBitWeight;
-		.bit                 = 13,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_13,      // uint32_t pinBitWeight;
+		.bit                 = 13,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -948,12 +948,12 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED3 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_14,      // uint32 pinBitWeight;
-		.bit                 = 14,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_14,      // uint32_t pinBitWeight;
+		.bit                 = 14,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -965,12 +965,12 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED4 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_10,      // uint32 pinBitWeight;
-		.bit                 = 10,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_10,      // uint32_t pinBitWeight;
+		.bit                 = 10,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -982,12 +982,12 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED5 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOC_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOC_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTC_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTC_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_9,       // uint32 pinBitWeight;
-		.bit                 = 9,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_9,       // uint32_t pinBitWeight;
+		.bit                 = 9,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -999,12 +999,12 @@ IOPinMapTypeDef IOMap =
 
 	.MIXED6 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_6,       // uint32 pinBitWeight;
-		.bit                 = 6,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_6,       // uint32_t pinBitWeight;
+		.bit                 = 6,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -1016,12 +1016,12 @@ IOPinMapTypeDef IOMap =
 
 	.ID_HW_0 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOE_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOE_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTE_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTE_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_26,      // uint32 pinBitWeight;
-		.bit                 = 26,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_26,      // uint32_t pinBitWeight;
+		.bit                 = 26,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -1033,12 +1033,12 @@ IOPinMapTypeDef IOMap =
 
 	.ID_HW_1 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_17,      // uint32 pinBitWeight;
-		.bit                 = 17,                   // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_17,      // uint32_t pinBitWeight;
+		.bit                 = 17,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -1050,12 +1050,12 @@ IOPinMapTypeDef IOMap =
 
 	.ID_HW_2 =  // IOPinTypeDef
 	{
-		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTB_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTB_BASE_PTR,
-		.bitWeight           = GPIO_PDD_PIN_9,       // uint32 pinBitWeight;
-		.bit                 = 9,                    // uint8 pinBitWeight;
+		.bitWeight           = GPIO_PDD_PIN_9,       // uint32_t pinBitWeight;
+		.bit                 = 9,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
@@ -1067,8 +1067,8 @@ IOPinMapTypeDef IOMap =
 
 	.DUMMY =  // Dummy Pin
 	{
-		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16 *setBitRegister;
-		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16 *resetBitRegister;
+		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
+		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
 		.portBase            = PORTA_BASE_PTR,       // GPIO_TypeDef *port;
 		.GPIOBase            = PTA_BASE_PTR,
 		.bitWeight           = DUMMY_BITWEIGHT,      // invalid
