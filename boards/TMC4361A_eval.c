@@ -77,8 +77,8 @@ static void tmc4361A_fullCover(uint8 *data, size_t length)
 // The cover function emulates the SPI readWrite function
 static uint8 tmc4361A_cover(uint8 data, uint8 lastTransfer)
 {
-	static uint64 coverIn = 0;     // read from squirrel
-	static uint64 coverOut = 0;    // write to squirrel
+	static uint64_t coverIn = 0;     // read from squirrel
+	static uint64_t coverOut = 0;    // write to squirrel
 	static uint8 coverLength = 0;  // data to be written
 
 	uint8 out = 0; // return value of this function
@@ -114,9 +114,9 @@ static uint8 tmc4361A_cover(uint8 data, uint8 lastTransfer)
 		// Read the reply
 		coverIn = 0;
 		if(coverLength > 4)
-			coverIn |= (uint64) tmc4361A_readInt(&TMC4361A, TMC4361A_COVER_DRV_HIGH_RD) << 32;
+			coverIn |= (uint64_t) tmc4361A_readInt(&TMC4361A, TMC4361A_COVER_DRV_HIGH_RD) << 32;
 		coverIn |= tmc4361A_readInt(&TMC4361A, TMC4361A_COVER_DRV_LOW_RD);
-		coverIn <<= (8-coverLength) * 8; // Shift the highest byte of the reply to the highest byte of the buffer uint64
+		coverIn <<= (8-coverLength) * 8; // Shift the highest byte of the reply to the highest byte of the buffer uint64_t
 
 		// Clear write buffer
 		coverOut = 0;

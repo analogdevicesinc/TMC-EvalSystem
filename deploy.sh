@@ -26,7 +26,7 @@ usage() {
   echo -e "\t\t Add notify_email to the list of emails to be notified about this new version. This requires mutt to be installed."
   echo -e "\t-s smtp_server"
   echo -e "\t\t SMTP server used to send notifications."
-  echo -e "\t-v smtp_user"
+  echo -e "\t-u smtp_user"
   echo -e "\t\t SMTP user used to send notifications."
   echo -e "\t-w smtp_pass"
   echo -e "\t\t SMTP password used to send notifications."

@@ -134,7 +134,7 @@ static uint32 moveBy(uint8 motor, int32 *ticks)
 	return moveTo(motor, *ticks);
 }
 
-static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
+static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32_t *value)
 {
 	u32 errors = TMC_ERROR_NONE;
 
@@ -178,7 +178,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 				break;
 			case STEPDIR_EXTERNAL:
 			default:
-				tempValue = (int32)(((int64)StepDir_getFrequency(motor) * (int64)122) / (int64)TMC2130_FIELD_READ(motorToIC(motor), TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
+				tempValue = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2130_FIELD_READ(motorToIC(motor), TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
 				*value = (abs(tempValue) < 20) ? 0 : tempValue;
 				break;
 			}
@@ -280,7 +280,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 	case 29:
 		// Measured Speed
 		if(readWrite == READ) {
-			tempValue = (int32)(((int64)StepDir_getFrequency(motor) * (int64)122) / (int64)TMC2130_FIELD_READ(motorToIC(motor), TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
+			tempValue = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2130_FIELD_READ(motorToIC(motor), TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
 			*value = (abs(tempValue) < 20) ? 0 : tempValue;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;

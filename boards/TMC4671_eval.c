@@ -12,12 +12,12 @@ static SPIChannelTypeDef *TMC4671_SPIChannel;
 
 typedef struct
 {
-	u16  startVoltage;
-	u16  initWaitTime;
-	u16  actualInitWaitTime;
+	uint16_t  startVoltage;
+	uint16_t  initWaitTime;
+	uint16_t  actualInitWaitTime;
 	uint8_t   initState;
 	uint8_t   initMode;
-	u16  torqueMeasurementFactor;  // uint8_t.uint8_t
+	uint16_t  torqueMeasurementFactor;  // uint8_t.uint8_t
 	uint8_t	 motionMode;
 } TMinimalMotorConfig;
 
@@ -26,8 +26,8 @@ TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
 #ifdef USE_LINEAR_RAMP
 	TMC_LinearRamp rampGenerator[TMC4671_MOTORS];
 	uint8_t actualMotionMode[TMC4671_MOTORS];
-	s32 lastRampTargetPosition[TMC4671_MOTORS];
-	s32 lastRampTargetVelocity[TMC4671_MOTORS];
+	int32_t lastRampTargetPosition[TMC4671_MOTORS];
+	int32_t lastRampTargetVelocity[TMC4671_MOTORS];
 #endif
 
 // => SPI wrapper
@@ -40,7 +40,7 @@ uint8_t tmc4671_readwriteByte(uint8_t motor, uint8_t data, uint8_t lastTransfer)
 }
 // <= SPI wrapper
 
-static uint32 rotate(uint8_t motor, int32 velocity)
+static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -70,22 +70,22 @@ static uint32 rotate(uint8_t motor, int32 velocity)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 right(uint8_t motor, int32 velocity)
+static uint32_t right(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, velocity);
 }
 
-static uint32 left(uint8_t motor, int32 velocity)
+static uint32_t left(uint8_t motor, int32_t velocity)
 {
 	return rotate(motor, -velocity);
 }
 
-static uint32 stop(uint8_t motor)
+static uint32_t stop(uint8_t motor)
 {
 	return rotate(motor, 0);
 }
 
-static uint32 moveTo(uint8_t motor, int32 position)
+static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -115,7 +115,7 @@ static uint32 moveTo(uint8_t motor, int32 position)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 moveBy(uint8_t motor, int32 *ticks)
+static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -132,7 +132,7 @@ static uint32 moveBy(uint8_t motor, int32 *ticks)
 		tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
 
 		// set target position for ramp generator
-		rampGenerator[motor].targetPosition = (s32) tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL) + *ticks;
+		rampGenerator[motor].targetPosition = (int32_t) tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL) + *ticks;
 	}
 	else
 	{
@@ -145,9 +145,9 @@ static uint32 moveBy(uint8_t motor, int32 *ticks)
 	return TMC_ERROR_NONE;
 }
 
-static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32 *value)
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	u32 errors = TMC_ERROR_NONE;
+	uint32_t errors = TMC_ERROR_NONE;
 
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -157,7 +157,7 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 	case 4: // Maximum speed
 		if(readWrite == READ)
 		{
-			*value = (u32) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
+			*value = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
 
 #ifdef USE_LINEAR_RAMP
 			// update also ramp generator value
@@ -177,7 +177,7 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 	case 11: // acceleration
 		if(readWrite == READ)
 		{
-			*value = (u32) tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
+			*value = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
 
 #ifdef USE_LINEAR_RAMP
 			// update also ramp generator value
@@ -215,389 +215,6 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 		}
 		break;
 
-
-	// ADC offsets
-	case 50:
-		// ADC_I1_OFFSET
-		if(readWrite == READ)
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_I1_SCALE_OFFSET, BIT_0_TO_15);
-		else if(readWrite == WRITE)
-			tmc4671_writeRegister16BitValue(motor, TMC4671_ADC_I1_SCALE_OFFSET, BIT_0_TO_15, *value);
-		break;
-	case 51:
-		// ADC_I0_OFFSET
-		if(readWrite == READ)
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_I0_SCALE_OFFSET, BIT_0_TO_15);
-		else if(readWrite == WRITE)
-			tmc4671_writeRegister16BitValue(motor, TMC4671_ADC_I0_SCALE_OFFSET, BIT_0_TO_15, *value);
-		break;
-		// ADC scaler values
-	case 53:
-		// ADC_I1_SCALE
-		if(readWrite == READ)
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_I1_SCALE_OFFSET, BIT_16_TO_31);
-		else if(readWrite == WRITE)
-			tmc4671_writeRegister16BitValue(motor, TMC4671_ADC_I1_SCALE_OFFSET, BIT_16_TO_31, *value);
-		break;
-	case 54:
-		// ADC_I0_SCALE
-		if(readWrite == READ)
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_I0_SCALE_OFFSET, BIT_16_TO_31);
-		else if(readWrite == WRITE)
-			tmc4671_writeRegister16BitValue(motor, TMC4671_ADC_I0_SCALE_OFFSET, BIT_16_TO_31, *value);
-		break;
-	case 100:
-		// ADC_VM_RAW
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_ADC_RAW_ADDR, 1);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_RAW_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 101:
-		// ADC_AGPI_A_RAW
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_ADC_RAW_ADDR, 1);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_RAW_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 102:
-		// ADC_AGPI_B_RAW
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_ADC_RAW_ADDR, 2);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_RAW_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 111:
-		// ADC_AENC_UX_RAW
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_ADC_RAW_ADDR, 2);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_RAW_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 112:
-		// ADC_AENC_WY_RAW
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_ADC_RAW_ADDR, 3);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_RAW_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 113:
-		// ADC_AENC_VN_RAW
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_ADC_RAW_ADDR, 3);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_RAW_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 116:
-		// ADC_I0_scaled
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_IWY_IUX, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 117:
-		// ADC_I2_scaled
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_IWY_IUX, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 118:
-		// ADC_I1_scaled
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_IV, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 120:
-		// AENC_UX
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_AENC_WY_UX, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 121:
-		// AENC_WY
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_AENC_WY_UX, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 122:
-		// AENC_VN
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_AENC_VN, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 124: // (vorher 103)
-		// ADCSD_I0_RAW
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_ADC_RAW_ADDR, 0);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_RAW_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 125: // (vorher 104)
-		// ADCSD_I1_RAW:
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_ADC_RAW_ADDR, 0);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_RAW_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 127:
-		// ADC_I0_EXT
-		if(readWrite == READ) {
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_I1_I0_EXT, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 128:
-		// ADC_I1_EXT
-		if(readWrite == READ) {
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_ADC_I1_I0_EXT, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 132:
-		// AENC_DECODER_COUNT
-		if(readWrite == READ) {
-			*value = (s32) tmc4671_readInt(motor, TMC4671_AENC_DECODER_COUNT);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 133:
-		// AENC_DECODER_COUNT_N
-		if(readWrite == READ) {
-			*value = (s32) tmc4671_readInt(motor, TMC4671_AENC_DECODER_COUNT_N);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 134:
-		// AENC_DECODER_PHI_E
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_AENC_DECODER_PHI_E_PHI_M, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 135:
-		// AENC_DECODER_PHI_M
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_AENC_DECODER_PHI_E_PHI_M, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 136:
-		// AENC_DECODER_POSITION
-		if(readWrite == READ) {
-			*value = (s32) tmc4671_readInt(motor, TMC4671_AENC_DECODER_POSITION);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 140:
-		// OPENLOOP_VELOCITY_TARGET
-		if(readWrite == READ) {
-			*value = (s32) tmc4671_readInt(motor, TMC4671_OPENLOOP_VELOCITY_TARGET);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 141:
-		// OPENLOOP_VELOCITY_ACTUAL
-		if(readWrite == READ) {
-			*value = (s32) tmc4671_readInt(motor, TMC4671_OPENLOOP_VELOCITY_ACTUAL);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 142:
-		// OPENLOOP_PHI
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_OPENLOOP_PHI, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 150:
-		// ABN_DECODER_COUNT
-		if(readWrite == READ) {
-			*value = tmc4671_readInt(motor, TMC4671_ABN_DECODER_COUNT) & 0x00FFFFFF;
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 151:
-		// ABN_DECODER_COUNT_N
-		if(readWrite == READ) {
-			*value = tmc4671_readInt(motor, TMC4671_ABN_DECODER_COUNT_N) & 0x00FFFFFF;
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 152:
-		// ABN_DECODER_PHI_E
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_ABN_DECODER_PHI_E_PHI_M, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 153:
-		// ABN_DECODER_PHI_M
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_ABN_DECODER_PHI_E_PHI_M, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 154:
-		// STATUS_REG_0
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 212);
-			*value =  (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 212);
-			tmc4671_writeInt(motor, TMC4671_INTERIM_DATA, *value);
-		}
-		break;
-	case 155:
-		// STATUS_REG_1
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 213);
-			*value =  (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 213);
-			tmc4671_writeInt(motor, TMC4671_INTERIM_DATA, *value);
-		}
-		break;
-	case 156:
-		// STATUS_PARAM_0
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 214);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 214);
-			tmc4671_writeRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15, *value);
-		}
-		break;
-	case 157:
-		// STATUS_PARAM_1
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 214);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 214);
-			tmc4671_writeRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31, *value);
-		}
-		break;
-	case 158:
-		// STATUS_PARAM_2
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 215);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 215);
-			tmc4671_writeRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15, *value);
-		}
-		break;
-	case 159:
-		// STATUS_PARAM_3
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 215);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 215);
-			tmc4671_writeRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31, *value);
-		}
-		break;
-	case 160:
-		// HALL_PHI_E
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_HALL_PHI_E_INTERPOLATED_PHI_E, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 161:
-		// HALL_PHI_E_INTERPOLATED
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_HALL_PHI_E_INTERPOLATED_PHI_E, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 162:
-		// AENC_DECODER_PHI_A_RAW
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_AENC_DECODER_PHI_A_RAW, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 163:
-		// AENC_DECODER_PHI_A
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_AENC_DECODER_PHI_A, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 164:
-		// HALL_PHI_M
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_HALL_PHI_M, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 170:
-		// PHI_E
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_PHI_E, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
 	case 171:
 		// PID_TORQUE_TARGET
 		if(readWrite == READ)
@@ -615,7 +232,7 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 	case 173:
 		// PID_VELOCITY_TARGET
 		if(readWrite == READ) {
-			*value = (s32) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
+			*value = (int32_t) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -623,15 +240,7 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 	case 174:
 		// PID_POSITION_TARGET
 		if(readWrite == READ) {
-			*value = (s32) tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 175:
-		// PID_TORQUE_ACTUAL
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, BIT_16_TO_31);
+			*value = (int32_t) tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -640,14 +249,6 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 		// PID_TORQUE_ACTUAL_mA
 		if(readWrite == READ) {
 			*value = tmc4671_getActualTorque_mA(motor, motorConfig[motor].torqueMeasurementFactor);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 177:
-		// PID_FLUX_ACTUAL
-		if(readWrite == READ) {
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, BIT_0_TO_15);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -676,78 +277,6 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 				tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, *value);
 			}
 #endif
-		}
-		break;
-	case 180:
-		// PID_TORQUE_ERROR
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_PID_ERROR_ADDR, 0);
-			*value = tmc4671_readInt(motor, TMC4671_PID_ERROR_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 181:
-		// PID_FLUX_ERROR
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_PID_ERROR_ADDR, 1);
-			*value = tmc4671_readInt(motor, TMC4671_PID_ERROR_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 182:
-		// PID_VELOCITY_ERROR
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_PID_ERROR_ADDR, 2);
-			*value = tmc4671_readInt(motor, TMC4671_PID_ERROR_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 183:
-		// PID_POSITION_ERROR
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_PID_ERROR_ADDR, 3);
-			*value = tmc4671_readInt(motor, TMC4671_PID_ERROR_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 184:
-		// PID_TORQUE_ERROR_SUM
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_PID_ERROR_ADDR, 4);
-			*value = tmc4671_readInt(motor, TMC4671_PID_ERROR_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 185:
-		// PID_FLUX_ERROR_SUM
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_PID_ERROR_ADDR, 5);
-			*value = tmc4671_readInt(motor, TMC4671_PID_ERROR_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 186:
-		// PID_VELOCITY_ERROR_SUM
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_PID_ERROR_ADDR, 6);
-			*value = tmc4671_readInt(motor, TMC4671_PID_ERROR_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 187:
-		// PID_POSITION_ERROR_SUM
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_PID_ERROR_ADDR, 7);
-			*value = tmc4671_readInt(motor, TMC4671_PID_ERROR_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
 		}
 		break;
 	case 189:
@@ -788,503 +317,8 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
-	case 193:
-		// PIDIN_TARGET_POSITION
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 3);
-			*value = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 194:
-		// PIDOUT_TARGET_TORQUE
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 4);
-			*value = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 195:
-		// PIDOUT_TARGET_FLUX
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 5);
-			*value = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 196:
-		// PIDOUT_TARGET_VELOCITY
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 6);
-			*value = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 197:
-		// PIDOUT_TARGET_POSITION
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 7);
-			*value = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 198:
-		// FOC_IUX
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 8);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 199:
-		// FOC_IWY
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 8);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 200:
-		// FOC_IV
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 9);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 201:
-		// FOC_IA
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 10);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 202:
-		// FOC_IB
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 10);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 203:
-		// FOC_ID
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 11);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 204:
-		// FOC_IQ
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 11);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 205:
-		// FOC_UD
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 12);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 206:
-		// FOC_UQ
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 12);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 207:
-		// FOC_UD_LIMITED
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 13);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 208:
-		// FOC_UQ_LIMITED
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 13);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 209:
-		// FOC_UA
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 14);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 210:
-		// FOC_UB
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 14);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 211:
-		// FOC_UUX
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 15);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 212:
-		// FOC_UWY
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 15);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 213:
-		// FOC_UV
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 16);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 214:
-		// PWM_UX
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 17);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 215:
-		// PWM_WY
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 17);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 216:
-		// PWM_UV
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 18);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 217:
-		// ADC_I_0
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 19);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 218:
-		// ADC_I_1
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 19);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 220:
-		// CONFIG_REG_0
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 208);
-			*value =  (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 208);
-			tmc4671_writeInt(motor, TMC4671_INTERIM_DATA, *value);
-		}
-		break;
-	case 221:
-		// CONFIG_REG_1
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 209);
-			*value =  (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 209);
-			tmc4671_writeInt(motor, TMC4671_INTERIM_DATA, *value);
-		}
-		break;
-	case 222:
-		// CTRL_PARAM_0
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 210);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 210);
-			tmc4671_writeRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15, *value);
-		}
-		break;
-	case 223:
-		// CTRL_PARAM_1
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 210);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 210);
-			tmc4671_writeRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31, *value);
-		}
-		break;
-	case 224:
-		// CTRL_PARAM_2
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 211);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 211);
-			tmc4671_writeRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15, *value);
-		}
-		break;
-	case 225:
-		// CTRL_PARAM_3
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 211);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		}
-		else if(readWrite == WRITE)
-		{
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 211);
-			tmc4671_writeRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31, *value);
-		}
-		break;
-	case 226:
-		// ACTUAL_VELOCITY_PPTM
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 29);
-			*value = (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 230:
-		// DEBUG_VALUE_0
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 192);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 231:
-		// DEBUG_VALUE_1
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 192);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 232:
-		// DEBUG_VALUE_2
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 193);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 233:
-		// DEBUG_VALUE_3
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 193);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 234:
-		// DEBUG_VALUE_4
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 194);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 235:
-		// DEBUG_VALUE_5
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 194);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 236:
-		// DEBUG_VALUE_6
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 195);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 237:
-		// DEBUG_VALUE_7
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 195);
-			*value = (s16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 238:
-		// DEBUG_VALUE_8
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 196);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 239:
-		// DEBUG_VALUE_9
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 196);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 240:
-		// DEBUG_VALUE_10
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 197);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 241:
-		// DEBUG_VALUE_11
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 197);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 242:
-		// DEBUG_VALUE_12
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 198);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 243:
-		// DEBUG_VALUE_13
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 198);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 244:
-		// DEBUG_VALUE_14
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 199);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_0_TO_15);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 245:
-		// DEBUG_VALUE_15
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 199);
-			*value = (u16) tmc4671_readRegister16BitValue(motor, TMC4671_INTERIM_DATA, BIT_16_TO_31);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 246:
-		// DEBUG_VALUE_16
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 200);
-			*value = (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 247:
-		// DEBUG_VALUE_17
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 201);
-			*value = (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 248:
-		// DEBUG_VALUE_18
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 202);
-			*value =  (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 249:
-		// DEBUG_VALUE_19
-		if(readWrite == READ) {
-			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 203);
-			*value =  (s32) tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
 	case 251:
-		// Torque measurement factor
+		// torque measurement factor
 		if(readWrite == READ) {
 			*value = motorConfig[motor].torqueMeasurementFactor;
 		} else if(readWrite == WRITE) {
@@ -1292,7 +326,7 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 		}
 		break;
 	case 252:
-		// Start encoder initialization
+		// start encoder initialization
 		if(readWrite == READ) {
 			*value = motorConfig[motor].initMode;
 		} else if(readWrite == WRITE) {
@@ -1300,7 +334,7 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 		}
 		break;
 	case 253:
-		// Encoder init state
+		// encoder init state
 		if(readWrite == READ) {
 			*value = motorConfig[motor].initState;
 		} else if(readWrite == WRITE) {
@@ -1308,7 +342,7 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 		}
 		break;
 	case 254:
-		// Actual encoder wait time
+		// actual encoder wait time
 		if(readWrite == READ) {
 			*value = motorConfig[motor].actualInitWaitTime;
 		} else if(readWrite == WRITE) {
@@ -1322,7 +356,7 @@ static uint32 handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, in
 	return errors;
 }
 
-static uint32 getMeasuredSpeed(uint8_t motor, int32 *value)
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -1332,9 +366,9 @@ static uint32 getMeasuredSpeed(uint8_t motor, int32 *value)
 	return TMC_ERROR_NONE;
 }
 
-static void periodicJob(uint32 actualSystick)
+static void periodicJob(uint32_t actualSystick)
 {
-	int motor;
+	int32_t motor;
 
 	// do encoder initialization if necessary
 	for(motor = 0; motor < TMC4671_MOTORS; motor++)
@@ -1346,7 +380,7 @@ static void periodicJob(uint32 actualSystick)
 
 #ifdef USE_LINEAR_RAMP
 	// 1ms velocity ramp handling
-	static u32 lastSystick;
+	static uint32_t lastSystick;
 	if (lastSystick != actualSystick)
 	{
 		// do velocity / position ramping for every motor
@@ -1401,29 +435,29 @@ static void periodicJob(uint32 actualSystick)
 #endif
 }
 
-static void writeRegister(uint8_t motor, uint8_t address, int32 value)
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	tmc4671_writeInt(DEFAULT_MOTOR, address, value);
 }
 
-static void readRegister(uint8_t motor, uint8_t address, int32 *value)
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
 	*value = tmc4671_readInt(DEFAULT_MOTOR, address);
 }
 
-static uint32 SAP(uint8_t type, uint8_t motor, int32 value)
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
 	return handleParameter(WRITE, motor, type, &value);
 }
 
-static uint32 GAP(uint8_t type, uint8_t motor, int32 *value)
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32 userFunction(uint8_t type, uint8_t motor, int32 *value)
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(type);
 	UNUSED(motor);
@@ -1475,7 +509,7 @@ static uint8_t restore()
 	return 1;
 }
 
-static void checkErrors(uint32 tick)
+static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
 	Evalboards.ch1.errors = 0;
@@ -1519,8 +553,7 @@ void TMC4671_init(void)
 	Evalboards.ch1.VMMax                = 650;
 
 	// init motor config
-
-	int motor;
+	int32_t motor;
 	for(motor = 0; motor < TMC4671_MOTORS; motor++)
 	{
 		motorConfig[motor].initWaitTime             = 1000;
@@ -1550,8 +583,8 @@ void TMC4671_init(void)
 		lastRampTargetVelocity[motor] = 0;
 
 		// update ramp generator default values
-		rampGenerator[motor].maxVelocity = (u32)tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
-		rampGenerator[motor].acceleration = (u32)tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
+		rampGenerator[motor].maxVelocity = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
+		rampGenerator[motor].acceleration = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
 	}
 #endif
 }

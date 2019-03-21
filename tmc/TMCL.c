@@ -167,7 +167,7 @@ typedef struct
 		uint8 Byte[4];
 		uint32 UInt32;
 		int32 Int32;
-		f32 Float32;
+		float32_t Float32;
 	} Value;
 } TMCLCommandTypeDef;
 
@@ -181,7 +181,7 @@ typedef struct
 		uint8 Byte[4];
 		uint32 UInt32;
 		int32 Int32;
-		f32 Float32;
+		float32_t Float32;
 	} Value;
 
 	uint8 Special[9];
