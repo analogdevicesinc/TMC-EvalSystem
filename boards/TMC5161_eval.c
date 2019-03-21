@@ -897,6 +897,7 @@ static void configCallback(TMC5161TypeDef *tmc5161, ConfigState state)
 	{	// Change hardware-preset registers here
 		tmc5161_writeInt(tmc5161, TMC5161_SHORT_CONF, 0x00010C0C);
 		tmc5161_writeInt(tmc5161, TMC5161_DRV_CONF, 0x00080200);
+		tmc5161_writeInt(tmc5161, TMC5161_PWMCONF, 0xC40C001E);
 	}
 }
 
