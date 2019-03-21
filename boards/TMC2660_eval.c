@@ -626,12 +626,7 @@ static uint32 GAP(uint8 type, uint8 motor, int32 *value)
 
 static void writeRegister(u8 motor, uint8 address, int32 value)
 {
-//	if(address == TMC2660_SGCSCONF || address == 0x0E) {
-//		if(TMC2660_FIELD_READ(motor, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT) == 1)
-//			TMC2660.standStillCurrentScale = value;
-//		else
-//			TMC2660.runCurrentScale = value;
-//	}
+	UNUSED(motor);
 	tmc2660_writeInt(0, address, value);
 }
 
