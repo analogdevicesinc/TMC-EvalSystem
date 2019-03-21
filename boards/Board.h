@@ -94,6 +94,12 @@ typedef struct
 
 EvalboardsTypeDef Evalboards;
 
+typedef enum {
+	TMC_COMM_SPI,
+	TMC_COMM_UART,
+	TMC_COMM_WLAN
+} TMC_Board_Comm_Mode;
+
 void periodicJobDummy(uint32_t tick);
 void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel);
 

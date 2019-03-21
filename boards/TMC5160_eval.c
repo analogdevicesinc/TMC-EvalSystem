@@ -14,6 +14,7 @@
 
 static bool vMaxModified = false;
 //static uint32_t vMax		   = 1;
+
 static bool uart_mode = false;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
@@ -36,7 +37,7 @@ static int32_t readInt_spi(uint8_t motor, uint8_t address);
 static void writeDatagram_uart(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4);
 static int32_t readInt_uart(uint8_t motor, uint8_t address);
 
-static void init_comm(bool mode);
+static void init_comm(TMC_Board_Comm_Mode mode);
 
 static void periodicJob(uint32_t tick);
 static void checkErrors(uint32_t tick);
@@ -1014,7 +1015,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 //		break;
 	case 8: // Enable UART mode
 		uart_mode = ((*value & 1) == 1);
-		init_comm(uart_mode);
+		init_comm((uart_mode) ? TMC_COMM_UART : TMC_COMM_SPI);
 		break;
 	case 9: // Switch between internal (0) / external (1) clock
 		if(*value == 1) {
@@ -1086,15 +1087,24 @@ static void enableDriver(DriverState state)
 		HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
 }
 
-static void init_comm(bool mode)
+static void init_comm(TMC_Board_Comm_Mode mode)
 {
-	if(mode) {
+	static TMC_Board_Comm_Mode old = TMC_COMM_SPI;
+	switch(mode) {
+	case TMC_COMM_UART:
 		TMC5160_UARTChannel = HAL.UART;
 		TMC5160_UARTChannel->rxtx.init();
-	} else {
-		TMC5160_UARTChannel->rxtx.deInit();
+		old = TMC_COMM_UART;
+		break;
+	case TMC_COMM_SPI:
+	case TMC_COMM_WLAN: // unused
+	default:
+		if(old == TMC_COMM_UART)
+			TMC5160_UARTChannel->rxtx.deInit();
 		TMC5160_SPIChannel = &HAL.SPI->ch1;
 		TMC5160_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+		old = TMC_COMM_SPI;
+		break;
 	}
 }
 
@@ -1134,7 +1144,7 @@ void TMC5160_init(void)
 //	HAL.IOs->config->toOutput(&HAL.IOs->pins->CLK16);
 //	HAL.IOs->config->setLow(&HAL.IOs->pins->CLK16);
 
-	init_comm(uart_mode);
+	init_comm((uart_mode) ? TMC_COMM_UART : TMC_COMM_SPI);
 
 	TMC5160_config = Evalboards.ch1.config;
 
