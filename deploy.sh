@@ -6,9 +6,9 @@ owner="trinamic"
 repo="TMC-EvalSystem"
 api="https://api.github.com/repos/${owner}/${repo}"
 token="changeme"
-notify=""
-smtp_server="smtp.gmail.com"
-smtp_user="leonardkugis@gmail.com"
+notify="git_Eval_News@trinamic.com"
+smtp_server="kug.is"
+smtp_user="tmc@kug.is"
 smtp_pass="changeme"
 
 usage() {
