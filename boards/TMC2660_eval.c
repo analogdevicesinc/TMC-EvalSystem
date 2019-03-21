@@ -38,6 +38,8 @@ static uint32 userFunction(uint8 type, uint8 motor, int32 *value);
 static uint8 reset();
 static void enableDriver(DriverState state);
 
+static void on_standstill_changed(uint8 newStandstill);
+
 void tmc2660_writeInt(uint8 motor, uint8 address, int value);
 uint32 tmc2660_readInt(uint8 motor, uint8 address);
 
@@ -64,11 +66,11 @@ void readWrite(uint32 datagram)
 	static uint8 rdsel = 0; // number of expected read response
 
 // if SGCONF should be written, check whether stand still, or run current should be used
-	if(TMC2660_GET_ADDRESS(datagram) == TMC2660_SGCSCONF)
-	{
-		datagram &= ~TMC2660_SET_CS(-1); // clear CS field
-		datagram |= (TMC2660.isStandStillCurrentLimit) ?  TMC2660_SET_CS(TMC2660.standStillCurrentScale) : TMC2660_SET_CS(TMC2660.runCurrentScale); // set current
-	}
+//	if(TMC2660_GET_ADDRESS(datagram) == TMC2660_SGCSCONF)
+//	{
+//		datagram &= ~TMC2660_SET_CS(-1); // clear CS field
+//		datagram |= (TMC2660.isStandStillCurrentLimit) ?  TMC2660_SET_CS(TMC2660.standStillCurrentScale) : TMC2660_SET_CS(TMC2660.runCurrentScale); // set current
+//	}
 
 // write value and read reply to shadow register
 	TMC2660_config->shadowRegister[rdsel]  = TMC2660_SPIChannel->readWrite(datagram>>16, 0);
@@ -109,10 +111,6 @@ void tmc2660_writeInt(uint8 motor, uint8 address, int value)
 	// tmc2660_writeDatagram(address, 0xFF & (value>>24), 0xFF & (value>>16), 0xFF & (value>>8), 0xFF & (value>>0));
 	value &= 0x0FFFFF;
 
-	// store desired cs value, this can be overwritten by current limitation
-	if(address == TMC2660_SGCSCONF)
-		TMC2660.runCurrentScale = TMC2660_GET_CS(value);
-
 	TMC2660_config->shadowRegister[0x7F & (address | TMC2660_WRITE_BIT)] = value;
 	if(!TMC2660.continuousModeEnable)
 		readWrite(TMC2660_DATAGRAM(address, value));
@@ -135,11 +133,11 @@ void tmc2660_readWrite(uint8 motor, uint32 value)
 	static uint8 rdsel = 0; // number of expected read response
 
 	// if SGCONF should be written, check whether stand still, or run current should be used
-	if(TMC2660_GET_ADDRESS(value) == TMC2660_SGCSCONF)
-	{
-		value &= ~TMC2660_SET_CS(-1); // clear CS field
-		value |= (TMC2660.isStandStillCurrentLimit) ?  TMC2660_SET_CS(TMC2660.standStillCurrentScale) : TMC2660_SET_CS(TMC2660.runCurrentScale); // set current
-	}
+//	if(TMC2660_GET_ADDRESS(value) == TMC2660_SGCSCONF)
+//	{
+//		value &= ~TMC2660_SET_CS(-1); // clear CS field
+//		value |= (TMC2660.isStandStillCurrentLimit) ?  TMC2660_SET_CS(TMC2660.standStillCurrentScale) : TMC2660_SET_CS(TMC2660.runCurrentScale); // set current
+//	}
 
 	// write value and read reply to shadow register
 	TMC2660_config->shadowRegister[rdsel] = TMC2660_SPIChannel->readWrite(value>>16, 0);
@@ -302,7 +300,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		} else if(readWrite == WRITE) {
 			TMC2660.runCurrentScale = *value;
 			if(TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT) == 0)
-				TMC2660_FIELD_WRITE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.runCurrentScale);
+				TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.runCurrentScale);
 		}
 		break;
 	case 7:
@@ -312,7 +310,7 @@ static uint32 handleParameter(u8 readWrite, u8 motor, u8 type, int32 *value)
 		} else if(readWrite == WRITE) {
 			TMC2660.standStillCurrentScale = *value;
 			if(TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT) == 1)
-				TMC2660_FIELD_WRITE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.standStillCurrentScale);
+				TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.standStillCurrentScale);
 		}
 		break;
 	case 8:
@@ -628,7 +626,12 @@ static uint32 GAP(uint8 type, uint8 motor, int32 *value)
 
 static void writeRegister(u8 motor, uint8 address, int32 value)
 {
-	UNUSED(motor);
+//	if(address == TMC2660_SGCSCONF || address == 0x0E) {
+//		if(TMC2660_FIELD_READ(motor, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT) == 1)
+//			TMC2660.standStillCurrentScale = value;
+//		else
+//			TMC2660.runCurrentScale = value;
+//	}
 	tmc2660_writeInt(0, address, value);
 }
 
@@ -670,6 +673,17 @@ static void deInit(void)
 	StepDir_deInit();
 }
 
+static void on_standstill_changed(uint8 newStandstill)
+{
+	if(newStandstill == true) {
+		TMC2660.runCurrentScale = TMC2660_FIELD_READ(0, 0x0E, TMC2660_CS_MASK, TMC2660_CS_SHIFT);
+		TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.standStillCurrentScale);
+	} else if(newStandstill == false) {
+		TMC2660.standStillCurrentScale = TMC2660_FIELD_READ(0, 0x0E, TMC2660_CS_MASK, TMC2660_CS_SHIFT);
+		TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.runCurrentScale);
+	}
+}
+
 static void periodicJob(uint32 tick)
 {
 	static uint8 lastCoolStepState = 0;
@@ -678,7 +692,7 @@ static void periodicJob(uint32 tick)
 
 	// Apply current settings
 	if((stst = TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT)) != lastStandstillState) {
-		TMC2660_FIELD_WRITE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, (stst) ? TMC2660.standStillCurrentScale : TMC2660.runCurrentScale);
+		on_standstill_changed(stst);
 		lastStandstillState = stst;
 	}
 
