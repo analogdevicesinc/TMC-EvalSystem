@@ -1,16 +1,15 @@
 #include "../tmc/StepDir.h"
-
 #include "Board.h"
-#include "tmc/ic/TMC262_1420/TMC262_1420.h"
+#include "tmc/ic/TMC2590/TMC2590.h"
 
-#undef  TMC262_1420_MAX_VELOCITY
-#define TMC262_1420_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
+#undef  TMC2590_MAX_VELOCITY
+#define TMC2590_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
 #define ERRORS_I_STS          (1<<0)  // stand still current too high
 #define ERRORS_I_TIMEOUT_STS  (1<<1)  // current limited in stand still to prevent driver from demage
 
 #define VM_MIN  50   // VM[V/10] min
-#define VM_MAX  293  // VM[V/10] max +10%
+#define VM_MAX  600  // VM[V/10] max +10%
 
 #define MOTORS 1
 
@@ -46,17 +45,17 @@ static void on_standstill_changed(uint8_t newStandstill);
 static uint32_t compatibilityMode = 1;
 static uint8_t standstill = 1;
 
-static SPIChannelTypeDef *TMC262_1420_SPIChannel;
-static TMC262_1420TypeDef TMC262_1420;
-static ConfigurationTypeDef *TMC262_1420_config;
+static SPIChannelTypeDef *TMC2590_SPIChannel;
+static TMC2590TypeDef TMC2590;
+static ConfigurationTypeDef *TMC2590_config;
 
-// Translate motor number to TMC262_1420TypeDef
+// Translate motor number to TMC2590TypeDef
 // When using multiple ICs you can map them here
-static inline TMC262_1420TypeDef *motorToIC(uint8_t motor)
+static inline TMC2590TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
 
-	return &TMC262_1420;
+	return &TMC2590;
 }
 
 // Translate channel number to SPI channel
@@ -65,11 +64,11 @@ static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 {
 	UNUSED(channel);
 
-	return TMC262_1420_SPIChannel;
+	return TMC2590_SPIChannel;
 }
 
 // SPI Wrapper for API
-void tmc262_1420_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
+void tmc2590_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 {
 	if(Evalboards.ch1.fullCover != NULL) {
 		UNUSED(channel);
@@ -96,28 +95,28 @@ static PinsTypeDef Pins;
 //	static uint8_t rdsel = 0; // number of expected read response
 //
 //// if SGCONF should be written, check whether stand still, or run current should be used
-//	if(TMC262_1420_GET_ADDRESS(value) == TMC262_1420_SGCSCONF)
+//	if(TMC2590_GET_ADDRESS(value) == TMC2590_SGCSCONF)
 //	{
-//		value &= ~TMC262_1420_SET_CS(-1); // clear CS field
-//		value |= (TMC262_1420.isStandStillCurrentLimit) ?  TMC262_1420_SET_CS(TMC262_1420.standStillCurrentScale) : TMC262_1420_SET_CS(TMC262_1420.runCurrentScale); // set current
+//		value &= ~TMC2590_SET_CS(-1); // clear CS field
+//		value |= (TMC2590.isStandStillCurrentLimit) ?  TMC2590_SET_CS(TMC2590.standStillCurrentScale) : TMC2590_SET_CS(TMC2590.runCurrentScale); // set current
 //	}
 //
 //// write value and read reply to shadow register
-//	TMC262_1420_config->shadowRegister[rdsel]  = TMC262_1420_SPIChannel->readWrite(value>>16, 0);
-//	TMC262_1420_config->shadowRegister[rdsel]  <<= 8;
-//	TMC262_1420_config->shadowRegister[rdsel]  |= TMC262_1420_SPIChannel->readWrite(value>>8, 0);
-//	TMC262_1420_config->shadowRegister[rdsel]  <<= 8;
-//	TMC262_1420_config->shadowRegister[rdsel]  |= TMC262_1420_SPIChannel->readWrite(value & 0xFF, 1);
-//	TMC262_1420_config->shadowRegister[rdsel]  >>= 4;
+//	TMC2590_config->shadowRegister[rdsel]  = TMC2590_SPIChannel->readWrite(value>>16, 0);
+//	TMC2590_config->shadowRegister[rdsel]  <<= 8;
+//	TMC2590_config->shadowRegister[rdsel]  |= TMC2590_SPIChannel->readWrite(value>>8, 0);
+//	TMC2590_config->shadowRegister[rdsel]  <<= 8;
+//	TMC2590_config->shadowRegister[rdsel]  |= TMC2590_SPIChannel->readWrite(value & 0xFF, 1);
+//	TMC2590_config->shadowRegister[rdsel]  >>= 4;
 //
-//	TMC262_1420_config->shadowRegister[TMC262_1420_RESPONSE_LATEST] = TMC262_1420_config->shadowRegister[rdsel]; // copy value to latest field
+//	TMC2590_config->shadowRegister[TMC2590_RESPONSE_LATEST] = TMC2590_config->shadowRegister[rdsel]; // copy value to latest field
 //
 //// set virtual read address for next reply given by RDSEL, can only change by setting RDSEL in DRVCONF
-//	if(TMC262_1420_GET_ADDRESS(value) == TMC262_1420_DRVCONF)
-//		rdsel = TMC262_1420_GET_RDSEL(value);
+//	if(TMC2590_GET_ADDRESS(value) == TMC2590_DRVCONF)
+//		rdsel = TMC2590_GET_RDSEL(value);
 //
 //// write store written value to shadow register
-//	TMC262_1420_config->shadowRegister[TMC262_1420_GET_ADDRESS(value) | TMC262_1420_WRITE_BIT ] = value;
+//	TMC2590_config->shadowRegister[TMC2590_GET_ADDRESS(value) | TMC2590_WRITE_BIT ] = value;
 //}
 //
 //static void readImmediately(uint8_t rdsel)
@@ -125,70 +124,70 @@ static PinsTypeDef Pins;
 //	uint32_t value, drvConf;
 //
 //// additional reading to keep all replies up to date
-//	value = tmc262_1420_readInt(&TMC262_1420, TMC262_1420_WRITE_BIT | TMC262_1420_DRVCONF);  // buffer value amd  drvConf to write back later
+//	value = tmc2590_readInt(&TMC2590, TMC2590_WRITE_BIT | TMC2590_DRVCONF);  // buffer value amd  drvConf to write back later
 //	drvConf = value;
-//	value &= ~TMC262_1420_SET_RDSEL(-1);                              // clear RDSEL bits
-//	value |= TMC262_1420_SET_RDSEL(rdsel%3);                          // set rdsel
+//	value &= ~TMC2590_SET_RDSEL(-1);                              // clear RDSEL bits
+//	value |= TMC2590_SET_RDSEL(rdsel%3);                          // set rdsel
 //	readWrite(value);                                             // write to chip and readout reply
 //	readWrite(drvConf);                                           // write to chip and return desired reply
 //}
 //
 //// => SPI wrapper
-//void tmc262_1420_writeInt(uint8_t motor, uint8_t address, int value)
+//void tmc2590_writeInt(uint8_t motor, uint8_t address, int value)
 //{
 //	UNUSED(motor);
 //
-//	// tmc262_1420_writeDatagram(address, 0xFF & (value>>24), 0xFF & (value>>16), 0xFF & (value>>8), 0xFF & (value>>0));
+//	// tmc2590_writeDatagram(address, 0xFF & (value>>24), 0xFF & (value>>16), 0xFF & (value>>8), 0xFF & (value>>0));
 //	value &= 0x0FFFFF;
 //
 //	// store desired cs value, this can be overwritten by current limitation
-//	if(TMC262_1420_GET_ADDRESS(value) == TMC262_1420_SGCSCONF)
-//		TMC262_1420.runCurrentScale = TMC262_1420_GET_CS(value);
+//	if(TMC2590_GET_ADDRESS(value) == TMC2590_SGCSCONF)
+//		TMC2590.runCurrentScale = TMC2590_GET_CS(value);
 //
-//	TMC262_1420_config->shadowRegister[0x7F & (address | TMC262_1420_WRITE_BIT)] = value;
-//	if(!TMC262_1420.continuousModeEnable)
+//	TMC2590_config->shadowRegister[0x7F & (address | TMC2590_WRITE_BIT)] = value;
+//	if(!TMC2590.continuousModeEnable)
 //		readWrite(value);
 //}
 //
-//uint32_t tmc262_1420_readInt(uint8_t motor, uint8_t address)
+//uint32_t tmc2590_readInt(uint8_t motor, uint8_t address)
 //{
 //	UNUSED(motor);
 //
-//	if(!TMC262_1420.continuousModeEnable && !(address & TMC262_1420_WRITE_BIT))
+//	if(!TMC2590.continuousModeEnable && !(address & TMC2590_WRITE_BIT))
 //		readImmediately(address);
 //
-//	return TMC262_1420_config->shadowRegister[0x7F & address];
+//	return TMC2590_config->shadowRegister[0x7F & address];
 //}
 //
-//void tmc262_1420_readWrite(uint8_t motor, uint32_t value)
+//void tmc2590_readWrite(uint8_t motor, uint32_t value)
 //{
 //	UNUSED(motor);
 //
 //	static uint8_t rdsel = 0; // number of expected read response
 //
 //	// if SGCONF should be written, check whether stand still, or run current should be used
-//	if(TMC262_1420_GET_ADDRESS(value) == TMC262_1420_SGCSCONF)
+//	if(TMC2590_GET_ADDRESS(value) == TMC2590_SGCSCONF)
 //	{
-//		value &= ~TMC262_1420_SET_CS(-1); // clear CS field
-//		value |= (TMC262_1420.isStandStillCurrentLimit) ?  TMC262_1420_SET_CS(TMC262_1420.standStillCurrentScale) : TMC262_1420_SET_CS(TMC262_1420.runCurrentScale); // set current
+//		value &= ~TMC2590_SET_CS(-1); // clear CS field
+//		value |= (TMC2590.isStandStillCurrentLimit) ?  TMC2590_SET_CS(TMC2590.standStillCurrentScale) : TMC2590_SET_CS(TMC2590.runCurrentScale); // set current
 //	}
 //
 //	// write value and read reply to shadow register
-//	TMC262_1420_config->shadowRegister[rdsel] = TMC262_1420_SPIChannel->readWrite(value>>16, 0);
-//	TMC262_1420_config->shadowRegister[rdsel] <<= 8;
-//	TMC262_1420_config->shadowRegister[rdsel] |= TMC262_1420_SPIChannel->readWrite(value>>8, 0);
-//	TMC262_1420_config->shadowRegister[rdsel] <<= 8;
-//	TMC262_1420_config->shadowRegister[rdsel] |= TMC262_1420_SPIChannel->readWrite(value & 0xFF, 1);
-//	TMC262_1420_config->shadowRegister[rdsel] >>= 4;
+//	TMC2590_config->shadowRegister[rdsel] = TMC2590_SPIChannel->readWrite(value>>16, 0);
+//	TMC2590_config->shadowRegister[rdsel] <<= 8;
+//	TMC2590_config->shadowRegister[rdsel] |= TMC2590_SPIChannel->readWrite(value>>8, 0);
+//	TMC2590_config->shadowRegister[rdsel] <<= 8;
+//	TMC2590_config->shadowRegister[rdsel] |= TMC2590_SPIChannel->readWrite(value & 0xFF, 1);
+//	TMC2590_config->shadowRegister[rdsel] >>= 4;
 //
-//	TMC262_1420_config->shadowRegister[TMC262_1420_RESPONSE_LATEST] = TMC262_1420_config->shadowRegister[rdsel]; // copy value to latest field
+//	TMC2590_config->shadowRegister[TMC2590_RESPONSE_LATEST] = TMC2590_config->shadowRegister[rdsel]; // copy value to latest field
 //
 //	// set virtual read address for next reply given by RDSEL, can only change by setting RDSEL in DRVCONF
-//	if(TMC262_1420_GET_ADDRESS(value) == TMC262_1420_DRVCONF)
-//		rdsel = TMC262_1420_GET_RDSEL(value);
+//	if(TMC2590_GET_ADDRESS(value) == TMC2590_DRVCONF)
+//		rdsel = TMC2590_GET_RDSEL(value);
 //
 //	// write store written value to shadow register
-//	TMC262_1420_config->shadowRegister[TMC262_1420_GET_ADDRESS(value) | TMC262_1420_WRITE_BIT ] = value;
+//	TMC2590_config->shadowRegister[TMC2590_GET_ADDRESS(value) | TMC2590_WRITE_BIT ] = value;
 //}
 
 
@@ -201,16 +200,14 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 
 	switch(type)
 	{
-	case 0:
-		// disable continuos read/write mode - used in BoardAssignment.c for the combination TMC43XX + TMC262_1420
-		// In continuos read/write mode settings will be continously written to TMC262_1420 and all replies are requested rotatory.
-		// It's the default mode to prevent TMC262_1420 from loosing setting on brownout and being alway up to date with all chip states.
-		TMC262_1420.continuousModeEnable = *value ? 0 : 1;
+	case 0:	// disable continuos read/write mode - used in BoardAssignment.c for the combination TMC43XX + TMC2590
+		// In continuos read/write mode settings will be continously written to TMC2590 and all replies are requested rotatory.
+		// It's the default mode to prevent TMC2590 from loosing setting on brownout and being alway up to date with all chip states.
+		TMC2590.continuousModeEnable = *value ? 0 : 1;
 		break;
-	case 1:
-		// disable compatibility mode
+	case 1:	// disable compatibility mode
 		// per default compability mode is enabled,
-		// saying firmware works with orl TMC262_1420-Eval Tool
+		// saying firmware works with orl TMC2590-Eval Tool
 		// e.g. stallGuard value is only
 		compatibilityMode = *value ? 0 : 1;
 		break;
@@ -230,8 +227,8 @@ static uint32_t rotate(uint8_t motor, int32_t velocity)
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
 
-	TMC262_1420.isStandStillCurrentLimit  = 0;
-	TMC262_1420.isStandStillOverCurrent   = 0;
+	TMC2590.isStandStillCurrentLimit  = 0;
+	TMC2590.isStandStillOverCurrent   = 0;
 
 	StepDir_rotate(motor, velocity);
 
@@ -334,21 +331,21 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 6:
 		// Maximum current
 		if(readWrite == READ) {
-			*value = TMC262_1420.runCurrentScale;
+			*value = TMC2590.runCurrentScale;
 		} else if(readWrite == WRITE) {
-			TMC262_1420.runCurrentScale = *value;
+			TMC2590.runCurrentScale = *value;
 			if(standstill == false)
-				TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT, TMC262_1420.runCurrentScale);
+				TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.runCurrentScale);
 		}
 		break;
 	case 7:
 		// Standby current
 		if(readWrite == READ) {
-			*value = TMC262_1420.standStillCurrentScale;
+			*value = TMC2590.standStillCurrentScale;
 		} else if(readWrite == WRITE) {
-			TMC262_1420.standStillCurrentScale = *value;
+			TMC2590.standStillCurrentScale = *value;
 			if(standstill == true)
-				TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT, TMC262_1420.standStillCurrentScale);
+				TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.standStillCurrentScale);
 		}
 		break;
 	case 8:
@@ -384,7 +381,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
-			*value = 8 - TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCTRL | TMC262_1420_WRITE_BIT, TMC262_1420_MRES_MASK, TMC262_1420_MRES_SHIFT);
+			*value = 8 - TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCTRL | TMC2590_WRITE_BIT, TMC2590_MRES_MASK, TMC2590_MRES_SHIFT);
 		} else if(readWrite == WRITE) {
 			switch(*value)
 			{
@@ -402,7 +399,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCTRL, TMC262_1420_MRES_MASK, TMC262_1420_MRES_SHIFT, *value);
+				TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_MRES_MASK, TMC2590_MRES_SHIFT, *value);
 			}
 			else
 			{
@@ -413,168 +410,168 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 160:
 		// Microstep Interpolation
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCTRL | TMC262_1420_WRITE_BIT, TMC262_1420_INTPOL_MASK, TMC262_1420_INTPOL_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCTRL | TMC2590_WRITE_BIT, TMC2590_INTPOL_MASK, TMC2590_INTPOL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCTRL, TMC262_1420_INTPOL_MASK, TMC262_1420_INTPOL_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_INTPOL_MASK, TMC2590_INTPOL_SHIFT, *value);
 		}
 		break;
 	case 161:
 		// Double Edge Steps
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCTRL | TMC262_1420_WRITE_BIT, TMC262_1420_DEDGE_MASK, TMC262_1420_DEDGE_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCTRL | TMC2590_WRITE_BIT, TMC2590_DEDGE_MASK, TMC2590_DEDGE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCTRL, TMC262_1420_DEDGE_MASK, TMC262_1420_DEDGE_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_DEDGE_MASK, TMC2590_DEDGE_SHIFT, *value);
 		}
 		break;
 	case 162:
 		// Chopper blank time
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_CHOPCONF | TMC262_1420_WRITE_BIT, TMC262_1420_TBL_MASK, TMC262_1420_TBL_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_TBL_MASK, TMC2590_TBL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_CHOPCONF, TMC262_1420_TBL_MASK, TMC262_1420_TBL_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_TBL_MASK, TMC2590_TBL_SHIFT, *value);
 		}
 		break;
 	case 163:
 		// Constant TOff Mode
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_CHOPCONF | TMC262_1420_WRITE_BIT, TMC262_1420_CHM_MASK, TMC262_1420_CHM_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_CHM_MASK, TMC2590_CHM_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_CHOPCONF, TMC262_1420_CHM_MASK, TMC262_1420_CHM_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_CHM_MASK, TMC2590_CHM_SHIFT, *value);
 		}
 		break;
 	case 164:
 		// Disable fast decay comparator
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_CHOPCONF | TMC262_1420_WRITE_BIT, TMC262_1420_HDEC_MASK, TMC262_1420_HDEC_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_HDEC_MASK, TMC2590_HDEC_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_CHOPCONF, TMC262_1420_HDEC_MASK, TMC262_1420_HDEC_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HDEC_MASK, TMC2590_HDEC_SHIFT, *value);
 		}
 		break;
 	case 165:
 		// Chopper hysteresis end / fast decay time
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_CHOPCONF | TMC262_1420_WRITE_BIT, TMC262_1420_HEND_MASK, TMC262_1420_HEND_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_HEND_MASK, TMC2590_HEND_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_CHOPCONF, TMC262_1420_HEND_MASK, TMC262_1420_HEND_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HEND_MASK, TMC2590_HEND_SHIFT, *value);
 		}
 		break;
 	case 166:
 		// Chopper hysteresis start / sine wave offset
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_CHOPCONF | TMC262_1420_WRITE_BIT, TMC262_1420_HSTRT_MASK, TMC262_1420_HSTRT_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_HSTRT_MASK, TMC2590_HSTRT_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_CHOPCONF, TMC262_1420_HSTRT_MASK, TMC262_1420_HSTRT_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HSTRT_MASK, TMC2590_HSTRT_SHIFT, *value);
 		}
 		break;
 	case 167:
 		// Chopper off time
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_CHOPCONF | TMC262_1420_WRITE_BIT, TMC262_1420_TOFF_MASK, TMC262_1420_TOFF_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_TOFF_MASK, TMC2590_TOFF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_CHOPCONF, TMC262_1420_TOFF_MASK, TMC262_1420_TOFF_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_TOFF_MASK, TMC2590_TOFF_SHIFT, *value);
 		}
 		break;
 	case 168:
 		// smartEnergy current minimum (SEIMIN)
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_SMARTEN, TMC262_1420_SEIMIN_MASK, TMC262_1420_SEIMIN_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEIMIN_MASK, TMC2590_SEIMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SMARTEN, TMC262_1420_SEIMIN_MASK, TMC262_1420_SEIMIN_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEIMIN_MASK, TMC2590_SEIMIN_SHIFT, *value);
 		}
 		break;
 	case 169:
 		// smartEnergy current down step
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_SMARTEN, TMC262_1420_SEDN_MASK, TMC262_1420_SEDN_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEDN_MASK, TMC2590_SEDN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SMARTEN, TMC262_1420_SEDN_MASK, TMC262_1420_SEDN_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEDN_MASK, TMC2590_SEDN_SHIFT, *value);
 		}
 		break;
 	case 170:
 		// smartEnergy hysteresis
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_SMARTEN, TMC262_1420_SEMAX_MASK, TMC262_1420_SEMAX_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEMAX_MASK, TMC2590_SEMAX_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SMARTEN, TMC262_1420_SEMAX_MASK, TMC262_1420_SEMAX_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEMAX_MASK, TMC2590_SEMAX_SHIFT, *value);
 		}
 		break;
 	case 171:
 		// smartEnergy current up step
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_SMARTEN, TMC262_1420_SEUP_MASK, TMC262_1420_SEUP_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEUP_MASK, TMC2590_SEUP_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SMARTEN, TMC262_1420_SEUP_MASK, TMC262_1420_SEUP_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEUP_MASK, TMC2590_SEUP_SHIFT, *value);
 		}
 		break;
 	case 172:
 		// smartEnergy hysteresis start
 		if(readWrite == READ) {
-			*value = TMC262_1420.coolStepActiveValue;
+			*value = TMC2590.coolStepActiveValue;
 		} else if(readWrite == WRITE) {
-			TMC262_1420.coolStepActiveValue = *value;
+			TMC2590.coolStepActiveValue = *value;
 		}
 		break;
 	case 173:
 		// stallGuard2 filter enable
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_SGCSCONF, TMC262_1420_SFILT_MASK, TMC262_1420_SFILT_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SFILT_MASK, TMC2590_SFILT_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SGCSCONF, TMC262_1420_SFILT_MASK, TMC262_1420_SFILT_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SFILT_MASK, TMC2590_SFILT_SHIFT, *value);
 		}
 		break;
 	case 174:
 		// stallGuard2 threshold
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_SGCSCONF, TMC262_1420_SGT_MASK, TMC262_1420_SGT_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SGT_MASK, TMC2590_SGT_SHIFT);
 			*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_SGCSCONF, TMC262_1420_SGT_MASK, TMC262_1420_SGT_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SGT_MASK, TMC2590_SGT_SHIFT, *value);
 		}
 		break;
 	case 175:
 		// Slope control, high side
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_SLPH_MASK, TMC262_1420_SLPH_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPH_MASK, TMC2590_SLPH_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_SLPH_MASK, TMC262_1420_SLPH_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPH_MASK, TMC2590_SLPH_SHIFT, *value);
 		}
 		break;
 	case 176:
 		// Slope control, low side
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_SLPL_MASK, TMC262_1420_SLPL_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPL_MASK, TMC2590_SLPL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_SLPL_MASK, TMC262_1420_SLPL_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPL_MASK, TMC2590_SLPL_SHIFT, *value);
 		}
 		break;
 	case 177:
 		// Short to Ground Protection
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_DISS2G_MASK, TMC262_1420_DISS2G_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_DISS2G_MASK, TMC2590_DISS2G_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_DISS2G_MASK, TMC262_1420_DISS2G_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_DISS2G_MASK, TMC2590_DISS2G_SHIFT, *value);
 		}
 		break;
 	case 178:
 		// Short-to-ground detection timer
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_TS2G_MASK, TMC262_1420_TS2G_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TS2G_MASK, TMC2590_TS2G_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_TS2G_MASK, TMC262_1420_TS2G_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TS2G_MASK, TMC2590_TS2G_SHIFT, *value);
 		}
 		break;
 	case 179:
 		// VSense
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_VSENSE_MASK, TMC262_1420_VSENSE_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_VSENSE_MASK, TMC2590_VSENSE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_VSENSE_MASK, TMC262_1420_VSENSE_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_VSENSE_MASK, TMC2590_VSENSE_SHIFT, *value);
 		}
 		break;
 	case 180:
 		// smartEnergy actual current
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_RESPONSE2, TMC262_1420_SE_MASK, TMC262_1420_SE_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_RESPONSE2, TMC2590_SE_MASK, TMC2590_SE_SHIFT);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -590,41 +587,41 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			*value = TMC262_1420.coolStepThreshold;
+			*value = TMC2590.coolStepThreshold;
 		} else if(readWrite == WRITE) {
-			TMC262_1420.coolStepThreshold = *value;
+			TMC2590.coolStepThreshold = *value;
 		}
 		break;
 	case 183:
 		// Disable step/dir interface
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_SDOFF_MASK, TMC262_1420_SDOFF_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SDOFF_MASK, TMC2590_SDOFF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_SDOFF_MASK, TMC262_1420_SDOFF_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SDOFF_MASK, TMC2590_SDOFF_SHIFT, *value);
 		}
 		break;
 	case 184:
 		// Random TOff mode
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_CHOPCONF, TMC262_1420_RNDTF_MASK, TMC262_1420_RNDTF_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_RNDTF_MASK, TMC2590_RNDTF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_CHOPCONF, TMC262_1420_RNDTF_MASK, TMC262_1420_RNDTF_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_RNDTF_MASK, TMC2590_RNDTF_SHIFT, *value);
 		}
 		break;
 	case 185:
 		// Reserved test mode: leave undocumented?
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_TST_MASK, TMC262_1420_TST_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TST_MASK, TMC2590_TST_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC262_1420_FIELD_UPDATE(motorToIC(motor), TMC262_1420_DRVCONF, TMC262_1420_TST_MASK, TMC262_1420_TST_SHIFT, *value);
+			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TST_MASK, TMC2590_TST_SHIFT, *value);
 		}
 		break;
 	case 206:
 		// Load value
 		if(readWrite == READ) {
 			*value = (compatibilityMode) ?
-					TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_RESPONSE2, TMC262_1420_SGU_MASK, TMC262_1420_SGU_SHIFT)<<5 :
-					TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_RESPONSE1, TMC262_1420_SG2_MASK, TMC262_1420_SG2_SHIFT);
+					TMC2590_FIELD_READ(motorToIC(motor), TMC2590_RESPONSE2, TMC2590_SGU_MASK, TMC2590_SGU_SHIFT)<<5 :
+					TMC2590_FIELD_READ(motorToIC(motor), TMC2590_RESPONSE1, TMC2590_SG2_MASK, TMC2590_SG2_SHIFT);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -632,7 +629,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 208:
 		// Status Flags
 		if(readWrite == READ) {
-			*value = TMC262_1420_FIELD_READ(motorToIC(motor), TMC262_1420_RESPONSE_LATEST, TMC262_1420_STATUS_MASK, TMC262_1420_STATUS_SHIFT);
+			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_RESPONSE_LATEST, TMC2590_STATUS_MASK, TMC2590_STATUS_SHIFT);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -640,9 +637,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 214:
 		// Power Down Delay
 		if(readWrite == READ) {
-			*value = TMC262_1420.standStillTimeout;
+			*value = TMC2590.standStillTimeout;
 		} else if(readWrite == WRITE) {
-			TMC262_1420.standStillTimeout = *value;
+			TMC2590.standStillTimeout = *value;
 		}
 		break;
 	default:
@@ -703,12 +700,12 @@ static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
-	tmc262_1420_writeInt(motorToIC(motor), address, value);
+	tmc2590_writeInt(motorToIC(motor), address, value);
 }
 
 static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
-	*value = tmc262_1420_readInt(motorToIC(motor), address);
+	*value = tmc2590_readInt(motorToIC(motor), address);
 }
 
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
@@ -746,11 +743,11 @@ static void deInit(void)
 static void on_standstill_changed(uint8_t newStandstill)
 {
 	if(newStandstill == true) {
-		TMC262_1420.runCurrentScale = TMC262_1420_FIELD_READ(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT);
-		TMC262_1420_FIELD_UPDATE(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT, TMC262_1420.standStillCurrentScale);
+		TMC2590.runCurrentScale = TMC2590_FIELD_READ(&TMC2590, TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT);
+		TMC2590_FIELD_UPDATE(&TMC2590, TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.standStillCurrentScale);
 	} else if(newStandstill == false) {
-		TMC262_1420.standStillCurrentScale = TMC262_1420_FIELD_READ(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT);
-		TMC262_1420_FIELD_UPDATE(&TMC262_1420, TMC262_1420_SGCSCONF, TMC262_1420_CS_MASK, TMC262_1420_CS_SHIFT, TMC262_1420.runCurrentScale);
+		TMC2590.standStillCurrentScale = TMC2590_FIELD_READ(&TMC2590, TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT);
+		TMC2590_FIELD_UPDATE(&TMC2590, TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.runCurrentScale);
 	}
 }
 
@@ -759,24 +756,24 @@ static void periodicJob(uint32_t tick)
 	static uint8_t lastCoolStepState = 0;
 	uint8_t stst;
 
-	if((stst = TMC262_1420_FIELD_READ(&TMC262_1420, TMC262_1420_DRVCTRL, TMC262_1420_STST_MASK, TMC262_1420_STST_SHIFT)) != standstill) {
+	if((stst = TMC2590_FIELD_READ(&TMC2590, TMC2590_DRVCTRL, TMC2590_STST_MASK, TMC2590_STST_SHIFT)) != standstill) {
 		on_standstill_changed(stst);
 		standstill = stst;
 	}
 
-	Evalboards.ch2.errors = (TMC262_1420.isStandStillOverCurrent) 	? (Evalboards.ch2.errors | ERRORS_I_STS) 			: (Evalboards.ch2.errors & ~ERRORS_I_STS);
-	Evalboards.ch2.errors = (TMC262_1420.isStandStillCurrentLimit) 	? (Evalboards.ch2.errors | ERRORS_I_TIMEOUT_STS) 	: (Evalboards.ch2.errors & ~ERRORS_I_TIMEOUT_STS);
+	Evalboards.ch2.errors = (TMC2590.isStandStillOverCurrent) 	? (Evalboards.ch2.errors | ERRORS_I_STS) 			: (Evalboards.ch2.errors & ~ERRORS_I_STS);
+	Evalboards.ch2.errors = (TMC2590.isStandStillCurrentLimit) 	? (Evalboards.ch2.errors | ERRORS_I_TIMEOUT_STS) 	: (Evalboards.ch2.errors & ~ERRORS_I_TIMEOUT_STS);
 
-	uint8_t currCoolStepState = (abs(StepDir_getActualVelocity(DEFAULT_MOTOR)) >= TMC262_1420.coolStepThreshold);
+	uint8_t currCoolStepState = (abs(StepDir_getActualVelocity(DEFAULT_MOTOR)) >= TMC2590.coolStepThreshold);
 	if(currCoolStepState != lastCoolStepState)
 	{
-		uint8_t value = (currCoolStepState)? TMC262_1420.coolStepActiveValue : TMC262_1420.coolStepInactiveValue;
-		TMC262_1420_FIELD_UPDATE(&TMC262_1420, TMC262_1420_SMARTEN, TMC262_1420_SEMIN_MASK, TMC262_1420_SEMIN_SHIFT, value);
+		uint8_t value = (currCoolStepState)? TMC2590.coolStepActiveValue : TMC2590.coolStepInactiveValue;
+		TMC2590_FIELD_UPDATE(&TMC2590, TMC2590_SMARTEN, TMC2590_SEMIN_MASK, TMC2590_SEMIN_SHIFT, value);
 
 		lastCoolStepState = currCoolStepState;
 	}
 
-	tmc262_1420_periodicJob(&TMC262_1420, tick);
+	tmc2590_periodicJob(&TMC2590, tick);
 	StepDir_periodicJob(DEFAULT_MOTOR);
 }
 
@@ -785,7 +782,7 @@ static uint8_t reset()
 	if(StepDir_getActualVelocity(0) != 0)
 		return 0;
 
-	tmc262_1420_reset(&TMC262_1420);
+	tmc2590_reset(&TMC2590);
 	compatibilityMode = 1;
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 
@@ -797,7 +794,7 @@ static uint8_t reset()
 
 static uint8_t restore()
 {
-	return tmc262_1420_restore(&TMC262_1420);
+	return tmc2590_restore(&TMC2590);
 }
 
 static void enableDriver(DriverState state)
@@ -811,11 +808,11 @@ static void enableDriver(DriverState state)
 		HAL.IOs->config->setLow(Pins.ENN);
 }
 
-void TMC262_1420_init(void)
+void TMC2590_init(void)
 {
 	compatibilityMode = 1;
 
-	tmc262_1420_init(&TMC262_1420, 0, Evalboards.ch2.config, &tmc262_1420_defaultRegisterResetState[0]);
+	tmc2590_init(&TMC2590, 0, Evalboards.ch2.config, &tmc2590_defaultRegisterResetState[0]);
 
 	Pins.ENN     = &HAL.IOs->pins->DIO0;
 	Pins.SG_TST  = &HAL.IOs->pins->DIO1;
@@ -834,16 +831,16 @@ void TMC262_1420_init(void)
 	HAL.IOs->config->reset(Pins.TEMP_BRIDGE);
 #endif
 
-	TMC262_1420_SPIChannel = &HAL.SPI->ch2;
-	TMC262_1420_SPIChannel->CSN = Pins.CSN;
+	TMC2590_SPIChannel = &HAL.SPI->ch2;
+	TMC2590_SPIChannel->CSN = Pins.CSN;
 
-	TMC262_1420.standStillCurrentScale  = I_STAND_STILL;
-	TMC262_1420.standStillTimeout       = T_STAND_STILL;
+	TMC2590.standStillCurrentScale  = I_STAND_STILL;
+	TMC2590.standStillTimeout       = T_STAND_STILL;
 
 	StepDir_init();
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.SG_TST);
 
-	TMC262_1420_config = Evalboards.ch2.config;
+	TMC2590_config = Evalboards.ch2.config;
 
 	Evalboards.ch2.config->restore      = restore;
 	Evalboards.ch2.config->reset        = reset;
