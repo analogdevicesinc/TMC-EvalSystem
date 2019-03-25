@@ -130,6 +130,7 @@
 #define VERSION_BOOTLOADER        2 // todo CHECK 2: implemented this way in IDE - probably means getting the bootloader version. Not implemented in firmware (LH)
 #define VERSION_SIGNATURE         3 // todo CHECK 2: implemented under "Signature" in IDE. Not sure what to return for that. Not implemented in firmware (LH)
 #define VERSION_BOARD_DETECT_SRC  4 // todo CHECK 2: This doesn't really fit under GetVersion, but its implemented there in the IDE - change or leave this way? (LH)
+#define VERSION_BUILD             5
 
 //Statuscodes
 #define REPLY_OK                     100
@@ -880,6 +881,9 @@ static void GetVersion(void)
 	{
 		ActualReply.Value.Byte[0] = IdState.ch1.detectedBy;
 		ActualReply.Value.Byte[1] = IdState.ch2.detectedBy;
+	}
+	else if(ActualCommand.Type == VERSION_BUILD) {
+		ActualReply.Value.UInt32 = BUILD_VERSION;
 	}
 }
 

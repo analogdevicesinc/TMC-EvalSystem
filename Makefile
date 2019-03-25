@@ -193,6 +193,8 @@ else ifeq ($(DEVICE),Landungsbruecke)
 	endif
 endif
 
+CDEFS += -DBUILD_VERSION=$(subst .,,$(VERSION))
+
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).
 # use file-extension c for "c-only"-files
 ## just for testing, timer.c could be compiled in thumb-mode too
