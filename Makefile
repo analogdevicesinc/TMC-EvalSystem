@@ -41,7 +41,6 @@ SRC 			+= boards/TMC5161_eval.c
 SRC 			+= boards/TMC6200_eval.c
 SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
-SRC				+= boards/TMC8690_eval.c
 SRC				+= boards/TMCC160_eval.c
 
 # System and hardware abstraction layer
