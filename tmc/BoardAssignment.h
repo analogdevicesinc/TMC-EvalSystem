@@ -99,7 +99,6 @@ extern void TMC8461_init_ch1();
 extern void TMC8461_init_ch2();
 extern void TMC8462_init_ch1();
 extern void TMC8462_init_ch2();
-extern void TMC8690_init();
 extern void SelfTest_init();
 
 typedef struct {
@@ -117,7 +116,6 @@ static const init_assignment init_ch1[] =
 	{ .id = ID_TMC4670,     .init = TMC4670_init     },
 	{ .id = ID_TMC4331,     .init = TMC4331_init     },
 	{ .id = ID_TMC4361A,    .init = TMC4361A_init    },
-	{ .id = ID_TMC8690,     .init = TMC8690_init     },
 	{ .id = ID_TMC4671,     .init = TMC4671_init     },
 	{ .id = ID_TMC4330,     .init = TMC4330_init     },
 	{ .id = ID_TMC5160,     .init = TMC5160_init     },
