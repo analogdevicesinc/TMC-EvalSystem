@@ -23,6 +23,7 @@ IOsTypeDef IOs =
 	.setHigh     = setPinHigh,
 	.setLow      = setPinLow,
 	.setToState  = setPinState,
+	.getState    = getPinState,
 	.isHigh      = isPinHigh
 };
 

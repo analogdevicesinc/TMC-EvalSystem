@@ -314,25 +314,31 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 			pin = Pins.STDBY;
 			break;
 		}
-		HAL.IOs->config->toOutput(pin);
-		switch(state) {
-		case 0b01: // VCC_IO
-			HAL.IOs->config->setHigh(pin);
-			break;
-		case 0b10: // open
-			HAL.IOs->config->reset(pin);
-			break;
-		case 0b00: // GND
-			HAL.IOs->config->setLow(pin);
-			break;
-		}
-		pin_states = FIELD_SET(pin_states, 0x03 << (motor << 1), (motor << 1), state);
+		HAL.IOs->config->setToState(pin, state);
 		break;
 	case 6:
-		*value = pin_states;
-		break;
-	case 7:
-		*value = FIELD_GET(pin_states, 0x03 << (motor << 1), (motor << 1));
+		pin = Pins.ENN;
+		switch(motor) {
+		case 0:
+			pin = Pins.ENN;
+			break;
+		case 1:
+			pin = Pins.SPREAD;
+			break;
+		case 2:
+			pin = Pins.MS1_AD0;
+			break;
+		case 3:
+			pin = Pins.MS2_AD1;
+			break;
+		case 4:
+			pin = Pins.UC_PWM;
+			break;
+		case 5:
+			pin = Pins.STDBY;
+			break;
+		}
+		*value = (uint32_t) HAL.IOs->config->getState(pin);
 		break;
 	default:
 		errors |= TMC_ERROR_TYPE;
