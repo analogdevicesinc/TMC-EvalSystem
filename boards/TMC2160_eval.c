@@ -784,10 +784,11 @@ static void deInit(void)
 	HAL.IOs->config->reset(Pins.DCO);
 	HAL.IOs->config->reset(Pins.DIAG0);
 	HAL.IOs->config->reset(Pins.DIAG1);
-	HAL.IOs->config->reset(Pins.DRV_ENN);
+	//HAL.IOs->config->reset(Pins.DRV_ENN);
 
 	StepDir_deInit();
 	Timer.deInit();
+	init_state = 0;
 }
 
 static uint8_t reset()
@@ -846,8 +847,8 @@ void TMC2160_init(void)
 	Pins.DIAG0 = &HAL.IOs->pins->DIO15;
 	Pins.DIAG1 = &HAL.IOs->pins->DIO16;
 
-	HAL.IOs->config->toInput(Pins.DIAG0);
-	HAL.IOs->config->toInput(Pins.DIAG1);
+	//HAL.IOs->config->toInput(Pins.DIAG0);
+	//HAL.IOs->config->toInput(Pins.DIAG1);
 	HAL.IOs->config->toInput(Pins.DCO);
 
 	HAL.IOs->config->toOutput(Pins.DRV_ENN);

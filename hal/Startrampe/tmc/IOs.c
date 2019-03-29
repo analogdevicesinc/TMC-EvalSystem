@@ -10,6 +10,7 @@ static void setPin2Input(IOPinTypeDef *pin);
 static void setPinHigh(IOPinTypeDef *pin);
 static void setPinLow(IOPinTypeDef *pin);
 static void setPinState(IOPinTypeDef *pin, IO_States state);
+static IO_States getPinState(IOPinTypeDef *pin);
 static unsigned char isPinHigh(IOPinTypeDef *pin);
 
 IOsTypeDef IOs =
@@ -23,6 +24,7 @@ IOsTypeDef IOs =
 	.setHigh               = setPinHigh,
 	.setLow                = setPinLow,
 	.setToState            = setPinState,
+	.getState              = getPinState,
 	.isHigh                = isPinHigh,
 	.HIGH_LEVEL_FUNCTIONS  =
 	{
@@ -101,6 +103,11 @@ static void setPinState(IOPinTypeDef *pin, IO_States state)
 	}
 
 	setPinConfiguration(pin);
+}
+
+static IO_States getPinState(IOPinTypeDef *pin)
+{
+	return pin->state;
 }
 
 static void setPinHigh(IOPinTypeDef *pin)

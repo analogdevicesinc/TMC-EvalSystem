@@ -3,8 +3,6 @@
 
 #include "derivative.h"
 
-static IO_States getPinState(IOPinTypeDef *pin);
-
 typedef enum { // Give bits explicitly, because IDE relies on it.
 	IOS_LOW      = 0b00,
 	IOS_HIGH     = 0b01,
