@@ -1,7 +1,6 @@
 #include "../../HAL.h"
 #include "../../Timer.h"
 
-#define TIMER_MAX     8000 // Frequenz von 6kHz => 166,66us pro Periode => 8000 Schritte bei 48Mhz
 #define MAX_ARR_HALF  TIMER_MAX >> 1
 
 static void init(void);

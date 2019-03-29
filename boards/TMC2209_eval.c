@@ -289,7 +289,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		pin_configurator = (*value == 1);
 		break;
 	case 4:
-		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) *value);
+		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
 		break;
 	case 5:
 		state = (*value) & 0x03;

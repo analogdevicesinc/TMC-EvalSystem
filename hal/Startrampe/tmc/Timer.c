@@ -1,8 +1,6 @@
 #include "../../HAL.h"
 #include "../../Timer.h"
 
-#define TIMER_MAX  10000
-
 static void init(void);
 static void deInit(void);
 static void setDuty(timer_channel, uint16_t);
