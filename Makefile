@@ -44,7 +44,6 @@ SRC				+= boards/TMC8462_eval.c
 SRC				+= boards/TMCC160_eval.c
 
 # System and hardware abstraction layer
-SRC             += hal/IOs.c
 SRC 			+= hal/$(DEVICE)/tmc/SysTick.c
 SRC 			+= hal/$(DEVICE)/tmc/IOs.c
 SRC 			+= hal/$(DEVICE)/tmc/IOMap.c
