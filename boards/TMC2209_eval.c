@@ -291,7 +291,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 	case 4:
 		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
 		break;
-	case 5:
+	case 5: // Set pin state
 		state = (*value) & 0x03;
 		pin = Pins.ENN;
 		switch(motor) {
@@ -316,7 +316,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		}
 		HAL.IOs->config->setToState(pin, state);
 		break;
-	case 6:
+	case 6: // Get pin state
 		pin = Pins.ENN;
 		switch(motor) {
 		case 0:
@@ -425,6 +425,7 @@ void TMC2209_init(void)
 
 	HAL.IOs->config->setLow(Pins.MS1_AD0);
 	HAL.IOs->config->setLow(Pins.MS2_AD1);
+	HAL.IOs->config->setToState(Pins.MS1_AD0, IOS_HIGH);
 
 	TMC2209_UARTChannel = HAL.UART;
 	TMC2209_UARTChannel->pinout = UART_PINS_2;

@@ -149,6 +149,8 @@ static void setPinState(IOPinTypeDef *pin, IO_States state)
 		break;
 	}
 
+	pin->state = state;
+
 	setPinConfiguration(pin);
 }
 
