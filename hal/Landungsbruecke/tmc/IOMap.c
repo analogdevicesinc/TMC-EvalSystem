@@ -416,7 +416,7 @@ IOPinMapTypeDef IOMap =
 		}
 	},
 
-	.SPI1_SDI =  // IOPinTypeDef SPI1_SDI
+	.SPI1_SDO =  // IOPinTypeDef SPI1_SDO
 	{
 		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
 		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
@@ -433,7 +433,7 @@ IOPinMapTypeDef IOMap =
 		}
 	},
 
-	.SPI1_SDO =  // IOPinTypeDef SPI1_SDO
+	.SPI1_SDI =  // IOPinTypeDef SPI1_SDI
 	{
 		.setBitRegister      = &(GPIOB_PSOR),        // __IO uint16_t *setBitRegister;
 		.resetBitRegister    = &(GPIOB_PCOR),        // __IO uint16_t *resetBitRegister;
