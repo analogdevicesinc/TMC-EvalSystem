@@ -48,7 +48,11 @@ void init()
 	SIM_SCGC6 |= SIM_SCGC6_SPI0_MASK;   // enable clock for SPI0
 	SIM_SCGC6 &= ~SIM_SCGC6_CRC_MASK;   // disable clock for CRC module
 
-	// configure SPI0 pins PORTC_PCR5(SCK), PORTC_PCR6(SDI), PORTC_PCR7(SDO), PORTC_PCR8(CSN)
+	// configure SPI0 pins:
+	//     SCK: Port C, Pin 5
+	//     SDI: Port C, Pin 6
+	//     SDO: Port C, Pin 7
+	//     CSN: Port C, Pin 8
 	HAL.IOs->pins->EEPROM_SCK.configuration.GPIO_Mode = GPIO_Mode_AF2;
 	HAL.IOs->pins->EEPROM_SI.configuration.GPIO_Mode = GPIO_Mode_AF2;
 	HAL.IOs->pins->EEPROM_SO.configuration.GPIO_Mode = GPIO_Mode_AF2;
@@ -68,8 +72,11 @@ void init()
 	SIM_SCGC6 |= SIM_SCGC6_SPI1_MASK;   // enable clock for SPI1
 	SIM_SCGC6 &= ~SIM_SCGC6_CRC_MASK;   // disable clock for CRC module
 
-	// configure SPI1 pins PORTB_PCR11(SCK), PORTB_PCR17(SDI), PORTB_PCR15(SDO), PORTB_PCR10(CSN)
-
+	// configure SPI1 pins:
+	//     SCK: Port B, Pin 11
+	//     SDI: Port B, Pin 16
+	//     SDO: Port B, Pin 17
+	//     CSN: Port B, Pin 10
 	HAL.IOs->pins->SPI1_SCK.configuration.GPIO_Mode = GPIO_Mode_AF2;
 	HAL.IOs->pins->SPI1_SDI.configuration.GPIO_Mode = GPIO_Mode_AF2;
 	HAL.IOs->pins->SPI1_SDO.configuration.GPIO_Mode = GPIO_Mode_AF2;
@@ -89,8 +96,13 @@ void init()
 	SIM_SCGC3 |= SIM_SCGC3_SPI2_MASK;                                                 // enable clock for SPI2
 	SIM_SCGC6 &= ~SIM_SCGC6_CRC_MASK;                                                 // disable clock for CRC module
 
-	// configure SPI2 pins PORTB_PCR21(SCK), PORTB_PCR23(SDI), PORTB_PCR22(SDO), PORTC_PCR0(CSN0), PORTA_PCR0(CSN5), PORTA_PCR4(CSN2)
-
+	// configure SPI2 pins:
+	//     SCK:  Port B, Pin 21
+	//     SDI:  Port B, Pin 22
+	//     SDO:  Port B, Pin 23
+	//     CSN0: Port C, Pin 0
+	//     CSN1: Port A, Pin 5
+	//     CSN2: Port C, Pin 4
 	HAL.IOs->pins->SPI2_SCK.configuration.GPIO_Mode = GPIO_Mode_AF2;
 	HAL.IOs->pins->SPI2_SDI.configuration.GPIO_Mode = GPIO_Mode_AF2;
 	HAL.IOs->pins->SPI2_SDO.configuration.GPIO_Mode = GPIO_Mode_AF2;

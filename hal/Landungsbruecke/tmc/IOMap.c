@@ -297,7 +297,7 @@ IOPinMapTypeDef IOMap =
 		}
 	},
 
-	.SPI2_CSN1 =  // IOPinTypeDef SPI2_CSN1 Konflikt mit DIO5
+	.SPI2_CSN1 =  // IOPinTypeDef SPI2_CSN1
 	{
 		.setBitRegister      = &(GPIOA_PSOR),        // __IO uint16_t *setBitRegister;
 		.resetBitRegister    = &(GPIOA_PCOR),        // __IO uint16_t *resetBitRegister;
