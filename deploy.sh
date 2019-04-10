@@ -10,6 +10,7 @@ notify="git_Eval_News@trinamic.com"
 smtp_server="kug.is"
 smtp_user="tmc@kug.is"
 smtp_pass="changeme"
+flags_set=false
 
 usage() {
   echo "Github release deploy script"
@@ -65,8 +66,14 @@ while getopts 'vt:s:u:w:n:h' flag; do
       exit 1
       ;;
   esac
+  flags_set=true
 done
 shift $((OPTIND -1))
+
+if ! $flags_set; then
+  usage
+  exit 1
+fi
 
 v_echo "verbosity: ${verbosity}" 2
 v_echo "owner: ${owner}" 2
