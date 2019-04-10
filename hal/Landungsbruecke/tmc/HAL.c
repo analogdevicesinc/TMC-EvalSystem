@@ -82,16 +82,58 @@ static void NVIC_DeInit(void)
 	SYST_CSR = 0; // disable systick
 }
 
+typedef enum {
+	STATE_Z    = 0,
+	STATE_LOW  = 1,
+	STATE_HIGH = 2
+} Tristate;
+
+// Helper for get_hwid()
+static Tristate getTristate(IOPinTypeDef *pin)
+{
+	// Input with pulldown
+	pin->configuration.GPIO_Mode = GPIO_Mode_IN;
+	pin->configuration.GPIO_OType = GPIO_OType_OD;
+	pin->configuration.GPIO_PuPd = GPIO_PuPd_DOWN;
+	HAL.IOs->config->set(pin);
+
+	if (HAL.IOs->config->isHigh(pin)) {
+		// High despite pulldown -> High state
+		return STATE_HIGH;
+	}
+
+	// Input with pullup
+	pin->configuration.GPIO_Mode = GPIO_Mode_IN;
+	pin->configuration.GPIO_OType = GPIO_OType_OD;
+	pin->configuration.GPIO_PuPd = GPIO_PuPd_UP;
+	HAL.IOs->config->set(pin);
+
+	if (HAL.IOs->config->isHigh(pin)) {
+		// High from pullup -> Z state
+		return STATE_Z;
+	} else {
+		// Low despite pullup -> Low state
+		return STATE_LOW;
+	}
+}
+
 // Determines HW version of Landungsbruecke to distinct between 1.X and 2.0+
 static void get_hwid(void)
 {
-	HAL.IOs->config->toInput(&HAL.IOs->pins->ID_HW_0);
-	HAL.IOs->config->toInput(&HAL.IOs->pins->ID_HW_1);
-	HAL.IOs->config->toInput(&HAL.IOs->pins->ID_HW_2);
-	hwid =
-			(HAL.IOs->config->isHigh(&HAL.IOs->pins->ID_HW_2) << 2) |
-			(HAL.IOs->config->isHigh(&HAL.IOs->pins->ID_HW_1) << 1) |
-			(HAL.IOs->config->isHigh(&HAL.IOs->pins->ID_HW_0) << 0);
+	static uint8_t hwid_map[27] = {
+		//	 Z   Z   Z   L   L   L   H   H   H <- ID_HW_1
+		//	 Z   L   H   Z   L   H   Z   L   H <- ID_HW_0
+			 1,  0,  0,  0,  0,  0,  0,  0,  0, // Z
+			 0,  0,  0,  0,  0,  0,  0,  2,  0, // L <- ID_HW_2
+			 0,  0,  0,  0,  0,  0,  0,  0,  0  // H
+	};
+
+	uint8_t tmp;
+	tmp = getTristate(&HAL.IOs->pins->ID_HW_0)
+	    + getTristate(&HAL.IOs->pins->ID_HW_1) * 3
+	    + getTristate(&HAL.IOs->pins->ID_HW_2) * (3*3);
+
+	hwid = hwid_map[tmp];
 }
 
 void _exit(int i)	// function has the attribute noreturn per default
