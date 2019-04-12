@@ -299,8 +299,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC2660.runCurrentScale;
 		} else if(readWrite == WRITE) {
 			TMC2660.runCurrentScale = *value;
-			if(TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT) == 0)
+			if(Evalboards.ch1.fullCover == NULL) {
+				if(TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT) == 0)
+					TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.runCurrentScale);
+			} else {
+				TMC2660.standStillCurrentScale = *value;
 				TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.runCurrentScale);
+			}
 		}
 		break;
 	case 7:
@@ -309,8 +314,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC2660.standStillCurrentScale;
 		} else if(readWrite == WRITE) {
 			TMC2660.standStillCurrentScale = *value;
-			if(TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT) == 1)
-				TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.standStillCurrentScale);
+			if(Evalboards.ch1.fullCover == NULL) {
+				if(TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT) == 1)
+					TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.standStillCurrentScale);
+			} else {
+				TMC2660.runCurrentScale = *value;
+			}
 		}
 		break;
 	case 8:
@@ -685,10 +694,12 @@ static void periodicJob(uint32_t tick)
 	static uint8_t lastStandstillState = 0;
 	uint8_t stst;
 
-	// Apply current settings
-	if((stst = TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT)) != lastStandstillState) {
-		on_standstill_changed(stst);
-		lastStandstillState = stst;
+	if(Evalboards.ch1.fullCover == NULL) { // Standstill detection only when not using an additional motion controller
+		// Apply current settings
+		if((stst = TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_STST_MASK, TMC2660_STST_SHIFT)) != lastStandstillState) {
+			on_standstill_changed(stst);
+			lastStandstillState = stst;
+		}
 	}
 
 	Evalboards.ch2.errors = (TMC2660.isStandStillOverCurrent) 	? (Evalboards.ch2.errors | ERRORS_I_STS) 			: (Evalboards.ch2.errors & ~ERRORS_I_STS);

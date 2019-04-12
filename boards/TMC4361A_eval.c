@@ -857,6 +857,8 @@ static void configCallback(TMC4361ATypeDef *tmc4361A, ConfigState state)
 	// Reset/Restore driver
 	if(state == CONFIG_RESET)
 	{
+		tmc4361A_writeInt(tmc4361A, TMC4361A_CURRENT_CONF, 0x00000003);
+		tmc4361A_writeInt(tmc4361A, TMC4361A_SCALE_VALUES, 0x00000000);
 		tmc4361A_fillShadowRegisters(tmc4361A);
 		Evalboards.ch2.config->reset();
 	}
