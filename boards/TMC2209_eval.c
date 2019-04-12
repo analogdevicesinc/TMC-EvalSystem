@@ -425,7 +425,6 @@ void TMC2209_init(void)
 
 	HAL.IOs->config->setLow(Pins.MS1_AD0);
 	HAL.IOs->config->setLow(Pins.MS2_AD1);
-	HAL.IOs->config->setToState(Pins.MS1_AD0, IOS_HIGH);
 
 	TMC2209_UARTChannel = HAL.UART;
 	TMC2209_UARTChannel->pinout = UART_PINS_2;
