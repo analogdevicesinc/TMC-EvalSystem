@@ -688,14 +688,13 @@ $(SRCARM:.c=.s) : %.s : %.c
 	@echo $(MSG_ASMFROMC_ARM) $< to $@
 	$(CC) -S $(CFLAGS) $(CONLYFLAGS) $< -o $@
 
-
-# Create output files directory
-## $(shell mkdir $(OUTDIR) 2>/dev/null)
-$(shell mkdir $(OUTDIR) 2>NUL)
+# Create output directories
+# Store the result to avoid printing warning messages
+tmp := $(shell mkdir $(OUTDIR) 2>&1)
+tmp := $(shell cd $(OUTDIR) && mkdir dep 2>&1)
 
 # Include the dependency files.
-##-include $(shell mkdir $(OUTDIR)/dep 2>/dev/null) $(wildcard $(OUTDIR)/dep/*)
--include $(shell mkdir $(OUTDIR)\dep 2>NUL) $(wildcard $(OUTDIR)/dep/*)
+-include $(wildcard $(OUTDIR)/dep/*)
 
 # Listing of phony targets.
 .PHONY : all begin end size gccversion \
