@@ -1,6 +1,7 @@
 #include "Board.h"
 #include "tmc/BoardAssignment.h"
 #include "tmc/ic/TMC4331/TMC4331.h"
+#include "tmc/ic/TMC2660/TMC2660_Macros.h"
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -421,7 +422,10 @@ static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 		high = value;
 		break;
 	case TMC4331_COVER_LOW_WR:
-		Evalboards.ch2.writeRegister(motor, TMC_ADDRESS(high), value);
+		if(Evalboards.ch2.id == ID_TMC2660) // TMC2660 -> 20 bit registers, 8 bit address
+			Evalboards.ch2.writeRegister(motor, TMC2660_ADDRESS(value), TMC2660_VALUE(value));
+		else // All other drivers -> 32 bit registers, 8 bit address
+			Evalboards.ch2.writeRegister(motor, TMC_ADDRESS(high), value);
 		break;
 	}
 	tmc4331_writeInt(motorToIC(motor), address, value);
