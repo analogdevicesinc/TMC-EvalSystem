@@ -656,7 +656,10 @@ static void SetGlobalParameter()
 			break;
 		}
 		break;
-	case 4:
+	case 4: // War schon so. Kann weg?
+		break;
+	case 6:
+		HAL.IOs->config->setToState(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32);
 		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
@@ -687,6 +690,9 @@ static void GetGlobalParameter()
 			break;
 		case 5: // Get hardware ID
 			ActualReply.Value.Int32 = hwid;
+			break;
+		case 6:
+			ActualReply.Value.UInt32 = HAL.IOs->config->getState(HAL.IOs->pins->pins[ActualCommand.Motor]);
 			break;
 		default:
 			ActualReply.Status = REPLY_INVALID_TYPE;
