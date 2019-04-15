@@ -1,5 +1,5 @@
-#include "../../IOMap.h"
-#include "../../HAL.h"
+#include "hal/IOMap.h"
+#include "hal/HAL.h"
 
 static void init();
 

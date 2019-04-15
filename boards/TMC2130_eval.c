@@ -1,4 +1,4 @@
-#include "../tmc/StepDir.h"
+#include "tmc/StepDir.h"
 #include "Board.h"
 #include "tmc/ic/TMC2130/TMC2130.h"
 

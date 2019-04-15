@@ -6,7 +6,7 @@
 
 	// todo API 2: move higher level StepDir functions to API!? (ED)
 
-	#include "../hal/HAL.h"
+	#include "hal/HAL.h"
 
 	#define STEPDIR_FREQUENCY         (1 << 17)
 	#define STEPDIR_MAX_VELOCITY      STEPDIR_FREQUENCY // Limit: 1 Step per interrupt (2^17 Hz) -> 2^17 pps

@@ -48,7 +48,7 @@ typedef enum { // Give bits explicitly, because IDE relies on it.
 		GPIO_Speed_100MHz  = 0x03  /*!< High speed on 30 pF (80 MHz Output max speed on 15 pF) */
 	} GPIOSpeed_TypeDef;
 
-	#include "../freescale/PDD/GPIO_PDD.h"
+	#include "hal/Landungsbruecke/freescale/PDD/GPIO_PDD.h"
 #endif
 
 enum IOsHighLevelFunctions { IO_DEFAULT, IO_DI, IO_AI, IO_DO, IO_PWM, IO_SD, IO_CLK16, IO_SPI };

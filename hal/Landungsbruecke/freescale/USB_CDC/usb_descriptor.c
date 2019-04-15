@@ -21,7 +21,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "../../derivative.h"
+#include "hal/derivative.h"
 #include "types.h"
 #include "usb_class.h"
 #include "usb_descriptor.h"

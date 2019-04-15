@@ -5,6 +5,6 @@
  *      Author: LK
  */
 
-#include "../../RXTX.h"
-#include "../../WLAN.h"
-#include "../../UART.h"
+#include "hal/RXTX.h"
+#include "hal/WLAN.h"
+#include "hal/UART.h"

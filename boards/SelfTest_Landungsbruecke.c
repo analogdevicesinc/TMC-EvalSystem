@@ -1,7 +1,7 @@
 #include "Board.h"
 #include "SelfTest.h"
-#include "../tmc/VitalSignsMonitor.h"
-#include "../tmc/IdDetection.h"
+#include "tmc/VitalSignsMonitor.h"
+#include "tmc/IdDetection.h"
 
 static void deInit();
 static uint32_t selfTest(uint8_t type, uint8_t motor, int32_t *value);

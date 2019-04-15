@@ -1,6 +1,6 @@
 #include "Board.h"
 #include "tmc/ic/TMC2209/TMC2209.h"
-#include "../tmc/StepDir.h"
+#include "tmc/StepDir.h"
 
 #undef  TMC2209_MAX_VELOCITY
 #define TMC2209_MAX_VELOCITY  STEPDIR_MAX_VELOCITY

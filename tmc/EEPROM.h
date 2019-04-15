@@ -12,8 +12,8 @@
 
 #include "tmc/helpers/API_Header.h"
 
-#include "../hal/SPI.h"
-#include "../hal/HAL.h"
+#include "hal/SPI.h"
+#include "hal/HAL.h"
 
 #define EEPROM_ADDR_NAME   0
 #define EEPROM_ADDR_ID     16

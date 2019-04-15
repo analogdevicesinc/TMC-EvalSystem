@@ -4,7 +4,7 @@
  *    Copyright © 2012 Freescale semiConductor Inc. All Rights Reserved.
  */
 
-#include "../../derivative.h"
+#include "hal/derivative.h"
 #include "kinetis_sysinit.h"
 
 /**

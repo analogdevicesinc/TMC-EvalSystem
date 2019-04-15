@@ -1,5 +1,5 @@
-#include "../../HAL.h"
-#include "../../RS232.h"
+#include "hal/HAL.h"
+#include "hal/RS232.h"
 
 void init();
 void reset_ch1();

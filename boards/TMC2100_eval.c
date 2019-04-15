@@ -2,8 +2,8 @@
 
 #include "Board.h"
 #include "tmc/ic/TMC5130/TMC5130_Register.h"
-#include "../tmc/StepDir.h"
-#include "../hal/Timer.h"
+#include "tmc/StepDir.h"
+#include "hal/Timer.h"
 
 //#define VM_MIN  50   // VM[V/10] min
 //#define VM_MAX  480  // VM[V/10] max

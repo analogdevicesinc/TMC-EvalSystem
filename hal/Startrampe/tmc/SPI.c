@@ -1,5 +1,5 @@
-#include "../../HAL.h"
-#include "../../SPI.h"
+#include "hal/HAL.h"
+#include "hal/SPI.h"
 
 static void init(void);
 static void reset_ch1();

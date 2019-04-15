@@ -1,6 +1,6 @@
-#include "../../HAL.h"
-#include "../../RS232.h"
-#include "../freescale/Cpu.h"
+#include "hal/HAL.h"
+#include "hal/RS232.h"
+#include "hal/Landungsbruecke/freescale/Cpu.h"
 
 #define BUFFER_SIZE         1024
 #define INTR_PRI            6

@@ -1,9 +1,9 @@
 
 #include "VitalSignsMonitor.h"
 
-#include "../hal/derivative.h"
-#include "../boards/Board.h"
-#include "../hal/HAL.h"
+#include "hal/derivative.h"
+#include "boards/Board.h"
+#include "hal/HAL.h"
 
 	#define VM_MIN_INTERFACE_BOARD  70   // minimum motor supply voltage for system in [100mV]
 	#define VM_MAX_INTERFACE_BOARD  700  // maximum motor supply voltage for system in [100mV]

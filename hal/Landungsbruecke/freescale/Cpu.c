@@ -61,7 +61,7 @@
 
 /* {Default RTOS Adapter} No RTOS includes */
 
-#include "../../derivative.h"
+#include "hal/derivative.h"
 #include "Cpu.h"
 
 #ifdef __cplusplus

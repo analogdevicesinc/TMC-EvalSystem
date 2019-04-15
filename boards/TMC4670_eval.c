@@ -1,6 +1,6 @@
 #include "Board.h"
 #include "tmc/ic/TMC4670/TMC4670.h"
-#include "../hal/SPI.h"
+#include "hal/SPI.h"
 
 #define DEFAULT_MOTOR 0
 

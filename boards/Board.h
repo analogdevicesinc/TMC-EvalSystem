@@ -3,9 +3,9 @@
 
 #include "tmc/helpers/API_Header.h"
 
-#include "../hal/derivative.h"
-#include "../hal/HAL.h"
-#include "../tmc/VitalSignsMonitor.h"
+#include "hal/derivative.h"
+#include "hal/HAL.h"
+#include "tmc/VitalSignsMonitor.h"
 
 // parameter access (for axis parameters)
 #define READ   0

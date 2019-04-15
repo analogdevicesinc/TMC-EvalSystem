@@ -1,4 +1,4 @@
-#include "../tmc/idDetection.h"
+#include "tmc/idDetection.h"
 #include "SelfTest.h"
 #include "board.h"
 

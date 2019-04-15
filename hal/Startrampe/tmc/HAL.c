@@ -1,5 +1,5 @@
-#include "../../derivative.h"
-#include "../../HAL.h"
+#include "hal/derivative.h"
+#include "hal/HAL.h"
 
 #define AIRCR_VECTKEY_MASK ((uint32_t)0x05FA0000)
 

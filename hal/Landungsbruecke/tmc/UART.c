@@ -1,6 +1,6 @@
-#include "../../HAL.h"
-#include "../../UART.h"
-#include "../freescale/Cpu.h"
+#include "hal/HAL.h"
+#include "hal/UART.h"
+#include "hal/Landungsbruecke/freescale/Cpu.h"
 
 #define BUFFER_SIZE         32
 #define INTR_PRI            6

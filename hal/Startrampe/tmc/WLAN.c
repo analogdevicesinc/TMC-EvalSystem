@@ -1,7 +1,7 @@
-#include "../../HAL.h"
-#include "../../RS232.h"
-#include "../../WLAN.h"
-#include "../../RXTX.h"
+#include "hal/HAL.h"
+#include "hal/RS232.h"
+#include "hal/WLAN.h"
+#include "hal/RXTX.h"
 
 #define BUFFER_SIZE  1024
 #define INTR_PRI     6

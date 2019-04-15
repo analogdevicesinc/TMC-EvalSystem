@@ -1,4 +1,4 @@
-#include "../../HAL.h"
+#include "hal/HAL.h"
 #include "hal/SysTick.h"
 
 volatile uint32_t systick = 0;

@@ -1,6 +1,6 @@
-#include "../../HAL.h"
-//#include "../../WLAN.h"
-#include "../freescale/Cpu.h"
+#include "hal/HAL.h"
+//#include "hal/WLAN.h"
+#include "hal/Landungsbruecke/freescale/Cpu.h"
 
 #include <string.h>
 

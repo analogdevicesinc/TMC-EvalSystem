@@ -1,5 +1,5 @@
-#include "../../HAL.h"
-#include "../../IOs.h"
+#include "hal/HAL.h"
+#include "hal/IOs.h"
 
 static void init();
 static void setPinConfiguration(IOPinTypeDef *pin);

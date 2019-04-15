@@ -1,12 +1,12 @@
-#include "../../HAL.h"
-#include "../../USB.h"
+#include "hal/HAL.h"
+#include "hal/USB.h"
 
-#include "../freescale/USB_CDC/USB0.h"
-#include "../freescale/USB_CDC/USB1.h"
-#include "../freescale/USB_CDC/Tx1.h"
-#include "../freescale/USB_CDC/Rx1.h"
-#include "../freescale/USB_CDC/CDC1.h"
-#include "../freescale/USB_CDC/CS1.h"
+#include "hal/Landungsbruecke/freescale/USB_CDC/USB0.h"
+#include "hal/Landungsbruecke/freescale/USB_CDC/USB1.h"
+#include "hal/Landungsbruecke/freescale/USB_CDC/Tx1.h"
+#include "hal/Landungsbruecke/freescale/USB_CDC/Rx1.h"
+#include "hal/Landungsbruecke/freescale/USB_CDC/CDC1.h"
+#include "hal/Landungsbruecke/freescale/USB_CDC/CS1.h"
 
 extern uint8_t USB_DCI_DeInit(void);
 extern uint8_t USB_Class_CDC_DeInit(uint8_t controller_ID);

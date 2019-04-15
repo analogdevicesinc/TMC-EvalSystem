@@ -14,7 +14,7 @@
 #include "usbd_desc.h"
 #include "usbd_cdc_core.h"
 #include "usb_dcd_int.h"
-#include "../../HAL.h"
+#include "hal/HAL.h"
 
 // USB Device Descriptor
 #define USBD_VID                      0x16D0

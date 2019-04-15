@@ -41,7 +41,7 @@
 #include "types.h"          /* User Defined Data Types */
 #include "hidef.h"          /* for EnableInterrupts; macro */
 #include <stdint.h>
-#include "../../derivative.h"     /* include peripheral declarations */
+#include "hal/derivative.h"     /* include peripheral declarations */
 #include "usb_user_config.h"    /* User Configuration File << EST 'user_config.h' conflicts with MQX Lite */
 /******************************************************************************
  * Constants - None

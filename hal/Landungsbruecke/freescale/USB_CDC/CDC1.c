@@ -61,7 +61,7 @@
 
 #include "CDC1.h"
 #include "hidef.h"          /* for EnableInterrupts; macro */
-#include "../../derivative.h"     /* include peripheral declarations */
+#include "hal/derivative.h"     /* include peripheral declarations */
 #include "usb_cdc.h"        /* USB CDC Class Header File */
 #include <stdio.h>
 /* skip the inclusion in dependency state */

@@ -116,7 +116,7 @@
  */
 
 #include "StepDir.h"
-#include "../hal/derivative.h"
+#include "hal/derivative.h"
 
 #if defined(Startrampe)
 	#define TIMER_INTERRUPT TIM2_IRQHandler

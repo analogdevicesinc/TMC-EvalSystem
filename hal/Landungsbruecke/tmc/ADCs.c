@@ -1,5 +1,5 @@
-#include "../../HAL.h"
-#include "../../ADCs.h"
+#include "hal/HAL.h"
+#include "hal/ADCs.h"
 
 /* analog channel selection values (ADCx_SC1n Register, DIFF & ADCH fields) */
 

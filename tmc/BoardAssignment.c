@@ -1,5 +1,5 @@
-#include "../hal/derivative.h"
-#include "../hal/HAL.h"
+#include "hal/derivative.h"
+#include "hal/HAL.h"
 
 #include "TMCL.h"
 #include "IdDetection.h"

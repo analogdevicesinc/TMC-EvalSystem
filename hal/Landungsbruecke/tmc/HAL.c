@@ -1,4 +1,4 @@
-#include "../../HAL.h"
+#include "hal/HAL.h"
 
 static void init(void);
 static void reset(uint8_t ResetPeripherals);

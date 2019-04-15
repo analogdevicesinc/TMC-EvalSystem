@@ -68,7 +68,7 @@
 #include "USB_CDC/PE_Types.h"
 #include "USB_CDC/PE_Error.h"
 #include "USB_CDC/PE_Const.h"
-#include "../../derivative.h"
+#include "hal/derivative.h"
 
 #ifdef __cplusplus
 extern "C" {

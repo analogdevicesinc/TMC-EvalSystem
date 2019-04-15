@@ -1,6 +1,6 @@
 #include <math.h>
-#include "../../HAL.h"
-#include "../../ADCs.h"
+#include "hal/HAL.h"
+#include "hal/ADCs.h"
 
 #define ADC1_DR_ADDRESS  ((uint32_t)0x4001204C)
 

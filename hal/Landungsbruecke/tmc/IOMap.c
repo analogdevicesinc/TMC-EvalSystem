@@ -1,6 +1,6 @@
-#include "../../HAL.h"
-#include "../../IOMap.h"
-#include "../freescale/PDD/GPIO_PDD.h"
+#include "hal/HAL.h"
+#include "hal/IOMap.h"
+#include "hal/Landungsbruecke/freescale/PDD/GPIO_PDD.h"
 
 static void init();
 

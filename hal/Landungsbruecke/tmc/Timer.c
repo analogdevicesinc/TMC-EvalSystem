@@ -1,5 +1,5 @@
-#include "../../HAL.h"
-#include "../../Timer.h"
+#include "hal/HAL.h"
+#include "hal/Timer.h"
 
 #define MAX_ARR_HALF  TIMER_MAX >> 1
 

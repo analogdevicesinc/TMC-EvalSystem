@@ -1,7 +1,7 @@
 #include "Board.h"
 #include "tmc/ic/TMC2041/TMC2041.h"
 
-#include "../tmc/StepDir.h"
+#include "tmc/StepDir.h"
 
 #define VM_MIN  50   // 5V
 #define VM_MAX  286  // 286V (26V + 10%)

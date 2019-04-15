@@ -2,10 +2,10 @@
 #include "TMCL.h"
 
 #include "BoardAssignment.h"
-#include "../hal/derivative.h"
+#include "hal/derivative.h"
 #include "IdDetection.h"
 #include "VitalSignsMonitor.h"
-#include "../tmc/StepDir.h"
+#include "tmc/StepDir.h"
 #include "EEPROM.h"
 
 // these addresses are fixed

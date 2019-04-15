@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include "../../HAL.h"
-#include "../../LEDs.h"
+#include "hal/HAL.h"
+#include "hal/LEDs.h"
 
 static void init();
 static void onStat();

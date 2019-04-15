@@ -1,5 +1,5 @@
-#include "../../HAL.h"
-#include "../../UART.h"
+#include "hal/HAL.h"
+#include "hal/UART.h"
 
 #define BUFFER_SIZE  1024
 #define INTR_PRI     6

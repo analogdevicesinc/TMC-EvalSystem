@@ -32,7 +32,7 @@
  *****************************************************************************/
 
 #include "types.h"      		/* User Defined Data Types */
-#include "../../derivative.h" 	/* include peripheral declarations */
+#include "hal/derivative.h" 	/* include peripheral declarations */
 #include "wdt_kinetis.h"       	/* own header with public declarations */
 
 /*****************************************************************************/

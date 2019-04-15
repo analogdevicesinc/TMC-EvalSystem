@@ -1,5 +1,5 @@
-#include "../../HAL.h"
-#include "../../Timer.h"
+#include "hal/HAL.h"
+#include "hal/Timer.h"
 
 static void init(void);
 static void deInit(void);

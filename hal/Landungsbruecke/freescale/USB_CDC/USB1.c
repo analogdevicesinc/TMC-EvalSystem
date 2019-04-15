@@ -40,7 +40,7 @@
 /* MODULE USB1. */
 
 #include "USB1.h"
-#include "../derivative.h"     /* include peripheral declarations */
+#include "hal/derivative.h"     /* include peripheral declarations */
 
 /*
 ** ===================================================================

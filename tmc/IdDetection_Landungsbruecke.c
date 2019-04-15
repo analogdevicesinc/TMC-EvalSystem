@@ -15,8 +15,8 @@
 
 #include "tmc/helpers/API_Header.h"
 
-#include "../hal/derivative.h"
-#include "../hal/HAL.h"
+#include "hal/derivative.h"
+#include "hal/HAL.h"
 #include "BoardAssignment.h"
 #include "EEPROM.h"
 #include "IdDetection.h"
