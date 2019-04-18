@@ -806,11 +806,16 @@ static uint8_t restore()
 	return tmc2130_restore(&TMC2130);
 }
 
-static void configCallback(TMC2130TypeDef *tmc2130, ConfigState state)
+static void configCallback(TMC2130TypeDef *tmc2130, ConfigState completedState)
 {
-	if(state == CONFIG_RESET)
-	{	// Change hardware-preset registers here
+	if(completedState == CONFIG_RESET)
+	{
+		// Configuration reset completed
+		// Change hardware preset registers here
 		tmc2130_writeInt(tmc2130, TMC2130_PWMCONF, 0x000504C8);
+
+		// Fill missing shadow registers (hardware preset registers)
+		tmc2130_fillShadowRegisters(tmc2130);
 	}
 }
 
@@ -830,6 +835,7 @@ void TMC2130_init(void)
 	tmc2130_init(&TMC2130, 1, Evalboards.ch2.config, &tmc2130_defaultRegisterResetState[0]);
 	tmc2130_setCallback(&TMC2130, configCallback);
 
+	// Initialize the hardware pins
 	Pins.DRV_ENN_CFG6    = &HAL.IOs->pins->DIO0;
 	Pins.REFL_STEP       = &HAL.IOs->pins->DIO6;
 	Pins.REFR_DIR        = &HAL.IOs->pins->DIO7;
@@ -858,9 +864,11 @@ void TMC2130_init(void)
 	HAL.IOs->config->setLow(Pins.ENCN_DCO);
 	HAL.IOs->config->setLow(Pins.ENCA_DCIN_CFG5);
 
+	// Initialize the SPI channel
 	TMC2130_SPIChannel       = &HAL.SPI->ch2;
 	TMC2130_SPIChannel->CSN  = &HAL.IOs->pins->SPI2_CSN0;
 
+	// Initialize the software StepDir generator
 	StepDir_init();
 	StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
 
