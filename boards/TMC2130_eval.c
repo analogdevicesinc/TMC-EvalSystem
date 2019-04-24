@@ -864,6 +864,8 @@ void TMC2130_init(void)
 	StepDir_init();
 	StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
 
+	Evalboards.ch2.type = (void *)&TMC2130;
+
 	Evalboards.ch2.config->reset        = reset;
 	Evalboards.ch2.config->restore      = restore;
 	Evalboards.ch2.config->state        = CONFIG_RESET;

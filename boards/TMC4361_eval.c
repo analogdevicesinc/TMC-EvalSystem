@@ -2,6 +2,8 @@
 #include "tmc/BoardAssignment.h"
 #include "tmc/ic/TMC4361/TMC4361.h"
 #include "tmc/ic/TMC2660/TMC2660_Macros.h"
+#include "tmc/ic/TMC2130/TMC2130.h"
+#include "tmc/ic/TMC2160/TMC2160.h"
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -686,6 +688,19 @@ static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 			Evalboards.ch2.writeRegister(motor, TMC2660_ADDRESS(value), TMC2660_VALUE(value));
 		else // All other drivers -> 32 bit registers, 8 bit address
 			Evalboards.ch2.writeRegister(motor, TMC_ADDRESS(high), value);
+		break;
+	case TMC4361_SCALE_VALUES:
+		/* Only possible with IHOLD and only with TMC2130 and TMC2160, since write-only registers changed actively by
+		 * the TMC43XX (not via cover datagrams) are impossible to track.
+		 */
+		switch(Evalboards.ch2.id) {
+		case ID_TMC2130:
+			TMC2130_FIELD_UPDATE((TMC2130TypeDef *)Evalboards.ch2.type, TMC2130_IHOLD_IRUN, TMC2130_IHOLD_MASK, TMC2130_IHOLD_SHIFT, FIELD_GET(value, TMC4361_HOLD_SCALE_VAL_MASK, TMC4361_HOLD_SCALE_VAL_SHIFT));
+			break;
+		case ID_TMC2160:
+			TMC2160_FIELD_UPDATE((TMC2160TypeDef *)Evalboards.ch2.type, TMC2160_IHOLD_IRUN, TMC2160_IHOLD_MASK, TMC2160_IHOLD_SHIFT, FIELD_GET(value, TMC4361_HOLD_SCALE_VAL_MASK, TMC4361_HOLD_SCALE_VAL_SHIFT));
+			break;
+		}
 		break;
 	}
 	tmc4361_writeInt(motorToIC(motor), address, value);

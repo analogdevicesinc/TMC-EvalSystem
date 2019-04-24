@@ -25,6 +25,7 @@ typedef enum {
 // Evalboard channel struct
 typedef struct
 {
+	void *type;
 	uint8_t  id;
 	uint32_t errors;
 	uint32_t VMMax;
