@@ -18,7 +18,11 @@ typedef struct
 	uint8_t   initState;
 	uint8_t   initMode;
 	uint16_t  torqueMeasurementFactor;  // uint8_t.uint8_t
-	uint8_t	 motionMode;
+	uint8_t	  motionMode;
+	int32_t   actualVelocityPT1;
+	int64_t	  akkuActualVelocity;
+	int16_t   actualTorquePT1;
+	int64_t   akkuActualTorque;
 } TMinimalMotorConfig;
 
 TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
@@ -248,7 +252,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 176:
 		// PID_TORQUE_ACTUAL_mA
 		if(readWrite == READ) {
-			*value = tmc4671_getActualTorque_mA(motor, motorConfig[motor].torqueMeasurementFactor);
+			*value = motorConfig[motor].actualTorquePT1;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -256,7 +260,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 178:
 		// PID_VELOCITY_ACTUAL
 		if(readWrite == READ) {
-			*value = tmc4671_getActualVelocity(motor);
+			*value = motorConfig[motor].actualVelocityPT1;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -378,11 +382,25 @@ static void periodicJob(uint32_t actualSystick)
 				&(motorConfig[motor].actualInitWaitTime), motorConfig[motor].startVoltage);
 	}
 
-#ifdef USE_LINEAR_RAMP
 	// 1ms velocity ramp handling
 	static uint32_t lastSystick;
 	if (lastSystick != actualSystick)
 	{
+		for(motor = 0; motor < TMC4671_MOTORS; motor++)
+		{
+			// filter actual velocity
+			motorConfig[motor].actualVelocityPT1 = tmc_filterPT1(&motorConfig[motor].akkuActualVelocity, tmc4671_getActualVelocity(motor), motorConfig[motor].actualVelocityPT1, 3, 8);
+
+			// filter actual current
+			int16_t actualCurrentRaw = 	tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, BIT_16_TO_31);
+			if ((actualCurrentRaw > -32000) && (actualCurrentRaw < 32000))
+			{
+				int32_t actualCurrent = ((int32_t)actualCurrentRaw * (int32_t)motorConfig[motor].torqueMeasurementFactor) / 256;
+				motorConfig[motor].actualTorquePT1 = tmc_filterPT1(&motorConfig[motor].akkuActualTorque , actualCurrent, motorConfig[motor].actualTorquePT1, 4, 8);
+			}
+		}
+
+#ifdef USE_LINEAR_RAMP
 		// do velocity / position ramping for every motor
 		for (motor = 0; motor < TMC4671_MOTORS; motor++)
 		{
@@ -430,9 +448,9 @@ static void periodicJob(uint32_t actualSystick)
 				rampGenerator[motor].lastdXRest = 0;
 			}
 		}
+#endif
 		lastSystick = actualSystick;
 	}
-#endif
 }
 
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
@@ -560,6 +578,10 @@ void TMC4671_init(void)
 		motorConfig[motor].startVoltage             = 6000;
 		motorConfig[motor].initMode                 = 0;
 		motorConfig[motor].torqueMeasurementFactor  = 256;
+		motorConfig[motor].actualVelocityPT1		= 0;
+		motorConfig[motor].akkuActualVelocity       = 0;
+		motorConfig[motor].actualTorquePT1			= 0;
+		motorConfig[motor].akkuActualTorque         = 0;
 	}
 
 	// set default polarity for evaluation board's power stage on init

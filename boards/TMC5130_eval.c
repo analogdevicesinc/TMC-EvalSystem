@@ -392,7 +392,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_MRES_MASK, TMC5130_MRES_SHIFT, *value);
 			}
 			else
+			{
 				errors |= TMC_ERROR_VALUE;
+			}
 		}
 		break;
 	case 162:
@@ -650,7 +652,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_AUTOSCALE_MASK, TMC5130_PWM_AUTOSCALE_SHIFT, *value);
 			}
 			else
+			{
 				errors |= TMC_ERROR_VALUE;
+			}
 		}
 		break;
 	case 204:
@@ -708,18 +712,21 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 		return TMC_ERROR_MOTOR;
 
 	*value = TMC5130.velocity;
+
 	return TMC_ERROR_NONE;
 }
 
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
+
 	tmc5130_writeInt(&TMC5130, address, value);
 }
 
 static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
+
 	*value = tmc5130_readInt(&TMC5130, address);
 }
 
@@ -731,6 +738,7 @@ static void periodicJob(uint32_t tick)
 static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
+
 	Evalboards.ch1.errors = 0;
 }
 
@@ -792,7 +800,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 			Timer.setDuty(TIMER_CHANNEL_1, *value % 10001);
 		}
 		else
+		{
 			errors |= TMC_ERROR_VALUE;
+		}
 		break;
 	case 2:  // Use internal clock
 		/*
@@ -804,7 +814,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 			HAL.IOs->config->setLow(&HAL.IOs->pins->CLK16);
 		}
 		else
+		{
 			HAL.IOs->config->reset(&HAL.IOs->pins->CLK16);
+		}
 		break;
 	case 3:
 		// Unused
@@ -891,16 +903,17 @@ static uint8_t restore()
 	return tmc5130_restore(&TMC5130);
 }
 
-static void configCallback(TMC5130TypeDef *tmc5130, ConfigState state)
+static void configCallback(TMC5130TypeDef *tmc5130, ConfigState completedState)
 {
-	if(state == CONFIG_RESET)
-	{	// Change hardware-preset registers here
+	if(completedState == CONFIG_RESET)
+	{
+		// Configuration reset completed
+		// Change hardware preset registers here
 		tmc5130_writeInt(tmc5130, TMC5130_PWMCONF, 0x000504C8);
 
 		// Fill missing shadow registers (hardware preset registers)
 		tmc5130_fillShadowRegisters(&TMC5130);
 	}
-
 }
 
 static void enableDriver(DriverState state)

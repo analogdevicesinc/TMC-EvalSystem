@@ -7,7 +7,7 @@
 #include "tmc/VitalSignsMonitor.h"
 #include "tmc/BoardAssignment.h"
 
-const char *VersionString = MODULE_ID"V306"; // module id and version of the firmware shown in the TMCL-IDE
+const char *VersionString = MODULE_ID"V307"; // module id and version of the firmware shown in the TMCL-IDE
 
 /* Keep as is! This lines are important for the update functionality. */
 #if defined(Landungsbruecke)
