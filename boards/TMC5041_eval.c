@@ -679,10 +679,7 @@ static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	for(int motor = 0; motor < TMC5041_MOTORS; motor++)
-	{
-		tmc5041_periodicJob(motor, tick, &TMC5041, TMC5041_config);
-	}
+	tmc5041_periodicJob(tick, &TMC5041, TMC5041_config);
 }
 
 static void checkErrors(uint32_t tick)
