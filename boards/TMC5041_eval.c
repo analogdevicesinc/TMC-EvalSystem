@@ -679,7 +679,7 @@ static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	tmc5041_periodicJob(tick, &TMC5041, TMC5041_config);
+	tmc5041_periodicJob(&TMC5041, tick);
 }
 
 static void checkErrors(uint32_t tick)
@@ -723,12 +723,12 @@ static uint8_t reset()
 		if(tmc5041_readInt(motor, TMC5041_VACTUAL(motor)) != 0)
 			return 0;
 
-	return tmc5041_reset(TMC5041_config);
+	return tmc5041_reset(&TMC5041);
 }
 
 static uint8_t restore()
 {
-	return tmc5041_restore(TMC5041_config);
+	return tmc5041_restore(&TMC5041);
 }
 
 static void enableDriver(DriverState state)
