@@ -747,7 +747,7 @@ static void enableDriver(DriverState state)
 
 void TMC5041_init(void)
 {
-	tmc5041_initConfig(&TMC5041);
+	tmc5041_init(&TMC5041, 0, Evalboards.ch1.config, tmc5041_defaultRegisterResetState);
 
 	Pins.DRV_ENN   = &HAL.IOs->pins->DIO0;
 	Pins.INT_ENCA  = &HAL.IOs->pins->DIO5;
