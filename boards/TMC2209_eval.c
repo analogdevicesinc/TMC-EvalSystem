@@ -58,24 +58,72 @@ static PinsTypeDef Pins;
 
 static uint8_t restore(void);
 
-void tmc2209_writeRegister(uint8_t motor, uint8_t address, int32_t value)
+static inline TMC2209TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
-	UART_writeInt(TMC2209_UARTChannel, tmc2209_get_slave(&TMC2209), address, value);
-	TMC2209.config->shadowRegister[TMC_ADDRESS(address)] = value;
+
+	return &TMC2209;
+}
+
+static inline UART_Config *channelToUART(uint8_t channel)
+{
+	UNUSED(channel);
+
+	return TMC2209_UARTChannel;
+}
+
+// => UART wrapper
+// Write [writeLength] bytes from the [data] array.
+// If [readLength] is greater than zero, read [readLength] bytes from the
+// [data] array.
+void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	UART_Config *uart = channelToUART(channel);
+
+	uart->rxtx.clearBuffers();
+	uart->rxtx.txN(data, writeLength);
+	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
+	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
+	 * periodic refresh of values gets requested right after the write request.
+	 */
+	wait(2);
+
+	// Abort early if no data needs to be read back
+	if (readLength <= 0)
+		return;
+
+	// Wait for reply with timeout limit
+	uint32_t timestamp = systick_getTick();
+	while(uart->rxtx.bytesAvailable() < readLength)
+	{
+		if(timeSince(timestamp) > TIMEOUT_VALUE)
+		{
+			// Abort on timeout
+			return;
+		}
+	}
+
+	uart->rxtx.rxN(data, readLength);
+}
+// <= UART wrapper
+
+// => CRC wrapper
+// Return the CRC8 of [length] bytes of data stored in the [data] array.
+uint8_t tmc2209_CRC8(uint8_t *data, size_t length)
+{
+	return tmc_CRC8(data, length, 1);
+}
+// <= CRC wrapper
+
+void tmc2209_writeRegister(uint8_t motor, uint8_t address, int32_t value)
+{
+	tmc2209_writeInt(motorToIC(motor), address, value);
+
 }
 
 void tmc2209_readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
-	UNUSED(motor);
-	if(TMC_IS_READABLE(TMC2209.registerAccess[TMC_ADDRESS(address)]))
-	{
-		UART_readInt(TMC2209_UARTChannel, tmc2209_get_slave(&TMC2209), address, value);
-	}
-	else
-	{
-		*value = TMC2209.config->shadowRegister[TMC_ADDRESS(address)];
-	}
+	*value = tmc2209_readInt(motorToIC(motor), address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
