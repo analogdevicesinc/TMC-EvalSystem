@@ -14,7 +14,8 @@
 
 #define MOTORS 1
 
-#define TIMEOUT_VALUE 10 // 10 ms
+// Timeout value for UART replies (in ms)
+#define TIMEOUT_VALUE 10
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -31,6 +32,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
+static uint8_t restore(void);
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC2209_UARTChannel;
@@ -55,8 +57,6 @@ typedef struct
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
-
-static uint8_t restore(void);
 
 static inline TMC2209TypeDef *motorToIC(uint8_t motor)
 {
@@ -111,7 +111,7 @@ void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, 
 // Return the CRC8 of [length] bytes of data stored in the [data] array.
 uint8_t tmc2209_CRC8(uint8_t *data, size_t length)
 {
-	return tmc_CRC8(data, length, 1);
+	return TMC2209_CRC(data, length);
 }
 // <= CRC wrapper
 
@@ -383,11 +383,8 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
-	for(int motor = 0; motor < MOTORS; motor++)
-	{
-		tmc2209_periodicJob(&TMC2209, tick);
-		StepDir_periodicJob(motor);
-	}
+	tmc2209_periodicJob(&TMC2209, tick);
+	StepDir_periodicJob(0);
 }
 
 void TMC2209_init(void)
@@ -425,8 +422,6 @@ void TMC2209_init(void)
 
 	Evalboards.ch2.config->reset        = reset;
 	Evalboards.ch2.config->restore      = restore;
-	Evalboards.ch2.config->state        = CONFIG_RESET;
-	Evalboards.ch2.config->configIndex  = 0;
 
 	Evalboards.ch2.rotate               = rotate;
 	Evalboards.ch2.right                = right;
