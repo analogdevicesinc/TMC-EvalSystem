@@ -25,8 +25,6 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static uint32_t setPins(uint32_t pins);
-
 static void checkErrors (uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
@@ -38,9 +36,6 @@ static void enableDriver(DriverState state);
 static UART_Config *TMC2209_UARTChannel;
 static TMC2209TypeDef TMC2209;
 static ConfigurationTypeDef *TMC2209_config;
-
-static uint32_t pin_states = 0;
-static bool pin_configurator = false;
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2209_CRC(data, length) tmc_CRC8(data, length, 1)
@@ -73,13 +68,13 @@ void tmc2209_writeRegister(uint8_t motor, uint8_t address, int32_t value)
 void tmc2209_readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
-	if(pin_configurator && address == 0) // Detect old Rhino setPins datagram
-		*value = setPins(*value);
-	else {
-		if(TMC_IS_READABLE(TMC2209.registerAccess[TMC_ADDRESS(address)]))
-			UART_readInt(TMC2209_UARTChannel, tmc2209_get_slave(&TMC2209), address, value);
-		else
-			*value = TMC2209.config->shadowRegister[TMC_ADDRESS(address)];
+	if(TMC_IS_READABLE(TMC2209.registerAccess[TMC_ADDRESS(address)]))
+	{
+		UART_readInt(TMC2209_UARTChannel, tmc2209_get_slave(&TMC2209), address, value);
+	}
+	else
+	{
+		*value = TMC2209.config->shadowRegister[TMC_ADDRESS(address)];
 	}
 }
 
@@ -213,55 +208,6 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32_t setPins(uint32_t pins)
-{
-	uint8_t state = 0;
-	IOPinTypeDef *pin = Pins.ENN;
-	for(uint8_t i = 0; pins; i++) {
-		switch(i) {
-		case 0:
-			pin = Pins.ENN;
-			break;
-		case 1:
-			pin = Pins.SPREAD;
-			break;
-		case 2:
-			pin = Pins.MS1_AD0;
-			break;
-		case 3:
-			pin = Pins.MS2_AD1;
-			break;
-		case 4:
-			pin = Pins.UC_PWM;
-			break;
-		case 5:
-			pin = Pins.STDBY;
-			break;
-		default:
-			goto error;
-		}
-		state = pins & 0x03;
-		HAL.IOs->config->toOutput(pin);
-		switch(state) {
-		case 0b01: // VCC_IO
-			HAL.IOs->config->setHigh(pin);
-			break;
-		case 0b10: // open
-			HAL.IOs->config->reset(pin);
-			break;
-		case 0b00: // GND
-			HAL.IOs->config->setLow(pin);
-			break;
-		case 0b11:
-			goto shift;
-			break;
-		}
-		pin_states = FIELD_SET(pin_states, 0x03 << (i << 1), (i << 1), state);
-		shift: pins >>= 2;
-	}
-	error: return pin_states;
-}
-
 static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
@@ -284,9 +230,6 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		break;
 	case 2:
 		*value = tmc2209_get_slave(&TMC2209);
-		break;
-	case 3:
-		pin_configurator = (*value == 1);
 		break;
 	case 4:
 		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
