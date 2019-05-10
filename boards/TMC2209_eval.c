@@ -14,7 +14,8 @@
 
 #define MOTORS 1
 
-#define TIMEOUT_VALUE 10 // 10 ms
+// Timeout value for UART replies (in ms)
+#define TIMEOUT_VALUE 10
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -25,22 +26,18 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static uint32_t setPins(uint32_t pins);
-
 static void checkErrors (uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
+static uint8_t restore(void);
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC2209_UARTChannel;
 static TMC2209TypeDef TMC2209;
 static ConfigurationTypeDef *TMC2209_config;
-
-static uint32_t pin_states = 0;
-static bool pin_configurator = false;
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2209_CRC(data, length) tmc_CRC8(data, length, 1)
@@ -61,26 +58,72 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-static uint8_t restore(void);
+static inline TMC2209TypeDef *motorToIC(uint8_t motor)
+{
+	UNUSED(motor);
+
+	return &TMC2209;
+}
+
+static inline UART_Config *channelToUART(uint8_t channel)
+{
+	UNUSED(channel);
+
+	return TMC2209_UARTChannel;
+}
+
+// => UART wrapper
+// Write [writeLength] bytes from the [data] array.
+// If [readLength] is greater than zero, read [readLength] bytes from the
+// [data] array.
+void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	UART_Config *uart = channelToUART(channel);
+
+	uart->rxtx.clearBuffers();
+	uart->rxtx.txN(data, writeLength);
+	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
+	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
+	 * periodic refresh of values gets requested right after the write request.
+	 */
+	wait(2);
+
+	// Abort early if no data needs to be read back
+	if (readLength <= 0)
+		return;
+
+	// Wait for reply with timeout limit
+	uint32_t timestamp = systick_getTick();
+	while(uart->rxtx.bytesAvailable() < readLength)
+	{
+		if(timeSince(timestamp) > TIMEOUT_VALUE)
+		{
+			// Abort on timeout
+			return;
+		}
+	}
+
+	uart->rxtx.rxN(data, readLength);
+}
+// <= UART wrapper
+
+// => CRC wrapper
+// Return the CRC8 of [length] bytes of data stored in the [data] array.
+uint8_t tmc2209_CRC8(uint8_t *data, size_t length)
+{
+	return TMC2209_CRC(data, length);
+}
+// <= CRC wrapper
 
 void tmc2209_writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
-	UNUSED(motor);
-	UART_writeInt(TMC2209_UARTChannel, tmc2209_get_slave(&TMC2209), address, value);
-	TMC2209.config->shadowRegister[TMC_ADDRESS(address)] = value;
+	tmc2209_writeInt(motorToIC(motor), address, value);
+
 }
 
 void tmc2209_readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
-	UNUSED(motor);
-	if(pin_configurator && address == 0) // Detect old Rhino setPins datagram
-		*value = setPins(*value);
-	else {
-		if(TMC_IS_READABLE(TMC2209.registerAccess[TMC_ADDRESS(address)]))
-			UART_readInt(TMC2209_UARTChannel, tmc2209_get_slave(&TMC2209), address, value);
-		else
-			*value = TMC2209.config->shadowRegister[TMC_ADDRESS(address)];
-	}
+	*value = tmc2209_readInt(motorToIC(motor), address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -213,55 +256,6 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32_t setPins(uint32_t pins)
-{
-	uint8_t state = 0;
-	IOPinTypeDef *pin = Pins.ENN;
-	for(uint8_t i = 0; pins; i++) {
-		switch(i) {
-		case 0:
-			pin = Pins.ENN;
-			break;
-		case 1:
-			pin = Pins.SPREAD;
-			break;
-		case 2:
-			pin = Pins.MS1_AD0;
-			break;
-		case 3:
-			pin = Pins.MS2_AD1;
-			break;
-		case 4:
-			pin = Pins.UC_PWM;
-			break;
-		case 5:
-			pin = Pins.STDBY;
-			break;
-		default:
-			goto error;
-		}
-		state = pins & 0x03;
-		HAL.IOs->config->toOutput(pin);
-		switch(state) {
-		case 0b01: // VCC_IO
-			HAL.IOs->config->setHigh(pin);
-			break;
-		case 0b10: // open
-			HAL.IOs->config->reset(pin);
-			break;
-		case 0b00: // GND
-			HAL.IOs->config->setLow(pin);
-			break;
-		case 0b11:
-			goto shift;
-			break;
-		}
-		pin_states = FIELD_SET(pin_states, 0x03 << (i << 1), (i << 1), state);
-		shift: pins >>= 2;
-	}
-	error: return pin_states;
-}
-
 static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
@@ -284,9 +278,6 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		break;
 	case 2:
 		*value = tmc2209_get_slave(&TMC2209);
-		break;
-	case 3:
-		pin_configurator = (*value == 1);
 		break;
 	case 4:
 		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
@@ -392,11 +383,8 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
-	for(int motor = 0; motor < MOTORS; motor++)
-	{
-		tmc2209_periodicJob(&TMC2209, tick);
-		StepDir_periodicJob(motor);
-	}
+	tmc2209_periodicJob(&TMC2209, tick);
+	StepDir_periodicJob(0);
 }
 
 void TMC2209_init(void)
@@ -434,8 +422,6 @@ void TMC2209_init(void)
 
 	Evalboards.ch2.config->reset        = reset;
 	Evalboards.ch2.config->restore      = restore;
-	Evalboards.ch2.config->state        = CONFIG_RESET;
-	Evalboards.ch2.config->configIndex  = 0;
 
 	Evalboards.ch2.rotate               = rotate;
 	Evalboards.ch2.right                = right;
