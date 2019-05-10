@@ -219,6 +219,11 @@ uint32_t resetRequest = 0;
 
 #if defined(Landungsbruecke)
 extern uint32_t BLMagic;
+extern uint64_t pins_a;
+extern uint64_t pins_b;
+extern uint64_t pins_c;
+extern uint64_t pins_d;
+extern uint64_t pins_e;
 #endif
 
 // Sets TMCL status from Evalboard error. Returns the parameter given to allow for compact error handling
@@ -527,6 +532,13 @@ void rx(RXTXTypeDef *RXTX)
 
 void tmcl_boot()
 {
+#if defined(Landungsbruecke)
+	if(Evalboards.ch1.id == ID_TMC4670 ||
+			Evalboards.ch1.id == ID_TMC4671)
+		pins_a |= (0b01 << (12 << 1));
+	else
+		pins_a |= (0b10 << (12 << 1));
+#endif
 	Evalboards.driverEnable = DRIVER_DISABLE;
 	Evalboards.ch1.enableDriver(DRIVER_DISABLE); // todo CHECK 2: the ch1/2 deInit() calls should already disable the drivers - keep this driver disabling to be sure or remove it and leave the disabling to deInit? (LH)
 	Evalboards.ch2.enableDriver(DRIVER_DISABLE);

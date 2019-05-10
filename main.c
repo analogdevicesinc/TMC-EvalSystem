@@ -22,6 +22,20 @@ const char *VersionString = MODULE_ID"V307"; // module id and version of the fir
 	};
 
 	__attribute__ ((section(".bldata"))) uint32_t BLMagic;
+
+	/*
+	 * Bootloader pin configuration
+	 * 2 Bits per pin.
+	 * 0b00: open
+	 * 0b01: low
+	 * 0b10: high
+	 * See Pins.ods for further layout details.
+	 */
+	__attribute__ ((section(".bldata"))) uint64_t pins_a; // PTA
+	__attribute__ ((section(".bldata"))) uint64_t pins_b; // PTB
+	__attribute__ ((section(".bldata"))) uint64_t pins_c; // PTC
+	__attribute__ ((section(".bldata"))) uint64_t pins_d; // PTD
+	__attribute__ ((section(".bldata"))) uint64_t pins_e; // PTE
 #endif
 
 
@@ -63,6 +77,12 @@ void shallForceBoot()
 /* Call all standard initialization routines. */
 static void init()
 {
+	pins_a = 0;
+	pins_b = 0;
+	pins_c = 0;
+	pins_d = 0;
+	pins_e = 0;
+
 	HAL.init();                  // Initialize Hardware Abstraction Layer
 	IDDetection_init();          // Initialize board detection
 	tmcl_init();                 // Initialize TMCL communication
