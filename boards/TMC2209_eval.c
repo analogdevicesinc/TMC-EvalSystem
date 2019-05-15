@@ -39,6 +39,8 @@ static UART_Config *TMC2209_UARTChannel;
 static TMC2209TypeDef TMC2209;
 static ConfigurationTypeDef *TMC2209_config;
 
+static int32_t thigh;
+
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2209_CRC(data, length) tmc_CRC8(data, length, 1)
 
@@ -175,7 +177,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
 	uint32_t errors = TMC_ERROR_NONE;
-
+	int32_t buffer = 0;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -231,11 +233,304 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 	case 6:
-		// UART slave address
+		// Maximum current
 		if(readWrite == READ) {
-			*value = tmc2209_get_slave(&TMC2209);
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_IHOLD_IRUN, TMC2209_IRUN_MASK, TMC2209_IRUN_SHIFT);
 		} else if(readWrite == WRITE) {
-			tmc2209_set_slave(&TMC2209, *value);
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_IHOLD_IRUN, TMC2209_IRUN_MASK, TMC2209_IRUN_SHIFT, *value);
+		}
+		break;
+	case 7:
+		// Standby current
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_IHOLD_IRUN, TMC2209_IHOLD_MASK, TMC2209_IHOLD_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_IHOLD_IRUN, TMC2209_IHOLD_MASK, TMC2209_IHOLD_SHIFT, *value);
+		}
+		break;
+	case 8:
+		// Position reached flag
+		if(readWrite == READ) {
+			*value = (StepDir_getStatus(motor) & STATUS_TARGET_REACHED)? 1:0;
+		} else if(readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 23:
+		// Speed threshold for high speed mode
+		if(readWrite == READ) {
+			buffer = thigh;
+			*value = MIN(0xFFFFF, (1<<24) / ((buffer) ? buffer : 1));
+		} else if(readWrite == WRITE) {
+			*value = MIN(0xFFFFF, (1<<24) / ((*value) ? *value : 1));
+			thigh = *value;
+		}
+		break;
+	case 28:
+		// Internal RSense
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_GCONF, TMC2209_INTERNAL_RSENSE_MASK, TMC2209_INTERNAL_RSENSE_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_GCONF, TMC2209_INTERNAL_RSENSE_MASK, TMC2209_INTERNAL_RSENSE_SHIFT, *value);
+		}
+		break;
+	case 29:
+		// Measured Speed
+		if(readWrite == READ) {
+			buffer = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2209_FIELD_READ(motorToIC(motor), TMC2209_TSTEP, TMC2209_TSTEP_MASK, TMC2209_TSTEP_SHIFT));
+			*value = (abs(buffer) < 20) ? 0 : buffer;
+		} else if(readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 50: // StepDir internal(0)/external(1)
+		if(readWrite == READ) {
+			*value = StepDir_getMode(motor);
+		} else if(readWrite == WRITE) {
+			StepDir_setMode(motor, *value);
+		}
+		break;
+	case 51: // StepDir interrupt frequency
+		if(readWrite == READ) {
+			*value = StepDir_getFrequency(motor);
+		} else if(readWrite == WRITE) {
+			StepDir_setFrequency(motor, *value);
+		}
+		break;
+	case 140:
+		// Microstep Resolution
+		if(readWrite == READ) {
+			*value = 256 >> TMC2209_FIELD_READ(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT);
+		} else if(readWrite == WRITE) {
+			switch(*value)
+			{
+			case 1:    *value = 8;   break;
+			case 2:    *value = 7;   break;
+			case 4:    *value = 6;   break;
+			case 8:    *value = 5;   break;
+			case 16:   *value = 4;   break;
+			case 32:   *value = 3;   break;
+			case 64:   *value = 2;   break;
+			case 128:  *value = 1;   break;
+			case 256:  *value = 0;   break;
+			default:   *value = -1;  break;
+			}
+
+			if(*value != -1)
+			{
+				TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_MRES_MASK, TMC2209_MRES_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+	case 162:
+		// Chopper blank time
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_TBL_MASK, TMC2209_TBL_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_TBL_MASK, TMC2209_TBL_SHIFT, *value);
+		}
+		break;
+	case 165:
+		// Chopper hysteresis end / fast decay time
+		if(readWrite == READ) {
+			if(tmc2209_readInt(motorToIC(motor), TMC2209_CHOPCONF) & (1<<14))
+			{
+				*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_HEND_MASK, TMC2209_HEND_SHIFT);
+			}
+			else
+			{
+				buffer = tmc2209_readInt(motorToIC(motor), TMC2209_CHOPCONF);
+				*value = (tmc2209_readInt(motorToIC(motor), TMC2209_CHOPCONF) >> 4) & 0x07;
+				if(buffer & (1<<11))
+					*value |= 1<<3;
+			}
+		} else if(readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 166:
+		// Chopper hysteresis start / sine wave offset
+		if(readWrite == READ) {
+			if(tmc2209_readInt(motorToIC(motor), TMC2209_CHOPCONF) & (1<<14))
+			{
+				*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_HSTRT_MASK, TMC2209_HSTRT_SHIFT);
+			}
+			else
+			{
+				buffer = tmc2209_readInt(motorToIC(motor), TMC2209_CHOPCONF);
+				*value = (tmc2209_readInt(motorToIC(motor), TMC2209_CHOPCONF) >> 7) & 0x0F;
+				if(buffer & (1<<11))
+					*value |= 1<<3;
+			}
+		} else if(readWrite == WRITE) {
+			if(tmc2209_readInt(motorToIC(motor), TMC2209_CHOPCONF) & (1<<14))
+			{
+				TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_HSTRT_MASK, TMC2209_HSTRT_SHIFT, *value);
+			}
+			else
+			{
+				TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_HEND_MASK, TMC2209_HEND_SHIFT, *value);
+			}
+		}
+		break;
+	case 167:
+		// Chopper off time
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_TOFF_MASK, TMC2209_TOFF_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_TOFF_MASK, TMC2209_TOFF_SHIFT, *value);
+		}
+		break;
+	case 168:
+		// smartEnergy current minimum (SEIMIN)
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEIMIN_MASK, TMC2209_SEIMIN_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEIMIN_MASK, TMC2209_SEIMIN_SHIFT, *value);
+		}
+		break;
+	case 169:
+		// smartEnergy current down step
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEDN_MASK, TMC2209_SEDN_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEDN_MASK, TMC2209_SEDN_SHIFT, *value);
+		}
+		break;
+	case 170:
+		// smartEnergy hysteresis
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEMAX_MASK, TMC2209_SEMAX_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEMAX_MASK, TMC2209_SEMAX_SHIFT, *value);
+		}
+		break;
+	case 171:
+		// smartEnergy current up step
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEUP_MASK, TMC2209_SEUP_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEUP_MASK, TMC2209_SEUP_SHIFT, *value);
+		}
+		break;
+	case 172:
+		// smartEnergy hysteresis start
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEMIN_MASK, TMC2209_SEMIN_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SEMIN_MASK, TMC2209_SEMIN_SHIFT, *value);
+		}
+		break;
+	case 174:
+		// stallGuard2 threshold
+		if(readWrite == READ) {
+			//*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SGT_MASK, TMC2209_SGT_SHIFT);
+			//*value = StepDir_getStallGuardThreshold(motor);
+			*value = tmc2209_readInt(motorToIC(motor), TMC2209_SGTHRS);
+			//*value = CAST_Sn_TO_S32(*value, 7);
+		} else if(readWrite == WRITE) {
+			tmc2209_writeInt(motorToIC(motor), TMC2209_SGTHRS, *value);
+			//StepDir_setStallGuardThreshold(motor, *value);
+			//TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SGT_MASK, TMC2209_SGT_SHIFT, *value);
+		}
+		break;
+	case 179:
+		// VSense
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_VSENSE_MASK, TMC2209_VSENSE_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_CHOPCONF, TMC2209_VSENSE_MASK, TMC2209_VSENSE_SHIFT, *value);
+		}
+		break;
+	case 180:
+		// smartEnergy actual current
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_DRVSTATUS, TMC2209_CS_ACTUAL_MASK, TMC2209_CS_ACTUAL_SHIFT);
+		} else if(readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 181:
+		// smartEnergy stall velocity
+		if(readWrite == READ) {
+			*value = StepDir_getStallGuardThreshold(motor);
+		} else if(readWrite == WRITE) {
+			StepDir_setStallGuardThreshold(motor, *value);
+		}
+		break;
+	case 182:
+		// smartEnergy threshold speed
+		if(readWrite == READ) {
+			buffer = tmc2209_readInt(motorToIC(motor), TMC2209_TCOOLTHRS);
+			*value = MIN(0xFFFFF, (1<<24) / ((buffer) ? buffer : 1));
+		} else if(readWrite == WRITE) {
+			*value = MIN(0xFFFFF, (1<<24) / ((*value) ? *value : 1));
+			tmc2209_writeInt(motorToIC(motor), TMC2209_TCOOLTHRS, *value);
+		}
+		break;
+	case 186:
+		// PWM threshold speed
+		if(readWrite == READ) {
+			buffer = tmc2209_readInt(motorToIC(motor), TMC2209_TPWMTHRS);
+			*value = MIN(0xFFFFF, (1<<24) / ((buffer) ? buffer : 1));
+		} else if(readWrite == WRITE) {
+			*value = MIN(0xFFFFF, (1<<24) / ((*value) ? *value : 1));
+			tmc2209_writeInt(motorToIC(motor), TMC2209_TPWMTHRS, *value);
+		}
+		break;
+	case 187:
+		// PWM gradient
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_PWMCONF, TMC2209_PWM_GRAD_MASK, TMC2209_PWM_GRAD_SHIFT);
+		} else if(readWrite == WRITE) {
+			// Set gradient
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_PWMCONF, TMC2209_PWM_GRAD_MASK, TMC2209_PWM_GRAD_SHIFT, *value);
+
+			// Enable/disable stealthChop accordingly
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_GCONF, TMC2209_EN_SPREADCYCLE_MASK, TMC2209_EN_SPREADCYCLE_SHIFT, (*value > 0) ? 0 : 1);
+		}
+		break;
+	case 191:
+		// PWM frequency
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_PWMCONF, TMC2209_PWM_FREQ_MASK, TMC2209_PWM_FREQ_SHIFT);
+		} else if(readWrite == WRITE) {
+			if(*value >= 0 && *value < 4)
+			{
+				TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_PWMCONF, TMC2209_PWM_FREQ_MASK, TMC2209_PWM_FREQ_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+	case 192:
+		// PWM autoscale
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_PWMCONF, TMC2209_PWM_AUTOSCALE_MASK, TMC2209_PWM_AUTOSCALE_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_PWMCONF, TMC2209_PWM_AUTOSCALE_MASK, TMC2209_PWM_AUTOSCALE_SHIFT, (*value)? 1:0);
+		}
+		break;
+	case 204:
+		// Freewheeling mode
+		if(readWrite == READ) {
+			*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_PWMCONF, TMC2209_FREEWHEEL_MASK, TMC2209_FREEWHEEL_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_PWMCONF, TMC2209_FREEWHEEL_MASK, TMC2209_FREEWHEEL_SHIFT, *value);
+		}
+		break;
+	case 206:
+		// Load value
+		if(readWrite == READ) {
+			*value = tmc2209_readInt(motorToIC(motor), TMC2209_SG_RESULT);
+		} else if(readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
 		}
 		break;
 	default:
@@ -390,6 +685,7 @@ static void periodicJob(uint32_t tick)
 void TMC2209_init(void)
 {
 	tmc_fillCRC8Table(0x07, true, 1);
+	thigh = 0;
 
 	Pins.ENN      = &HAL.IOs->pins->DIO0;
 	Pins.SPREAD   = &HAL.IOs->pins->DIO8;
