@@ -77,11 +77,13 @@ void shallForceBoot()
 /* Call all standard initialization routines. */
 static void init()
 {
+#if defined(Landungsbruecke)
 	pins_a = 0;
 	pins_b = 0;
 	pins_c = 0;
 	pins_d = 0;
 	pins_e = 0;
+#endif
 
 	HAL.init();                  // Initialize Hardware Abstraction Layer
 	IDDetection_init();          // Initialize board detection
