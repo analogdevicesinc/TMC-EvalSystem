@@ -165,6 +165,7 @@ static void setPinHigh(IOPinTypeDef *pin)
 		return;
 
 	*pin->setBitRegister = pin->bitWeight;
+	pin->state = IOS_HIGH;
 }
 
 static void setPinLow(IOPinTypeDef *pin)
@@ -173,6 +174,7 @@ static void setPinLow(IOPinTypeDef *pin)
 		return;
 
 	*pin->resetBitRegister = pin->bitWeight;
+	pin->state = IOS_LOW;
 }
 
 static uint8_t isPinHigh(IOPinTypeDef *pin) // Die Abfrage eines Pins funktioniert nur, wenn der Pin AF1 ist
