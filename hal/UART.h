@@ -23,6 +23,7 @@ typedef struct {
 UART_Config UART;
 
 void UART0_RX_TX_IRQHandler_UART(void);
+int UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t readLength);
 void UART_readInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t *value);
 void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t value);
 

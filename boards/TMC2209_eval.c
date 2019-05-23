@@ -14,9 +14,6 @@
 
 #define MOTORS 1
 
-// Timeout value for UART replies (in ms)
-#define TIMEOUT_VALUE 10
-
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -80,32 +77,7 @@ static inline UART_Config *channelToUART(uint8_t channel)
 // [data] array.
 void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
 {
-	UART_Config *uart = channelToUART(channel);
-
-	uart->rxtx.clearBuffers();
-	uart->rxtx.txN(data, writeLength);
-	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
-	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
-	 * periodic refresh of values gets requested right after the write request.
-	 */
-	wait(2);
-
-	// Abort early if no data needs to be read back
-	if (readLength <= 0)
-		return;
-
-	// Wait for reply with timeout limit
-	uint32_t timestamp = systick_getTick();
-	while(uart->rxtx.bytesAvailable() < readLength)
-	{
-		if(timeSince(timestamp) > TIMEOUT_VALUE)
-		{
-			// Abort on timeout
-			return;
-		}
-	}
-
-	uart->rxtx.rxN(data, readLength);
+	UART_readWrite(channelToUART(channel), data, writeLength, readLength);
 }
 // <= UART wrapper
 
