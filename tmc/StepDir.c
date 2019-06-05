@@ -139,31 +139,30 @@ int32_t calculateStepDifference(int32_t velocity, uint32_t oldAccel, uint32_t ne
 void TIMER_INTERRUPT()
 {
 #ifdef Startrampe
-	if(TIM_GetITStatus(TIM2, TIM_IT_Update) == RESET)
+	if (TIM_GetITStatus(TIM2, TIM_IT_Update) == RESET)
 		return;
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update); // clear pending flag
 #else
 	FTM1_SC &= ~FTM_SC_TOF_MASK; // clear timer overflow flag
 #endif
 
-	for(uint8_t ch = 0; ch < STEP_DIR_CHANNELS; ch++)
+	for (uint8_t ch = 0; ch < STEP_DIR_CHANNELS; ch++)
 	{
 		// Temporary variable for the current channel
 		StepDirectionTypedef *currCh = &StepDir[ch];
 
 		// If any halting condition is present, abort immediately
-		if(currCh->haltingCondition)
+		if (currCh->haltingCondition)
 			continue;
 
 		// Reset step output (falling edge of last pulse)
 		*currCh->stepPin->resetBitRegister = currCh->stepPin->bitWeight;
 
 		// Compute ramp
-		if(currCh)
-			tmc_ramp_linear_compute(&currCh->ramp, 1); // delta = 1 => velocity unit: steps/delta-tick
+		tmc_ramp_linear_compute(&currCh->ramp, 1); // delta = 1 => velocity unit: steps/delta-tick
 
 		// Step
-		if(tmc_ramp_linear_get_dx(&currCh->ramp) == 0) // No change in position -> skip step generation
+		if (tmc_ramp_linear_get_dx(&currCh->ramp) == 0) // No change in position -> skip step generation
 			goto skipStep;
 
 		// Direction
@@ -196,7 +195,7 @@ skipStep:
 
 void StepDir_rotate(uint8_t channel, int velocity)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
 	// Set the rampmode first - other way around might cause issues
@@ -214,7 +213,7 @@ void StepDir_rotate(uint8_t channel, int velocity)
 
 void StepDir_moveTo(uint8_t channel, int position)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
 	tmc_ramp_linear_set_mode(&StepDir[channel].ramp, TMC_RAMP_LINEAR_MODE_POSITION);
@@ -223,11 +222,13 @@ void StepDir_moveTo(uint8_t channel, int position)
 
 void StepDir_periodicJob(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	if(!IS_DUMMY_PIN(StepDir[channel].stallGuardPin))
+	if (!IS_DUMMY_PIN(StepDir[channel].stallGuardPin))
+	{
 		StepDir_stallGuard(channel, HAL.IOs->config->isHigh(StepDir[channel].stallGuardPin));
+	}
 }
 
 void StepDir_stop(uint8_t channel, StepDirStop stopType)
@@ -253,7 +254,7 @@ void StepDir_stop(uint8_t channel, StepDirStop stopType)
 
 uint8_t StepDir_getStatus(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	uint8_t status = StepDir[channel].haltingCondition;
@@ -268,43 +269,48 @@ uint8_t StepDir_getStatus(uint8_t channel)
 // Register the pins to be used by a StepDir channel. NULL will leave the pin unchanged
 void StepDir_setPins(uint8_t channel, IOPinTypeDef *stepPin, IOPinTypeDef *dirPin, IOPinTypeDef *stallPin)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	if(stepPin)
+	if (stepPin)
 	{
 		StepDir[channel].stepPin = stepPin;
-		if(!IS_DUMMY_PIN(stepPin))
+		if (!IS_DUMMY_PIN(stepPin))
 			StepDir[channel].haltingCondition &= ~STATUS_NO_STEP_PIN;
 		else
 			StepDir[channel].haltingCondition |= STATUS_NO_STEP_PIN;
 	}
 
-	if(dirPin)
+	if (dirPin)
 	{
 		StepDir[channel].dirPin = dirPin;
-		if(!IS_DUMMY_PIN(dirPin))
+		if (!IS_DUMMY_PIN(dirPin))
 			StepDir[channel].haltingCondition &= ~STATUS_NO_DIR_PIN;
 		else
 			StepDir[channel].haltingCondition |= STATUS_NO_DIR_PIN;
 	}
 
-	if(stallPin)
+	if (stallPin)
+	{
 		StepDir[channel].stallGuardPin = stallPin;
+	}
 }
 
-void StepDir_stallGuard(uint8_t channel, bool sg)
+void StepDir_stallGuard(uint8_t channel, bool stall)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	if((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold)) {
+	if ((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold))
+	{
 		StepDir[channel].stallGuardActive = true;
-		if(sg)
+		if (stall)
 		{
 			StepDir_stop(channel, STOP_STALL);
 		}
-	} else {
+	}
+	else
+	{
 		StepDir[channel].stallGuardActive = false;
 	}
 }
@@ -315,13 +321,13 @@ void StepDir_stallGuard(uint8_t channel, bool sg)
 // Set actual and target position (Not during an active position ramp)
 void StepDir_setActualPosition(uint8_t channel, int actualPosition)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	if(tmc_ramp_linear_get_mode(&StepDir[channel].ramp) == TMC_RAMP_LINEAR_MODE_POSITION)
+	if (tmc_ramp_linear_get_mode(&StepDir[channel].ramp) == TMC_RAMP_LINEAR_MODE_POSITION)
 	{
 		// In position mode: If we're not idle -> abort
-//		if((StepDir[channel].actualVelocity != 0) ||
+//		if ((StepDir[channel].actualVelocity != 0) ||
 //		   (StepDir[channel].actualPosition != StepDir[channel].targetPosition))
 //		{
 //			return;
@@ -348,17 +354,17 @@ void StepDir_setActualPosition(uint8_t channel, int actualPosition)
 
 void StepDir_setAcceleration(uint8_t channel, uint32_t acceleration)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	if(tmc_ramp_linear_get_mode(&StepDir[channel].ramp) == TMC_RAMP_LINEAR_MODE_VELOCITY)
+	if (tmc_ramp_linear_get_mode(&StepDir[channel].ramp) == TMC_RAMP_LINEAR_MODE_VELOCITY)
 	{	// Velocity mode does not require any special actions
 		tmc_ramp_linear_set_acceleration(&StepDir[channel].ramp, acceleration);
 		return;
 	}
 
 	// Position mode does not allow acceleration 0
-	if(acceleration == 0)
+	if (acceleration == 0)
 		return;
 
 	tmc_ramp_linear_set_acceleration(&StepDir[channel].ramp, acceleration);
@@ -367,14 +373,14 @@ void StepDir_setAcceleration(uint8_t channel, uint32_t acceleration)
 	uint32_t oldAcceleration = tmc_ramp_linear_get_acceleration(&StepDir[channel].ramp);
 
 	// If the channel is not halted we need to synchronise with the interrupt
-	if(StepDir[channel].haltingCondition == 0)
+	if (StepDir[channel].haltingCondition == 0)
 	{
 		// Sync mechanism: store the new acceleration value and request
 		// a snapshot from the interrupt
 		StepDir[channel].newAcceleration = acceleration;
 		StepDir[channel].syncFlag = SYNC_SNAPSHOT_REQUESTED;
 		// Wait for the flag update from the interrupt.
-		while(ACCESS_ONCE(StepDir[channel].syncFlag) != SYNC_SNAPSHOT_SAVED); // todo CHECK 2: Timeout to prevent deadlock? (LH) #1
+		while (ACCESS_ONCE(StepDir[channel].syncFlag) != SYNC_SNAPSHOT_SAVED); // todo CHECK 2: Timeout to prevent deadlock? (LH) #1
 	}
 	else
 	{	// Channel is halted -> access data directly without sync mechanism
@@ -385,13 +391,13 @@ void StepDir_setAcceleration(uint8_t channel, uint32_t acceleration)
 
 	int32_t stepDifference = calculateStepDifference(StepDir[channel].oldVelocity, oldAcceleration, acceleration);
 
-	if(StepDir[channel].haltingCondition == 0)
+	if (StepDir[channel].haltingCondition == 0)
 	{
 		StepDir[channel].stepDifference = stepDifference;
 		StepDir[channel].syncFlag = SYNC_UPDATE_DATA;
 
 		// Wait for interrupt to set flag to SYNC_IDLE
-		while(ACCESS_ONCE(StepDir[channel].syncFlag) != SYNC_IDLE); // todo CHECK 2: Timeout to prevent deadlock? (LH) #2
+		while (ACCESS_ONCE(StepDir[channel].syncFlag) != SYNC_IDLE); // todo CHECK 2: Timeout to prevent deadlock? (LH) #2
 	}
 	else
 	{	// Channel is halted -> access data directly without sync mechanism
@@ -401,7 +407,7 @@ void StepDir_setAcceleration(uint8_t channel, uint32_t acceleration)
 
 void StepDir_setVelocityMax(uint8_t channel, int velocityMax)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
 	tmc_ramp_linear_set_maxVelocity(&StepDir[channel].ramp, velocityMax);
@@ -410,7 +416,7 @@ void StepDir_setVelocityMax(uint8_t channel, int velocityMax)
 // Set the velocity threshold for active StallGuard. Also reset the stall flag
 void StepDir_setStallGuardThreshold(uint8_t channel, int stallGuardThreshold)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
 	StepDir[channel].stallGuardThreshold = stallGuardThreshold;
@@ -419,18 +425,20 @@ void StepDir_setStallGuardThreshold(uint8_t channel, int stallGuardThreshold)
 
 void StepDir_setMode(uint8_t channel, StepDirMode mode)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
 	StepDir[channel].mode = mode;
 
-	if(mode == STEPDIR_INTERNAL)
+	if (mode == STEPDIR_INTERNAL)
+	{
 		StepDir_setFrequency(channel, STEPDIR_FREQUENCY);
+	}
 }
 
 void StepDir_setFrequency(uint8_t channel, uint32_t frequency)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
 	StepDir[channel].frequency = frequency;
@@ -439,7 +447,7 @@ void StepDir_setFrequency(uint8_t channel, uint32_t frequency)
 // ===== Getters =====
 int StepDir_getActualPosition(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return tmc_ramp_linear_get_rampPosition(&StepDir[channel].ramp);
@@ -447,7 +455,7 @@ int StepDir_getActualPosition(uint8_t channel)
 
 int StepDir_getTargetPosition(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return tmc_ramp_linear_get_targetPosition(&StepDir[channel].ramp);
@@ -455,7 +463,7 @@ int StepDir_getTargetPosition(uint8_t channel)
 
 int StepDir_getActualVelocity(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp);
@@ -463,7 +471,7 @@ int StepDir_getActualVelocity(uint8_t channel)
 
 int StepDir_getTargetVelocity(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return tmc_ramp_linear_get_targetVelocity(&StepDir[channel].ramp);
@@ -471,7 +479,7 @@ int StepDir_getTargetVelocity(uint8_t channel)
 
 uint32_t StepDir_getAcceleration(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return tmc_ramp_linear_get_acceleration(&StepDir[channel].ramp);
@@ -479,7 +487,7 @@ uint32_t StepDir_getAcceleration(uint8_t channel)
 
 int StepDir_getVelocityMax(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return tmc_ramp_linear_get_maxVelocity(&StepDir[channel].ramp);
@@ -487,7 +495,7 @@ int StepDir_getVelocityMax(uint8_t channel)
 
 int StepDir_getStallGuardThreshold(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return StepDir[channel].stallGuardThreshold;
@@ -495,7 +503,7 @@ int StepDir_getStallGuardThreshold(uint8_t channel)
 
 StepDirMode StepDir_getMode(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return StepDir[channel].mode;
@@ -503,7 +511,7 @@ StepDirMode StepDir_getMode(uint8_t channel)
 
 uint32_t StepDir_getFrequency(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
 	return StepDir[channel].frequency;
@@ -511,18 +519,14 @@ uint32_t StepDir_getFrequency(uint8_t channel)
 
 int32_t StepDir_getMaxAcceleration(uint8_t channel)
 {
-	if(channel >= STEP_DIR_CHANNELS)
+	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
 
-	switch(StepDir[channel].mode) {
-	case STEPDIR_INTERNAL:
+	if (StepDir[channel].mode == STEPDIR_INTERNAL)
 		return STEPDIR_MAX_ACCELERATION;
-		break;
-	case STEPDIR_EXTERNAL:
-	default:
-		return s32_MAX;
-		break;
-	}
+
+	// STEPDIR_EXTERNAL -> no limitation from this generator
+	return s32_MAX;
 }
 
 // ===================
@@ -530,24 +534,23 @@ int32_t StepDir_getMaxAcceleration(uint8_t channel)
 void StepDir_init()
 {
 	// StepDir Channel initialisation
-	for(int i = 0; i < STEP_DIR_CHANNELS; i++)
+	for (int i = 0; i < STEP_DIR_CHANNELS; i++)
 	{
-		StepDir[i].oldVelAccu = 0;
-		StepDir[i].oldVelocity = 0;
-		StepDir[i].newAcceleration = 0;
+		StepDir[i].oldVelAccu           = 0;
+		StepDir[i].oldVelocity          = 0;
+		StepDir[i].newAcceleration      = 0;
 
 		// Set the no-pin halting conditions before changing the pins
 		// to avoid a race condition with the interrupt
-		StepDir[i].haltingCondition       = STATUS_NO_STEP_PIN | STATUS_NO_DIR_PIN;
+		StepDir[i].haltingCondition     = STATUS_NO_STEP_PIN | STATUS_NO_DIR_PIN;
+		StepDir[i].stallGuardPin        = &DummyPin;
+		StepDir[i].stepPin              = &DummyPin;
+		StepDir[i].dirPin               = &DummyPin;
 
-		StepDir[i].stallGuardPin          = &DummyPin;
-		StepDir[i].stepPin                = &DummyPin;
-		StepDir[i].dirPin                 = &DummyPin;
+		StepDir[i].stallGuardThreshold  = STALLGUARD_THRESHOLD;
 
-		StepDir[i].stallGuardThreshold    = STALLGUARD_THRESHOLD;
-
-		StepDir[i].mode                   = STEPDIR_INTERNAL;
-		StepDir[i].frequency              = STEPDIR_FREQUENCY;
+		StepDir[i].mode                 = STEPDIR_INTERNAL;
+		StepDir[i].frequency            = STEPDIR_FREQUENCY;
 
 		tmc_ramp_linear_init(&StepDir[i].ramp);
 		tmc_ramp_linear_set_maxVelocity(&StepDir[i].ramp, STEPDIR_DEFAULT_VELOCITY);

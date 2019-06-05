@@ -4,8 +4,6 @@
 	#include "tmc/helpers/API_Header.h"
 	#include "tmc/ramp/LinearRamp1.h"
 
-	// todo API 2: move higher level StepDir functions to API!? (ED)
-
 	#include "hal/HAL.h"
 
 	#define STEPDIR_FREQUENCY         (1 << 17)
@@ -45,8 +43,8 @@
 
 	typedef struct
 	{	// Generic parameters
-		uint8_t         targetReached;
-		uint8_t         haltingCondition;
+		uint8_t       targetReached;
+		uint8_t       haltingCondition;
 		// StallGuard
 		bool          stallGuardActive;
 		int           stallGuardThreshold;
@@ -58,15 +56,15 @@
 		StepDirSync   syncFlag; // Synchronisation flag between main code & interrupt
 		// Snapshot data
 		// Interrupt -> main code
-		int32_t         oldVelocity;
-		int32_t         oldVelAccu;
+		int32_t       oldVelocity;
+		int32_t       oldVelAccu;
 		// Main code -> interrupt
-		uint32_t        newAcceleration;
-		int32_t         stepDifference;
+		uint32_t      newAcceleration;
+		int32_t       stepDifference;
 		StepDirMode   mode;
-		uint32_t        frequency;
+		uint32_t      frequency;
 
-		TMC_LinearRamp ramp, ramp_old;
+		TMC_LinearRamp ramp;
 	} StepDirectionTypedef;
 
 	void StepDir_rotate(uint8_t channel, int velocity);
@@ -75,7 +73,7 @@
 	void StepDir_stop(uint8_t channel, StepDirStop stopType);
 	uint8_t StepDir_getStatus(uint8_t channel);
 	void StepDir_setPins(uint8_t channel, IOPinTypeDef *stepPin, IOPinTypeDef *dirPin, IOPinTypeDef *stallPin);
-	void StepDir_stallGuard(uint8_t channel, bool sg);
+	void StepDir_stallGuard(uint8_t channel, bool stall);
 
 	// ===== Setters =====
 	void StepDir_setActualPosition(uint8_t channel, int actualPosition);
