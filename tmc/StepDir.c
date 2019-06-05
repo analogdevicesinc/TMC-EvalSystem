@@ -295,19 +295,18 @@ void StepDir_setPins(uint8_t channel, IOPinTypeDef *stepPin, IOPinTypeDef *dirPi
 
 void StepDir_stallGuard(uint8_t channel, bool sg)
 {
-	static bool sg_old = false;
-
 	if(channel >= STEP_DIR_CHANNELS)
 		return;
 
 	if((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold)) {
 		StepDir[channel].stallGuardActive = true;
-		if((!sg_old) && sg)
+		if(sg)
+		{
 			StepDir_stop(channel, STOP_STALL);
+		}
 	} else {
 		StepDir[channel].stallGuardActive = false;
 	}
-	sg_old = sg;
 }
 
 // ===== Setters =====
