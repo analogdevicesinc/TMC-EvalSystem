@@ -245,6 +245,36 @@ void UART2_RX_TX_IRQHandler(void)
 	}
 }
 
+int UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t readLength)
+{
+	uart->rxtx.clearBuffers();
+	uart->rxtx.txN(data, writeLength);
+	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
+	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
+	 * periodic refresh of values gets requested right after the write request.
+	 */
+	wait(2);
+
+	// Abort early if no data needs to be read back
+	if (readLength <= 0)
+		return 0;
+
+	// Wait for reply with timeout limit
+	uint32_t timestamp = systick_getTick();
+	while(uart->rxtx.bytesAvailable() < readLength)
+	{
+		if(timeSince(timestamp) > UART_TIMEOUT_VALUE)
+		{
+			// Abort on timeout
+			return -1;
+		}
+	}
+
+	uart->rxtx.rxN(data, readLength);
+
+	return 0;
+}
+
 void UART_readInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t *value)
 {
 	uint8_t readData[8], dataRequest[4];

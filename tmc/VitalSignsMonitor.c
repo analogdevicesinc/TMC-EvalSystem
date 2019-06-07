@@ -136,11 +136,11 @@ void vitalsignsmonitor_checkVitalSigns()
 		errors |= VSM_BUSY | VSM_BUSY_CH2;
 
 	if(VitalSignsMonitor.brownOut)
-		errors |= VSM_ERRORS_VM | VSM_ERRORS_BROWNOUT;
+		errors |= VSM_WARNING_CPU_SUPPLY_LOW;
 	if(VitalSignsMonitor.brownOut & VSM_CH1	)
-		errors |= VSM_ERRORS_VM | VSM_ERRORS_BROWNOUT | VSM_ERRORS_BROWNOUT_CH1;
+		errors |= VSM_ERRORS_VM | VSM_ERRORS_BROWNOUT_CH1;
 	if(VitalSignsMonitor.brownOut & VSM_CH2	)
-		errors |= VSM_ERRORS_VM | VSM_ERRORS_BROWNOUT | VSM_ERRORS_BROWNOUT_CH2;
+		errors |= VSM_ERRORS_VM | VSM_ERRORS_BROWNOUT_CH2;
 
 	if(VitalSignsMonitor.overVoltage)
 		errors |= VSM_ERRORS_VM | VSM_ERRORS_OVERVOLTAGE;
@@ -163,7 +163,7 @@ void vitalsignsmonitor_checkVitalSigns()
 	// set status LED if not in debug mode
 	if(!VitalSignsMonitor.debugMode)
 	{
-		if(VitalSignsMonitor.errors & (~(VSM_BUSY | VSM_BUSY_CH1 | VSM_BUSY_CH2)))
+		if(VitalSignsMonitor.errors & (~(VSM_BUSY | VSM_BUSY_CH1 | VSM_BUSY_CH2 | VSM_WARNING_CPU_SUPPLY_LOW)))
 			HAL.LEDs->error.on();
 		else
 			HAL.LEDs->error.off();

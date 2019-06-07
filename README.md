@@ -14,7 +14,6 @@ For detailed changelog, see commit history.
 * Full TMC2160 support
 * Landungsbruecke HW v2.0 support with internal HWID detection for future revisions
 * Internal/external step/dir generator handling in FW and IDE
-* Begin TMC-Minion-EVAL support
 * Various bugfixes
 * Internal optimizations
 
