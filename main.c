@@ -21,21 +21,13 @@ const char *VersionString = MODULE_ID"V307"; // module id and version of the fir
 		0xFF                                             //reserved
 	};
 
-	__attribute__ ((section(".bldata"))) uint32_t BLMagic;
+	struct BootloaderConfig {
+		uint32_t BLMagic;
+		uint32_t drvEnableResetValue;
+	};
 
-	/*
-	 * Bootloader pin configuration
-	 * 2 Bits per pin.
-	 * 0b00: open
-	 * 0b01: low
-	 * 0b10: high
-	 * See Pins.ods for further layout details.
-	 */
-	__attribute__ ((section(".bldata"))) uint64_t pins_a; // PTA
-	__attribute__ ((section(".bldata"))) uint64_t pins_b; // PTB
-	__attribute__ ((section(".bldata"))) uint64_t pins_c; // PTC
-	__attribute__ ((section(".bldata"))) uint64_t pins_d; // PTD
-	__attribute__ ((section(".bldata"))) uint64_t pins_e; // PTE
+	// This struct gets placed at a specific address by the linker
+	struct BootloaderConfig __attribute__ ((section(".bldata"))) BLConfig;
 #endif
 
 
@@ -78,11 +70,8 @@ void shallForceBoot()
 static void init()
 {
 #if defined(Landungsbruecke)
-	pins_a = 0;
-	pins_b = 0;
-	pins_c = 0;
-	pins_d = 0;
-	pins_e = 0;
+	// Default value: Driver enable gets set high by the bootloader
+	BLConfig.drvEnableResetValue = 1;
 #endif
 
 	HAL.init();                  // Initialize Hardware Abstraction Layer

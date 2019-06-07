@@ -28,7 +28,7 @@
 	#define VSM_BUSY                    (1<<3)   // any board is busy
 	#define VSM_BUSY_CH1                (1<<4)   // motion controller board is busy
 	#define VSM_BUSY_CH2                (1<<5)   // driver board is busy
-	#define VSM_ERRORS_BROWNOUT         (1<<6)   // motor supply VM is to low for any board
+	#define VSM_WARNING_CPU_SUPPLY_LOW  (1<<6)   // motor supply VM is to low for the processor -> Supply over USB needed
 	#define VSM_ERRORS_BROWNOUT_CH1     (1<<7)   // motor supply VM is to low for motion controller board
 	#define VSM_ERRORS_BROWNOUT_CH2     (1<<8)   // motor supply VM is to low for driver board
 	#define VSM_ERRORS_OVERVOLTAGE      (1<<9)   // motor supply VM is to high for any board

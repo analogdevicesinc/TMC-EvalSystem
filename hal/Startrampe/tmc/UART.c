@@ -156,7 +156,7 @@ static void deInit()
 void USART2_IRQHandler(void)
 {
 	uint8_t byte;
-	
+
 	// Receive interrupt
 	if(USART2->SR & USART_FLAG_RXNE)
 	{
@@ -192,13 +192,43 @@ void USART2_IRQHandler(void)
 	if(USART2->SR & USART_FLAG_TC)
 	{
 		//Only if there are no more bytes left in the transmit buffer
-		if(buffers.tx.read == buffers.tx.wrote) 
+		if(buffers.tx.read == buffers.tx.wrote)
 		{
   		byte = USART2->DR;  //Ignore spurios echos of the last sent byte that sometimes occur.
 			UARTSendFlag = false;
 		}
 		USART_ClearITPendingBit(USART2, USART_IT_TC);
 	}
+}
+
+int UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t readLength)
+{
+	uart->rxtx.clearBuffers();
+	uart->rxtx.txN(data, writeLength);
+	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
+	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
+	 * periodic refresh of values gets requested right after the write request.
+	 */
+	wait(2);
+
+	// Abort early if no data needs to be read back
+	if (readLength <= 0)
+		return 0;
+
+	// Wait for reply with timeout limit
+	uint32_t timestamp = systick_getTick();
+	while(uart->rxtx.bytesAvailable() < readLength)
+	{
+		if(timeSince(timestamp) > UART_TIMEOUT_VALUE)
+		{
+			// Abort on timeout
+			return -1;
+		}
+	}
+
+	uart->rxtx.rxN(data, readLength);
+
+	return 0;
 }
 
 void UART_readInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t *value)
