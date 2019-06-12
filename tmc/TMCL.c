@@ -374,13 +374,17 @@ void ExecuteActualCommand()
 		Evalboards.ch2.writeRegister(ActualCommand.Motor, ActualCommand.Type, ActualCommand.Value.Int32);
 		break;
 	case TMCL_readRegisterChannel_1:
-		if(VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH1)
+		// Do not allow reads during brownout to prevent garbage data being used
+		// in read-modify-write operations. Bypass this safety with motor = 255
+		if ((VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH1) && ActualCommand.Motor != 255)
 			ActualReply.Status = REPLY_CHIP_READ_FAILED;
 		else
 			Evalboards.ch1.readRegister(ActualCommand.Motor, ActualCommand.Type, &ActualReply.Value.Int32);
 		break;
 	case TMCL_readRegisterChannel_2:
-		if(VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH2)
+		// Do not allow reads during brownout to prevent garbage data being used
+		// in read-modify-write operations. Bypass this safety with motor = 255
+		if ((VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH2) && ActualCommand.Motor != 255)
 			ActualReply.Status = REPLY_CHIP_READ_FAILED;
 		else
 			Evalboards.ch2.readRegister(ActualCommand.Motor, ActualCommand.Type, &ActualReply.Value.Int32);
