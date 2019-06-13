@@ -627,7 +627,7 @@ static void deInit(void)
 static uint8_t reset()
 {
 	StepDir_init();
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
 
 	return tmc2209_reset(&TMC2209);
 }
@@ -713,7 +713,7 @@ void TMC2209_init(void)
 	tmc2209_init(&TMC2209, 0, TMC2209_config, &tmc2209_defaultRegisterResetState[0]);
 
 	StepDir_init();
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);
 
