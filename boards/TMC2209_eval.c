@@ -431,7 +431,23 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = StepDir_getStallGuardThreshold(motor);
 		} else if(readWrite == WRITE) {
+			// Store the threshold value in the internal StepDir generator
 			StepDir_setStallGuardThreshold(motor, *value);
+
+			// Convert the value for the TCOOLTHRS register
+			// The IC only sends out Stallguard errors while TCOOLTHRS >= TSTEP >= TPWMTHRS
+			// The TSTEP value is measured. To prevent measurement inaccuracies hiding
+			// a stall signal, we decrease the needed velocity by roughly 12% before converting it.
+			*value -= (*value) >> 3;
+			if (*value)
+			{
+				*value = MIN(0x000FFFFF, (1<<24) / (*value));
+			}
+			else
+			{
+				*value = 0x000FFFFF;
+			}
+			tmc2209_writeInt(motorToIC(motor), TMC2209_TCOOLTHRS, *value);
 		}
 		break;
 	case 182:
