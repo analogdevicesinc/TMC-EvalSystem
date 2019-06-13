@@ -710,7 +710,7 @@ void TMC2209_init(void)
 	Evalboards.ch2.deInit               = deInit;
 	Evalboards.ch2.periodicJob          = periodicJob;
 
-	tmc2209_init(&TMC2209, 0, TMC2209_config, &tmc2209_defaultRegisterResetState[0]);
+	tmc2209_init(&TMC2209, 0, 0, TMC2209_config, &tmc2209_defaultRegisterResetState[0]);
 
 	StepDir_init();
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
