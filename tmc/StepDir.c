@@ -158,6 +158,12 @@ void TIMER_INTERRUPT()
 		// Reset step output (falling edge of last pulse)
 		*currCh->stepPin->resetBitRegister = currCh->stepPin->bitWeight;
 
+		// Check StallGuard pin if one is registered
+		if (!IS_DUMMY_PIN(currCh->stallGuardPin))
+		{
+			StepDir_stallGuard(ch, HAL.IOs->config->isHigh(currCh->stallGuardPin));
+		}
+
 		// Compute ramp
 		tmc_ramp_linear_compute(&currCh->ramp, 1); // delta = 1 => velocity unit: steps/delta-tick
 
@@ -225,10 +231,7 @@ void StepDir_periodicJob(uint8_t channel)
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	if (!IS_DUMMY_PIN(StepDir[channel].stallGuardPin))
-	{
-		StepDir_stallGuard(channel, HAL.IOs->config->isHigh(StepDir[channel].stallGuardPin));
-	}
+	// No work to do here
 }
 
 void StepDir_stop(uint8_t channel, StepDirStop stopType)
