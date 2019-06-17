@@ -5,9 +5,6 @@
 #undef  TMC2590_MAX_VELOCITY
 #define TMC2590_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
-#define ERRORS_I_STS          (1<<0)  // stand still current too high
-#define ERRORS_I_TIMEOUT_STS  (1<<1)  // current limited in stand still to prevent driver from demage
-
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  600  // VM[V/10] max +10%
 
@@ -37,10 +34,7 @@ static uint8_t reset();
 static uint8_t restore();
 static void enableDriver(DriverState state);
 
-static void on_standstill_changed(uint8_t newStandstill);
-
 static uint32_t compatibilityMode = 1;
-static uint8_t standstill = 1;
 
 static SPIChannelTypeDef *TMC2590_SPIChannel;
 static TMC2590TypeDef TMC2590;
@@ -121,9 +115,6 @@ static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
-
-	TMC2590.isStandStillCurrentLimit  = 0;
-	TMC2590.isStandStillOverCurrent   = 0;
 
 	StepDir_rotate(motor, velocity);
 
@@ -229,8 +220,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC2590.runCurrentScale;
 		} else if(readWrite == WRITE) {
 			TMC2590.runCurrentScale = *value;
-			if(standstill == false)
+			if(TMC2590.isStandStillCurrent == false)
+			{
 				TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.runCurrentScale);
+			}
 		}
 		break;
 	case 7:
@@ -239,8 +232,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC2590.standStillCurrentScale;
 		} else if(readWrite == WRITE) {
 			TMC2590.standStillCurrentScale = *value;
-			if(standstill == true)
+			if(TMC2590.isStandStillCurrent == true)
+			{
 				TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.standStillCurrentScale);
+			}
 		}
 		break;
 	case 8:
@@ -635,29 +630,12 @@ static void deInit(void)
 	StepDir_deInit();
 }
 
-static void on_standstill_changed(uint8_t newStandstill)
-{
-	if(newStandstill == true) {
-		TMC2590.runCurrentScale = TMC2590_FIELD_READ(&TMC2590, TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT);
-		TMC2590_FIELD_UPDATE(&TMC2590, TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.standStillCurrentScale);
-	} else if(newStandstill == false) {
-		TMC2590.standStillCurrentScale = TMC2590_FIELD_READ(&TMC2590, TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT);
-		TMC2590_FIELD_UPDATE(&TMC2590, TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.runCurrentScale);
-	}
-}
-
 static void periodicJob(uint32_t tick)
 {
 	static uint8_t lastCoolStepState = 0;
-	uint8_t stst;
 
-	if((stst = TMC2590_FIELD_READ(&TMC2590, TMC2590_DRVCTRL, TMC2590_STST_MASK, TMC2590_STST_SHIFT)) != standstill) {
-		on_standstill_changed(stst);
-		standstill = stst;
-	}
-
-	Evalboards.ch2.errors = (TMC2590.isStandStillOverCurrent) 	? (Evalboards.ch2.errors | ERRORS_I_STS) 			: (Evalboards.ch2.errors & ~ERRORS_I_STS);
-	Evalboards.ch2.errors = (TMC2590.isStandStillCurrentLimit) 	? (Evalboards.ch2.errors | ERRORS_I_TIMEOUT_STS) 	: (Evalboards.ch2.errors & ~ERRORS_I_TIMEOUT_STS);
+	tmc2590_periodicJob(&TMC2590, tick);
+	StepDir_periodicJob(DEFAULT_MOTOR);
 
 	uint8_t currCoolStepState = (abs(StepDir_getActualVelocity(DEFAULT_MOTOR)) >= TMC2590.coolStepThreshold);
 	if(currCoolStepState != lastCoolStepState)
@@ -667,9 +645,6 @@ static void periodicJob(uint32_t tick)
 
 		lastCoolStepState = currCoolStepState;
 	}
-
-	tmc2590_periodicJob(&TMC2590, tick);
-	StepDir_periodicJob(DEFAULT_MOTOR);
 }
 
 static uint8_t reset()
