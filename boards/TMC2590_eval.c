@@ -13,9 +13,6 @@
 
 #define MOTORS 1
 
-#define I_STAND_STILL 5
-#define T_STAND_STILL 1000
-
 #define DEFAULT_MOTOR 0
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
@@ -732,9 +729,6 @@ void TMC2590_init(void)
 	TMC2590_SPIChannel = &HAL.SPI->ch2;
 	TMC2590_SPIChannel->CSN = Pins.CSN;
 
-	TMC2590.standStillCurrentScale  = I_STAND_STILL;
-	TMC2590.standStillTimeout       = T_STAND_STILL;
-
 	StepDir_init();
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.SG_TST);
 
@@ -742,8 +736,6 @@ void TMC2590_init(void)
 
 	Evalboards.ch2.config->restore      = restore;
 	Evalboards.ch2.config->reset        = reset;
-	Evalboards.ch2.config->state        = CONFIG_READY; // Not used, leave this as CONFIG_READY to indicate chip not being busy
-	Evalboards.ch2.config->configIndex  = 0;
 
 	Evalboards.ch2.rotate               = rotate;
 	Evalboards.ch2.right                = right;
