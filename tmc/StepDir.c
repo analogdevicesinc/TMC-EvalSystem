@@ -165,7 +165,7 @@ void TIMER_INTERRUPT()
 		}
 
 		// Compute ramp
-		int32_t dx = tmc_ramp_linear_compute(&currCh->ramp, 1); // delta = 1 => velocity unit: steps/delta-tick
+		int32_t dx = tmc_ramp_linear_compute(&currCh->ramp);
 
 		// Step
 		if (dx == 0) // No change in position -> skip step generation
