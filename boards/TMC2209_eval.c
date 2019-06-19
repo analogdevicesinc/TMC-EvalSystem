@@ -400,14 +400,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 174:
 		// stallGuard2 threshold
 		if(readWrite == READ) {
-			//*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SGT_MASK, TMC2209_SGT_SHIFT);
-			//*value = StepDir_getStallGuardThreshold(motor);
 			*value = tmc2209_readInt(motorToIC(motor), TMC2209_SGTHRS);
-			//*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
 			tmc2209_writeInt(motorToIC(motor), TMC2209_SGTHRS, *value);
-			//StepDir_setStallGuardThreshold(motor, *value);
-			//TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SGT_MASK, TMC2209_SGT_SHIFT, *value);
 		}
 		break;
 	case 179:
