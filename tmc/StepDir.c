@@ -231,7 +231,15 @@ void StepDir_periodicJob(uint8_t channel)
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	// No work to do here
+	// Check stallguard velocity threshold
+	if ((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold))
+	{
+		StepDir[channel].stallGuardActive = true;
+	}
+	else
+	{
+		StepDir[channel].stallGuardActive = false;
+	}
 }
 
 void StepDir_stop(uint8_t channel, StepDirStop stopType)
@@ -304,9 +312,7 @@ void StepDir_stallGuard(uint8_t channel, bool stall)
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	StepDir[channel].stallGuardActive = ((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold));
-
-	if(StepDir[channel].stallGuardActive && stall)
+	if (StepDir[channel].stallGuardActive && stall)
 	{
 		StepDir_stop(channel, STOP_STALL);
 	}
