@@ -53,20 +53,46 @@ static PinsTypeDef Pins;
 
 static uint8_t restore(void);
 
-void tmc2208_writeRegister(uint8_t motor, uint8_t address, int32_t value)
+static inline TMC2208TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
-	UART_writeInt(TMC2208_UARTChannel, tmc2208_get_slave(&TMC2208), address, value);
-	TMC2208.config->shadowRegister[TMC_ADDRESS(address)] = value;
+
+	return &TMC2208;
+}
+
+static inline UART_Config *channelToUART(uint8_t channel)
+{
+	UNUSED(channel);
+
+	return TMC2208_UARTChannel;
+}
+
+// => UART wrapper
+// Write [writeLength] bytes from the [data] array.
+// If [readLength] is greater than zero, read [readLength] bytes from the
+// [data] array.
+void tmc2208_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	UART_readWrite(channelToUART(channel), data, writeLength, readLength);
+}
+// <= UART wrapper
+
+// => CRC wrapper
+// Return the CRC8 of [length] bytes of data stored in the [data] array.
+uint8_t tmc2208_CRC8(uint8_t *data, size_t length)
+{
+	return TMC2208_CRC(data, length);
+}
+// <= CRC wrapper
+
+void tmc2208_writeRegister(uint8_t motor, uint8_t address, int32_t value)
+{
+	tmc2208_writeInt(motorToIC(motor), address, value);
 }
 
 void tmc2208_readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
-	UNUSED(motor);
-	if(TMC_IS_READABLE(TMC2208.registerAccess[TMC_ADDRESS(address)]))
-		UART_readInt(TMC2208_UARTChannel, tmc2208_get_slave(&TMC2208), address, value);
-	else
-		*value = TMC2208.config->shadowRegister[TMC_ADDRESS(address)];
+	*value = tmc2208_readInt(motorToIC(motor), address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
