@@ -177,7 +177,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = tmc2208_get_slave(&TMC2208);
 		} else if(readWrite == WRITE) {
-			tmc2208_set_slave(&TMC2208, *value);
+			errors |= TMC_ERROR_TYPE;
 		}
 		break;
 	default:
