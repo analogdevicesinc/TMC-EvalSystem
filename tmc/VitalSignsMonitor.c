@@ -5,16 +5,16 @@
 #include "boards/Board.h"
 #include "hal/HAL.h"
 
-	#define VM_MIN_INTERFACE_BOARD  70   // minimum motor supply voltage for system in [100mV]
-	#define VM_MAX_INTERFACE_BOARD  700  // maximum motor supply voltage for system in [100mV]
-	#define VM_FACTOR               713  // ADC reaches limit at VM = 71.3V => VM Factor (in 100mV) = 713
+#define VM_MIN_INTERFACE_BOARD  70   // minimum motor supply voltage for system in [100mV]
+#define VM_MAX_INTERFACE_BOARD  700  // maximum motor supply voltage for system in [100mV]
+#define VM_FACTOR               713  // ADC reaches limit at VM = 71.3V => VM Factor (in 100mV) = 713
 
-	// Status LED frequencies
-	// Values are time in ms between LED toggles
-	#define VSM_HEARTRATE_NORMAL  500  // Normal:   1 Hz
-	#define VSM_HEARTRATE_FAST    50   // Busy:    10 Hz
+// Status LED frequencies
+// Values are time in ms between LED toggles
+#define VSM_HEARTRATE_NORMAL  500  // Normal:   1 Hz
+#define VSM_HEARTRATE_FAST    50   // Busy:    10 Hz
 
-	#define VSM_BROWNOUT_DELAY 100 // Delay (in 10ms) between voltage (re-)application and configuration restoration
+#define VSM_BROWNOUT_DELAY 100 // Delay (in 10ms) between voltage (re-)application and configuration restoration
 
 VitalSignsMonitorTypeDef VitalSignsMonitor =
 {
@@ -54,6 +54,7 @@ void checkVM()
 {
 	uint32_t VM;
 	static uint8_t stable = VSM_BROWNOUT_DELAY + 1; // delay value + 1 is the state during normal voltage levels - set here to prevent restore shortly after boot
+	static uint8_t vio_state = 1;
 
 	VM = *HAL.ADCs->VM;              // read ADC value for motor supply VM
 	VM = (VM*VM_FACTOR)/ADC_VM_RES;  // calculate voltage from ADC value
@@ -73,6 +74,20 @@ void checkVM()
 	// Global minimum voltage check (skipped if a minimum voltage of 0 is set by a board)
 	if(Evalboards.ch1.VMMin && Evalboards.ch2.VMMin)
 		if(VM <	VM_MIN_INTERFACE_BOARD)  VitalSignsMonitor.brownOut  |= VSM_CHX;
+
+	if((VitalSignsMonitor.errors & VSM_ERRORS_CH1) || (VitalSignsMonitor.errors & VSM_ERRORS_CH2)) // VIO low in CH1
+	{
+		if((Evalboards.ch1.errors & VSM_ERRORS_VIO_LOW) || (Evalboards.ch2.errors & VSM_ERRORS_VIO_LOW))
+		{
+			vio_state = 0;
+		}
+	}
+	else if(vio_state == 0) // VIO high
+	{
+		Evalboards.ch2.config->reset();
+		Evalboards.ch1.config->reset();
+		vio_state = 1;
+	}
 
 	// after brownout all settings are restored to the boards
 	// this happens after supply was stable for a set delay (checkVM() is called every 10 ms/systicks)

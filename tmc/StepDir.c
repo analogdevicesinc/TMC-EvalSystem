@@ -304,17 +304,14 @@ void StepDir_stallGuard(uint8_t channel, bool stall)
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	if ((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold))
+	StepDir[channel].stallGuardActive = ((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold));
+
+	if(StepDir[channel].stallGuardActive || !(IS_DUMMY_PIN(StepDir[channel].stallGuardPin)))
 	{
-		StepDir[channel].stallGuardActive = true;
 		if (stall)
 		{
 			StepDir_stop(channel, STOP_STALL);
 		}
-	}
-	else
-	{
-		StepDir[channel].stallGuardActive = false;
 	}
 }
 
