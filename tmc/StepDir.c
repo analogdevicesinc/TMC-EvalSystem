@@ -247,10 +247,10 @@ void StepDir_stop(uint8_t channel, StepDirStop stopType)
 		break;
 	case STOP_STALL:
 		StepDir[channel].haltingCondition |= STATUS_STALLED;
-//		tmc_ramp_linear_set_rampVelocity(&StepDir[channel].ramp, 0);
-//		StepDir[channel].ramp.accumulatorVelocity = 0;
-//		tmc_ramp_linear_set_targetVelocity(&StepDir[channel].ramp, 0);
-//		StepDir[channel].ramp.accelerationSteps = 0;
+		tmc_ramp_linear_set_rampVelocity(&StepDir[channel].ramp, 0);
+		StepDir[channel].ramp.accumulatorVelocity = 0;
+		tmc_ramp_linear_set_targetVelocity(&StepDir[channel].ramp, 0);
+		StepDir[channel].ramp.accelerationSteps = 0;
 		break;
 	}
 }
@@ -306,12 +306,9 @@ void StepDir_stallGuard(uint8_t channel, bool stall)
 
 	StepDir[channel].stallGuardActive = ((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold));
 
-	if(StepDir[channel].stallGuardActive || !(IS_DUMMY_PIN(StepDir[channel].stallGuardPin)))
+	if(StepDir[channel].stallGuardActive && stall)
 	{
-		if (stall)
-		{
-			StepDir_stop(channel, STOP_STALL);
-		}
+		StepDir_stop(channel, STOP_STALL);
 	}
 }
 
