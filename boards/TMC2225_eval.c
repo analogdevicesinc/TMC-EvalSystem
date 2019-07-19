@@ -47,6 +47,7 @@ typedef struct
 	IOPinTypeDef  *MS2;
 	IOPinTypeDef  *DIAG;
 	IOPinTypeDef  *INDEX;
+	IOPinTypeDef  *UC_PWM;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -529,6 +530,7 @@ void TMC2225_init(void)
 	Pins.MS2      = &HAL.IOs->pins->DIO4;
 	Pins.DIAG     = &HAL.IOs->pins->DIO1;
 	Pins.INDEX    = &HAL.IOs->pins->DIO2;
+	Pins.UC_PWM   = &HAL.IOs->pins->DIO9;
 
 	HAL.IOs->config->toOutput(Pins.DRV_ENN);
 	HAL.IOs->config->toOutput(Pins.STEP);
@@ -574,6 +576,18 @@ void TMC2225_init(void)
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);
+
+#if defined(Startrampe)
+	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_PinAFConfig(Pins.UC_PWM->port, Pins.UC_PWM->bit, GPIO_AF_TIM1);
+#elif defined(Landungsbruecke)
+	HAL.IOs->config->toOutput(Pins.UC_PWM);
+	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#endif
+
+	HAL.IOs->config->set(Pins.UC_PWM);
+	Timer.init();
+	Timer.setDuty(TIMER_CHANNEL_3, 0);
 
 	enableDriver(DRIVER_ENABLE);
 };
