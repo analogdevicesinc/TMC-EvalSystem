@@ -165,14 +165,14 @@ void TIMER_INTERRUPT()
 		}
 
 		// Compute ramp
-		tmc_ramp_linear_compute(&currCh->ramp, 1); // delta = 1 => velocity unit: steps/delta-tick
+		int32_t dx = tmc_ramp_linear_compute(&currCh->ramp, 1); // delta = 1 => velocity unit: steps/delta-tick
 
 		// Step
-		if (tmc_ramp_linear_get_dx(&currCh->ramp) == 0) // No change in position -> skip step generation
+		if (dx == 0) // No change in position -> skip step generation
 			goto skipStep;
 
 		// Direction
-		*((tmc_ramp_linear_get_dx(&currCh->ramp) > 0) ? currCh->dirPin->resetBitRegister : currCh->dirPin->setBitRegister) = currCh->dirPin->bitWeight;
+		*((dx > 0) ? currCh->dirPin->resetBitRegister : currCh->dirPin->setBitRegister) = currCh->dirPin->bitWeight;
 
 		// Set step output (rising edge of step pulse)
 		*currCh->stepPin->setBitRegister = currCh->stepPin->bitWeight;
