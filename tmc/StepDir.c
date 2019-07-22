@@ -588,20 +588,17 @@ void StepDir_init()
 
 		FTM1_MODE |= FTM_MODE_WPDIS_MASK; // disable write protection, FTM specific register are available
 
-		FTM1_SC |= FTM_SC_CLKS(1) | FTM_SC_PS(0); // Clock source System Clock,divided by 0 Prescaler
-
 		FTM1_MODE |= FTM_MODE_FTMEN_MASK | FTM_MODE_FAULTM_MASK; //enable interrupt and select all faults
 
-		// (MOD - CNTIN + 1) / CLKFrequency = Timer Period
-		FTM1_CNTIN = 65535 - 366;
+		// Timer frequency = Bus clk frequency / (MOD - CNTIN + 1)
+		// The datasheet documents the FTM using the system/core clock, but it's
+		// actually using the bus clock
+		FTM1_MOD   = 366;
+		FTM1_CNTIN = 0;
 
-		FTM1_CONF |= FTM_CONF_NUMTOF(0); // The TOF bit is set for each counter overflow
-
-		// Edge-Aligned PWM (EPWM) mode
-		FTM1_C0SC |= FTM_CnSC_MSB_MASK | FTM_CnSC_ELSB_MASK; //FTM_CnSC_CHIE_MASK //
-
-		// enable FTM1 Timer Overflow interrupt
-		FTM1_SC |= (uint32_t) (FTM_SC_TOIE_MASK);
+		// Select Bus clock as clock source, set prescaler divisor to 2^0 = 1,
+		// enable timer overflow interrupt
+		FTM1_SC |= FTM_SC_CLKS(1) | FTM_SC_PS(0) | FTM_SC_TOIE_MASK;
 
 		// set FTM1 interrupt handler
 		enable_irq(INT_FTM1-16);
