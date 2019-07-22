@@ -610,6 +610,20 @@ void StepDir_deInit()
 	#if defined(Startrampe)
 		TIM_DeInit(TIM2);
 	#elif defined(Landungsbruecke)
+		// Disable interrupt in FTM module
+		FTM1_SC &= ~FTM_SC_TOIE_MASK;
+
+		// Disable the FTM module
+		FTM1_MODE &= ~FTM_MODE_FTMEN_MASK;
+
+		// Disable the interrupt
+		disable_irq(INT_FTM1-16);
+
+		// Ensure that the module is disabled BEFORE clock gating gets disabled.
+		// Without this the processor can crash under heavy FTM interrupt load.
+		asm volatile("DMB");
+
+		// Disable clock gating for the FTM module
 		SIM_SCGC6 |= SIM_SCGC6_FTM1_MASK;
 		SIM_SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
 	#endif
