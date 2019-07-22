@@ -8,6 +8,9 @@
 #undef  TMC2130_MAX_VELOCITY
 #define TMC2130_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+// Stepdir precision: 2^17 -> 17 digits of precision
+#define STEPDIR_PRECISION (1 << 17)
+
 #define TMC2130_DEFAULT_MOTOR 0
 
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -795,7 +798,7 @@ static uint8_t reset()
 
 	tmc2130_reset(&TMC2130);
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
 
 	return 1;
@@ -869,7 +872,7 @@ void TMC2130_init(void)
 	TMC2130_SPIChannel->CSN  = &HAL.IOs->pins->SPI2_CSN0;
 
 	// Initialize the software StepDir generator
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
 
 	Evalboards.ch2.type = (void *)&TMC2130;

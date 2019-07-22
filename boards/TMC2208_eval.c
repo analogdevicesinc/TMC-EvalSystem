@@ -5,6 +5,9 @@
 #undef  TMC2208_MAX_VELOCITY
 #define TMC2208_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+// Stepdir precision: 2^17 -> 17 digits of precision
+#define STEPDIR_PRECISION (1 << 17)
+
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
@@ -264,7 +267,7 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 
 	return tmc2208_reset(&TMC2208);
@@ -347,7 +350,7 @@ void TMC2208_init(void)
 
 	tmc2208_init(&TMC2208, 0, TMC2208_config, &tmc2208_defaultRegisterResetState[0]);
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);

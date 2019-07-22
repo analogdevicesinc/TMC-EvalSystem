@@ -447,6 +447,14 @@ void StepDir_setFrequency(uint8_t channel, uint32_t frequency)
 	StepDir[channel].frequency = frequency;
 }
 
+void StepDir_setPrecision(uint8_t channel, uint32_t precision)
+{
+	if (channel >= STEP_DIR_CHANNELS)
+		return;
+
+	tmc_ramp_linear_set_precision(&StepDir[channel].ramp, precision);
+}
+
 // ===== Getters =====
 int StepDir_getActualPosition(uint8_t channel)
 {
@@ -520,6 +528,14 @@ uint32_t StepDir_getFrequency(uint8_t channel)
 	return StepDir[channel].frequency;
 }
 
+uint32_t StepDir_getPrecision(uint8_t channel)
+{
+	if (channel >= STEP_DIR_CHANNELS)
+		return 0;
+
+	return tmc_ramp_linear_get_precision(&StepDir[channel].ramp);
+}
+
 int32_t StepDir_getMaxAcceleration(uint8_t channel)
 {
 	if (channel >= STEP_DIR_CHANNELS)
@@ -534,8 +550,14 @@ int32_t StepDir_getMaxAcceleration(uint8_t channel)
 
 // ===================
 
-void StepDir_init()
+void StepDir_init(uint32_t precision)
 {
+	if (precision == 0)
+	{
+		// Use default precision
+		precision = STEPDIR_FREQUENCY;
+	}
+
 	// StepDir Channel initialisation
 	for (int i = 0; i < STEP_DIR_CHANNELS; i++)
 	{
@@ -553,9 +575,10 @@ void StepDir_init()
 		StepDir[i].stallGuardThreshold  = STALLGUARD_THRESHOLD;
 
 		StepDir[i].mode                 = STEPDIR_INTERNAL;
-		StepDir[i].frequency            = STEPDIR_FREQUENCY;
+		StepDir[i].frequency            = precision;
 
 		tmc_ramp_linear_init(&StepDir[i].ramp);
+		tmc_ramp_linear_set_precision(&StepDir[i].ramp, precision);
 		tmc_ramp_linear_set_maxVelocity(&StepDir[i].ramp, STEPDIR_DEFAULT_VELOCITY);
 		tmc_ramp_linear_set_acceleration(&StepDir[i].ramp, STEPDIR_DEFAULT_ACCELERATION);
 	}
@@ -591,10 +614,11 @@ void StepDir_init()
 		FTM1_MODE |= FTM_MODE_FTMEN_MASK | FTM_MODE_FAULTM_MASK; //enable interrupt and select all faults
 
 		// Timer frequency = Bus clk frequency / (MOD - CNTIN + 1)
+		//     => MOD = (f_bus / f_timer) + CNTIN - 1
 		// The datasheet documents the FTM using the system/core clock, but it's
 		// actually using the bus clock
-		FTM1_MOD   = 366;
 		FTM1_CNTIN = 0;
+		FTM1_MOD   = (48000000 / precision) - 1;
 
 		// Select Bus clock as clock source, set prescaler divisor to 2^0 = 1,
 		// enable timer overflow interrupt
