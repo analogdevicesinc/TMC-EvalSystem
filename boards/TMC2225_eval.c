@@ -591,9 +591,10 @@ void TMC2225_init(void)
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #endif
 
+	// Initial PWM for VREF scaling: 75% duty cycle
 	HAL.IOs->config->set(Pins.UC_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_3, 0);
+	Timer.setDuty(TIMER_CHANNEL_3, 75*TIMER_MAX / 100);
 
 	enableDriver(DRIVER_ENABLE);
 };
