@@ -547,7 +547,7 @@ void TMC2225_init(void)
 	HAL.IOs->config->toInput(Pins.INDEX);
 
 	TMC2225_UARTChannel = HAL.UART;
-	TMC2225_UARTChannel->pinout = UART_PINS_1;
+	TMC2225_UARTChannel->pinout = UART_PINS_2;
 	TMC2225_UARTChannel->rxtx.init();
 
 	TMC2225_config = Evalboards.ch2.config;
