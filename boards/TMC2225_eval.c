@@ -204,11 +204,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 	case 6:
-		// UART slave address
+		// Maximum current
 		if(readWrite == READ) {
-			*value = tmc2225_get_slave(&TMC2225);
+			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_IHOLD_IRUN, TMC2225_IRUN_MASK, TMC2225_IRUN_SHIFT);
 		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
+			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_IHOLD_IRUN, TMC2225_IRUN_MASK, TMC2225_IRUN_SHIFT, *value);
 		}
 		break;
 	case 7:
