@@ -560,6 +560,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 	case 2:
 		*value = tmc2209_get_slave(motorToIC(motor));
 		break;
+	case 3:
+		*value = Timer.getDuty(TIMER_CHANNEL_3) * 100 / TIMER_MAX;
+		break;
 	case 4:
 		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
 		break;
