@@ -165,14 +165,14 @@ void TIMER_INTERRUPT()
 		}
 
 		// Compute ramp
-		tmc_ramp_linear_compute(&currCh->ramp, 1); // delta = 1 => velocity unit: steps/delta-tick
+		int32_t dx = tmc_ramp_linear_compute(&currCh->ramp);
 
 		// Step
-		if (tmc_ramp_linear_get_dx(&currCh->ramp) == 0) // No change in position -> skip step generation
+		if (dx == 0) // No change in position -> skip step generation
 			goto skipStep;
 
 		// Direction
-		*((tmc_ramp_linear_get_dx(&currCh->ramp) > 0) ? currCh->dirPin->resetBitRegister : currCh->dirPin->setBitRegister) = currCh->dirPin->bitWeight;
+		*((dx > 0) ? currCh->dirPin->resetBitRegister : currCh->dirPin->setBitRegister) = currCh->dirPin->bitWeight;
 
 		// Set step output (rising edge of step pulse)
 		*currCh->stepPin->setBitRegister = currCh->stepPin->bitWeight;
@@ -231,7 +231,15 @@ void StepDir_periodicJob(uint8_t channel)
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	// No work to do here
+	// Check stallguard velocity threshold
+	if ((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold))
+	{
+		StepDir[channel].stallGuardActive = true;
+	}
+	else
+	{
+		StepDir[channel].stallGuardActive = false;
+	}
 }
 
 void StepDir_stop(uint8_t channel, StepDirStop stopType)
@@ -304,9 +312,7 @@ void StepDir_stallGuard(uint8_t channel, bool stall)
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	StepDir[channel].stallGuardActive = ((StepDir[channel].stallGuardThreshold != 0) && (abs(tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp)) >= StepDir[channel].stallGuardThreshold));
-
-	if(StepDir[channel].stallGuardActive && stall)
+	if (StepDir[channel].stallGuardActive && stall)
 	{
 		StepDir_stop(channel, STOP_STALL);
 	}
@@ -441,6 +447,14 @@ void StepDir_setFrequency(uint8_t channel, uint32_t frequency)
 	StepDir[channel].frequency = frequency;
 }
 
+void StepDir_setPrecision(uint8_t channel, uint32_t precision)
+{
+	if (channel >= STEP_DIR_CHANNELS)
+		return;
+
+	tmc_ramp_linear_set_precision(&StepDir[channel].ramp, precision);
+}
+
 // ===== Getters =====
 int StepDir_getActualPosition(uint8_t channel)
 {
@@ -514,6 +528,14 @@ uint32_t StepDir_getFrequency(uint8_t channel)
 	return StepDir[channel].frequency;
 }
 
+uint32_t StepDir_getPrecision(uint8_t channel)
+{
+	if (channel >= STEP_DIR_CHANNELS)
+		return 0;
+
+	return tmc_ramp_linear_get_precision(&StepDir[channel].ramp);
+}
+
 int32_t StepDir_getMaxAcceleration(uint8_t channel)
 {
 	if (channel >= STEP_DIR_CHANNELS)
@@ -528,8 +550,14 @@ int32_t StepDir_getMaxAcceleration(uint8_t channel)
 
 // ===================
 
-void StepDir_init()
+void StepDir_init(uint32_t precision)
 {
+	if (precision == 0)
+	{
+		// Use default precision
+		precision = STEPDIR_FREQUENCY;
+	}
+
 	// StepDir Channel initialisation
 	for (int i = 0; i < STEP_DIR_CHANNELS; i++)
 	{
@@ -547,9 +575,10 @@ void StepDir_init()
 		StepDir[i].stallGuardThreshold  = STALLGUARD_THRESHOLD;
 
 		StepDir[i].mode                 = STEPDIR_INTERNAL;
-		StepDir[i].frequency            = STEPDIR_FREQUENCY;
+		StepDir[i].frequency            = precision;
 
 		tmc_ramp_linear_init(&StepDir[i].ramp);
+		tmc_ramp_linear_set_precision(&StepDir[i].ramp, precision);
 		tmc_ramp_linear_set_maxVelocity(&StepDir[i].ramp, STEPDIR_DEFAULT_VELOCITY);
 		tmc_ramp_linear_set_acceleration(&StepDir[i].ramp, STEPDIR_DEFAULT_ACCELERATION);
 	}
@@ -582,20 +611,18 @@ void StepDir_init()
 
 		FTM1_MODE |= FTM_MODE_WPDIS_MASK; // disable write protection, FTM specific register are available
 
-		FTM1_SC |= FTM_SC_CLKS(1) | FTM_SC_PS(0); // Clock source System Clock,divided by 0 Prescaler
-
 		FTM1_MODE |= FTM_MODE_FTMEN_MASK | FTM_MODE_FAULTM_MASK; //enable interrupt and select all faults
 
-		// (MOD - CNTIN + 1) / CLKFrequency = Timer Period
-		FTM1_CNTIN = 65535 - 366;
+		// Timer frequency = Bus clk frequency / (MOD - CNTIN + 1)
+		//     => MOD = (f_bus / f_timer) + CNTIN - 1
+		// The datasheet documents the FTM using the system/core clock, but it's
+		// actually using the bus clock
+		FTM1_CNTIN = 0;
+		FTM1_MOD   = (48000000 / precision) - 1;
 
-		FTM1_CONF |= FTM_CONF_NUMTOF(0); // The TOF bit is set for each counter overflow
-
-		// Edge-Aligned PWM (EPWM) mode
-		FTM1_C0SC |= FTM_CnSC_MSB_MASK | FTM_CnSC_ELSB_MASK; //FTM_CnSC_CHIE_MASK //
-
-		// enable FTM1 Timer Overflow interrupt
-		FTM1_SC |= (uint32_t) (FTM_SC_TOIE_MASK);
+		// Select Bus clock as clock source, set prescaler divisor to 2^0 = 1,
+		// enable timer overflow interrupt
+		FTM1_SC |= FTM_SC_CLKS(1) | FTM_SC_PS(0) | FTM_SC_TOIE_MASK;
 
 		// set FTM1 interrupt handler
 		enable_irq(INT_FTM1-16);
@@ -607,8 +634,26 @@ void StepDir_deInit()
 	#if defined(Startrampe)
 		TIM_DeInit(TIM2);
 	#elif defined(Landungsbruecke)
-		SIM_SCGC6 |= SIM_SCGC6_FTM1_MASK;
-		SIM_SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
+		// Only disable the module if it has been enabled before
+		if (SIM_SCGC6 & SIM_SCGC6_FTM1_MASK)
+		{
+			// Disable interrupt in FTM module
+			FTM1_SC &= ~FTM_SC_TOIE_MASK;
+
+			// Disable the FTM module
+			FTM1_MODE &= ~FTM_MODE_FTMEN_MASK;
+
+			// Disable the interrupt
+			disable_irq(INT_FTM1-16);
+
+			// Ensure that the module is disabled BEFORE clock gating gets disabled.
+			// Without this the processor can crash under heavy FTM interrupt load.
+			asm volatile("DMB");
+
+			// Disable clock gating for the FTM module
+			SIM_SCGC6 |= SIM_SCGC6_FTM1_MASK;
+			SIM_SCGC6 &= ~SIM_SCGC6_FTM1_MASK;
+		}
 	#endif
 }
 

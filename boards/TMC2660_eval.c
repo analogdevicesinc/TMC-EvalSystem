@@ -6,6 +6,9 @@
 #undef  TMC2660_MAX_VELOCITY
 #define TMC2660_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+// Stepdir precision: 2^17 -> 17 digits of precision
+#define STEPDIR_PRECISION (1 << 17)
+
 #define ERRORS_I_STS          (1<<0)  // stand still current too high
 #define ERRORS_I_TIMEOUT_STS  (1<<1)  // current limited in stand still to prevent driver from demage
 
@@ -727,7 +730,7 @@ static uint8_t reset()
 	compatibilityMode = 1;
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.SG_TST);
 
 	return 1;
@@ -778,7 +781,7 @@ void TMC2660_init(void)
 	TMC2660.standStillCurrentScale  = I_STAND_STILL;
 	TMC2660.standStillTimeout       = T_STAND_STILL;
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.SG_TST);
 
 	TMC2660_config = Evalboards.ch2.config;

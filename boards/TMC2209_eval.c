@@ -5,6 +5,9 @@
 #undef  TMC2209_MAX_VELOCITY
 #define TMC2209_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+// Stepdir precision: 2^17 -> 17 digits of precision
+#define STEPDIR_PRECISION 131072
+
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
@@ -400,14 +403,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 174:
 		// stallGuard2 threshold
 		if(readWrite == READ) {
-			//*value = TMC2209_FIELD_READ(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SGT_MASK, TMC2209_SGT_SHIFT);
-			//*value = StepDir_getStallGuardThreshold(motor);
 			*value = tmc2209_readInt(motorToIC(motor), TMC2209_SGTHRS);
-			//*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
 			tmc2209_writeInt(motorToIC(motor), TMC2209_SGTHRS, *value);
-			//StepDir_setStallGuardThreshold(motor, *value);
-			//TMC2209_FIELD_UPDATE(motorToIC(motor), TMC2209_COOLCONF, TMC2209_SGT_MASK, TMC2209_SGT_SHIFT, *value);
 		}
 		break;
 	case 179:
@@ -562,6 +560,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 	case 2:
 		*value = tmc2209_get_slave(motorToIC(motor));
 		break;
+	case 3:
+		*value = Timer.getDuty(TIMER_CHANNEL_3) * 100 / TIMER_MAX;
+		break;
 	case 4:
 		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
 		break;
@@ -642,7 +643,7 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
 
 	return tmc2209_reset(&TMC2209);
@@ -728,7 +729,7 @@ void TMC2209_init(void)
 
 	tmc2209_init(&TMC2209, 0, 0, TMC2209_config, &tmc2209_defaultRegisterResetState[0]);
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);

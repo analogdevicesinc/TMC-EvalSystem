@@ -5,6 +5,9 @@
 #undef  TMC2225_MAX_VELOCITY
 #define TMC2225_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+// Stepdir precision: 2^17 -> 17 digits of precision
+#define STEPDIR_PRECISION (1 << 17)
+
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
@@ -201,11 +204,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 	case 6:
-		// UART slave address
+		// Maximum current
 		if(readWrite == READ) {
-			*value = tmc2225_get_slave(&TMC2225);
+			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_IHOLD_IRUN, TMC2225_IRUN_MASK, TMC2225_IRUN_SHIFT);
 		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
+			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_IHOLD_IRUN, TMC2225_IRUN_MASK, TMC2225_IRUN_SHIFT, *value);
 		}
 		break;
 	case 7:
@@ -460,6 +463,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 	case 2:
 		*value = tmc2225_get_slave(motorToIC(motor));
 		break;
+	case 3:
+		*value = Timer.getDuty(TIMER_CHANNEL_3) * 100 / TIMER_MAX;
+		break;
 	case 4:
 		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
 		break;
@@ -488,7 +494,7 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 
 	return tmc2225_reset(&TMC2225);
@@ -541,7 +547,7 @@ void TMC2225_init(void)
 	HAL.IOs->config->toInput(Pins.INDEX);
 
 	TMC2225_UARTChannel = HAL.UART;
-	TMC2225_UARTChannel->pinout = UART_PINS_1;
+	TMC2225_UARTChannel->pinout = UART_PINS_2;
 	TMC2225_UARTChannel->rxtx.init();
 
 	TMC2225_config = Evalboards.ch2.config;
@@ -572,7 +578,7 @@ void TMC2225_init(void)
 
 	tmc2225_init(&TMC2225, 0, TMC2225_config, &tmc2225_defaultRegisterResetState[0]);
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);
@@ -585,9 +591,10 @@ void TMC2225_init(void)
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #endif
 
+	// Initial PWM for VREF scaling: 75% duty cycle
 	HAL.IOs->config->set(Pins.UC_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_3, 0);
+	Timer.setDuty(TIMER_CHANNEL_3, 75*TIMER_MAX / 100);
 
 	enableDriver(DRIVER_ENABLE);
 };

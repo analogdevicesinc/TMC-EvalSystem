@@ -5,6 +5,9 @@
 #undef  TMC2590_MAX_VELOCITY
 #define TMC2590_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+// Stepdir precision: 2^17 -> 17 digits of precision
+#define STEPDIR_PRECISION (1 << 17)
+
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  600  // VM[V/10] max +10%
 
@@ -656,7 +659,7 @@ static uint8_t reset()
 	compatibilityMode = 1;
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.SG_TST);
 
 	return 1;
@@ -704,7 +707,7 @@ void TMC2590_init(void)
 	TMC2590_SPIChannel = &HAL.SPI->ch2;
 	TMC2590_SPIChannel->CSN = Pins.CSN;
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.SG_TST);
 
 	TMC2590_config = Evalboards.ch2.config;

@@ -10,6 +10,8 @@
 #undef  TMC2041_MAX_VELOCITY
 #define TMC2041_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+#define STEPDIR_PRECISION 100000
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -583,7 +585,7 @@ static uint8_t reset()
 			return 0;
 
 	tmc2041_reset(&TMC2041);
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.REFL1_STEP1, Pins.REFR1_DIR1, NULL);
 	StepDir_setPins(1, Pins.REFL2_STEP2, Pins.REFR2_DIR2, NULL);
 
@@ -631,7 +633,7 @@ void TMC2041_init(void)
 
 	TMC2041_config = &TMCDriver.config;
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.REFL1_STEP1, Pins.REFR1_DIR1, NULL);
 	StepDir_setPins(1, Pins.REFL2_STEP2, Pins.REFR2_DIR2, NULL);
 

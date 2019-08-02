@@ -8,6 +8,9 @@
 #undef  TMC2160_MAX_VELOCITY
 #define TMC2160_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+// Stepdir precision: 2^17 -> 17 digits of precision
+#define STEPDIR_PRECISION (1 << 17)
+
 #define TMC2160_DRVENN_DELAY 2000 // Driver enable delay preventing overload on power-on.
 
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -798,7 +801,7 @@ static uint8_t reset()
 
 	tmc2160_reset(&TMC2160);
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
 
 	return 1;
@@ -869,7 +872,7 @@ void TMC2160_init(void)
 	TMC2160_SPIChannel       = &HAL.SPI->ch2;
 	TMC2160_SPIChannel->CSN  = &HAL.IOs->pins->SPI2_CSN0;
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
 
 	Evalboards.ch2.type = (void *)&TMC2160;

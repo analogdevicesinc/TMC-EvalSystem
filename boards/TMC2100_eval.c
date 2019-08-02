@@ -11,6 +11,9 @@
 #undef  TMC2100_MAX_VELOCITY
 #define TMC2100_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
+// Stepdir precision: 2^17 -> 17 digits of precision
+#define STEPDIR_PRECISION (1 << 17)
+
 #define MOTORS 1
 
 static uint32_t right(uint8_t motor, int32_t velocity);
@@ -520,7 +523,7 @@ void TMC2100_init(void)
 
 	Evalboards.ch2.config->state = CONFIG_READY;
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 	StepDir_setVelocityMax(0, 20000);
 	StepDir_setAcceleration(0, 25000);
@@ -586,7 +589,7 @@ static uint8_t reset()
 
 	TMCRhinoSA.reset();
 
-	StepDir_init();
+	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 	StepDir_setVelocityMax(0, 20000);
 	StepDir_setAcceleration(0, 25000);

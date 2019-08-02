@@ -82,6 +82,7 @@
 	void StepDir_setStallGuardThreshold(uint8_t channel, int stallGuardThreshold);
 	void StepDir_setMode(uint8_t channel, StepDirMode mode);
 	void StepDir_setFrequency(uint8_t channel, uint32_t frequency);
+	void StepDir_setPrecision(uint8_t channel, uint32_t precision);
 	// ===== Getters =====
 	int StepDir_getActualPosition(uint8_t channel);
 	int StepDir_getTargetPosition(uint8_t channel);
@@ -92,9 +93,10 @@
 	int StepDir_getStallGuardThreshold(uint8_t channel);
 	StepDirMode StepDir_getMode(uint8_t channel);
 	uint32_t StepDir_getFrequency(uint8_t channel);
+	uint32_t StepDir_getPrecision(uint8_t channel);
 	int32_t StepDir_getMaxAcceleration(uint8_t channel);
 
-	void StepDir_init();
+	void StepDir_init(uint32_t precision);
 	void StepDir_deInit(void);
 
 #endif /* STEP_DIR_H_ */
