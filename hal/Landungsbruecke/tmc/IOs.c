@@ -156,6 +156,16 @@ static void setPinState(IOPinTypeDef *pin, IO_States state)
 
 static IO_States getPinState(IOPinTypeDef *pin)
 {
+	if(IS_DUMMY_PIN(pin))
+		return IOS_OPEN;
+
+	if(pin->configuration.GPIO_Mode == GPIO_Mode_AN)
+		pin->state = IOS_OPEN;
+	else if(GPIO_PDIR_REG(pin->GPIOBase) & pin->bitWeight)
+		pin->state = IOS_HIGH;
+	else
+		pin->state = IOS_LOW;
+
 	return pin->state;
 }
 
