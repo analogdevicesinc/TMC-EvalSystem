@@ -170,6 +170,14 @@ static void hookDriverSPI(IdAssignmentTypeDef *ids)
 			Evalboards.ch2.userFunction(5, 0, NULL);
 		}
 	}
+
+	if ((ids->ch1.id == ID_TMC4330) || (ids->ch1.id == ID_TMC4331) || (ids->ch1.id == ID_TMC4361) || (ids->ch1.id == ID_TMC4361A))
+	{
+		if (ids->ch2.id == ID_TMC2130)
+		{
+			Evalboards.ch2.userFunction(6, 0, NULL);
+		}
+	}
 }
 
 static void unassign(IdAssignmentTypeDef *ids)

@@ -747,6 +747,12 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		Pins.ENCB_DCEN_CFG4 = &HAL.IOs->pins->DIO6;
 		HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
 		break;
+	case 6:
+		// When running with any of the TMC43XX Evals, CFG5 is not routed through.
+		// The DIO12 pin not usable by the TMC2130 and is reset to a HIGH level.
+		Pins.ENCA_DCIN_CFG5 = &HAL.IOs->pins->DUMMY;
+		HAL.IOs->config->setHigh(&HAL.IOs->pins->DIO12);
+		break;
 	default:
 		errors |= TMC_ERROR_TYPE;
 		break;
