@@ -770,9 +770,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			// Set gradient
 			TMC5160_FIELD_UPDATE(motor, TMC5160_PWMCONF, TMC5160_PWM_GRAD_MASK, TMC5160_PWM_GRAD_SHIFT, *value);
-
 			// Enable/disable stealthChop accordingly
-			TMC5160_FIELD_UPDATE(motor, TMC5160_GCONF, TMC5160_EN_PWM_MODE_MASK, TMC5160_EN_PWM_MODE_SHIFT, *value);
+			TMC5160_FIELD_UPDATE(motor, TMC5160_GCONF, TMC5160_EN_PWM_MODE_MASK, TMC5160_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
 		}
 		break;
 	case 188:

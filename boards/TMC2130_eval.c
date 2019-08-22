@@ -543,7 +543,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			TMC2130_FIELD_UPDATE(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_GRAD_MASK, TMC2130_PWM_GRAD_SHIFT, *value);
 
 			// Enable/disable stealthChop accordingly
-			TMC2130_FIELD_UPDATE(motorToIC(motor), TMC2130_GCONF, TMC2130_EN_PWM_MODE_MASK, TMC2130_EN_PWM_MODE_SHIFT, (*value>0));
+			TMC2130_FIELD_UPDATE(motorToIC(motor), TMC2130_GCONF, TMC2130_EN_PWM_MODE_MASK, TMC2130_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
 		}
 		break;
 	case 188:
