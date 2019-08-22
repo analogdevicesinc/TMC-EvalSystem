@@ -285,20 +285,32 @@ void StepDir_setPins(uint8_t channel, IOPinTypeDef *stepPin, IOPinTypeDef *dirPi
 
 	if (stepPin)
 	{
+		if (IS_DUMMY_PIN(stepPin))
+		{
+			// Set the halting condition before changing the pin
+			StepDir[channel].haltingCondition |= STATUS_NO_STEP_PIN;
+		}
 		StepDir[channel].stepPin = stepPin;
 		if (!IS_DUMMY_PIN(stepPin))
+		{
+			// Clear the halting condition after setting the pin
 			StepDir[channel].haltingCondition &= ~STATUS_NO_STEP_PIN;
-		else
-			StepDir[channel].haltingCondition |= STATUS_NO_STEP_PIN;
+		}
 	}
 
 	if (dirPin)
 	{
+		if (IS_DUMMY_PIN(dirPin))
+		{
+			// Set the halting condition before changing the pin
+			StepDir[channel].haltingCondition |= STATUS_NO_DIR_PIN;
+		}
 		StepDir[channel].dirPin = dirPin;
 		if (!IS_DUMMY_PIN(dirPin))
+		{
+			// Clear the halting condition after setting the pin
 			StepDir[channel].haltingCondition &= ~STATUS_NO_DIR_PIN;
-		else
-			StepDir[channel].haltingCondition |= STATUS_NO_DIR_PIN;
+		}
 	}
 
 	if (stallPin)
