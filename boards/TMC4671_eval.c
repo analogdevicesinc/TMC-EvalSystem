@@ -554,7 +554,7 @@ void TMC4671_init(void)
 	// connect evalboard functions
 	Evalboards.ch1.config->reset        = reset;
 	Evalboards.ch1.config->restore      = restore;
-	Evalboards.ch1.config->state        = CONFIG_RESET;
+	Evalboards.ch1.config->state        = CONFIG_READY;
 	Evalboards.ch1.config->configIndex  = 0;
 	Evalboards.ch1.rotate               = rotate;
 	Evalboards.ch1.right                = right;
