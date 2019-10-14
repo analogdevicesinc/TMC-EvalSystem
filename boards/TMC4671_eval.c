@@ -218,7 +218,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
 #endif
 		}   else if (readWrite == WRITE) {
-			erorrs |= TMC_ERROR_TYPE;
+			errors |= TMC_ERROR_TYPE;
 		}
 		break;
 
