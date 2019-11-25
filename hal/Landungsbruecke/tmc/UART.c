@@ -86,8 +86,8 @@ static void init()
 		case UART_MODE_SINGLE_WIRE:
 			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
 			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-			HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
-			HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+			HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // RxD as open drain output
+			HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // TxD with pull-up resistor
 			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
 			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
 			// Enable single wire UART
@@ -326,6 +326,58 @@ void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t
 	 * periodic refresh of values gets requested right after the write request.
 	 */
 	wait(2);
+}
+
+void UART_setEnabled(UART_Config *channel, uint8_t enabled)
+{
+	switch(channel->pinout)
+	{
+	case UART_PINS_2:
+		if (enabled)
+		{
+			HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
+			HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
+			HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
+		}
+		else
+		{
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO10);
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO11);
+		}
+		break;
+	case UART_PINS_1:
+		if (enabled)
+		{
+			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+
+			if (channel->mode == UART_MODE_SINGLE_WIRE)
+			{
+				HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // RxD as open drain output
+				HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // TxD with pull-up resistor
+			}
+			else
+			{
+				HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+				HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+			}
+
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+		}
+		else
+		{
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
+		}
+		break;
+	default:
+		break;
+
+	}
 }
 
 static void tx(uint8_t ch)
