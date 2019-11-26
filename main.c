@@ -90,7 +90,7 @@ static void init()
 	HAL.IOs->config->toOutput(&HAL.IOs->pins->DIO0);
 	HAL.IOs->config->setHigh(&HAL.IOs->pins->DIO0);
 
-	IdAssignmentTypeDef ids;
+	IdAssignmentTypeDef ids = { 0 };
 	IDDetection_initialScan(&ids);  // start initial board detection
 	IDDetection_initialScan(&ids);  // start second time, first time not 100% reliable, not sure why - too fast after startup?
 	if(!ids.ch1.id && !ids.ch2.id)
