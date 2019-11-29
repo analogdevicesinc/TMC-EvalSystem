@@ -26,7 +26,7 @@ typedef struct
 	IdStateTypeDef ch2;  // interface for id and detection state for the motion controller board
 } IdAssignmentTypeDef;   // interface for id and detection state of driver and motion controller board
 
-IdAssignmentTypeDef IdState;
+extern IdAssignmentTypeDef IdState;
 
 int32_t Board_assign(IdAssignmentTypeDef *ids);     // ids and states of assigned driver and motion controller board
 int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of supported driver and motion controller board
