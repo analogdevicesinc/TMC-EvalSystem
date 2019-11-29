@@ -50,8 +50,6 @@ typedef enum {
 
 State_MonoflopDetection monoflopState = MONOFLOP_INIT;
 
-#define TIMER_START  5537
-#define FULLCOUNTER  60000 // 65536 - TIMER_START + 1
 /* Timer Frequency:
  *  System Clock   48MHz
  *  ------------ = ----- = 6MHz
@@ -64,8 +62,6 @@ State_MonoflopDetection monoflopState = MONOFLOP_INIT;
  */
 #define TICK_FACTOR 10/6
 
-static uint32_t counter = 0;
-
 IdAssignmentTypeDef IdState = { 0 };
 
 // Interrupt: Edge on GPIO Port B
@@ -73,7 +69,6 @@ void PORTB_IRQHandler(void)
 {
 	// Store the timing values
 	uint32_t timerVal = FTM2_CNT;
-	uint32_t counterVal = counter;
 
 	// Store the interrupt flag state and then reset the flags
 	uint32_t interruptFlags = PORTB_ISFR;
@@ -90,13 +85,13 @@ void PORTB_IRQHandler(void)
 		if(IdState.ch1.state == ID_STATE_WAIT_HIGH)
 		{	// Second ID pulse edge - store timer values -> state DONE
 			IdState.ch1.timer_2    = timerVal;
-			IdState.ch1.counter_2  = counterVal;
+			IdState.ch1.counter_2  = 0;
 			IdState.ch1.state      = ID_STATE_DONE;
 		}
 		else
 		{	// First ID pulse edge - store timer values -> state WAIT_HIGH
 			IdState.ch1.timer_1    = timerVal;
-			IdState.ch1.counter_1  = counterVal;
+			IdState.ch1.counter_1  = 0;
 			IdState.ch1.state      = ID_STATE_WAIT_HIGH;
 		}
 	}
@@ -108,13 +103,13 @@ void PORTB_IRQHandler(void)
 		if(IdState.ch2.state == ID_STATE_WAIT_HIGH)
 		{	// Second ID pulse edge - store timer values -> state DONE
 			IdState.ch2.timer_2    = timerVal;
-			IdState.ch2.counter_2  = counterVal;
+			IdState.ch2.counter_2  = 0;
 			IdState.ch2.state      = ID_STATE_DONE;
 		}
 		else
 		{	// First ID pulse edge - store timer values -> state WAIT_HIGH
 			IdState.ch2.timer_1    = timerVal;
-			IdState.ch2.counter_1  = counterVal;
+			IdState.ch2.counter_1  = 0;
 			IdState.ch2.state      = ID_STATE_WAIT_HIGH;
 		}
 	}
@@ -125,14 +120,7 @@ void FTM2_IRQHandler()
 	// clear timer overflow flag
 	FTM2_SC &= ~FTM_SC_TOF_MASK;
 
-	counter++;
-
-	// Abort if timeout limit hasn't been reached yet
-	if(counter < 100)
-		return;
-
-	// Reset counter and stop the timer
-	counter = 0;
+	// Stop the timer
 	FTM2_SC &= ~FTM_SC_CLKS_MASK;
 
 	// Abort if we're not scanning
@@ -155,12 +143,16 @@ void IDDetection_init(void)
 	// Disable write protection, FTM specific registers are available
 	FTM2_MODE |= FTM_MODE_WPDIS_MASK | FTM_MODE_FTMEN_MASK | FTM_MODE_FAULTM_MASK;
 
+	// Clear the CLKS field to avoid buffered write issues for MOD
+	FTM2_SC &= ~FTM_SC_CLKS_MASK;
+
+	// Use the full time period available
+	FTM2_MOD   = 0xFFFF;
+	FTM2_CNTIN = 0;
+	FTM2_CNT   = 0;
+
 	// Clock source: System Clock (48 MHz), Prescaler: 8 -> 6 MHz Timer clock
 	FTM2_SC |= FTM_SC_CLKS(1) | FTM_SC_PS(3);
-
-	// ( MOD  - CNTIN + 1) / 6 MHz = Timer period
-	// (65536 -  5537 + 1) / 6 MHz = 10 ms
-	FTM2_CNTIN = TIMER_START;
 
 	// The TOF bit is set for each counter overflow
 	FTM2_CONF |= FTM_CONF_NUMTOF(0);
@@ -277,7 +269,7 @@ static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 	{
 	case MONOFLOP_INIT:
 		FTM2_SC &= ~FTM_SC_CLKS_MASK;  // stop timer
-		FTM2_CNTIN = TIMER_START;      // clear counter
+		FTM2_CNT = 0;                  // clear counter
 
 		IdState.ch1.state       = ID_STATE_WAIT_LOW;
 		IdState.ch1.detectedBy  = FOUND_BY_NONE;
@@ -311,8 +303,7 @@ static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 		if(IdState.ch1.state == ID_STATE_DONE)
 		{
 			// Assign the ID derived from the ID pulse duration
-			uint32_t tickDiff = (IdState.ch1.counter_2 - IdState.ch1.counter_1) * FULLCOUNTER
-			                  + (IdState.ch1.timer_2   - IdState.ch1.timer_1);
+			uint32_t tickDiff = IdState.ch1.timer_2 - IdState.ch1.timer_1;
 			ids->ch1.id = assign(tickDiff * TICK_FACTOR);
 
 			if(ids->ch1.id)
@@ -340,8 +331,7 @@ static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 		if(IdState.ch2.state == ID_STATE_DONE)
 		{
 			// Assign the ID derived from the ID pulse duration
-			uint32_t tickDiff = (IdState.ch2.counter_2 - IdState.ch2.counter_1) * FULLCOUNTER
-			                  + (IdState.ch2.timer_2   - IdState.ch2.timer_1);
+			uint32_t tickDiff = IdState.ch2.timer_2 - IdState.ch2.timer_1;
 			ids->ch2.id = assign(tickDiff * TICK_FACTOR);
 
 			if(ids->ch2.id)
