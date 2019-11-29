@@ -371,7 +371,7 @@ static int detectID_EEPROM(IdAssignmentTypeDef *ids)
 	// (uint8_t to uint16_t and change EEPROM read to read two bytes instead of one)
 	uint8_t idBuffer[2];
 	// ====== CH1 ======
-	if(!ids->ch1.id)
+	if(ids->ch1.state != ID_STATE_DONE)
 	{
 		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
 		if(!eeprom_check(&SPI.ch1))
@@ -390,7 +390,7 @@ static int detectID_EEPROM(IdAssignmentTypeDef *ids)
 	}
 
 	// ====== CH2 ======
-	if(!ids->ch2.id)
+	if(ids->ch2.state != ID_STATE_DONE)
 	{
 		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
 		if(!eeprom_check(&SPI.ch2))
