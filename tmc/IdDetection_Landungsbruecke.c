@@ -40,6 +40,16 @@ static int detectID_EEPROM(IdAssignmentTypeDef *ids);
 
 static uint8_t assign(uint32_t pulse);
 
+typedef enum {
+	MONOFLOP_INIT,
+	MONOFLOP_SCANNING,
+	MONOFLOP_DONE,
+
+	MONOFLOP_END
+} State_MonoflopDetection;
+
+State_MonoflopDetection monoflopState = MONOFLOP_INIT;
+
 #define TIMER_START  5537
 #define FULLCOUNTER  60000 // 65536 - TIMER_START + 1
 /* Timer Frequency:
@@ -56,7 +66,6 @@ static uint8_t assign(uint32_t pulse);
 
 static uint32_t counter = 0;
 
-static bool isScanning;
 IdAssignmentTypeDef IdState = { 0 };
 
 // Interrupt: Edge on GPIO Port B
@@ -71,7 +80,7 @@ void PORTB_IRQHandler(void)
 	PORTB_ISFR = PORT_ISFR_ISF_MASK;
 
 	// Abort if we're not scanning
-	if(!isScanning)
+	if(monoflopState != MONOFLOP_SCANNING)
 		return;
 
 	// ======== CH0 ==========
@@ -127,32 +136,17 @@ void FTM2_IRQHandler()
 	FTM2_SC &= ~FTM_SC_CLKS_MASK;
 
 	// Abort if we're not scanning
-	if(!isScanning)
-		return;
-
-	// Set the Timeout states
-	if(IdState.ch1.state == ID_STATE_WAIT_HIGH)
-	{	// Only detected ID pulse rising edge -> Timeout
-		IdState.ch1.state = ID_STATE_TIMEOUT;
-	}
-	else if(IdState.ch1.state == ID_STATE_WAIT_LOW)
-	{	// Did not detect any edge -> No answer
-		IdState.ch1.state = ID_STATE_NO_ANSWER;
-	}
-
-	if(IdState.ch2.state == ID_STATE_WAIT_HIGH)
-	{	// Only detected ID pulse rising edge -> Timeout
-		IdState.ch2.state = ID_STATE_TIMEOUT;
-	}
-	else if(IdState.ch2.state == ID_STATE_WAIT_LOW)
-	{	// Did not detect any edge -> No answer
-		IdState.ch2.state = ID_STATE_NO_ANSWER;
+	if(monoflopState == MONOFLOP_SCANNING)
+	{
+		monoflopState = MONOFLOP_DONE;
+			return;
 	}
 }
 
 void IDDetection_init(void)
 {
-	isScanning = false;
+	monoflopState = MONOFLOP_INIT;
+
 
 	// ====== Timer initialisation =======
 	// Enable clock for FTM2
@@ -279,8 +273,9 @@ void IDDetection_initialScan(IdAssignmentTypeDef *ids)
 // Helper functions
 static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 {
-	if(!isScanning)
+	switch (monoflopState)
 	{
+	case MONOFLOP_INIT:
 		FTM2_SC &= ~FTM_SC_CLKS_MASK;  // stop timer
 		FTM2_CNTIN = TIMER_START;      // clear counter
 
@@ -288,65 +283,93 @@ static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 		IdState.ch1.detectedBy  = FOUND_BY_NONE;
 		IdState.ch2.state       = ID_STATE_WAIT_LOW;
 		IdState.ch2.detectedBy  = FOUND_BY_NONE;
-		isScanning = true;
+
+		// Update the monoflop state before activating the timer. Otherwise bad
+		// luck with other unrelated interrupts might cause enough delay to
+		// trigger the timer overflow after starting the timer before updating
+		// this state - which results in the timeout no longer working.
+		monoflopState = MONOFLOP_SCANNING;
 
 		FTM2_SC |= FTM_SC_CLKS(1);  // start timer
 		ID_CLK_HIGH();
+		break;
+	case MONOFLOP_SCANNING:
+		if(IDSTATE_SCAN_DONE(IdState))
+		{
+			monoflopState = MONOFLOP_DONE;
+		}
+		break;
+	case MONOFLOP_DONE:
+		// Scan complete
+		ID_CLK_LOW();
+		FTM2_SC &= ~FTM_SC_CLKS_MASK; // stop timer
 
-		return false;
-	}
+		// ======== CH0 ==========
+		// Assign ID detection state for this channel
+		ids->ch1.state = IdState.ch1.state;
 
-	if(!IDSTATE_SCAN_DONE(IdState))
-		return false;
+		if(IdState.ch1.state == ID_STATE_DONE)
+		{
+			// Assign the ID derived from the ID pulse duration
+			uint32_t tickDiff = (IdState.ch1.counter_2 - IdState.ch1.counter_1) * FULLCOUNTER
+			                  + (IdState.ch1.timer_2   - IdState.ch1.timer_1);
+			ids->ch1.id = assign(tickDiff * TICK_FACTOR);
 
-	// Scan complete
-	isScanning = false;
-	ID_CLK_LOW();
-	FTM2_SC &= ~FTM_SC_CLKS_MASK; // stop timer
-
-	// ======== CH0 ==========
-	// Assign ID detection state for this channel
-	ids->ch1.state = IdState.ch1.state;
-
-	if(IdState.ch1.state == ID_STATE_DONE)
-	{
-		// Assign the ID derived from the ID pulse duration
-		uint32_t tickDiff = (IdState.ch1.counter_2 - IdState.ch1.counter_1) * FULLCOUNTER
-		                  + (IdState.ch1.timer_2   - IdState.ch1.timer_1);
-		ids->ch1.id = assign(tickDiff * TICK_FACTOR);
-
-		if(ids->ch1.id)
-			IdState.ch1.detectedBy = FOUND_BY_MONOFLOP;
+			if(ids->ch1.id)
+				IdState.ch1.detectedBy = FOUND_BY_MONOFLOP;
+			else
+				ids->ch1.state = ID_STATE_INVALID; // Invalid ID pulse detected
+		}
+		else if(IdState.ch1.state == ID_STATE_WAIT_HIGH)
+		{	// Only detected ID pulse rising edge -> Timeout
+			ids->ch1.state = ID_STATE_TIMEOUT;
+		}
+		else if(IdState.ch1.state == ID_STATE_WAIT_LOW)
+		{	// Did not detect any edge -> No answer
+			ids->ch1.state = ID_STATE_NO_ANSWER;
+		}
 		else
-			ids->ch1.state = ID_STATE_INVALID; // Invalid ID pulse detected
-	}
-	else
-	{
-		ids->ch1.id = 0;
-	}
+		{
+			ids->ch1.id = 0;
+		}
 
-	// ======== CH1 ==========
-	// Assign ID detection state for this channel
-	ids->ch2.state 	= IdState.ch2.state;
+		// ======== CH1 ==========
+		// Assign ID detection state for this channel
+		ids->ch2.state 	= IdState.ch2.state;
 
-	if(IdState.ch2.state == ID_STATE_DONE)
-	{
-		// Assign the ID derived from the ID pulse duration
-		uint32_t tickDiff = (IdState.ch2.counter_2 - IdState.ch2.counter_1) * FULLCOUNTER
-		                  + (IdState.ch2.timer_2   - IdState.ch2.timer_1);
-		ids->ch2.id = assign(tickDiff * TICK_FACTOR);
+		if(IdState.ch2.state == ID_STATE_DONE)
+		{
+			// Assign the ID derived from the ID pulse duration
+			uint32_t tickDiff = (IdState.ch2.counter_2 - IdState.ch2.counter_1) * FULLCOUNTER
+			                  + (IdState.ch2.timer_2   - IdState.ch2.timer_1);
+			ids->ch2.id = assign(tickDiff * TICK_FACTOR);
 
-		if(ids->ch2.id)
-			IdState.ch2.detectedBy = FOUND_BY_MONOFLOP;
+			if(ids->ch2.id)
+				IdState.ch2.detectedBy = FOUND_BY_MONOFLOP;
+			else
+				ids->ch2.state = ID_STATE_INVALID; // Invalid ID pulse detected
+		}
+		else if(IdState.ch2.state == ID_STATE_WAIT_HIGH)
+		{	// Only detected ID pulse rising edge -> Timeout
+			ids->ch2.state = ID_STATE_TIMEOUT;
+		}
+		else if(IdState.ch2.state == ID_STATE_WAIT_LOW)
+		{	// Did not detect any edge -> No answer
+			ids->ch2.state = ID_STATE_NO_ANSWER;
+		}
 		else
-			ids->ch2.state = ID_STATE_INVALID; // Invalid ID pulse detected
-	}
-	else
-	{
-		ids->ch2.id = 0;
+		{
+			ids->ch2.id = 0;
+		}
+
+		monoflopState = MONOFLOP_INIT;
+		return true;
+		break;
+	default:
+		break;
 	}
 
-	return true;
+	return false;
 }
 
 static int detectID_EEPROM(IdAssignmentTypeDef *ids)
