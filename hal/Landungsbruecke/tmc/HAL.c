@@ -86,11 +86,13 @@ static void NVIC_init(void)
 
 	// Special interrupt priorities
 	// PortB interrupt - used for ID detection by measuring a pulse duration
+	// Needs to be the fastest interrupt to ensure correct measurement.
 	NVICIP88 = 0x00;
-	// FTM2 interrupt - used for the ID detection for a timeout
-	NVICIP64 = 0x00;
-	// USB interrupt - needed for communication.
-	NVICIP73 = 0x00;
+	// FTM1 interrupt - used by the StepDir generator. If this gets preempted
+	// the StepDir movement quality gets degraded.
+	NVICIP63 = 0x10;
+	// USB interrupt - needed for communication
+	NVICIP73 = 0x20;
 }
 
 static void NVIC_DeInit(void)
