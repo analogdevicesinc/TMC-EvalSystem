@@ -2,6 +2,7 @@
 
 static void init(void);
 static void reset(uint8_t ResetPeripherals);
+static void NVIC_init(void);
 static void NVIC_DeInit(void);
 static void get_hwid(void);
 
@@ -31,6 +32,7 @@ static void init(void)
 {
 	Cpu.initClocks();
 	Cpu.initLowLevel();
+	NVIC_init();
 	EnableInterrupts;;
 
 	systick_init();
@@ -61,6 +63,34 @@ static void __attribute((noreturn)) reset(uint8_t ResetPeripherals)
 	// SYSRESETREQ does not happen instantly since peripheral reset timing is not specified.
 	// Trap execution here so nothing else happens until the reset completes.
 	while(1);
+}
+
+static void NVIC_init(void)
+{
+	uint8_t i;
+
+	// Disable all interrupts
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICER); i++)
+		NVIC_ICER_REG(NVIC_BASE_PTR, i) = 0xFFFFFFFF;	// Interrupt clear-enable Registers
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICPR); i++)
+		NVIC_ICPR_REG(NVIC_BASE_PTR, i) = 0xFFFFFFFF;	// Interrupt clear-pending Registers
+
+	// Set all interrupt priorities to the same level
+	// The priority is stored in the uint8_t IP register, but not all of the
+	// bits are used. For the Processor of the Landungsbruecke the 4 upper bits
+	// are implemented. Here we set the interrupt priority to the middle of the
+	// available values to allow other code to increase or decrease specific
+	// interrupt priorities.
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->IP); i++)
+		NVIC_IP_REG(NVIC_BASE_PTR, i) = 0x80;
+
+	// Special interrupt priorities
+	// PortB interrupt - used for ID detection by measuring a pulse duration
+	NVICIP88 = 0x00;
+	// FTM2 interrupt - used for the ID detection for a timeout
+	NVICIP64 = 0x00;
+	// USB interrupt - needed for communication.
+	NVICIP73 = 0x00;
 }
 
 static void NVIC_DeInit(void)
