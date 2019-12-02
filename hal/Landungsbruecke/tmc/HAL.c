@@ -95,19 +95,19 @@ static void NVIC_init(void)
 
 static void NVIC_DeInit(void)
 {
-	uint8_t index;
+	uint8_t i;
 
 	asm volatile("CPSID I\n");	// disable interrupts
 
 	// Clear all NVIC interrupts
-	for(index = 0; index < (sizeof(NVIC_BASE_PTR->ICER)/sizeof(NVIC_BASE_PTR->ICER[0])); index++)
-		NVIC_ICER_REG(NVIC_BASE_PTR,index) = 0xFFFFFFFF;	// Interrupt clear-enable Registers
-	for(index = 0; index < (sizeof(NVIC_BASE_PTR->ICPR)/sizeof(NVIC_BASE_PTR->ICPR[0])); index++)
-		NVIC_ICPR_REG(NVIC_BASE_PTR,index) = 0xFFFFFFFF;	// Interrupt clear-pending Registers
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICER); i++)
+		NVIC_ICER_REG(NVIC_BASE_PTR, i) = 0xFFFFFFFF;	// Interrupt clear-enable Registers
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICPR); i++)
+		NVIC_ICPR_REG(NVIC_BASE_PTR, i) = 0xFFFFFFFF;	// Interrupt clear-pending Registers
 
 	// Reset interrupt priorities
-	for(index = 0; index < (sizeof(NVIC_BASE_PTR->IP)/sizeof(NVIC_BASE_PTR->IP[0])); index++)
-		NVIC_IP_REG(NVIC_BASE_PTR,index) = 0x00000000;
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->IP); i++)
+		NVIC_IP_REG(NVIC_BASE_PTR, i) = 0x00;
 
 	SYST_CSR = 0; // disable systick
 }
