@@ -71,9 +71,15 @@ static void NVIC_init(void)
 
 	// Disable all interrupts
 	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICER); i++)
-		NVIC_ICER_REG(NVIC_BASE_PTR, i) = 0xFFFFFFFF;	// Interrupt clear-enable Registers
+	{
+		// Interrupt clear-enable Registers
+		NVIC_ICER(i) = 0xFFFFFFFF;
+	}
 	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICPR); i++)
-		NVIC_ICPR_REG(NVIC_BASE_PTR, i) = 0xFFFFFFFF;	// Interrupt clear-pending Registers
+	{
+		// Interrupt clear-pending Registers
+		NVIC_ICPR(i) = 0xFFFFFFFF;
+	}
 
 	// Set all interrupt priorities to the same level
 	// The priority is stored in the uint8_t IP register, but not all of the
@@ -82,17 +88,20 @@ static void NVIC_init(void)
 	// available values to allow other code to increase or decrease specific
 	// interrupt priorities.
 	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->IP); i++)
-		NVIC_IP_REG(NVIC_BASE_PTR, i) = 0x80;
+	{
+		// Interrupt priority registers
+		NVIC_IP(i) = 0x80;
+	}
 
 	// Special interrupt priorities
 	// PortB interrupt - used for ID detection by measuring a pulse duration
 	// Needs to be the fastest interrupt to ensure correct measurement.
-	NVICIP88 = 0x00;
+	NVIC_IP(INT_PORTB-16) = 0x00;
 	// FTM1 interrupt - used by the StepDir generator. If this gets preempted
 	// the StepDir movement quality gets degraded.
-	NVICIP63 = 0x10;
+	NVIC_IP(INT_FTM1-16) = 0x10;
 	// USB interrupt - needed for communication
-	NVICIP73 = 0x20;
+	NVIC_IP(INT_USB0-16) = 0x20;
 }
 
 static void NVIC_DeInit(void)
@@ -103,13 +112,22 @@ static void NVIC_DeInit(void)
 
 	// Clear all NVIC interrupts
 	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICER); i++)
-		NVIC_ICER_REG(NVIC_BASE_PTR, i) = 0xFFFFFFFF;	// Interrupt clear-enable Registers
+	{
+		// Interrupt clear-enable Registers
+		NVIC_ICER(i) = 0xFFFFFFFF;
+	}
 	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICPR); i++)
-		NVIC_ICPR_REG(NVIC_BASE_PTR, i) = 0xFFFFFFFF;	// Interrupt clear-pending Registers
+	{
+		// Interrupt clear-pending Registers
+		NVIC_ICPR(i) = 0xFFFFFFFF;
+	}
 
 	// Reset interrupt priorities
 	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->IP); i++)
-		NVIC_IP_REG(NVIC_BASE_PTR, i) = 0x00;
+	{
+		// Interrupt priority registers
+		NVIC_IP(i) = 0x00;
+	}
 
 	SYST_CSR = 0; // disable systick
 }
