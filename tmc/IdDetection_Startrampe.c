@@ -211,8 +211,8 @@ void IDDetection_init(void)
 				| TIM_CCER_CC4E // capture enable
 		);
 
-	TIM5->PSC = 5;         // prescaler -> 0.1us
-	TIM5->ARR = 13500000;  // timeout   -> 1.35s
+	TIM5->PSC = 5;       // prescaler -> 0.1us
+	TIM5->ARR = 100000;  // timeout   -> 10ms
 
 	TIM5->EGR |= (uint16_t)
 		(
