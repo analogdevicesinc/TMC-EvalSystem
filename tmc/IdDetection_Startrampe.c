@@ -43,7 +43,16 @@ static int detectID_EEPROM(IdAssignmentTypeDef *ids);
 
 static uint8_t assign(uint32_t pulse);
 
-static bool isScanning;
+typedef enum {
+	MONOFLOP_INIT,
+	MONOFLOP_SCANNING,
+	MONOFLOP_DONE,
+
+	MONOFLOP_END
+} State_MonoflopDetection;
+
+State_MonoflopDetection monoflopState = MONOFLOP_INIT;
+
 IdAssignmentTypeDef IdState = { 0 };
 
 /* pin changed interrupt to detect edges of ID pulse for this channel */
@@ -56,7 +65,7 @@ void __attribute__ ((interrupt)) EXTI0_IRQHandler(void)
 	EXTI_ClearITPendingBit(EXTI_Line0);
 
 	// Abort if we're not scanning
-	if(!isScanning)
+	if(monoflopState != MONOFLOP_SCANNING)
 		return;
 
 	if(ID_CH0_STATE) // Capture time of rising edge on ID_CH0
@@ -81,7 +90,7 @@ void __attribute__ ((interrupt)) EXTI1_IRQHandler(void)
 	EXTI_ClearITPendingBit(EXTI_Line1);
 
 	// Abort if we're not scanning
-	if(!isScanning)
+	if(monoflopState != MONOFLOP_SCANNING)
 		return;
 
 	if(ID_CH1_STATE) // Capture time of rising edge on ID_CH1
@@ -105,32 +114,17 @@ void TIM5_IRQHandler(void)
 
 	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 
-	if(!isScanning)
+	if(monoflopState == MONOFLOP_SCANNING)
+	{
+		monoflopState = MONOFLOP_DONE;
 		return;
-
-	if(IdState.ch1.state == ID_STATE_WAIT_HIGH)
-	{	// Only detected ID pulse rising edge -> Timeout
-		IdState.ch1.state = ID_STATE_TIMEOUT;
-	}
-	else if(IdState.ch1.state == ID_STATE_WAIT_LOW)
-	{	// Did not detect any edge -> No answer
-		IdState.ch1.state = ID_STATE_NO_ANSWER;
-	}
-
-	if(IdState.ch2.state == ID_STATE_WAIT_HIGH)
-	{	// Only detected ID pulse rising edge -> Timeout
-		IdState.ch2.state = ID_STATE_TIMEOUT;
-	}
-	else if(IdState.ch2.state == ID_STATE_WAIT_LOW)
-	{	// Did not detect any edge -> No answer
-		IdState.ch2.state = ID_STATE_NO_ANSWER;
 	}
 }
 
 /* Initialise timer and GPIO edge-triggered interrupts */
 void IDDetection_init(void)
 {
-	isScanning = false;
+	monoflopState = MONOFLOP_INIT;
 
 	// ====== Pin initialisation ======
 	// Pin ID_CLK
@@ -323,8 +317,9 @@ void IDDetection_initialScan(IdAssignmentTypeDef *ids)
 
 static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 {
-	if(!isScanning)
+	switch(monoflopState)
 	{
+	case MONOFLOP_INIT:
 		TIM_Cmd(TIM5, DISABLE);  // stop timer
 		TIM5->CNT = 0;           // clear counter
 
@@ -332,62 +327,91 @@ static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 		IdState.ch1.detectedBy  = FOUND_BY_NONE;
 		IdState.ch2.state       = ID_STATE_WAIT_LOW;
 		IdState.ch2.detectedBy  = FOUND_BY_NONE;
-		isScanning = true;
+
+		// Update the monoflop state before activating the timer. Otherwise bad
+		// luck with other unrelated interrupts might cause enough delay to
+		// trigger the timer overflow after starting the timer before updating
+		// this state - which results in the timeout no longer working.
+		monoflopState = MONOFLOP_SCANNING;
 
 		TIM_Cmd(TIM5, ENABLE);   // start timer
 		ID_CLK_HIGH();
+		break;
+	case MONOFLOP_SCANNING:
+		if (IDSTATE_SCAN_DONE(IdState))
+		{
+			monoflopState = MONOFLOP_DONE;
+		}
+		break;
+	case MONOFLOP_DONE:
+		// Scan complete, disable ID_CLK and the timer
+		ID_CLK_LOW();
+		TIM_Cmd(TIM5, DISABLE);
 
-		return false;
-	}
+		// ======== CH1 ==========
+		// Assign ID detection state for this channel
+		ids->ch1.state 	= IdState.ch1.state;
 
-	// Abort if we're still scanning
-	if(!IDSTATE_SCAN_DONE(IdState))
-		return false;
+		if(IdState.ch1.state == ID_STATE_DONE)
+		{
+			// Assign the ID derived from the ID pulse duration
+			ids->ch1.id = assign(TIM5->CCR2 - TIM5->CCR1);
 
-	// Scan done, disable ID_CLK and the timer
-	isScanning = false;
-	ID_CLK_LOW();
-	TIM_Cmd(TIM5, DISABLE);
-
-	// ======== CH1 ==========
-	// Assign ID detection state for this channel
-	ids->ch1.state 	= IdState.ch1.state;
-
-	if(IdState.ch1.state == ID_STATE_DONE)
-	{
-		// Assign the ID derived from the ID pulse duration
-		ids->ch1.id = assign(TIM5->CCR2 - TIM5->CCR1);
-
-		if(ids->ch1.id)
-			IdState.ch1.detectedBy = FOUND_BY_MONOFLOP;
+			if(ids->ch1.id)
+				IdState.ch1.detectedBy = FOUND_BY_MONOFLOP;
+			else
+				ids->ch1.state = ID_STATE_INVALID; // Invalid ID pulse detected
+		}
+		else if(IdState.ch1.state == ID_STATE_WAIT_HIGH)
+		{	// Only detected ID pulse rising edge -> Timeout
+			IdState.ch1.state = ID_STATE_TIMEOUT;
+		}
+		else if(IdState.ch1.state == ID_STATE_WAIT_LOW)
+		{	// Did not detect any edge -> No answer
+			IdState.ch1.state = ID_STATE_NO_ANSWER;
+		}
 		else
-			ids->ch1.state = ID_STATE_INVALID; // Invalid ID pulse detected
-	}
-	else
-	{
-		ids->ch1.id = 0;
-	}
+		{
+			ids->ch1.id = 0;
+		}
 
-	// ======== CH2 ==========
-	// Assign ID detection state for this channel
-	ids->ch2.state 	= IdState.ch2.state;
 
-	if(IdState.ch2.state == ID_STATE_DONE)
-	{
-		// Assign the ID derived from the ID pulse duration
-		ids->ch2.id = assign(TIM5->CCR4 - TIM5->CCR3);
 
-		if(ids->ch2.id)
-			IdState.ch2.detectedBy = FOUND_BY_MONOFLOP;
+		// ======== CH2 ==========
+		// Assign ID detection state for this channel
+		ids->ch2.state 	= IdState.ch2.state;
+
+		if(IdState.ch2.state == ID_STATE_DONE)
+		{
+			// Assign the ID derived from the ID pulse duration
+			ids->ch2.id = assign(TIM5->CCR4 - TIM5->CCR3);
+
+			if(ids->ch2.id)
+				IdState.ch2.detectedBy = FOUND_BY_MONOFLOP;
+			else
+				ids->ch2.state = ID_STATE_INVALID; // Invalid ID pulse detected
+		}
+		else if(IdState.ch2.state == ID_STATE_WAIT_HIGH)
+		{	// Only detected ID pulse rising edge -> Timeout
+			IdState.ch2.state = ID_STATE_TIMEOUT;
+		}
+		else if(IdState.ch2.state == ID_STATE_WAIT_LOW)
+		{	// Did not detect any edge -> No answer
+			IdState.ch2.state = ID_STATE_NO_ANSWER;
+		}
 		else
-			ids->ch2.state = ID_STATE_INVALID; // Invalid ID pulse detected
-	}
-	else
-	{
-		ids->ch2.id = 0;
+		{
+			ids->ch2.id = 0;
+		}
+
+		monoflopState = MONOFLOP_INIT;
+		return true;
+		break;
+	default:
+		break;
 	}
 
-	return true;
+	return false;
 }
 
 static int detectID_EEPROM(IdAssignmentTypeDef *ids)
@@ -399,7 +423,7 @@ static int detectID_EEPROM(IdAssignmentTypeDef *ids)
 	// (uint8_t to uint16_t and change EEPROM read to read two bytes instead of one)
 	uint8_t idBuffer[2];
 	// ====== CH1 ======
-	if(!ids->ch1.id)
+	if(ids->ch1.state != ID_STATE_DONE)
 	{
 		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
 		if(!eeprom_check(&SPI.ch1))
@@ -418,7 +442,7 @@ static int detectID_EEPROM(IdAssignmentTypeDef *ids)
 	}
 
 	// ====== CH2 ======
-	if(!ids->ch2.id)
+	if(ids->ch2.state != ID_STATE_DONE)
 	{
 		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
 		if(!eeprom_check(&SPI.ch2))
