@@ -23,6 +23,10 @@
 #include "VitalSignsMonitor.h"
 #include "TMCL.h"
 
+// Helper functions
+static int detectID_Monoflop(IdAssignmentTypeDef *ids);
+static int detectID_EEPROM(IdAssignmentTypeDef *ids);
+
 // Helper macros
 #define ID_CLK_LOW()   GPIOC->BSRRH=BIT9    // set id clk signal to low
 #define ID_CLK_HIGH()  GPIOC->BSRRL=BIT9    // set id clk signal to high
@@ -293,7 +297,31 @@ static uint8_t assign(uint32_t pulse)
 }
 
 // Detect IDs of attached boards - returns true when done
-uint8_t IDDetection_detect(IdAssignmentTypeDef *out)
+uint8_t IDDetection_detect(IdAssignmentTypeDef *ids)
+{
+	// Try to identify the IDs via monoflop pulse duration
+	if (!detectID_Monoflop(ids))
+		return false;
+
+	// Try to identify the IDs via EEPROM readout
+	detectID_EEPROM(ids);
+
+	// Detection finished
+	return true;
+
+}
+
+void IDDetection_initialScan(IdAssignmentTypeDef *ids)
+{
+	while(!IDDetection_detect(ids))
+	{
+		vitalsignsmonitor_checkVitalSigns();
+		tmcl_process();
+	}
+
+}
+
+static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 {
 	if(!isScanning)
 	{
@@ -323,42 +351,47 @@ uint8_t IDDetection_detect(IdAssignmentTypeDef *out)
 
 	// ======== CH1 ==========
 	// Assign ID detection state for this channel
-	out->ch1.state 	= IdState.ch1.state;
+	ids->ch1.state 	= IdState.ch1.state;
 
 	if(IdState.ch1.state == ID_STATE_DONE)
 	{
 		// Assign the ID derived from the ID pulse duration
-		out->ch1.id = assign(TIM5->CCR2 - TIM5->CCR1);
+		ids->ch1.id = assign(TIM5->CCR2 - TIM5->CCR1);
 
-		if(out->ch1.id)
+		if(ids->ch1.id)
 			IdState.ch1.detectedBy = FOUND_BY_MONOFLOP;
 		else
-			out->ch1.state = ID_STATE_INVALID; // Invalid ID pulse detected
+			ids->ch1.state = ID_STATE_INVALID; // Invalid ID pulse detected
 	}
 	else
 	{
-		out->ch1.id = 0;
+		ids->ch1.id = 0;
 	}
 
 	// ======== CH2 ==========
 	// Assign ID detection state for this channel
-	out->ch2.state 	= IdState.ch2.state;
+	ids->ch2.state 	= IdState.ch2.state;
 
 	if(IdState.ch2.state == ID_STATE_DONE)
 	{
 		// Assign the ID derived from the ID pulse duration
-		out->ch2.id = assign(TIM5->CCR4 - TIM5->CCR3);
+		ids->ch2.id = assign(TIM5->CCR4 - TIM5->CCR3);
 
-		if(out->ch2.id)
+		if(ids->ch2.id)
 			IdState.ch2.detectedBy = FOUND_BY_MONOFLOP;
 		else
-			out->ch2.state = ID_STATE_INVALID; // Invalid ID pulse detected
+			ids->ch2.state = ID_STATE_INVALID; // Invalid ID pulse detected
 	}
 	else
 	{
-		out->ch2.id = 0;
+		ids->ch2.id = 0;
 	}
 
+	return true;
+}
+
+static int detectID_EEPROM(IdAssignmentTypeDef *ids)
+{
 	// ====== EEPROM Check ======
 	// EEPROM spec reserves 2 bytes for the ID buffer.
 	// Currently we only use one byte for IDs, both here in the firmware
@@ -366,17 +399,17 @@ uint8_t IDDetection_detect(IdAssignmentTypeDef *out)
 	// (uint8_t to uint16_t and change EEPROM read to read two bytes instead of one)
 	uint8_t idBuffer[2];
 	// ====== CH1 ======
-	if(!out->ch1.id)
+	if(!ids->ch1.id)
 	{
 		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
 		if(!eeprom_check(&SPI.ch1))
 		{
 			eeprom_read_array(&SPI.ch1, EEPROM_ADDR_ID, &idBuffer[0], 1);
-			out->ch1.id = idBuffer[0];
+			ids->ch1.id = idBuffer[0];
 			// ID was correctly detected via EEPROM
-			if(out->ch1.id)
+			if(ids->ch1.id)
 			{
-				out->ch1.state = ID_STATE_DONE;
+				ids->ch1.state = ID_STATE_DONE;
 				IdState.ch1.detectedBy = FOUND_BY_EEPROM;
 			}
 		}
@@ -385,17 +418,17 @@ uint8_t IDDetection_detect(IdAssignmentTypeDef *out)
 	}
 
 	// ====== CH2 ======
-	if(!out->ch2.id)
+	if(!ids->ch2.id)
 	{
 		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
 		if(!eeprom_check(&SPI.ch2))
 		{
 			eeprom_read_array(&SPI.ch2, EEPROM_ADDR_ID, &idBuffer[0], 1);
-			out->ch2.id = idBuffer[0];
+			ids->ch2.id = idBuffer[0];
 			// ID was correctly detected via EEPROM
-			if(out->ch2.id)
+			if(ids->ch2.id)
 			{
-				out->ch2.state = ID_STATE_DONE;
+				ids->ch2.state = ID_STATE_DONE;
 				IdState.ch2.detectedBy = FOUND_BY_EEPROM;
 			}
 		}
@@ -404,14 +437,4 @@ uint8_t IDDetection_detect(IdAssignmentTypeDef *out)
 	}
 
 	return true;
-}
-
-void IDDetection_initialScan(IdAssignmentTypeDef *ids)
-{
-	while(!IDDetection_detect(ids))
-	{
-		vitalsignsmonitor_checkVitalSigns();
-		tmcl_process();
-	}
-
 }
