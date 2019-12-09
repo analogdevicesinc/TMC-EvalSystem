@@ -70,6 +70,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC2160        11
 #define ID_TMC2590 		  13
 #define ID_TMC2225        18
+#define ID_TMC6100        19
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
 extern void TMCC160_init();
@@ -96,6 +97,7 @@ extern void TMC5072_init();
 extern void TMC5130_init();
 extern void TMC5160_init();
 extern void TMC5161_init();
+extern void TMC6100_init();
 extern void TMC6200_init();
 extern void TMC8461_init_ch1();
 extern void TMC8461_init_ch2();
@@ -142,6 +144,7 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC2225,     .init = TMC2225_init     },
 	{ .id = ID_TMC2590,     .init = TMC2590_init     },
 	{ .id = ID_TMCC160,     .init = TMCC160_init     },
+	{ .id = ID_TMC6100,     .init = TMC6100_init     },
 	{ .id = ID_TMC6200,     .init = TMC6200_init     },
 	{ .id = ID_TMC2160,     .init = TMC2160_init     }
 };
