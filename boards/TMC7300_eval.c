@@ -139,9 +139,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 0:
 		// Target PWM A duty cycle (in %)
 		if (readWrite == READ) {
-			*value = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_A_MASK, TMC7300_PWM_A_SHIFT);
+			int32_t tmp = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_A_MASK, TMC7300_PWM_A_SHIFT);
+
+			// Change the unsigned read to a signed value
+			tmp = CAST_Sn_TO_S32(tmp, 9);
 			// Scale the internal value [-255 ; +255] to percent [-100% ; +100%]
-			*value = CAST_Sn_TO_S32(*value, 9) * 100 / 255;
+			// For that we need to round away from zero - since the division in
+			// the write rounded towards zero.
+			if (tmp >= 0) {
+				// Round up for positive values
+				*value = (tmp * 100 + 254) / 255;
+			} else {
+				// Round down for negative values
+				*value = (tmp * 100 - 254) / 255;
+			}
 		} else if(readWrite == WRITE) {
 			if (abs(*value) <= 100) {
 				// Scale the duty cycle in percent [-100% ; +100%] to internal values [-255 ; +255]
@@ -155,9 +166,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 1:
 		// Target PWM B duty cycle (in %)
 		if (readWrite == READ) {
-			*value = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_B_MASK, TMC7300_PWM_B_SHIFT);
+			int32_t tmp = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_B_MASK, TMC7300_PWM_B_SHIFT);
+
+			// Change the unsigned read to a signed value
+			tmp = CAST_Sn_TO_S32(tmp, 9);
 			// Scale the internal value [-255 ; +255] to percent [-100% ; +100%]
-			*value = *value * 100 / 255;
+			// For that we need to round away from zero - since the division in
+			// the write rounded towards zero.
+			if (tmp >= 0) {
+				// Round up for positive values
+				*value = (tmp * 100 + 254) / 255;
+			} else {
+				// Round down for negative values
+				*value = (tmp * 100 - 254) / 255;
+			}
 		} else if(readWrite == WRITE) {
 			if (abs(*value) <= 100) {
 				// Scale the duty cycle in percent [-100% ; +100%] to internal values [-255 ; +255]
