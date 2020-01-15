@@ -269,10 +269,6 @@ void LowLevelInit(void)
   /* SMC_PMPROT: ??=0,??=0,AVLP=0,??=0,ALLS=0,??=0,AVLLS=0,??=0 */
   SMC_PMPROT = 0x00U;                  /* Setup Power mode protection register */
 
-  /* Common initialization of the CPU registers */
-  /* NVICIP73: PRI73=0 (USB Interrupt)*/
-  NVICIP73 = NVIC_IP_PRI73(0x00);
-
   //Interrupt priority base setting
   Cpu_SetBASEPRI(0);
 }

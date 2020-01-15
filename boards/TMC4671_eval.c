@@ -200,10 +200,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 #ifdef USE_LINEAR_RAMP
 	case 12: // enable velocity ramp
-		if(readWrite == READ)
+		if(readWrite == READ) {
 			*value = rampGenerator[motor].rampEnabled;
-		else if(readWrite == WRITE)
+		} else if(readWrite == WRITE) {
 			rampGenerator[motor].rampEnabled = *value;
+		}
 		break;
 #endif
 	case 13: // ramp velocity
@@ -216,22 +217,27 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 #else
 			*value = tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
 #endif
+		}   else if (readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
 		}
 		break;
 
 	case 171:
 		// PID_TORQUE_TARGET
-		if(readWrite == READ)
+		if(readWrite == READ) {
 			*value = (int16_t) tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_16_TO_31);
-		else if(readWrite == WRITE)
+		} else if(readWrite == WRITE) {
 			tmc4671_writeRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_16_TO_31, *value);
+		}
+
 		break;
 	case 172:
 		// PID_FLUX_TARGET
-		if(readWrite == READ)
+		if(readWrite == READ) {
 			*value = (int16_t) tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_0_TO_15);
-		else if(readWrite == WRITE)
+		} else if(readWrite == WRITE) {
 			tmc4671_writeRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_TARGET, BIT_0_TO_15, *value);
+		}
 		break;
 	case 173:
 		// PID_VELOCITY_TARGET
@@ -548,7 +554,7 @@ void TMC4671_init(void)
 	// connect evalboard functions
 	Evalboards.ch1.config->reset        = reset;
 	Evalboards.ch1.config->restore      = restore;
-	Evalboards.ch1.config->state        = CONFIG_RESET;
+	Evalboards.ch1.config->state        = CONFIG_READY;
 	Evalboards.ch1.config->configIndex  = 0;
 	Evalboards.ch1.rotate               = rotate;
 	Evalboards.ch1.right                = right;

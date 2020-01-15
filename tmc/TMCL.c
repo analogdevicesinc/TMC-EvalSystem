@@ -843,7 +843,7 @@ static void setDriversEnable()
 
 static void checkIDs(void)
 {
-	IdAssignmentTypeDef ids;
+	IdAssignmentTypeDef ids = { 0 };
 
 	if(IDDetection_detect(&ids))
 	{

@@ -23,6 +23,10 @@
 #include "VitalSignsMonitor.h"
 #include "TMCL.h"
 
+// Helper functions
+static int detectID_Monoflop(IdAssignmentTypeDef *ids);
+static int detectID_EEPROM(IdAssignmentTypeDef *ids);
+
 // Helper macros
 #define ID_CLK_LOW()   HAL.IOs->config->setLow(&HAL.IOs->pins->ID_CLK);   // set id clk signal to low
 #define ID_CLK_HIGH()  HAL.IOs->config->setHigh(&HAL.IOs->pins->ID_CLK);  // set id clk signal to high
@@ -36,8 +40,16 @@
 
 static uint8_t assign(uint32_t pulse);
 
-#define TIMER_START  5537
-#define FULLCOUNTER  60000 // 65536 - TIMER_START + 1
+typedef enum {
+	MONOFLOP_INIT,
+	MONOFLOP_SCANNING,
+	MONOFLOP_DONE,
+
+	MONOFLOP_END
+} State_MonoflopDetection;
+
+State_MonoflopDetection monoflopState = MONOFLOP_INIT;
+
 /* Timer Frequency:
  *  System Clock   48MHz
  *  ------------ = ----- = 6MHz
@@ -50,9 +62,6 @@ static uint8_t assign(uint32_t pulse);
  */
 #define TICK_FACTOR 10/6
 
-static uint32_t counter = 0;
-
-static bool isScanning;
 IdAssignmentTypeDef IdState = { 0 };
 
 // Interrupt: Edge on GPIO Port B
@@ -60,14 +69,13 @@ void PORTB_IRQHandler(void)
 {
 	// Store the timing values
 	uint32_t timerVal = FTM2_CNT;
-	uint32_t counterVal = counter;
 
 	// Store the interrupt flag state and then reset the flags
 	uint32_t interruptFlags = PORTB_ISFR;
 	PORTB_ISFR = PORT_ISFR_ISF_MASK;
 
 	// Abort if we're not scanning
-	if(!isScanning)
+	if(monoflopState != MONOFLOP_SCANNING)
 		return;
 
 	// ======== CH0 ==========
@@ -77,13 +85,13 @@ void PORTB_IRQHandler(void)
 		if(IdState.ch1.state == ID_STATE_WAIT_HIGH)
 		{	// Second ID pulse edge - store timer values -> state DONE
 			IdState.ch1.timer_2    = timerVal;
-			IdState.ch1.counter_2  = counterVal;
+			IdState.ch1.counter_2  = 0;
 			IdState.ch1.state      = ID_STATE_DONE;
 		}
 		else
 		{	// First ID pulse edge - store timer values -> state WAIT_HIGH
 			IdState.ch1.timer_1    = timerVal;
-			IdState.ch1.counter_1  = counterVal;
+			IdState.ch1.counter_1  = 0;
 			IdState.ch1.state      = ID_STATE_WAIT_HIGH;
 		}
 	}
@@ -95,13 +103,13 @@ void PORTB_IRQHandler(void)
 		if(IdState.ch2.state == ID_STATE_WAIT_HIGH)
 		{	// Second ID pulse edge - store timer values -> state DONE
 			IdState.ch2.timer_2    = timerVal;
-			IdState.ch2.counter_2  = counterVal;
+			IdState.ch2.counter_2  = 0;
 			IdState.ch2.state      = ID_STATE_DONE;
 		}
 		else
 		{	// First ID pulse edge - store timer values -> state WAIT_HIGH
 			IdState.ch2.timer_1    = timerVal;
-			IdState.ch2.counter_1  = counterVal;
+			IdState.ch2.counter_1  = 0;
 			IdState.ch2.state      = ID_STATE_WAIT_HIGH;
 		}
 	}
@@ -112,43 +120,21 @@ void FTM2_IRQHandler()
 	// clear timer overflow flag
 	FTM2_SC &= ~FTM_SC_TOF_MASK;
 
-	counter++;
-
-	// Abort if timeout limit hasn't been reached yet
-	if(counter < 100)
-		return;
-
-	// Reset counter and stop the timer
-	counter = 0;
+	// Stop the timer
 	FTM2_SC &= ~FTM_SC_CLKS_MASK;
 
 	// Abort if we're not scanning
-	if(!isScanning)
-		return;
-
-	// Set the Timeout states
-	if(IdState.ch1.state == ID_STATE_WAIT_HIGH)
-	{	// Only detected ID pulse rising edge -> Timeout
-		IdState.ch1.state = ID_STATE_TIMEOUT;
-	}
-	else if(IdState.ch1.state == ID_STATE_WAIT_LOW)
-	{	// Did not detect any edge -> No answer
-		IdState.ch1.state = ID_STATE_NO_ANSWER;
-	}
-
-	if(IdState.ch2.state == ID_STATE_WAIT_HIGH)
-	{	// Only detected ID pulse rising edge -> Timeout
-		IdState.ch2.state = ID_STATE_TIMEOUT;
-	}
-	else if(IdState.ch2.state == ID_STATE_WAIT_LOW)
-	{	// Did not detect any edge -> No answer
-		IdState.ch2.state = ID_STATE_NO_ANSWER;
+	if(monoflopState == MONOFLOP_SCANNING)
+	{
+		monoflopState = MONOFLOP_DONE;
+			return;
 	}
 }
 
 void IDDetection_init(void)
 {
-	isScanning = false;
+	monoflopState = MONOFLOP_INIT;
+
 
 	// ====== Timer initialisation =======
 	// Enable clock for FTM2
@@ -157,12 +143,16 @@ void IDDetection_init(void)
 	// Disable write protection, FTM specific registers are available
 	FTM2_MODE |= FTM_MODE_WPDIS_MASK | FTM_MODE_FTMEN_MASK | FTM_MODE_FAULTM_MASK;
 
+	// Clear the CLKS field to avoid buffered write issues for MOD
+	FTM2_SC &= ~FTM_SC_CLKS_MASK;
+
+	// Use the full time period available
+	FTM2_MOD   = 0xFFFF;
+	FTM2_CNTIN = 0;
+	FTM2_CNT   = 0;
+
 	// Clock source: System Clock (48 MHz), Prescaler: 8 -> 6 MHz Timer clock
 	FTM2_SC |= FTM_SC_CLKS(1) | FTM_SC_PS(3);
-
-	// ( MOD  - CNTIN + 1) / 6 MHz = Timer period
-	// (65536 -  5537 + 1) / 6 MHz = 10 ms
-	FTM2_CNTIN = TIMER_START;
 
 	// The TOF bit is set for each counter overflow
 	FTM2_CONF |= FTM_CONF_NUMTOF(0);
@@ -251,117 +241,14 @@ static uint8_t assign(uint32_t pulse)
 // Detect IDs of attached boards - returns true when done
 uint8_t IDDetection_detect(IdAssignmentTypeDef *out)
 {
-	if(!isScanning)
-	{
-		FTM2_SC &= ~FTM_SC_CLKS_MASK;  // stop timer
-		FTM2_CNTIN = TIMER_START;      // clear counter
-
-		IdState.ch1.state       = ID_STATE_WAIT_LOW;
-		IdState.ch1.detectedBy  = FOUND_BY_NONE;
-		IdState.ch2.state       = ID_STATE_WAIT_LOW;
-		IdState.ch2.detectedBy  = FOUND_BY_NONE;
-		isScanning = true;
-
-		FTM2_SC |= FTM_SC_CLKS(1);  // start timer
-		ID_CLK_HIGH();
-
-		return false;
-	}
-
-	if(!IDSTATE_SCAN_DONE(IdState))
+	// Try to identify the IDs via monoflop pulse duration
+	if (!detectID_Monoflop(out))
 		return false;
 
-	// Scan complete
-	isScanning = false;
-	ID_CLK_LOW();
-	FTM2_SC &= ~FTM_SC_CLKS_MASK; // stop timer
+	// Try to identify the IDs via EEPROM readout
+	detectID_EEPROM(out);
 
-	// ======== CH0 ==========
-	// Assign ID detection state for this channel
-	out->ch1.state = IdState.ch1.state;
-
-	if(IdState.ch1.state == ID_STATE_DONE)
-	{
-		// Assign the ID derived from the ID pulse duration
-		uint32_t tickDiff =    (IdState.ch1.counter_2 - IdState.ch1.counter_1) * FULLCOUNTER
-						   + (IdState.ch1.timer_2   - IdState.ch1.timer_1);
-		out->ch1.id = assign(tickDiff * TICK_FACTOR);
-
-		if(out->ch1.id)
-			IdState.ch1.detectedBy = FOUND_BY_MONOFLOP;
-		else
-			out->ch1.state = ID_STATE_INVALID; // Invalid ID pulse detected
-	}
-	else
-	{
-		out->ch1.id = 0;
-	}
-
-	// ======== CH1 ==========
-	// Assign ID detection state for this channel
-	out->ch2.state 	= IdState.ch2.state;
-
-	if(IdState.ch2.state == ID_STATE_DONE)
-	{
-		// Assign the ID derived from the ID pulse duration
-		uint32_t tickDiff =    (IdState.ch2.counter_2 - IdState.ch2.counter_1) * FULLCOUNTER
-						   + (IdState.ch2.timer_2   - IdState.ch2.timer_1);
-		out->ch2.id = assign(tickDiff * TICK_FACTOR);
-
-		if(out->ch2.id)
-			IdState.ch2.detectedBy = FOUND_BY_MONOFLOP;
-		else
-			out->ch2.state = ID_STATE_INVALID; // Invalid ID pulse detected
-	}
-	else
-	{
-		out->ch2.id = 0;
-	}
-
-	// ====== EEPROM Check ======
-	// EEPROM spec reserves 2 bytes for the ID buffer.
-	// Currently we only use one byte for IDs, both here in the firmware
-	// and in the IDE - once we deplete that ID pool, this needs to be extended
-	// (uint8_t to uint16_t and change EEPROM read to read two bytes instead of one)
-	uint8_t idBuffer[2];
-	// ====== CH1 ======
-	if(!out->ch1.id)
-	{
-		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
-		if(!eeprom_check(&SPI.ch1))
-		{
-			eeprom_read_array(&SPI.ch1, EEPROM_ADDR_ID, &idBuffer[0], 1);
-			out->ch1.id = idBuffer[0];
-			// ID was correctly detected via EEPROM
-			if(out->ch1.id)
-			{
-				out->ch1.state = ID_STATE_DONE;
-				IdState.ch1.detectedBy = FOUND_BY_EEPROM;
-			}
-		}
-		// EEPROM access changes the ID_CH0 pin configuration -> write it again // todo CHECK 2: workaround, do this better later (LH) #1
-		PORT_PCR_REG(HAL.IOs->pins->ID_CH0.portBase, HAL.IOs->pins->ID_CH0.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
-	}
-
-	// ====== CH2 ======
-	if(!out->ch2.id)
-	{
-		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
-		if(!eeprom_check(&SPI.ch2))
-		{
-			eeprom_read_array(&SPI.ch2, EEPROM_ADDR_ID, &idBuffer[0], 1);
-			out->ch2.id = idBuffer[0];
-			//id was correctly detected via EEPROM
-			if(out->ch2.id)
-			{
-				out->ch2.state = ID_STATE_DONE;
-				IdState.ch2.detectedBy = FOUND_BY_EEPROM;
-			}
-		}
-		// EEPROM access changes the ID_CH1 pin configuration -> write it again // todo CHECK 2: workaround, do this better later (LH) #2
-		PORT_PCR_REG(HAL.IOs->pins->ID_CH1.portBase, HAL.IOs->pins->ID_CH1.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
-	}
-
+	// Detection finished
 	return true;
 }
 
@@ -374,3 +261,152 @@ void IDDetection_initialScan(IdAssignmentTypeDef *ids)
 	}
 }
 
+
+// Helper functions
+static int detectID_Monoflop(IdAssignmentTypeDef *ids)
+{
+	switch (monoflopState)
+	{
+	case MONOFLOP_INIT:
+		FTM2_SC &= ~FTM_SC_CLKS_MASK;  // stop timer
+		FTM2_CNT = 0;                  // clear counter
+
+		IdState.ch1.state       = ID_STATE_WAIT_LOW;
+		IdState.ch1.detectedBy  = FOUND_BY_NONE;
+		IdState.ch2.state       = ID_STATE_WAIT_LOW;
+		IdState.ch2.detectedBy  = FOUND_BY_NONE;
+
+		// Update the monoflop state before activating the timer. Otherwise bad
+		// luck with other unrelated interrupts might cause enough delay to
+		// trigger the timer overflow after starting the timer before updating
+		// this state - which results in the timeout no longer working.
+		monoflopState = MONOFLOP_SCANNING;
+
+		FTM2_SC |= FTM_SC_CLKS(1);  // start timer
+		ID_CLK_HIGH();
+		break;
+	case MONOFLOP_SCANNING:
+		if(IDSTATE_SCAN_DONE(IdState))
+		{
+			monoflopState = MONOFLOP_DONE;
+		}
+		break;
+	case MONOFLOP_DONE:
+		// Scan complete
+		ID_CLK_LOW();
+		FTM2_SC &= ~FTM_SC_CLKS_MASK; // stop timer
+
+		// ======== CH0 ==========
+		// Assign ID detection state for this channel
+		ids->ch1.state = IdState.ch1.state;
+
+		if(IdState.ch1.state == ID_STATE_DONE)
+		{
+			// Assign the ID derived from the ID pulse duration
+			uint32_t tickDiff = IdState.ch1.timer_2 - IdState.ch1.timer_1;
+			ids->ch1.id = assign(tickDiff * TICK_FACTOR);
+
+			if(ids->ch1.id)
+				IdState.ch1.detectedBy = FOUND_BY_MONOFLOP;
+			else
+				ids->ch1.state = ID_STATE_INVALID; // Invalid ID pulse detected
+		}
+		else if(IdState.ch1.state == ID_STATE_WAIT_HIGH)
+		{	// Only detected ID pulse rising edge -> Timeout
+			ids->ch1.state = ID_STATE_TIMEOUT;
+		}
+		else if(IdState.ch1.state == ID_STATE_WAIT_LOW)
+		{	// Did not detect any edge -> No answer
+			ids->ch1.state = ID_STATE_NO_ANSWER;
+		}
+		else
+		{
+			ids->ch1.id = 0;
+		}
+
+		// ======== CH1 ==========
+		// Assign ID detection state for this channel
+		ids->ch2.state 	= IdState.ch2.state;
+
+		if(IdState.ch2.state == ID_STATE_DONE)
+		{
+			// Assign the ID derived from the ID pulse duration
+			uint32_t tickDiff = IdState.ch2.timer_2 - IdState.ch2.timer_1;
+			ids->ch2.id = assign(tickDiff * TICK_FACTOR);
+
+			if(ids->ch2.id)
+				IdState.ch2.detectedBy = FOUND_BY_MONOFLOP;
+			else
+				ids->ch2.state = ID_STATE_INVALID; // Invalid ID pulse detected
+		}
+		else if(IdState.ch2.state == ID_STATE_WAIT_HIGH)
+		{	// Only detected ID pulse rising edge -> Timeout
+			ids->ch2.state = ID_STATE_TIMEOUT;
+		}
+		else if(IdState.ch2.state == ID_STATE_WAIT_LOW)
+		{	// Did not detect any edge -> No answer
+			ids->ch2.state = ID_STATE_NO_ANSWER;
+		}
+		else
+		{
+			ids->ch2.id = 0;
+		}
+
+		monoflopState = MONOFLOP_INIT;
+		return true;
+		break;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+static int detectID_EEPROM(IdAssignmentTypeDef *ids)
+{
+	// ====== EEPROM Check ======
+	// EEPROM spec reserves 2 bytes for the ID buffer.
+	// Currently we only use one byte for IDs, both here in the firmware
+	// and in the IDE - once we deplete that ID pool, this needs to be extended
+	// (uint8_t to uint16_t and change EEPROM read to read two bytes instead of one)
+	uint8_t idBuffer[2];
+	// ====== CH1 ======
+	if(ids->ch1.state != ID_STATE_DONE)
+	{
+		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
+		if(!eeprom_check(&SPI.ch1))
+		{
+			eeprom_read_array(&SPI.ch1, EEPROM_ADDR_ID, &idBuffer[0], 1);
+			ids->ch1.id = idBuffer[0];
+			// ID was correctly detected via EEPROM
+			if(ids->ch1.id)
+			{
+				ids->ch1.state = ID_STATE_DONE;
+				IdState.ch1.detectedBy = FOUND_BY_EEPROM;
+			}
+		}
+		// EEPROM access changes the ID_CH0 pin configuration -> write it again // todo CHECK 2: workaround, do this better later (LH) #1
+		PORT_PCR_REG(HAL.IOs->pins->ID_CH0.portBase, HAL.IOs->pins->ID_CH0.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
+	}
+
+	// ====== CH2 ======
+	if(ids->ch2.state != ID_STATE_DONE)
+	{
+		// EEPROM is not ready -> assume it is not connected -> skip EEPROM ID read
+		if(!eeprom_check(&SPI.ch2))
+		{
+			eeprom_read_array(&SPI.ch2, EEPROM_ADDR_ID, &idBuffer[0], 1);
+			ids->ch2.id = idBuffer[0];
+			//id was correctly detected via EEPROM
+			if(ids->ch2.id)
+			{
+				ids->ch2.state = ID_STATE_DONE;
+				IdState.ch2.detectedBy = FOUND_BY_EEPROM;
+			}
+		}
+		// EEPROM access changes the ID_CH1 pin configuration -> write it again // todo CHECK 2: workaround, do this better later (LH) #2
+		PORT_PCR_REG(HAL.IOs->pins->ID_CH1.portBase, HAL.IOs->pins->ID_CH1.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
+	}
+
+	return true;
+}

@@ -41,9 +41,6 @@ void enable_irq (int irq)
               NVICISER2 |= 1 << (irq%32);
               break;
     }
-    // FISCHSUPPECHECK welche Prioritäten für welche Interrupts
-    NVICIP88 = 0x03;	// PortB Prio3
-    NVICIP64 = 0x03;	// FTM2 Prio3
 }
 /***********************************************************************/
 /*

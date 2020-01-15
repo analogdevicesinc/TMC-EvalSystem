@@ -38,6 +38,8 @@ static void enableDriver(DriverState state);
 
 static uint8_t init_state = 0;
 
+extern IOPinTypeDef DummyPin;
+
 typedef struct
 {
 	IOPinTypeDef *DRV_ENN;
@@ -293,6 +295,21 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = StepDir_getMode(motor);
 		} else if(readWrite == WRITE) {
 			StepDir_setMode(motor, *value);
+
+			if (*value == 0)
+			{
+				// Register the pins
+				StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
+			}
+			else
+			{
+				// Unregister the pins
+				StepDir_setPins(0, &DummyPin, &DummyPin, NULL);
+
+				// Set the Pins to HIGH - this allows external StepDir input
+				HAL.IOs->config->setHigh(Pins.REFL_STEP);
+				HAL.IOs->config->setHigh(Pins.REFR_DIR);
+			}
 		}
 		break;
 	case 51: // StepDir interrupt frequency

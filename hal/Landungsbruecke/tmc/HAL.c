@@ -2,6 +2,7 @@
 
 static void init(void);
 static void reset(uint8_t ResetPeripherals);
+static void NVIC_init(void);
 static void NVIC_DeInit(void);
 static void get_hwid(void);
 
@@ -31,6 +32,7 @@ static void init(void)
 {
 	Cpu.initClocks();
 	Cpu.initLowLevel();
+	NVIC_init();
 	EnableInterrupts;;
 
 	systick_init();
@@ -63,21 +65,69 @@ static void __attribute((noreturn)) reset(uint8_t ResetPeripherals)
 	while(1);
 }
 
+static void NVIC_init(void)
+{
+	uint8_t i;
+
+	// Disable all interrupts
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICER); i++)
+	{
+		// Interrupt clear-enable Registers
+		NVIC_ICER(i) = 0xFFFFFFFF;
+	}
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICPR); i++)
+	{
+		// Interrupt clear-pending Registers
+		NVIC_ICPR(i) = 0xFFFFFFFF;
+	}
+
+	// Set all interrupt priorities to the same level
+	// The priority is stored in the uint8_t IP register, but not all of the
+	// bits are used. For the Processor of the Landungsbruecke the 4 upper bits
+	// are implemented. Here we set the interrupt priority to the middle of the
+	// available values to allow other code to increase or decrease specific
+	// interrupt priorities.
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->IP); i++)
+	{
+		// Interrupt priority registers
+		NVIC_IP(i) = 0x80;
+	}
+
+	// Special interrupt priorities
+	// PortB interrupt - used for ID detection by measuring a pulse duration
+	// Needs to be the fastest interrupt to ensure correct measurement.
+	NVIC_IP(INT_PORTB-16) = 0x00;
+	// FTM1 interrupt - used by the StepDir generator. If this gets preempted
+	// the StepDir movement quality gets degraded.
+	NVIC_IP(INT_FTM1-16) = 0x10;
+	// USB interrupt - needed for communication
+	NVIC_IP(INT_USB0-16) = 0x20;
+}
+
 static void NVIC_DeInit(void)
 {
-	uint8_t index;
+	uint8_t i;
 
 	asm volatile("CPSID I\n");	// disable interrupts
 
 	// Clear all NVIC interrupts
-	for(index = 0; index < (sizeof(NVIC_BASE_PTR->ICER)/sizeof(NVIC_BASE_PTR->ICER[0])); index++)
-		NVIC_ICER_REG(NVIC_BASE_PTR,index) = 0xFFFFFFFF;	// Interrupt clear-enable Registers
-	for(index = 0; index < (sizeof(NVIC_BASE_PTR->ICPR)/sizeof(NVIC_BASE_PTR->ICPR[0])); index++)
-		NVIC_ICPR_REG(NVIC_BASE_PTR,index) = 0xFFFFFFFF;	// Interrupt clear-pending Registers
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICER); i++)
+	{
+		// Interrupt clear-enable Registers
+		NVIC_ICER(i) = 0xFFFFFFFF;
+	}
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->ICPR); i++)
+	{
+		// Interrupt clear-pending Registers
+		NVIC_ICPR(i) = 0xFFFFFFFF;
+	}
 
 	// Reset interrupt priorities
-	for(index = 0; index < (sizeof(NVIC_BASE_PTR->IP)/sizeof(NVIC_BASE_PTR->IP[0])); index++)
-		NVIC_IP_REG(NVIC_BASE_PTR,index) = 0x00000000;
+	for(i = 0; i < ARRAY_SIZE(NVIC_BASE_PTR->IP); i++)
+	{
+		// Interrupt priority registers
+		NVIC_IP(i) = 0x00;
+	}
 
 	SYST_CSR = 0; // disable systick
 }

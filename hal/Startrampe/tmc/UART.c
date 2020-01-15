@@ -284,6 +284,37 @@ void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t
 	wait(2);
 }
 
+void UART_setEnabled(UART_Config *channel, uint8_t enabled)
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	if (enabled)
+	{
+		// UART2-Pins zuweisen (PD5 und PD6)
+		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_6;
+		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
+		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
+		GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_5;
+		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
+		GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+		GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
+		GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
+	}
+	else
+	{
+		HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
+		HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
+	}
+}
+
 static void tx(uint8_t ch)
 {
 	buffers.tx.buffer[buffers.tx.wrote] = ch;
