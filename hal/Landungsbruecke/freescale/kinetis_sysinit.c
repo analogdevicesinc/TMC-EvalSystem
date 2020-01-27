@@ -15,7 +15,6 @@
 #if __cplusplus
 extern "C" {
 #endif
-extern uint32 __vector_table[];
 extern unsigned long _estack;
 extern void __thumb_startup(void);
 #if __cplusplus
@@ -40,37 +39,6 @@ void Default_Handler(void)
 	 * 0xE000ED29: BFSR (BusFault status register)
 	 * 0xE000ED38: BFAR (BusFault address register)
 	 */
-}
-
-/**
- **===========================================================================
- **  Reset handler
- **===========================================================================
- */
-void __init_hardware(void)
-{
-	SCB_VTOR = (uint32)__vector_table; /* Set the interrupt vector table position */
-
-  #if defined(MKL25Z128)
-	 // Disable the Watchdog because it may reset the core before entering main().
-	SIM_COPC = KINETIS_WDOG_DISABLED_CTRL;
-
-	#elif defined(MKE02Z64)
-	 // Disable the Watchdog because it may reset the core before entering main().
-	WDOG_CNT = 0x20C5;
-	WDOG_CNT = 0x28D9;
-	WDOG_TOVAL = 0x28D9;
-	WDOG_CS2 = WDOG_CS2_CLK(0);
-	WDOG_CS1 = WDOG_CS1_UPDATE_MASK;   //watchdog setting can be changed later
-
-  #elif defined(MK20DN512) || defined(MK20DX256)
-	 // Disable the Watchdog because it may reset the core before entering main().
-	WDOG_UNLOCK = 0xC520;			// Write 0xC520 to the unlock register
-	WDOG_UNLOCK = 0xD928;			// Followed by 0xD928 to complete the unlock
-	WDOG_STCTRLH &= ~WDOG_STCTRLH_WDOGEN_MASK;	// Clear the WDOGEN bit to disable the watchdog
-	#else
-	#error "MCU sub-model not supported!"
-	#endif
 }
 
 /* Weak definitions of handlers point to Default_Handler if not implemented */
@@ -298,3 +266,33 @@ void (* const InterruptVector[])(void) __attribute__ ((section(".vectortable")))
 	SWI_IRQHandler            /* Software interrupt */
 };
 
+/**
+ **===========================================================================
+ **  Reset handler
+ **===========================================================================
+ */
+void __init_hardware(void)
+{
+	SCB_VTOR = (uint32)&InterruptVector[0]; /* Set the interrupt vector table position */
+
+  #if defined(MKL25Z128)
+	 // Disable the Watchdog because it may reset the core before entering main().
+	SIM_COPC = KINETIS_WDOG_DISABLED_CTRL;
+
+	#elif defined(MKE02Z64)
+	 // Disable the Watchdog because it may reset the core before entering main().
+	WDOG_CNT = 0x20C5;
+	WDOG_CNT = 0x28D9;
+	WDOG_TOVAL = 0x28D9;
+	WDOG_CS2 = WDOG_CS2_CLK(0);
+	WDOG_CS1 = WDOG_CS1_UPDATE_MASK;   //watchdog setting can be changed later
+
+  #elif defined(MK20DN512) || defined(MK20DX256)
+	 // Disable the Watchdog because it may reset the core before entering main().
+	WDOG_UNLOCK = 0xC520;			// Write 0xC520 to the unlock register
+	WDOG_UNLOCK = 0xD928;			// Followed by 0xD928 to complete the unlock
+	WDOG_STCTRLH &= ~WDOG_STCTRLH_WDOGEN_MASK;	// Clear the WDOGEN bit to disable the watchdog
+	#else
+	#error "MCU sub-model not supported!"
+	#endif
+}
