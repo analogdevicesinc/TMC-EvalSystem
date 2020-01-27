@@ -182,119 +182,119 @@ void SWI_IRQHandler(void) __attribute__ ((weak, alias("Default_Handler")));			/*
 
 /* The Interrupt Vector Table */
 void (* const InterruptVector[])(void) __attribute__ ((section(".vectortable"))) = {
-    /* Processor exceptions */
-    (void(*)(void)) &_estack,
-    __thumb_startup,
-    NMI_Handler,
-    HardFault_Handler,
-	  MemManage_Handler,
-	  BusFault_Handler,
-	  UsageFault_Handler,
-    0,
-    0,
-    0,
-    0,
-    SVC_Handler,
-	  DebugMon_Handler,
-    0,
-    PendSV_Handler,
-    SysTick_Handler,
+	/* Processor exceptions */
+	(void(*)(void)) &_estack,
+	__thumb_startup,
+	NMI_Handler,
+	HardFault_Handler,
+	MemManage_Handler,
+	BusFault_Handler,
+	UsageFault_Handler,
+	0,
+	0,
+	0,
+	0,
+	SVC_Handler,
+	DebugMon_Handler,
+	0,
+	PendSV_Handler,
+	SysTick_Handler,
 
-    /* Interrupts */
-    DMA0_IRQHandler,		/* DMA channel 0 transfer complete interrupt */
-    DMA1_IRQHandler,		/* DMA channel 1 transfer complete interrupt */
-    DMA2_IRQHandler,		/* DMA channel 2 transfer complete interrupt */
-    DMA3_IRQHandler,		/* DMA channel 3 transfer complete interrupt */
-    DMA4_IRQHandler,		/* DMA channel 4 transfer complete interrupt */
-    DMA5_IRQHandler,		/* DMA channel 5 transfer complete interrupt */
-    DMA6_IRQHandler,		/* DMA channel 6 transfer complete interrupt */
-    DMA7_IRQHandler,		/* DMA channel 7 transfer complete interrupt */
-    DMA8_IRQHandler,		/* DMA channel 8 transfer complete interrupt */
-    DMA9_IRQHandler,		/* DMA channel 9 transfer complete interrupt */
-    DMA10_IRQHandler,	/* DMA channel 10 transfer complete interrupt */
-    DMA11_IRQHandler,	/* DMA channel 11 transfer complete interrupt */
-    DMA12_IRQHandler,	/* DMA channel 12 transfer complete interrupt */
-    DMA13_IRQHandler,	/* DMA channel 13 transfer complete interrupt */
-    DMA14_IRQHandler,	/* DMA channel 14 transfer complete interrupt */
-    DMA15_IRQHandler,	/* DMA channel 15 transfer complete interrupt */
-    DMA_Error_IRQHandler,/* DMA error interrupt */
-    MCMNormal_IRQHandler,/* MCM normal interrupt */
-    FlashCmd_IRQHandler,	/* Flash memory command complete interrupt */
-    FlashReadErr_IRQHandler,/* Flash read collision interrupt */
-    LVD_LVW_IRQHandler,	/* Low Voltage Detect, Low Voltage Warning */
-    LLW_IRQHandler,		/* Low Leakage Wakeup */
-    Watchdog_IRQHandler,	/* WDOG or EVM interrupt (shared) */
-  	Reserved39_IRQHandler,/* Reserved interrupt 39 */
-    I2C0_IRQHandler,		/* I2C0 interrupt */
-    I2C1_IRQHandler,		/* I2C1 interrupt */
-    SPI0_IRQHandler,		/* SPI0 interrupt */
-    SPI1_IRQHandler,		/* SPI1 interrupt */
-  	SPI2_IRQHandler,    /* SPI2 interrupt 44 */
-		CAN0Msg_IRQHandler,	/* CAN0 message buffer (0-15) interrupt */
-		CAN0BusOff_IRQHandler,/* CAN0 Bus Off interrupt */
-		CAN0Error_IRQHandler,/* CAN0 Error interrupt */
-		CAN0Xmit_IRQHandler,	/* CAN0 Transmit warning interrupt */
-		CAN0Rcv_IRQHandler,	/* CAN0 Recieve warning interrupt */
-		CAN0Wake_IRQHandler,	/* CAN0 Wake Up interrupt */
-    I2S0_Tx_IRQHandler,	/* I2S0 transmit interrupt */
-    I2S0_Rx_IRQHandler,	/* I2S0 receive interrupt */
-  	CAN1Msg_IRQHandler,/* Reserved interrupt 53 */
-   	CAN1BusOff_IRQHandler,/* Reserved interrupt 54 */
-   	CAN1Error_IRQHandler,/* Reserved interrupt 55 */
-   	CAN1Xmit_IRQHandler,/* Reserved interrupt 56 */
-   	CAN1Rcv_IRQHandler,/* Reserved interrupt 57 */
-   	CAN1Wake_IRQHandler,/* Reserved interrupt 58 */
-   	Reserved59_IRQHandler,/* Reserved interrupt 59 */
-    UART0_LON_IRQHandler,/* UART0 LON interrupt */
-    UART0_RX_TX_IRQHandler, /* UART0 receive/transmit interrupt */
-  	UART0Error_IRQHandler,/* UART0 error interrupt */
-    UART1_RX_TX_IRQHandler, /* UART1 receive/transmit interrupt */
-    UART1Error_IRQHandler,/* UART1 error interrupt */
-    UART2_RX_TX_IRQHandler, /* UART2 receive/transmit interrupt */
-    UART2Error_IRQHandler,/* UART2 error interrupt */
-  	UART3_RX_TX_IRQHandler,/* UART3 receive/transmit interrupt */
-   	UART3Error_IRQHandler,/* UART3 error interrupt */
-   	UART4_RX_TX_IRQHandler,/* UART4 receive/transmit */
-   	UART4Error_IRQHandler,/* UART4 error interrupt */
-   	Reserved71_IRQHandler,/* Reserved interrupt 71 */
-   	Reserved72_IRQHandler,/* Reserved interrupt 72 */
-    ADC0_IRQHandler,		/* ADC0 interrupt */
-    ADC1_IRQHandler,		/* ADC1 interrupt */
-    CMP0_IRQHandler,		/* CMP0 interrupt */
-    CMP1_IRQHandler,		/* CMP1 interrupt */
-    CMP2_IRQHandler,		/* CMP2 interrupt */
-    FTM0_IRQHandler,		/* FTM0 fault, all sources interrupt */
-    FTM1_IRQHandler,		/* FTM1 fault, all sources interrupt */
-    FTM2_IRQHandler,		/* FTM2 fault, all sources interrupt */
-    CMT_IRQHandler,		/* CMT interrupt */
-    RTC_IRQHandler,		/* RTC alarm interrupt */
-    RTCSeconds_IRQHandler,  /* RTC seconds interrupt */
-    PIT0_IRQHandler,		/* PIT timer channel 0 interrupt */
-    PIT1_IRQHandler,		/* PIT timer channel 1 interrupt */
-    PIT2_IRQHandler,		/* PIT timer channel 2 interrupt */
-    PIT3_IRQHandler,		/* PIT timer channel 3 interrupt */
-    PDB0_IRQHandler,		/* PDB0 interrupt */
-    USB_ISR,	          /* USB OTG interrupt */
-    USBCharge_IRQHandler,/* USB charger detect interrupt */
-  	Reserved91_IRQHandler,/* Reserved interrupt 91 */
-  	Reserved92_IRQHandler,/* Reserved interrupt 92 */
-   	Reserved93_IRQHandler,/* Reserved interrupt 93 */
-   	Reserved94_IRQHandler,/* Reserved interrupt 94 */
-   	Reserved95_IRQHandler,/* Reserved interrupt 95 */
-   	SDHC_IRQHandler,/* SDHC interrupt */
-   	DAC0_IRQHandler,		/* DAC0 interrupt */
-   	Reserved98_IRQHandler,/* Reserved interrupt 98 */
-    TSI_IRQHandler,		/* TSI all sources interrupt */
-    MCG_IRQHandler,		/* MCG interrupt */
-    LPTimer_IRQHandler,	/* Low-power Timer interrupt */
-   	Reserved102_IRQHandler,/* Reserved interrupt 102 */
-    PORTA_IRQHandler,	/* Port A pin detect interrupt */
-    PORTB_IRQHandler,	/* Port B pin detect interrupt */
-    PORTC_IRQHandler,	/* Port C pin detect interrupt */
-    PORTD_IRQHandler,	/* Port D pin detect interrupt */
-    PORTE_IRQHandler,	/* Port E pin detect interrupt */
-   	Reserved108_IRQHandler,/* Reserved interrupt 108 */
-   	Reserved109_IRQHandler,/* Reserved interrupt 109 */
-    SWI_IRQHandler			/* Software interrupt */
+	/* Interrupts */
+	DMA0_IRQHandler,          /* DMA channel 0 transfer complete interrupt */
+	DMA1_IRQHandler,          /* DMA channel 1 transfer complete interrupt */
+	DMA2_IRQHandler,          /* DMA channel 2 transfer complete interrupt */
+	DMA3_IRQHandler,          /* DMA channel 3 transfer complete interrupt */
+	DMA4_IRQHandler,          /* DMA channel 4 transfer complete interrupt */
+	DMA5_IRQHandler,          /* DMA channel 5 transfer complete interrupt */
+	DMA6_IRQHandler,          /* DMA channel 6 transfer complete interrupt */
+	DMA7_IRQHandler,          /* DMA channel 7 transfer complete interrupt */
+	DMA8_IRQHandler,          /* DMA channel 8 transfer complete interrupt */
+	DMA9_IRQHandler,          /* DMA channel 9 transfer complete interrupt */
+	DMA10_IRQHandler,         /* DMA channel 10 transfer complete interrupt */
+	DMA11_IRQHandler,         /* DMA channel 11 transfer complete interrupt */
+	DMA12_IRQHandler,         /* DMA channel 12 transfer complete interrupt */
+	DMA13_IRQHandler,         /* DMA channel 13 transfer complete interrupt */
+	DMA14_IRQHandler,         /* DMA channel 14 transfer complete interrupt */
+	DMA15_IRQHandler,         /* DMA channel 15 transfer complete interrupt */
+	DMA_Error_IRQHandler,     /* DMA error interrupt */
+	MCMNormal_IRQHandler,     /* MCM normal interrupt */
+	FlashCmd_IRQHandler,      /* Flash memory command complete interrupt */
+	FlashReadErr_IRQHandler,  /* Flash read collision interrupt */
+	LVD_LVW_IRQHandler,       /* Low Voltage Detect, Low Voltage Warning */
+	LLW_IRQHandler,           /* Low Leakage Wakeup */
+	Watchdog_IRQHandler,      /* WDOG or EVM interrupt (shared) */
+	Reserved39_IRQHandler,    /* Reserved interrupt 39 */
+	I2C0_IRQHandler,          /* I2C0 interrupt */
+	I2C1_IRQHandler,          /* I2C1 interrupt */
+	SPI0_IRQHandler,          /* SPI0 interrupt */
+	SPI1_IRQHandler,          /* SPI1 interrupt */
+	SPI2_IRQHandler,          /* SPI2 interrupt 44 */
+	CAN0Msg_IRQHandler,       /* CAN0 message buffer (0-15) interrupt */
+	CAN0BusOff_IRQHandler,    /* CAN0 Bus Off interrupt */
+	CAN0Error_IRQHandler,     /* CAN0 Error interrupt */
+	CAN0Xmit_IRQHandler,      /* CAN0 Transmit warning interrupt */
+	CAN0Rcv_IRQHandler,       /* CAN0 Recieve warning interrupt */
+	CAN0Wake_IRQHandler,      /* CAN0 Wake Up interrupt */
+	I2S0_Tx_IRQHandler,       /* I2S0 transmit interrupt */
+	I2S0_Rx_IRQHandler,       /* I2S0 receive interrupt */
+	CAN1Msg_IRQHandler,       /* Reserved interrupt 53 */
+	CAN1BusOff_IRQHandler,    /* Reserved interrupt 54 */
+	CAN1Error_IRQHandler,     /* Reserved interrupt 55 */
+	CAN1Xmit_IRQHandler,      /* Reserved interrupt 56 */
+	CAN1Rcv_IRQHandler,       /* Reserved interrupt 57 */
+	CAN1Wake_IRQHandler,      /* Reserved interrupt 58 */
+	Reserved59_IRQHandler,    /* Reserved interrupt 59 */
+	UART0_LON_IRQHandler,     /* UART0 LON interrupt */
+	UART0_RX_TX_IRQHandler,   /* UART0 receive/transmit interrupt */
+	UART0Error_IRQHandler,    /* UART0 error interrupt */
+	UART1_RX_TX_IRQHandler,   /* UART1 receive/transmit interrupt */
+	UART1Error_IRQHandler,    /* UART1 error interrupt */
+	UART2_RX_TX_IRQHandler,   /* UART2 receive/transmit interrupt */
+	UART2Error_IRQHandler,    /* UART2 error interrupt */
+	UART3_RX_TX_IRQHandler,   /* UART3 receive/transmit interrupt */
+	UART3Error_IRQHandler,    /* UART3 error interrupt */
+	UART4_RX_TX_IRQHandler,   /* UART4 receive/transmit */
+	UART4Error_IRQHandler,    /* UART4 error interrupt */
+	Reserved71_IRQHandler,    /* Reserved interrupt 71 */
+	Reserved72_IRQHandler,    /* Reserved interrupt 72 */
+	ADC0_IRQHandler,          /* ADC0 interrupt */
+	ADC1_IRQHandler,          /* ADC1 interrupt */
+	CMP0_IRQHandler,          /* CMP0 interrupt */
+	CMP1_IRQHandler,          /* CMP1 interrupt */
+	CMP2_IRQHandler,          /* CMP2 interrupt */
+	FTM0_IRQHandler,          /* FTM0 fault, all sources interrupt */
+	FTM1_IRQHandler,          /* FTM1 fault, all sources interrupt */
+	FTM2_IRQHandler,          /* FTM2 fault, all sources interrupt */
+	CMT_IRQHandler,           /* CMT interrupt */
+	RTC_IRQHandler,           /* RTC alarm interrupt */
+	RTCSeconds_IRQHandler,    /* RTC seconds interrupt */
+	PIT0_IRQHandler,          /* PIT timer channel 0 interrupt */
+	PIT1_IRQHandler,          /* PIT timer channel 1 interrupt */
+	PIT2_IRQHandler,          /* PIT timer channel 2 interrupt */
+	PIT3_IRQHandler,          /* PIT timer channel 3 interrupt */
+	PDB0_IRQHandler,          /* PDB0 interrupt */
+	USB_ISR,                  /* USB OTG interrupt */
+	USBCharge_IRQHandler,     /* USB charger detect interrupt */
+	Reserved91_IRQHandler,    /* Reserved interrupt 91 */
+	Reserved92_IRQHandler,    /* Reserved interrupt 92 */
+	Reserved93_IRQHandler,    /* Reserved interrupt 93 */
+	Reserved94_IRQHandler,    /* Reserved interrupt 94 */
+	Reserved95_IRQHandler,    /* Reserved interrupt 95 */
+	SDHC_IRQHandler,          /* SDHC interrupt */
+	DAC0_IRQHandler,          /* DAC0 interrupt */
+	Reserved98_IRQHandler,    /* Reserved interrupt 98 */
+	TSI_IRQHandler,           /* TSI all sources interrupt */
+	MCG_IRQHandler,           /* MCG interrupt */
+	LPTimer_IRQHandler,       /* Low-power Timer interrupt */
+	Reserved102_IRQHandler,   /* Reserved interrupt 102 */
+	PORTA_IRQHandler,         /* Port A pin detect interrupt */
+	PORTB_IRQHandler,         /* Port B pin detect interrupt */
+	PORTC_IRQHandler,         /* Port C pin detect interrupt */
+	PORTD_IRQHandler,         /* Port D pin detect interrupt */
+	PORTE_IRQHandler,         /* Port E pin detect interrupt */
+	Reserved108_IRQHandler,   /* Reserved interrupt 108 */
+	Reserved109_IRQHandler,   /* Reserved interrupt 109 */
+	SWI_IRQHandler            /* Software interrupt */
 };
 
