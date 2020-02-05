@@ -428,7 +428,7 @@ void TMC7300_init(void)
 	Evalboards.ch2.enableDriver         = enableDriver;
 	Evalboards.ch2.checkErrors          = checkErrors;
 	Evalboards.ch2.numberOfMotors       = MOTORS;
-	Evalboards.ch2.VMMin                = VM_MIN;
+	Evalboards.ch2.VMMin                = 0; // Set to 0 instead of VM_MIN here since the VM supply isn't connected to the Landungsbruecke
 	Evalboards.ch2.VMMax                = VM_MAX;
 	Evalboards.ch2.deInit               = deInit;
 	Evalboards.ch2.periodicJob          = periodicJob;
