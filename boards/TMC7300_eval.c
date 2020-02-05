@@ -278,7 +278,6 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
-	Evalboards.ch2.errors = !(HAL.IOs->config->isHigh(Pins.STDBY));
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
