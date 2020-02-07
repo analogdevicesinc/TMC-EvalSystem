@@ -28,8 +28,8 @@ typedef struct
 	void *type;
 	uint8_t  id;
 	uint32_t errors;
-	uint32_t VMMax;
-	uint32_t VMMin;
+	int32_t VMMax;
+	int32_t VMMin;
 	unsigned char numberOfMotors;
 	ConfigurationTypeDef *config;
 	uint32_t (*left)                (uint8_t motor, int32_t velocity);            // move left with velocity <velocity>

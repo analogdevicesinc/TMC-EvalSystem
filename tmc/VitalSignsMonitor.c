@@ -52,7 +52,7 @@ void heartBeat(uint32_t tick)
 // Check for over/undervoltage of motor supply VM
 void checkVM()
 {
-	uint32_t VM;
+	int32_t VM;
 	static uint8_t stable = VSM_BROWNOUT_DELAY + 1; // delay value + 1 is the state during normal voltage levels - set here to prevent restore shortly after boot
 	static uint8_t vio_state = 1;
 
@@ -69,8 +69,10 @@ void checkVM()
 	if(VM >	Evalboards.ch2.VMMax)    VitalSignsMonitor.overVoltage  |= VSM_CHX | VSM_CH2;
 
 	// check for over/undervoltage and set according status if necessary
-	if(VM <	Evalboards.ch1.VMMin)    VitalSignsMonitor.brownOut  |= VSM_CHX | VSM_CH1;
-	if(VM <	Evalboards.ch2.VMMin)    VitalSignsMonitor.brownOut  |= VSM_CHX | VSM_CH2;
+	if (Evalboards.ch1.VMMin > 0)
+		if(VM <	Evalboards.ch1.VMMin)    VitalSignsMonitor.brownOut  |= VSM_CHX | VSM_CH1;
+	if (Evalboards.ch2.VMMin > 0)
+		if(VM <	Evalboards.ch2.VMMin)    VitalSignsMonitor.brownOut  |= VSM_CHX | VSM_CH2;
 	// Global minimum voltage check (skipped if a minimum voltage of 0 is set by a board)
 	if(Evalboards.ch1.VMMin && Evalboards.ch2.VMMin)
 		if(VM <	VM_MIN_INTERFACE_BOARD)  VitalSignsMonitor.brownOut  |= VSM_CHX;

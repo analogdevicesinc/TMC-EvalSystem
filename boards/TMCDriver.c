@@ -16,11 +16,12 @@ void tmcdriver_init()
 	Evalboards.ch2.config->state        = CONFIG_READY;
 	Evalboards.ch2.config->configIndex  = 0;
 
-	// Set the minimum required voltage to 0.1V here.
 	// A value of 0 indicates the Evalboard not connecting the VM line,
 	// resulting in skipped global minimum voltage checks.
-	Evalboards.ch2.VMMin                = 1;
-	Evalboards.ch2.VMMax                = -1;
+	// A negative value indicates no board being connected, which skips the
+	// minimum voltage check for that channel
+	Evalboards.ch2.VMMin                = -1;
+	Evalboards.ch2.VMMax                = s32_MAX;
 
 	Evalboards.ch2.numberOfMotors       = 0;
 	Evalboards.ch2.errors               = 0;
