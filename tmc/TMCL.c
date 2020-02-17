@@ -681,7 +681,9 @@ static void SetGlobalParameter()
 	case 4: // War schon so. Kann weg?
 		break;
 	case 6:
-		HAL.IOs->config->setToState(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32);
+		if(Evalboards.ch1.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32)
+				&& Evalboards.ch2.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32))
+			HAL.IOs->config->setToState(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32);
 		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;

@@ -39,6 +39,7 @@ static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static void setStandby(uint8_t enableStandby);
+static uint8_t setPin(IOPinTypeDef *pin, IO_States state);
 
 static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
@@ -553,6 +554,12 @@ static void setStandby(uint8_t enableStandby)
 	tmc2300_setStandby(&TMC2300, enableStandby);
 }
 
+static uint8_t onPinChange(IOPinTypeDef *pin, IO_States state)
+{
+	UNUSED(state);
+	return !(pin == Pins.DRV_EN || pin == Pins.STDBY);
+}
+
 static uint8_t reset()
 {
 	StepDir_init(STEPDIR_PRECISION);
@@ -662,6 +669,7 @@ void TMC2300_init(void)
 	Evalboards.ch2.VMMax                = VM_MAX;
 	Evalboards.ch2.deInit               = deInit;
 	Evalboards.ch2.periodicJob          = periodicJob;
+	Evalboards.ch2.onPinChange               = onPinChange;
 
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);

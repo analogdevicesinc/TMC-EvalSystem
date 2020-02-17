@@ -61,6 +61,13 @@ static uint32_t dummy_getLimit(uint8_t type, uint8_t motor, int32_t *value)
 	return TMC_ERROR_FUNCTION;
 }
 
+static uint8_t dummy_onPinChange(IOPinTypeDef *pin, IO_States state)
+{
+	UNUSED(pin);
+	UNUSED(state);
+	return 1;
+}
+
 static uint8_t delegationReturn(void)
 {
 	return 1;
@@ -103,6 +110,7 @@ void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel)
 	channel->fullCover         = NULL;
 	channel->getMin            = dummy_getLimit;
 	channel->getMax            = dummy_getLimit;
+	channel->onPinChange       = dummy_onPinChange;
 }
 
 void periodicJobDummy(uint32_t tick)

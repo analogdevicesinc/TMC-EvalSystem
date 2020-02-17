@@ -59,6 +59,8 @@ typedef struct
 
 	uint32_t (*getMin)              (uint8_t type, uint8_t motor, int32_t *value);
 	uint32_t (*getMax)              (uint8_t type, uint8_t motor, int32_t *value);
+
+	uint8_t (*onPinChange)(IOPinTypeDef *pin, IO_States state);
 } EvalboardFunctionsTypeDef;
 
 
