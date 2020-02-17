@@ -8,6 +8,10 @@
 
 #define TIMEOUT_VALUE 10 // 10 ms
 
+// Eval Error defines
+#define ERROR_INCONSISTENT_MASK (1 << 0)
+#define ERROR_INCONSISTENT_SHIFT 0
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -278,6 +282,10 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
+	Evalboards.ch2.errors = FIELD_SET(Evalboards.ch2.errors, ERROR_INCONSISTENT_MASK, ERROR_INCONSISTENT_SHIFT, tmc7300_consistencyCheck(&TMC7300));
+
+	if(Evalboards.ch2.errors)
+		enableDriver(DRIVER_DISABLE);
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)

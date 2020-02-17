@@ -25,6 +25,10 @@
 
 #define TIMEOUT_VALUE 10 // 10 ms
 
+// Eval Error defines
+#define ERROR_INCONSISTENT_MASK (1 << 0)
+#define ERROR_INCONSISTENT_SHIFT 0
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -39,7 +43,7 @@ static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static void setStandby(uint8_t enableStandby);
-static uint8_t setPin(IOPinTypeDef *pin, IO_States state);
+static uint8_t onPinChange(IOPinTypeDef *pin, IO_States state);
 
 static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
@@ -496,6 +500,11 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 static void checkErrors(uint32_t tick)
 {
 	UNUSED(tick);
+	Evalboards.ch2.errors = FIELD_SET(Evalboards.ch2.errors, ERROR_INCONSISTENT_MASK, ERROR_INCONSISTENT_SHIFT, tmc2300_consistencyCheck(&TMC2300));
+
+	// Error detected -> disable driver for safety
+	if(Evalboards.ch2.errors)
+		enableDriver(DRIVER_DISABLE);
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
@@ -538,7 +547,7 @@ static void setStandby(uint8_t enableStandby)
 	// En/disable the UART pins depending on standby state
 	UART_setEnabled(TMC2300_UARTChannel, !enableStandby);
 
-	HAL.IOs->config->setToState(Pins.STDBY, (enableStandby)? IOS_LOW:IOS_HIGH);
+	HAL.IOs->config->setToState(Pins.STDBY, (enableStandby) ? IOS_LOW : IOS_HIGH);
 
 	if (enableStandby)
 	{
@@ -669,7 +678,7 @@ void TMC2300_init(void)
 	Evalboards.ch2.VMMax                = VM_MAX;
 	Evalboards.ch2.deInit               = deInit;
 	Evalboards.ch2.periodicJob          = periodicJob;
-	Evalboards.ch2.onPinChange               = onPinChange;
+	Evalboards.ch2.onPinChange          = onPinChange;
 
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
