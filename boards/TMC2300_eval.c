@@ -25,6 +25,8 @@
 
 #define TIMEOUT_VALUE 10 // 10 ms
 
+#define CONSISTENCY_CHECK_INTERVAL 0 // ticks
+
 // Eval Error defines
 #define ERROR_INCONSISTENT_MASK (1 << 0)
 #define ERROR_INCONSISTENT_SHIFT 0
@@ -499,8 +501,11 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 
 static void checkErrors(uint32_t tick)
 {
-	UNUSED(tick);
-	Evalboards.ch2.errors = FIELD_SET(Evalboards.ch2.errors, ERROR_INCONSISTENT_MASK, ERROR_INCONSISTENT_SHIFT, tmc2300_consistencyCheck(&TMC2300));
+	static uint32_t tick_old = 0;
+	if((tick - tick_old) > CONSISTENCY_CHECK_INTERVAL) {
+		Evalboards.ch2.errors = FIELD_SET(Evalboards.ch2.errors, ERROR_INCONSISTENT_MASK, ERROR_INCONSISTENT_SHIFT, tmc2300_consistencyCheck(&TMC2300));
+		tick_old = tick;
+	}
 
 	// Error detected -> disable driver for safety
 	if(Evalboards.ch2.errors)
