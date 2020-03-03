@@ -99,7 +99,21 @@ static void init()
 		// todo CHECK 2: Workaround: shallForceBoot() changes pin settings - change them again here, since otherwise IDDetection partially breaks (LH)
 		HAL.IOs->config->toOutput(&HAL.IOs->pins->ID_CLK);
 		HAL.IOs->config->toInput(&HAL.IOs->pins->ID_CH0);
+
 	}
+
+	if (ID_CH1_DEFAULT && (!ids.ch1.id || ID_CH1_OVERRIDE))
+	{
+		ids.ch1.id = ID_CH1_DEFAULT;
+		ids.ch1.state = ID_STATE_DONE;
+	}
+
+	if (ID_CH2_DEFAULT && (!ids.ch2.id || ID_CH2_OVERRIDE))
+	{
+		ids.ch2.id = ID_CH2_DEFAULT;
+		ids.ch2.state = ID_STATE_DONE;
+	}
+
 	Board_assign(&ids);             // assign boards with detected id
 
 	VitalSignsMonitor.busy 	= 0;    // not busy any more!

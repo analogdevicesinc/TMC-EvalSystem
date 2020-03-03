@@ -8,6 +8,14 @@ LINK			= BL
 OUTDIR 			= _build_$(DEVICE)
 TARGET 			= $(DEVICE)_v$(VERSION)_$(LINK)
 
+# Force IDs (IDs found in tmc/BoardAssignment.h)
+# If OVERRIDE is set, any autodetected ID will be discarded
+# Else, autodetected IDs preceed ID_CH1_DEFAULT / ID_CH2_DEFAULT
+ID_CH1_DEFAULT	?= 0
+ID_CH1_OVERRIDE	?= false
+ID_CH2_DEFAULT	?= 0
+ID_CH2_OVERRIDE	?= false
+
 ### Source File Selection ###
 # Evalboards
 SRC				+= boards/SelfTest_$(DEVICE).c
@@ -201,6 +209,9 @@ else ifeq ($(DEVICE),Landungsbruecke)
 		LDFLAGS +=-T $(LPCLIBDIR)/MK20DN512.ld
 	endif
 endif
+
+CDEFS += -DID_CH1_DEFAULT=$(ID_CH1_DEFAULT) -DID_CH1_OVERRIDE=$(ID_CH1_OVERRIDE)
+CDEFS += -DID_CH2_DEFAULT=$(ID_CH2_DEFAULT) -DID_CH2_OVERRIDE=$(ID_CH2_OVERRIDE)
 
 CDEFS += -DBUILD_VERSION=$(subst .,,$(VERSION))
 
