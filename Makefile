@@ -243,18 +243,18 @@ ASRC +=
 ASRCARM =
 
 # List any extra directories to look for include files here.
-#    Each directory must be seperated by a space.
+#    Each directory must be separated by a space.
 EXTRAINCDIRS  += TMC-API
 # EXTRAINCDIRS  += "${GCC_HOME}/lib/gcc/arm-none-eabi/6.3.1/include"
 
 # List any extra directories to look for library files here.
 # Also add directories where the linker should search for
 # includes from linker-script to the list
-#     Each directory must be seperated by a space.
+#     Each directory must be separated by a space.
 EXTRA_LIBDIRS +=
 
 # Extra libraries
-#    Each library-name must be seperated by a space.
+#    Each library-name must be separated by a space.
 #    i.e. to link with libxyz.a, libabc.a and libefsl.a:
 #    EXTRA_LIBS = xyz abc efsl
 # for newlib-lpc (file: libnewlibc-lpc.a):
