@@ -96,6 +96,8 @@ void tmc7300_readRegister(uint8_t motor, uint8_t address, int32_t *value)
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
+	UNUSED(velocity);
+
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
 
@@ -119,6 +121,8 @@ static uint32_t stop(uint8_t motor)
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
+	UNUSED(position);
+
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
 
