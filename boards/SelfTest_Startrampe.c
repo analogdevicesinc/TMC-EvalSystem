@@ -1,6 +1,6 @@
-#include "tmc/idDetection.h"
+#include "tmc/IdDetection.h"
 #include "SelfTest.h"
-#include "board.h"
+#include "Board.h"
 
 static void deInit();
 static uint32_t selfTest(uint8_t type, uint8_t motor, int32_t *value);
