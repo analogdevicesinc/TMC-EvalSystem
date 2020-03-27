@@ -217,13 +217,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			TMC2041_FIELD_WRITE(motorToIC(motor), TMC2041_CHOPCONF(motor), TMC2041_VHIGHFS_MASK, TMC2041_VHIGHFS_SHIFT, *value);
 		}
 		break;
-	case 29: // todo AP REM 2: Not documented in XML - delete? seems pointless anyways (LH)
-		if(readWrite == READ) {
-			//*value = StepDir.ch1->actualVelocity;
-			*value = StepDir_getActualVelocity(0);
-		} else if(readWrite == WRITE)
-			errors |= TMC_ERROR_TYPE;
-		break;
 	case 50: // StepDir internal(0)/external(1)
 		if(readWrite == READ) {
 			*value = StepDir_getMode(motor);
