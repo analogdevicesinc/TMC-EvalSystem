@@ -54,6 +54,9 @@ SRC				+= boards/TMC7300_eval.c
 SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
 SRC				+= boards/TMCC160_eval.c
+ifeq ($(DEVICE),Landungsbruecke)
+SRC             += boards/TMC6300_eval.c
+endif
 
 # System and hardware abstraction layer
 SRC 			+= hal/$(DEVICE)/tmc/SysTick.c
@@ -78,6 +81,9 @@ SRC				+= tmc/EEPROM.c
 SRC 			+= tmc/BoardAssignment.c
 SRC 			+= tmc/VitalSignsMonitor.c
 SRC 			+= tmc/StepDir.c
+ifeq ($(DEVICE),Landungsbruecke)
+SRC             += tmc/BLDC.c
+endif
 
 # TMC_API
 SRC				+= TMC-API/tmc/helpers/Functions.c
