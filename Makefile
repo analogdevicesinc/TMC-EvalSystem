@@ -55,6 +55,7 @@ SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
 SRC				+= boards/TMCC160_eval.c
 ifeq ($(DEVICE),Landungsbruecke)
+SRC             += boards/TMC2226_eval.c
 SRC             += boards/TMC6300_eval.c
 endif
 
@@ -98,6 +99,7 @@ SRC 			+= TMC-API/tmc/ic/TMC2208/TMC2208.c
 SRC 			+= TMC-API/tmc/ic/TMC2209/TMC2209.c
 SRC 			+= TMC-API/tmc/ic/TMC2224/TMC2224.c
 SRC 			+= TMC-API/tmc/ic/TMC2225/TMC2225.c
+SRC 			+= TMC-API/tmc/ic/TMC2226/TMC2226.c
 SRC 			+= TMC-API/tmc/ic/TMC2590/TMC2590.c
 SRC 			+= TMC-API/tmc/ic/TMC2660/TMC2660.c
 SRC 			+= TMC-API/tmc/ic/TMC2300/TMC2300.c
