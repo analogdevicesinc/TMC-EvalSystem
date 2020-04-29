@@ -5,6 +5,7 @@
 #define BUFFER_SIZE         32
 #define INTR_PRI            6
 #define UART_TIMEOUT_VALUE  10
+#define WRITE_READ_DELAY    10
 
 static void init();
 static void deInit();
@@ -73,6 +74,7 @@ static void init()
 		SIM_SCGC4 |= SIM_SCGC4_UART0_MASK;
 		UART_C2_REG(UART0_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
 		UART_C1_REG(UART0_BASE_PTR) = 0;
+		UART_C4_REG(UART0_BASE_PTR) = 0;
 		UART_BDH_REG(UART0_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
 		UART_BDL_REG(UART0_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
 		UART_C2_REG(UART0_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
@@ -253,7 +255,7 @@ int UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t
 	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
 	 * periodic refresh of values gets requested right after the write request.
 	 */
-	wait(2);
+	wait(WRITE_READ_DELAY);
 
 	// Abort early if no data needs to be read back
 	if (readLength <= 0)
@@ -325,7 +327,7 @@ void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t
 	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
 	 * periodic refresh of values gets requested right after the write request.
 	 */
-	wait(2);
+	wait(WRITE_READ_DELAY);
 }
 
 void UART_setEnabled(UART_Config *channel, uint8_t enabled)
