@@ -6,6 +6,9 @@
 
 #define TMC6100_DEFAULT_MOTOR 0
 
+// use this define for TMC4671-TMC6100-BOB
+//#define COMPILE_FOR_TMC4671_TMC6100_BOB
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -195,6 +198,16 @@ void TMC6100_init(void)
 {
 	TMC6100_SPIChannel = &HAL.SPI->ch2;
 	TMC6100_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
+
+#ifdef COMPILE_FOR_TMC4671_TMC6100_BOB
+
+	#if defined(Landungsbruecke)
+		TMC6100_SPIChannel->periphery       = SPI1_BASE_PTR;
+	#else if defined(Startrampe)
+		TMC6100_SPIChannel->periphery       = SPI3;
+	#endif
+
+#endif
 
 	Evalboards.ch2.config->reset        = reset;
 	Evalboards.ch2.config->restore      = restore;
