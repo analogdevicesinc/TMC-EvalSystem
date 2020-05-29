@@ -43,7 +43,6 @@
 
 	typedef struct
 	{	// Generic parameters
-		uint8_t       targetReached;
 		uint8_t       haltingCondition;
 		// StallGuard
 		bool          stallGuardActive;

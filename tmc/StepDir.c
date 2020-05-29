@@ -270,7 +270,10 @@ uint8_t StepDir_getStatus(uint8_t channel)
 
 	uint8_t status = StepDir[channel].haltingCondition;
 
-	status |= (StepDir[channel].targetReached) ? STATUS_TARGET_REACHED : 0;
+	int32_t targetPosition = tmc_ramp_linear_get_targetPosition(&StepDir[channel].ramp);
+	int32_t actualPosition = tmc_ramp_linear_get_rampPosition(&StepDir[channel].ramp);
+
+	status |= (targetPosition == actualPosition) ? STATUS_TARGET_REACHED : 0;
 	status |= (StepDir[channel].stallGuardActive) ? STATUS_STALLGUARD_ACTIVE : 0;
 	status |= (tmc_ramp_linear_get_mode(&StepDir[channel].ramp) == TMC_RAMP_LINEAR_MODE_VELOCITY) ? STATUS_MODE : 0;
 
