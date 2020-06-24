@@ -98,6 +98,7 @@ typedef struct
 EvalboardsTypeDef Evalboards;
 
 typedef enum {
+	TMC_BOARD_COMM_DEFAULT,
 	TMC_BOARD_COMM_SPI,
 	TMC_BOARD_COMM_UART,
 	TMC_BOARD_COMM_WLAN
