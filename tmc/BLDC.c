@@ -16,8 +16,6 @@
 #define PWM_PHASE_W_ENABLED		0x00
 #define PWM_PHASE_W_DISABLED	0xC0
 
-#define PWM_DEADTIME  50
-
 #define PWM_FREQ 		  20000                  // in Hz
 #define PWM_PERIOD 		  (48000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
 
@@ -25,6 +23,7 @@ int16_t  targetPWM        = 0;
 uint16_t openloopStepTime = 200;
 BLDCMode commutationMode  = BLDC_OPENLOOP;
 uint8_t  pwmEnabled       = 0;
+uint8_t  bbmTime          = 50;
 
 int targetAngle         = 0;
 int hallAngle           = 0;
@@ -243,7 +242,7 @@ void BLDC_init(IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
 			| FTM_COMBINE_FAULTEN0_MASK | FTM_COMBINE_FAULTEN2_MASK | FTM_COMBINE_FAULTEN3_MASK;
 
 	// set dead time prescaler and dead time
-	FTM0_DEADTIME = FTM_DEADTIME_DTVAL(PWM_DEADTIME);
+	FTM0_DEADTIME = FTM_DEADTIME_DTVAL(bbmTime);
 
 	/* Initial setting of value registers */
 	FTM0_C0V = 0;
@@ -545,4 +544,18 @@ void BLDC_setHallInvert(uint8_t invert)
 uint8_t BLDC_getHallInvert()
 {
 	return hallInvert;
+}
+
+void BLDC_setBBMTime(uint8_t time)
+{
+	// Clip to the maximum value instead of overflowing
+	bbmTime = MIN(time, 63);
+
+	// set dead time prescaler and dead time
+	FTM0_DEADTIME = FTM_DEADTIME_DTVAL(bbmTime);
+}
+
+uint8_t BLDC_getBBMTime()
+{
+	return bbmTime;
 }
