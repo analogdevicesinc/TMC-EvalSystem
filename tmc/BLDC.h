@@ -42,4 +42,7 @@ uint8_t BLDC_getHallOrder();
 void BLDC_setHallInvert(uint8_t invert);
 uint8_t BLDC_getHallInvert();
 
+void BLDC_setBBMTime(uint8_t time);
+uint8_t BLDC_getBBMTime();
+
 #endif /* TMC_BLDC_H_ */
