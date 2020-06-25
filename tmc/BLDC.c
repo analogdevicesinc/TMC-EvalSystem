@@ -16,8 +16,9 @@
 #define PWM_PHASE_W_ENABLED		0x00
 #define PWM_PHASE_W_DISABLED	0xC0
 
-#define PWM_FREQ 		  20000                  // in Hz
-#define PWM_PERIOD 		  (48000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
+#define VELOCITY_CALC_FREQ  10                     // in Hz
+#define PWM_FREQ 		    20000                  // in Hz
+#define PWM_PERIOD 		    (48000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
 
 int16_t  targetPWM        = 0;
 uint16_t openloopStepTime = 200;
@@ -27,6 +28,8 @@ uint8_t  bbmTime          = 50;
 
 int targetAngle         = 0;
 int hallAngle           = 0;
+
+int actualHallVelocity = 0;
 
 volatile int32_t adcSamples[4] = { 0 };
 uint8_t adcSampleIndex = 0;
@@ -317,11 +320,32 @@ void FTM0_IRQHandler()
 	FTM0_SC &= ~FTM_SC_TOF_MASK;
 
 	static int commutationCounter = 0;
+	static int velocityCounter = 0;
+
+	static int lastHallAngle = 0;
+	static int hallAngleDiffAccu = 0;
 
 	// Measure the hall sensor
 	HallStates actualHallState = inputToHallState(HAL.IOs->config->isHigh(Pins.HALL_U), HAL.IOs->config->isHigh(Pins.HALL_V), HAL.IOs->config->isHigh(Pins.HALL_W));
-
 	hallAngle = hallStateToAngle(actualHallState);
+
+	// Calculate the hall angle difference
+	int hallAngleDiff = (hallAngle - lastHallAngle);         // [-300 ; +360)
+	hallAngleDiff     = (hallAngleDiff + 360) % 360;         // [   0 ; +360)
+	hallAngleDiff     = ((hallAngleDiff + 180) % 360) - 180; // [-180 ; +180)
+	lastHallAngle = hallAngle;
+
+	// Accumulate the hall angle for velocity measurement
+	hallAngleDiffAccu += hallAngleDiff;
+
+	// Calculate the velocity
+	if (++velocityCounter >= PWM_FREQ / VELOCITY_CALC_FREQ)
+	{
+		actualHallVelocity = hallAngleDiffAccu * 60 * VELOCITY_CALC_FREQ / 360; // electrical rotations per minute
+
+		hallAngleDiffAccu = 0;
+		velocityCounter = 0;
+	}
 
 	if (commutationMode == BLDC_OPENLOOP)
 	{
@@ -521,6 +545,12 @@ int BLDC_getTargetAngle()
 int BLDC_getHallAngle()
 {
 	return hallAngle;
+}
+
+// Velocity measured by hall in RPM (electrical, not mechanical)
+int BLDC_getActualHallVelocity()
+{
+	return actualHallVelocity;
 }
 
 void BLDC_setHallOrder(uint8_t order)
