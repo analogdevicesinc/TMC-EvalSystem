@@ -36,6 +36,9 @@ uint16_t BLDC_getOpenloopStepTime();
 int BLDC_getTargetAngle();
 int BLDC_getHallAngle();
 
+void BLDC_setTargetOpenloopVelocity(uint32_t velocity);
+uint32_t BLDC_getTargetOpenloopVelocity();
+int32_t BLDC_getActualOpenloopVelocity();
 int BLDC_getActualHallVelocity();
 
 void BLDC_setHallOrder(uint8_t order);

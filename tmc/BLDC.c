@@ -21,7 +21,8 @@
 #define PWM_PERIOD 		    (48000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
 
 int16_t  targetPWM        = 0;
-uint16_t openloopStepTime = 200;
+uint32_t openloopVelocity = 60; // rpm
+uint16_t openloopStepTime = 0;  // Calculate on init
 BLDCMode commutationMode  = BLDC_OPENLOOP;
 uint8_t  pwmEnabled       = 0;
 uint8_t  bbmTime          = 50;
@@ -162,6 +163,9 @@ void BLDC_init(IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
 	HAL.IOs->config->toInput(Pins.HALL_U);
 	HAL.IOs->config->toInput(Pins.HALL_V);
 	HAL.IOs->config->toInput(Pins.HALL_W);
+
+	// Calculate the openloop step time by setting the velocity
+	BLDC_setTargetOpenloopVelocity(openloopVelocity);
 
 	// --- PDB ---
 	// Enable clock for programmable delay block (PDB)
@@ -545,6 +549,38 @@ int BLDC_getTargetAngle()
 int BLDC_getHallAngle()
 {
 	return hallAngle;
+}
+
+// Set the open loop velocity in RPM (electrical, not mechanical)
+void BLDC_setTargetOpenloopVelocity(uint32_t velocity)
+{
+	// [eRPM] = [1/60 eRPS] = 6/60 [steps/s]
+	// steps/s = fpwm / openloopStepTime
+	//
+	// openloopStepTime = fpwm * 60 / 6 / velocity
+	openloopStepTime = PWM_FREQ * 10 / velocity;
+
+	// Store the requested velocity for accurate reading
+	// Otherwise we see rounding errors when reading back.
+	openloopVelocity = velocity;
+}
+
+uint32_t BLDC_getTargetOpenloopVelocity()
+{
+	return openloopVelocity;
+}
+
+int32_t BLDC_getActualOpenloopVelocity()
+{
+	if (commutationMode != BLDC_OPENLOOP)
+		return 0;
+
+	if (targetPWM > 0)
+		return openloopVelocity;
+	else if (targetPWM < 0)
+		return -openloopVelocity;
+	else
+		return 0;
 }
 
 // Velocity measured by hall in RPM (electrical, not mechanical)
