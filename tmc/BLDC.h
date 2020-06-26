@@ -30,6 +30,9 @@ typedef enum {
 void BLDC_setCommutationMode(BLDCMode mode);
 BLDCMode BLDC_getCommutationMode();
 
+void BLDC_setPolePairs(uint8 polePairs);
+uint8_t BLDC_getPolePairs();
+
 void BLDC_setOpenloopStepTime(uint16_t stepTime);
 uint16_t BLDC_getOpenloopStepTime();
 

@@ -21,16 +21,17 @@
 #define PWM_PERIOD 		    (48000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
 
 int16_t  targetPWM        = 0;
-uint32_t openloopVelocity = 60; // rpm
+uint32_t openloopVelocity = 60; // mechanical RPM
 uint16_t openloopStepTime = 0;  // Calculate on init
 BLDCMode commutationMode  = BLDC_OPENLOOP;
 uint8_t  pwmEnabled       = 0;
 uint8_t  bbmTime          = 50;
+uint8_t  motorPolePairs   = 1;
 
 int targetAngle         = 0;
 int hallAngle           = 0;
 
-int actualHallVelocity = 0;
+int actualHallVelocity = 0; // electrical RPM
 
 volatile int32_t adcSamples[4] = { 0 };
 uint8_t adcSampleIndex = 0;
@@ -531,6 +532,19 @@ BLDCMode BLDC_getCommutationMode()
 	return commutationMode;
 }
 
+void BLDC_setPolePairs(uint8 polePairs)
+{
+	if (polePairs == 0)
+		return;
+
+	motorPolePairs = polePairs;
+}
+
+uint8_t BLDC_getPolePairs()
+{
+	return motorPolePairs;
+}
+
 void BLDC_setOpenloopStepTime(uint16_t stepTime)
 {
 	openloopStepTime = stepTime;
@@ -551,14 +565,15 @@ int BLDC_getHallAngle()
 	return hallAngle;
 }
 
-// Set the open loop velocity in RPM (electrical, not mechanical)
+// Set the open loop velocity in RPM
 void BLDC_setTargetOpenloopVelocity(uint32_t velocity)
 {
+	// 1 [RPM] = polePairs [eRPM]
 	// [eRPM] = [1/60 eRPS] = 6/60 [steps/s]
 	// steps/s = fpwm / openloopStepTime
 	//
-	// openloopStepTime = fpwm * 60 / 6 / velocity
-	openloopStepTime = PWM_FREQ * 10 / velocity;
+	// openloopStepTime = fpwm * 60 / 6 / velocity / polePairs
+	openloopStepTime = PWM_FREQ * 10 / velocity / motorPolePairs;
 
 	// Store the requested velocity for accurate reading
 	// Otherwise we see rounding errors when reading back.
@@ -583,10 +598,10 @@ int32_t BLDC_getActualOpenloopVelocity()
 		return 0;
 }
 
-// Velocity measured by hall in RPM (electrical, not mechanical)
+// Velocity measured by hall in RPM
 int BLDC_getActualHallVelocity()
 {
-	return actualHallVelocity;
+	return actualHallVelocity / motorPolePairs;
 }
 
 void BLDC_setHallOrder(uint8_t order)
