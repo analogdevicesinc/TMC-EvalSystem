@@ -450,6 +450,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			TMC5160_FIELD_WRITE(motorToIC(motor), TMC5160_GCONF, TMC5160_REFR_DIR_MASK, TMC5160_REFR_DIR_SHIFT, *value);
 		}
 		break;
+	case 35:
+		// Global current scaler
+		if(readWrite == READ) {
+			*value = TMC5160_FIELD_READ(motorToIC(motor), TMC5160_GLOBAL_SCALER, TMC5160_GLOBAL_SCALER_MASK, TMC5160_GLOBAL_SCALER_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC5160_FIELD_WRITE(motorToIC(motor), TMC5160_GLOBAL_SCALER, TMC5160_GLOBAL_SCALER_MASK, TMC5160_GLOBAL_SCALER_SHIFT, *value);
+		}
+		break;
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
@@ -702,7 +710,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5160_FIELD_READ(motorToIC(motor), TMC5160_PWMCONF, TMC5160_PWM_OFS_MASK, TMC5160_PWM_OFS_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5160_FIELD_WRITE(motorToIC(motor), TMC5160_PWMCONF, TMC5160_GLOBAL_SCALER_MASK, TMC5160_GLOBAL_SCALER_SHIFT, *value);
+			TMC5160_FIELD_WRITE(motorToIC(motor), TMC5160_PWMCONF, TMC5160_PWM_OFS_MASK, TMC5160_PWM_OFS_SHIFT, *value);
 		}
 		break;
 	case 191:

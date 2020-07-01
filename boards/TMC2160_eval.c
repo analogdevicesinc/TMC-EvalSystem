@@ -273,14 +273,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			TMC2160_FIELD_UPDATE(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_VHIGHCHM_MASK, TMC2160_VHIGHCHM_SHIFT, *value);
 		}
 		break;
-	case 28:
-		// Internal RSense
-		if(readWrite == READ) {
-			*value = TMC2160_FIELD_READ(motorToIC(motor), TMC2160_GCONF, TMC2160_INTERNAL_RSENSE_MASK, TMC2160_INTERNAL_RSENSE_SHIFT);
-		} else if(readWrite == WRITE) {
-			TMC2160_FIELD_UPDATE(motorToIC(motor), TMC2160_GCONF, TMC2160_INTERNAL_RSENSE_MASK, TMC2160_INTERNAL_RSENSE_SHIFT, *value);
-		}
-		break;
 	case 29:
 		// Measured Speed
 		if(readWrite == READ) {
@@ -288,6 +280,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = (abs(tempValue) < 20) ? 0 : tempValue;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 35:
+		// Global current scaler
+		if(readWrite == READ) {
+			*value = TMC2160_FIELD_READ(motorToIC(motor), TMC2160_GLOBAL_SCALER, TMC2160_GLOBAL_SCALER_MASK, TMC2160_GLOBAL_SCALER_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2160_FIELD_UPDATE(motorToIC(motor), TMC2160_GLOBAL_SCALER, TMC2160_GLOBAL_SCALER_MASK, TMC2160_GLOBAL_SCALER_SHIFT, *value);
 		}
 		break;
 	case 50: // StepDir internal(0)/external(1)
@@ -532,14 +532,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			TMC2160_FIELD_UPDATE(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_RNDTF_MASK, TMC2160_RNDTF_SHIFT, *value);
 		}
 		break;
-	case 185:
-		// Chopper synchronization
-		if(readWrite == READ) {
-			*value = TMC2160_FIELD_READ(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_SYNC_MASK, TMC2160_SYNC_SHIFT);
-		} else if(readWrite == WRITE) {
-			TMC2160_FIELD_UPDATE(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_SYNC_MASK, TMC2160_SYNC_SHIFT, *value);
-		}
-		break;
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
@@ -565,9 +557,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 188:
 		// PWM amplitude
 		if(readWrite == READ) {
-			*value = TMC2160_FIELD_READ(motorToIC(motor), TMC2160_PWMCONF, TMC2160_PWM_AMPL_MASK, TMC2160_PWM_AMPL_SHIFT);
+			*value = TMC2160_FIELD_READ(motorToIC(motor), TMC2160_PWMCONF, TMC2160_PWM_OFS_MASK, TMC2160_PWM_OFS_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2160_FIELD_UPDATE(motorToIC(motor), TMC2160_PWMCONF, TMC2160_PWM_AMPL_MASK, TMC2160_PWM_AMPL_SHIFT, *value);
+			TMC2160_FIELD_UPDATE(motorToIC(motor), TMC2160_PWMCONF, TMC2160_PWM_OFS_MASK, TMC2160_PWM_OFS_SHIFT, *value);
 		}
 		break;
 	case 191:
