@@ -173,7 +173,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_IHOLD_IRUN, TMC5161_IRUN_MASK, TMC5161_IRUN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_IHOLD_IRUN, TMC5161_IRUN_MASK, TMC5161_IRUN_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_IHOLD_IRUN, TMC5161_IRUN_MASK, TMC5161_IRUN_SHIFT, *value);
 		}
 		break;
 	case 7:
@@ -181,7 +181,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_IHOLD_IRUN, TMC5161_IHOLD_MASK, TMC5161_IHOLD_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_IHOLD_IRUN, TMC5161_IHOLD_MASK, TMC5161_IHOLD_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_IHOLD_IRUN, TMC5161_IHOLD_MASK, TMC5161_IHOLD_SHIFT, *value);
 		}
 		break;
 	case 8:
@@ -213,7 +213,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_SWMODE, TMC5161_STOP_R_ENABLE_MASK, TMC5161_STOP_R_ENABLE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_SWMODE, TMC5161_STOP_R_ENABLE_MASK, TMC5161_STOP_R_ENABLE_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_SWMODE, TMC5161_STOP_R_ENABLE_MASK, TMC5161_STOP_R_ENABLE_SHIFT, *value);
 		}
 		break;
 	case 13:
@@ -221,7 +221,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_SWMODE, TMC5161_STOP_L_ENABLE_MASK, TMC5161_STOP_L_ENABLE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_SWMODE, TMC5161_STOP_L_ENABLE_MASK, TMC5161_STOP_L_ENABLE_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_SWMODE, TMC5161_STOP_L_ENABLE_MASK, TMC5161_STOP_L_ENABLE_SHIFT, *value);
 		}
 		break;
 	case 14:
@@ -311,7 +311,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_VHIGHCHM_MASK, TMC5161_VHIGHCHM_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_VHIGHCHM_MASK, TMC5161_VHIGHCHM_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_VHIGHCHM_MASK, TMC5161_VHIGHCHM_SHIFT, *value);
 		}
 		break;
 	case 28:
@@ -319,7 +319,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_VHIGHFS_MASK, TMC5161_VHIGHFS_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_VHIGHFS_MASK, TMC5161_VHIGHFS_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_VHIGHFS_MASK, TMC5161_VHIGHFS_SHIFT, *value);
 		}
 		break;
 	case 29:
@@ -335,7 +335,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_GCONF, TMC5161_RECALIBRATE_MASK, TMC5161_RECALIBRATE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_GCONF, TMC5161_RECALIBRATE_MASK, TMC5161_RECALIBRATE_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_GCONF, TMC5161_RECALIBRATE_MASK, TMC5161_RECALIBRATE_SHIFT, *value);
 		}
 		break;
 	case 34:
@@ -343,7 +343,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_GCONF, TMC5161_REFR_DIR_MASK, TMC5161_REFR_DIR_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_GCONF, TMC5161_REFR_DIR_MASK, TMC5161_REFR_DIR_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_GCONF, TMC5161_REFR_DIR_MASK, TMC5161_REFR_DIR_SHIFT, *value);
 		}
 		break;
 	case 140:
@@ -367,7 +367,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_MRES_MASK, TMC5161_MRES_SHIFT, *value);
+				TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_MRES_MASK, TMC5161_MRES_SHIFT, *value);
 			}
 			else
 			{
@@ -380,7 +380,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TBL_MASK, TMC5161_TBL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TBL_MASK, TMC5161_TBL_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TBL_MASK, TMC5161_TBL_SHIFT, *value);
 		}
 		break;
 	case 163:
@@ -388,7 +388,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_CHM_MASK, TMC5161_CHM_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_CHM_MASK, TMC5161_CHM_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_CHM_MASK, TMC5161_CHM_SHIFT, *value);
 		}
 		break;
 	case 164:
@@ -396,7 +396,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_DISFDCC_MASK, TMC5161_DISFDCC_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_DISFDCC_MASK, TMC5161_DISFDCC_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_DISFDCC_MASK, TMC5161_DISFDCC_SHIFT, *value);
 		}
 		break;
 	case 165:
@@ -416,12 +416,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(tmc5161_readInt(motorToIC(motor), TMC5161_CHOPCONF) & (1<<14))
 			{
-				TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_HEND_MASK, TMC5161_HEND_SHIFT, *value);
+				TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_HEND_MASK, TMC5161_HEND_SHIFT, *value);
 			}
 			else
 			{
-				TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TFD_3_MASK, TMC5161_TFD_3_SHIFT, (*value & (1<<3))); // MSB wird zu value dazugefügt
-				TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TFD_ALL_MASK, TMC5161_TFD_ALL_SHIFT, *value);
+				TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TFD_3_MASK, TMC5161_TFD_3_SHIFT, (*value & (1<<3))); // MSB wird zu value dazugefügt
+				TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TFD_ALL_MASK, TMC5161_TFD_ALL_SHIFT, *value);
 			}
 		}
 		break;
@@ -442,11 +442,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(buffer & (1 << TMC5161_CHM_SHIFT))
 			{
-				TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_HSTRT_MASK, TMC5161_HSTRT_SHIFT, *value);
+				TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_HSTRT_MASK, TMC5161_HSTRT_SHIFT, *value);
 			}
 			else
 			{
-				TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_OFFSET_MASK, TMC5161_OFFSET_SHIFT, *value);
+				TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_OFFSET_MASK, TMC5161_OFFSET_SHIFT, *value);
 			}
 		}
 		break;
@@ -455,7 +455,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TOFF_MASK, TMC5161_TOFF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TOFF_MASK, TMC5161_TOFF_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_TOFF_MASK, TMC5161_TOFF_SHIFT, *value);
 		}
 		break;
 	case 168:
@@ -463,7 +463,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEIMIN_MASK, TMC5161_SEIMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEIMIN_MASK, TMC5161_SEIMIN_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEIMIN_MASK, TMC5161_SEIMIN_SHIFT, *value);
 		}
 		break;
 	case 169:
@@ -471,7 +471,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEDN_MASK, TMC5161_SEDN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEDN_MASK, TMC5161_SEDN_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEDN_MASK, TMC5161_SEDN_SHIFT, *value);
 		}
 		break;
 	case 170:
@@ -479,7 +479,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEMAX_MASK, TMC5161_SEMAX_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEMAX_MASK, TMC5161_SEMAX_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEMAX_MASK, TMC5161_SEMAX_SHIFT, *value);
 		}
 		break;
 	case 171:
@@ -487,7 +487,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEUP_MASK, TMC5161_SEUP_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEUP_MASK, TMC5161_SEUP_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEUP_MASK, TMC5161_SEUP_SHIFT, *value);
 		}
 		break;
 	case 172:
@@ -495,7 +495,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEMIN_MASK, TMC5161_SEMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEMIN_MASK, TMC5161_SEMIN_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SEMIN_MASK, TMC5161_SEMIN_SHIFT, *value);
 		}
 		break;
 	case 173:
@@ -503,7 +503,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SFILT_MASK, TMC5161_SFILT_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SFILT_MASK, TMC5161_SFILT_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SFILT_MASK, TMC5161_SFILT_SHIFT, *value);
 		}
 		break;
 	case 174:
@@ -512,7 +512,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SGT_MASK, TMC5161_SGT_SHIFT);
 			*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SGT_MASK, TMC5161_SGT_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_COOLCONF, TMC5161_SGT_MASK, TMC5161_SGT_SHIFT, *value);
 		}
 		break;
 	case 180:
@@ -537,7 +537,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				*value = 0;
 			}
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_SWMODE, TMC5161_SG_STOP_MASK, TMC5161_SG_STOP_SHIFT, (*value)? 1:0);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_SWMODE, TMC5161_SG_STOP_MASK, TMC5161_SG_STOP_SHIFT, (*value)? 1:0);
 
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
 			tmc5161_writeInt(motorToIC(motor), TMC5161_TCOOLTHRS, *value);
@@ -558,7 +558,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_RNDTF_MASK, TMC5161_RNDTF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_RNDTF_MASK, TMC5161_RNDTF_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_CHOPCONF, TMC5161_RNDTF_MASK, TMC5161_RNDTF_SHIFT, *value);
 		}
 		break;
 	case 185:
@@ -588,9 +588,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_PWMCONF, TMC5161_PWM_GRAD_MASK, TMC5161_PWM_GRAD_SHIFT);
 		} else if(readWrite == WRITE) {
 			// Set gradient
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_PWM_GRAD_MASK, TMC5161_PWM_GRAD_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_PWM_GRAD_MASK, TMC5161_PWM_GRAD_SHIFT, *value);
 			// Enable/disable stealthChop accordingly
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_GCONF, TMC5161_EN_PWM_MODE_MASK, TMC5161_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_GCONF, TMC5161_EN_PWM_MODE_MASK, TMC5161_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
 		}
 		break;
 	case 188:
@@ -598,7 +598,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_PWMCONF, TMC5161_PWM_OFS_MASK, TMC5161_PWM_OFS_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_GLOBAL_SCALER_MASK, TMC5161_GLOBAL_SCALER_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_GLOBAL_SCALER_MASK, TMC5161_GLOBAL_SCALER_SHIFT, *value);
 		}
 		break;
 	case 191:
@@ -608,7 +608,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 4)
 			{
-				TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_PWM_FREQ_MASK, TMC5161_PWM_FREQ_SHIFT, *value);
+				TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_PWM_FREQ_MASK, TMC5161_PWM_FREQ_SHIFT, *value);
 			}
 			else
 			{
@@ -623,7 +623,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 2)
 			{
-				TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_PWM_AUTOSCALE_MASK, TMC5161_PWM_AUTOSCALE_SHIFT, *value);
+				TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_PWM_AUTOSCALE_MASK, TMC5161_PWM_AUTOSCALE_SHIFT, *value);
 			}
 			else
 			{
@@ -636,7 +636,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC5161_FIELD_READ(motorToIC(motor), TMC5161_PWMCONF, TMC5161_FREEWHEEL_MASK, TMC5161_FREEWHEEL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5161_FIELD_UPDATE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_FREEWHEEL_MASK, TMC5161_FREEWHEEL_SHIFT, *value);
+			TMC5161_FIELD_WRITE(motorToIC(motor), TMC5161_PWMCONF, TMC5161_FREEWHEEL_MASK, TMC5161_FREEWHEEL_SHIFT, *value);
 		}
 		break;
 	case 206:

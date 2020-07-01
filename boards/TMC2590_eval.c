@@ -225,7 +225,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			TMC2590.runCurrentScale = *value;
 			if(TMC2590.isStandStillCurrent == false)
 			{
-				TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.runCurrentScale);
+				TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.runCurrentScale);
 			}
 		}
 		break;
@@ -237,7 +237,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			TMC2590.standStillCurrentScale = *value;
 			if(TMC2590.isStandStillCurrent == true)
 			{
-				TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.standStillCurrentScale);
+				TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_CS_MASK, TMC2590_CS_SHIFT, TMC2590.standStillCurrentScale);
 			}
 		}
 		break;
@@ -292,7 +292,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_MRES_MASK, TMC2590_MRES_SHIFT, *value);
+				TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_MRES_MASK, TMC2590_MRES_SHIFT, *value);
 			}
 			else
 			{
@@ -305,7 +305,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCTRL | TMC2590_WRITE_BIT, TMC2590_INTPOL_MASK, TMC2590_INTPOL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_INTPOL_MASK, TMC2590_INTPOL_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_INTPOL_MASK, TMC2590_INTPOL_SHIFT, *value);
 		}
 		break;
 	case 161:
@@ -313,7 +313,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCTRL | TMC2590_WRITE_BIT, TMC2590_DEDGE_MASK, TMC2590_DEDGE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_DEDGE_MASK, TMC2590_DEDGE_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCTRL, TMC2590_DEDGE_MASK, TMC2590_DEDGE_SHIFT, *value);
 		}
 		break;
 	case 162:
@@ -321,7 +321,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_TBL_MASK, TMC2590_TBL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_TBL_MASK, TMC2590_TBL_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_TBL_MASK, TMC2590_TBL_SHIFT, *value);
 		}
 		break;
 	case 163:
@@ -329,7 +329,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_CHM_MASK, TMC2590_CHM_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_CHM_MASK, TMC2590_CHM_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_CHM_MASK, TMC2590_CHM_SHIFT, *value);
 		}
 		break;
 	case 164:
@@ -337,7 +337,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_HDEC_MASK, TMC2590_HDEC_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HDEC_MASK, TMC2590_HDEC_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HDEC_MASK, TMC2590_HDEC_SHIFT, *value);
 		}
 		break;
 	case 165:
@@ -345,7 +345,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_HEND_MASK, TMC2590_HEND_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HEND_MASK, TMC2590_HEND_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HEND_MASK, TMC2590_HEND_SHIFT, *value);
 		}
 		break;
 	case 166:
@@ -353,7 +353,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_HSTRT_MASK, TMC2590_HSTRT_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HSTRT_MASK, TMC2590_HSTRT_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_HSTRT_MASK, TMC2590_HSTRT_SHIFT, *value);
 		}
 		break;
 	case 167:
@@ -361,7 +361,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF | TMC2590_WRITE_BIT, TMC2590_TOFF_MASK, TMC2590_TOFF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_TOFF_MASK, TMC2590_TOFF_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_TOFF_MASK, TMC2590_TOFF_SHIFT, *value);
 		}
 		break;
 	case 168:
@@ -369,7 +369,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEIMIN_MASK, TMC2590_SEIMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEIMIN_MASK, TMC2590_SEIMIN_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEIMIN_MASK, TMC2590_SEIMIN_SHIFT, *value);
 		}
 		break;
 	case 169:
@@ -377,7 +377,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEDN_MASK, TMC2590_SEDN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEDN_MASK, TMC2590_SEDN_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEDN_MASK, TMC2590_SEDN_SHIFT, *value);
 		}
 		break;
 	case 170:
@@ -385,7 +385,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEMAX_MASK, TMC2590_SEMAX_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEMAX_MASK, TMC2590_SEMAX_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEMAX_MASK, TMC2590_SEMAX_SHIFT, *value);
 		}
 		break;
 	case 171:
@@ -393,7 +393,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEUP_MASK, TMC2590_SEUP_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEUP_MASK, TMC2590_SEUP_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_SMARTEN, TMC2590_SEUP_MASK, TMC2590_SEUP_SHIFT, *value);
 		}
 		break;
 	case 172:
@@ -409,7 +409,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SFILT_MASK, TMC2590_SFILT_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SFILT_MASK, TMC2590_SFILT_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SFILT_MASK, TMC2590_SFILT_SHIFT, *value);
 		}
 		break;
 	case 174:
@@ -418,7 +418,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SGT_MASK, TMC2590_SGT_SHIFT);
 			*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SGT_MASK, TMC2590_SGT_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_SGCSCONF, TMC2590_SGT_MASK, TMC2590_SGT_SHIFT, *value);
 		}
 		break;
 	case 175:
@@ -426,7 +426,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPH_MASK, TMC2590_SLPH_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPH_MASK, TMC2590_SLPH_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPH_MASK, TMC2590_SLPH_SHIFT, *value);
 		}
 		break;
 	case 176:
@@ -434,7 +434,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPL_MASK, TMC2590_SLPL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPL_MASK, TMC2590_SLPL_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SLPL_MASK, TMC2590_SLPL_SHIFT, *value);
 		}
 		break;
 	case 177:
@@ -442,7 +442,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_DISS2G_MASK, TMC2590_DISS2G_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_DISS2G_MASK, TMC2590_DISS2G_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_DISS2G_MASK, TMC2590_DISS2G_SHIFT, *value);
 		}
 		break;
 	case 178:
@@ -450,7 +450,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TS2G_MASK, TMC2590_TS2G_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TS2G_MASK, TMC2590_TS2G_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TS2G_MASK, TMC2590_TS2G_SHIFT, *value);
 		}
 		break;
 	case 179:
@@ -458,7 +458,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_VSENSE_MASK, TMC2590_VSENSE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_VSENSE_MASK, TMC2590_VSENSE_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_VSENSE_MASK, TMC2590_VSENSE_SHIFT, *value);
 		}
 		break;
 	case 180:
@@ -490,7 +490,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SDOFF_MASK, TMC2590_SDOFF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SDOFF_MASK, TMC2590_SDOFF_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_SDOFF_MASK, TMC2590_SDOFF_SHIFT, *value);
 		}
 		break;
 	case 184:
@@ -498,7 +498,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_RNDTF_MASK, TMC2590_RNDTF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_RNDTF_MASK, TMC2590_RNDTF_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_CHOPCONF, TMC2590_RNDTF_MASK, TMC2590_RNDTF_SHIFT, *value);
 		}
 		break;
 	case 185:
@@ -506,7 +506,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2590_FIELD_READ(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TST_MASK, TMC2590_TST_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2590_FIELD_UPDATE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TST_MASK, TMC2590_TST_SHIFT, *value);
+			TMC2590_FIELD_WRITE(motorToIC(motor), TMC2590_DRVCONF, TMC2590_TST_MASK, TMC2590_TST_SHIFT, *value);
 		}
 		break;
 	case 206:
@@ -644,7 +644,7 @@ static void periodicJob(uint32_t tick)
 	if(currCoolStepState != lastCoolStepState)
 	{
 		uint8_t value = (currCoolStepState)? TMC2590.coolStepActiveValue : TMC2590.coolStepInactiveValue;
-		TMC2590_FIELD_UPDATE(&TMC2590, TMC2590_SMARTEN, TMC2590_SEMIN_MASK, TMC2590_SEMIN_SHIFT, value);
+		TMC2590_FIELD_WRITE(&TMC2590, TMC2590_SMARTEN, TMC2590_SEMIN_MASK, TMC2590_SEMIN_SHIFT, value);
 
 		lastCoolStepState = currCoolStepState;
 	}

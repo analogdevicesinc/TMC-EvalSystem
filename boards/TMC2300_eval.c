@@ -226,7 +226,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IRUN_MASK, TMC2300_IRUN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IRUN_MASK, TMC2300_IRUN_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IRUN_MASK, TMC2300_IRUN_SHIFT, *value);
 		}
 		break;
 	case 7:
@@ -234,7 +234,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IHOLD_MASK, TMC2300_IHOLD_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IHOLD_MASK, TMC2300_IHOLD_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IHOLD_MASK, TMC2300_IHOLD_SHIFT, *value);
 		}
 		break;
 	case 8:
@@ -319,7 +319,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_MRES_MASK, TMC2300_MRES_SHIFT, *value);
+				TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_MRES_MASK, TMC2300_MRES_SHIFT, *value);
 			}
 			else
 			{
@@ -332,7 +332,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_TBL_MASK, TMC2300_TBL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_TBL_MASK, TMC2300_TBL_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_TBL_MASK, TMC2300_TBL_SHIFT, *value);
 		}
 		break;
 	case 168:
@@ -340,7 +340,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEIMIN_MASK, TMC2300_SEIMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEIMIN_MASK, TMC2300_SEIMIN_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEIMIN_MASK, TMC2300_SEIMIN_SHIFT, *value);
 		}
 		break;
 	case 169:
@@ -348,7 +348,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEDN_MASK, TMC2300_SEDN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEDN_MASK, TMC2300_SEDN_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEDN_MASK, TMC2300_SEDN_SHIFT, *value);
 		}
 		break;
 	case 170:
@@ -356,7 +356,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMAX_MASK, TMC2300_SEMAX_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMAX_MASK, TMC2300_SEMAX_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMAX_MASK, TMC2300_SEMAX_SHIFT, *value);
 		}
 		break;
 	case 171:
@@ -364,7 +364,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEUP_MASK, TMC2300_SEUP_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEUP_MASK, TMC2300_SEUP_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEUP_MASK, TMC2300_SEUP_SHIFT, *value);
 		}
 		break;
 	case 172:
@@ -372,7 +372,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMIN_MASK, TMC2300_SEMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMIN_MASK, TMC2300_SEMIN_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMIN_MASK, TMC2300_SEMIN_SHIFT, *value);
 		}
 		break;
 	case 174:
@@ -385,7 +385,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			tmc2300_writeInt(motorToIC(motor), TMC2300_SGTHRS, *value);
 			//StepDir_setStallGuardThreshold(motor, *value);
-			//TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SGT_MASK, TMC2300_SGT_SHIFT, *value);
+			//TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SGT_MASK, TMC2300_SGT_SHIFT, *value);
 		}
 		break;
 	case 180:
@@ -436,10 +436,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_GRAD_MASK, TMC2300_PWM_GRAD_SHIFT);
 		} else if(readWrite == WRITE) {
 			// Set gradient
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_GRAD_MASK, TMC2300_PWM_GRAD_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_GRAD_MASK, TMC2300_PWM_GRAD_SHIFT, *value);
 
 			// Enable/disable stealthChop accordingly
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_GCONF, TMC2300_EN_SPREADCYCLE_MASK, TMC2300_EN_SPREADCYCLE_SHIFT, (*value > 0) ? 0 : 1);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_GCONF, TMC2300_EN_SPREADCYCLE_MASK, TMC2300_EN_SPREADCYCLE_SHIFT, (*value > 0) ? 0 : 1);
 		}
 		break;
 	case 191:
@@ -449,7 +449,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 4)
 			{
-				TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_FREQ_MASK, TMC2300_PWM_FREQ_SHIFT, *value);
+				TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_FREQ_MASK, TMC2300_PWM_FREQ_SHIFT, *value);
 			}
 			else
 			{
@@ -462,7 +462,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_AUTOSCALE_MASK, TMC2300_PWM_AUTOSCALE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_AUTOSCALE_MASK, TMC2300_PWM_AUTOSCALE_SHIFT, (*value)? 1:0);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_AUTOSCALE_MASK, TMC2300_PWM_AUTOSCALE_SHIFT, (*value)? 1:0);
 		}
 		break;
 	case 204:
@@ -470,7 +470,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_PWMCONF, TMC2300_FREEWHEEL_MASK, TMC2300_FREEWHEEL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2300_FIELD_UPDATE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_FREEWHEEL_MASK, TMC2300_FREEWHEEL_SHIFT, *value);
+			TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_FREEWHEEL_MASK, TMC2300_FREEWHEEL_SHIFT, *value);
 		}
 		break;
 	case 206:

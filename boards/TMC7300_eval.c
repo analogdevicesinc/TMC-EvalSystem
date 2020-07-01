@@ -167,7 +167,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			if (abs(*value) <= 100) {
 				// Scale the duty cycle in percent [-100% ; +100%] to internal values [-255 ; +255]
 				*value = *value * 255 / 100;
-				TMC7300_FIELD_UPDATE(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_A_MASK, TMC7300_PWM_A_SHIFT, *value);
+				TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_A_MASK, TMC7300_PWM_A_SHIFT, *value);
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -194,7 +194,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			if (abs(*value) <= 100) {
 				// Scale the duty cycle in percent [-100% ; +100%] to internal values [-255 ; +255]
 				*value = *value * 255 / 100;
-				TMC7300_FIELD_UPDATE(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_B_MASK, TMC7300_PWM_B_SHIFT, *value);
+				TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_B_MASK, TMC7300_PWM_B_SHIFT, *value);
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -205,7 +205,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_IRUN_MASK, TMC7300_IRUN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC7300_FIELD_UPDATE(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_IRUN_MASK, TMC7300_IRUN_SHIFT, *value);
+			TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_IRUN_MASK, TMC7300_IRUN_SHIFT, *value);
 		}
 		break;
 	case 7:
@@ -221,7 +221,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if (readWrite == READ) {
 			*value = !TMC7300_FIELD_READ(motorToIC(motor), TMC7300_GCONF, TMC7300_PAR_MODE_MASK, TMC7300_PAR_MODE_SHIFT);
 		} else if (readWrite == WRITE) {
-			TMC7300_FIELD_UPDATE(motorToIC(motor), TMC7300_GCONF, TMC7300_PAR_MODE_MASK, TMC7300_PAR_MODE_SHIFT, (*value)? 0:1);
+			TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_GCONF, TMC7300_PAR_MODE_MASK, TMC7300_PAR_MODE_SHIFT, (*value)? 0:1);
 		}
 		break;
 	case 162:
@@ -229,7 +229,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_CHOPCONF, TMC7300_TBL_MASK, TMC7300_TBL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC7300_FIELD_UPDATE(motorToIC(motor), TMC7300_CHOPCONF, TMC7300_TBL_MASK, TMC7300_TBL_SHIFT, *value);
+			TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_CHOPCONF, TMC7300_TBL_MASK, TMC7300_TBL_SHIFT, *value);
 		}
 		break;
 	case 191:
@@ -239,7 +239,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 4)
 			{
-				TMC7300_FIELD_UPDATE(motorToIC(motor), TMC7300_PWMCONF, TMC7300_PWM_FREQ_MASK, TMC7300_PWM_FREQ_SHIFT, *value);
+				TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_PWMCONF, TMC7300_PWM_FREQ_MASK, TMC7300_PWM_FREQ_SHIFT, *value);
 			}
 			else
 			{
@@ -262,9 +262,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		} else if(readWrite == WRITE) {
 			// Unlock the freewheeling options by setting motorrun to 1
-			TMC7300_FIELD_UPDATE(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_MOTORRUN_MASK, TMC7300_MOTORRUN_SHIFT, 1);
+			TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_MOTORRUN_MASK, TMC7300_MOTORRUN_SHIFT, 1);
 			// Set the freewheeling option
-			TMC7300_FIELD_UPDATE(motorToIC(motor), TMC7300_PWMCONF, TMC7300_FREEWHEEL_MASK, TMC7300_FREEWHEEL_SHIFT, *value);
+			TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_PWMCONF, TMC7300_FREEWHEEL_MASK, TMC7300_FREEWHEEL_SHIFT, *value);
 		}
 		break;
 	default:
