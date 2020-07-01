@@ -7,6 +7,8 @@
 // SPI Channel selection
 #define DEFAULT_CHANNEL  0
 
+#define VREF_FULLSCALE 2714 // mV
+
 static uint32_t rotate(uint8_t motor, int32_t velocity);
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -31,6 +33,7 @@ static void enableDriver(DriverState state);
 static SPIChannelTypeDef *TMC5130_SPIChannel;
 static TMC5130TypeDef TMC5130;
 static uint32_t vmax_position;
+static uint16_t vref; // mV
 
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here
@@ -203,6 +206,19 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = (tmc5130_readInt(motorToIC(motor), TMC5130_RAMPSTAT) & TMC5130_RS_POSREACHED)? 1:0;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 9:
+		// VREF
+		if (readWrite == READ) {
+			*value = vref;
+		} else {
+			if ((uint32_t) *value < VREF_FULLSCALE) {
+				vref = *value;
+				Timer.setDuty(TIMER_CHANNEL_1, vref * TIMER_MAX / VREF_FULLSCALE);
+			} else {
+				errors |= TMC_ERROR_VALUE;
+			}
 		}
 		break;
 	case 10:
@@ -952,7 +968,6 @@ void TMC5130_init(void)
 	HAL.IOs->config->toInput(Pins.REFR_UC);
 	HAL.IOs->config->toOutput(Pins.DRV_ENN_CFG6);
 	HAL.IOs->config->toOutput(Pins.AIN_REF_SW);
-	HAL.IOs->config->toOutput(Pins.AIN_REF_PWM);
 
 	HAL.IOs->config->setLow(Pins.SWSEL);
 
@@ -989,8 +1004,6 @@ void TMC5130_init(void)
 
 	vmax_position = TMC5130.config->shadowRegister[TMC5130_VMAX];
 
-	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
-
 #if defined(Startrampe)
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_PinAFConfig(Pins.AIN_REF_PWM->port, Pins.AIN_REF_PWM->bit, GPIO_AF_TIM1);
@@ -999,7 +1012,10 @@ void TMC5130_init(void)
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #endif
 
+	vref = 2000;
 	HAL.IOs->config->set(Pins.AIN_REF_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_1, 0);
+	Timer.setDuty(TIMER_CHANNEL_1, vref * TIMER_MAX / VREF_FULLSCALE);
+
+	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 };

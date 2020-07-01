@@ -17,6 +17,8 @@
 
 #define MOTORS 1
 
+#define VREF_FULLSCALE 2714 // mV
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -39,6 +41,7 @@ static UART_Config *TMC2209_UARTChannel;
 static TMC2209TypeDef TMC2209;
 static ConfigurationTypeDef *TMC2209_config;
 
+static uint16_t vref; // mV
 static int32_t thigh;
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
@@ -229,6 +232,19 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = (StepDir_getStatus(motor) & STATUS_TARGET_REACHED)? 1:0;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 9:
+		// VREF
+		if (readWrite == READ) {
+			*value = vref;
+		} else {
+			if ((uint32_t) *value < VREF_FULLSCALE) {
+				vref = *value;
+				Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
+			} else {
+				errors |= TMC_ERROR_VALUE;
+			}
 		}
 		break;
 	case 23:
@@ -742,9 +758,10 @@ void TMC2209_init(void)
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #endif
 
+	vref = 2000;
 	HAL.IOs->config->set(Pins.UC_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_3, 0);
+	Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
 
 	enableDriver(DRIVER_ENABLE);
 };

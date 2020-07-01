@@ -17,6 +17,8 @@
 
 #define MOTORS 1
 
+#define VREF_FULLSCALE 2714 // mV
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -38,6 +40,8 @@ static UART_Config *TMC2208_UARTChannel;
 static TMC2208TypeDef TMC2208;
 static ConfigurationTypeDef *TMC2208_config;
 
+static uint16_t vref; // mV
+
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2208_CRC(data, length) tmc_CRC8(data, length, 1)
 
@@ -50,6 +54,7 @@ typedef struct
 	IOPinTypeDef  *MS2;
 	IOPinTypeDef  *DIAG;
 	IOPinTypeDef  *INDEX;
+	IOPinTypeDef  *UC_PWM;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -209,6 +214,19 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
+	case 9:
+		// VREF
+		if (readWrite == READ) {
+			*value = vref;
+		} else {
+			if ((uint32_t) *value < VREF_FULLSCALE) {
+				vref = *value;
+				Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
+			} else {
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
 	default:
 		errors |= TMC_ERROR_TYPE;
 		break;
@@ -309,6 +327,7 @@ void TMC2208_init(void)
 	Pins.MS2      = &HAL.IOs->pins->DIO4;
 	Pins.DIAG     = &HAL.IOs->pins->DIO1;
 	Pins.INDEX    = &HAL.IOs->pins->DIO2;
+	Pins.UC_PWM   = &HAL.IOs->pins->DIO9;
 
 	HAL.IOs->config->toOutput(Pins.DRV_ENN);
 	HAL.IOs->config->toOutput(Pins.STEP);
@@ -354,6 +373,19 @@ void TMC2208_init(void)
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);
+
+#if defined(Startrampe)
+	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_PinAFConfig(Pins.UC_PWM->port, Pins.UC_PWM->bit, GPIO_AF_TIM1);
+#elif defined(Landungsbruecke)
+	HAL.IOs->config->toOutput(Pins.UC_PWM);
+	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#endif
+
+	vref = 2000;
+	HAL.IOs->config->set(Pins.UC_PWM);
+	Timer.init();
+	Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
 
 	enableDriver(DRIVER_ENABLE);
 };

@@ -17,6 +17,8 @@
 
 #define MOTORS 1
 
+#define VREF_FULLSCALE 2714 // mV
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -37,6 +39,8 @@ static void enableDriver(DriverState state);
 static UART_Config *TMC2225_UARTChannel;
 static TMC2225TypeDef TMC2225;
 static ConfigurationTypeDef *TMC2225_config;
+
+static uint16_t vref; // mV
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2225_CRC(data, length) tmc_CRC8(data, length, 1)
@@ -225,6 +229,19 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = (StepDir_getStatus(motor) & STATUS_TARGET_REACHED)? 1:0;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 9:
+		// VREF
+		if (readWrite == READ) {
+			*value = vref;
+		} else {
+			if ((uint32_t) *value < VREF_FULLSCALE) {
+				vref = *value;
+				Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
+			} else {
+				errors |= TMC_ERROR_VALUE;
+			}
 		}
 		break;
 	case 28:
@@ -591,10 +608,10 @@ void TMC2225_init(void)
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #endif
 
-	// Initial PWM for VREF scaling: 75% duty cycle
+	vref = 2000;
 	HAL.IOs->config->set(Pins.UC_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_3, 75*TIMER_MAX / 100);
+	Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
 
 	enableDriver(DRIVER_ENABLE);
 };

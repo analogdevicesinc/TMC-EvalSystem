@@ -16,6 +16,8 @@
 
 #define MOTORS 1
 
+#define VREF_FULLSCALE 2714 // mV
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -39,6 +41,8 @@ static uint32_t setStandAloneSettings(uint8_t i, int32_t value);
 static uint32_t getStandAloneSettings(uint8_t i, int32_t *value);
 
 static IO_States lastEnable = IOS_OPEN; //TMCRhinoSA.Enable_StandStillPowerDownSettings.ENABLED_034;
+
+static uint16_t vref; // mV
 
 typedef struct
 {
@@ -168,6 +172,18 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 7:
 	case 8:
 	case 9:
+		// VREF
+		if (readWrite == READ) {
+			*value = vref;
+		} else {
+			if ((uint32_t) *value < VREF_FULLSCALE) {
+				vref = *value;
+				Timer.setDuty(TIMER_CHANNEL_1, vref * TIMER_MAX / VREF_FULLSCALE);
+			} else {
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
 	case 10:
 	case 11:
 		// Position reached flag
@@ -544,9 +560,6 @@ void TMC2100_init(void)
 	Evalboards.ch2.numberOfMotors  = MOTORS;
 	Evalboards.ch2.deInit          = deInit;
 
-	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
-	reset();
-
 #if defined(Startrampe)
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_PinAFConfig(Pins.AIN_REF_PWM->port, Pins.AIN_REF_PWM->bit, GPIO_AF_TIM1);
@@ -555,9 +568,13 @@ void TMC2100_init(void)
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #endif
 
+	vref = 2000;
 	HAL.IOs->config->set(Pins.AIN_REF_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_1, 0);
+	Timer.setDuty(TIMER_CHANNEL_1, vref * TIMER_MAX / VREF_FULLSCALE);
+
+	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
+	reset();
 }
 
 static void deInit(void)
