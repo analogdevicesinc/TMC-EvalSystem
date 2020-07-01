@@ -167,10 +167,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			StepDir_setAcceleration(motor, *value);
 		}
 		break;
-	// getStandaloneSettin APs have been copied from from types 14-19 but also left here for backwards-compatibility
-	case 6:
-	case 7:
-	case 8:
 	case 9:
 		// VREF
 		if (readWrite == READ) {
@@ -184,7 +180,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 10:
 	case 11:
 		// Position reached flag
 		if(readWrite == READ) {
