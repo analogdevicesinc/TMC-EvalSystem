@@ -16,17 +16,22 @@
 #define PWM_PHASE_W_ENABLED		0x00
 #define PWM_PHASE_W_DISABLED	0xC0
 
-#define PWM_FREQ 		  20000                  // in Hz
-#define PWM_PERIOD 		  (48000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
+#define VELOCITY_CALC_FREQ  10                     // in Hz
+#define PWM_FREQ 		    20000                  // in Hz
+#define PWM_PERIOD 		    (48000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
 
 int16_t  targetPWM        = 0;
-uint16_t openloopStepTime = 200;
+uint32_t openloopVelocity = 60; // mechanical RPM
+uint16_t openloopStepTime = 0;  // Calculate on init
 BLDCMode commutationMode  = BLDC_OPENLOOP;
 uint8_t  pwmEnabled       = 0;
 uint8_t  bbmTime          = 50;
+uint8_t  motorPolePairs   = 1;
 
 int targetAngle         = 0;
 int hallAngle           = 0;
+
+int actualHallVelocity = 0; // electrical RPM
 
 volatile int32_t adcSamples[4] = { 0 };
 uint8_t adcSampleIndex = 0;
@@ -159,6 +164,9 @@ void BLDC_init(IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
 	HAL.IOs->config->toInput(Pins.HALL_U);
 	HAL.IOs->config->toInput(Pins.HALL_V);
 	HAL.IOs->config->toInput(Pins.HALL_W);
+
+	// Calculate the openloop step time by setting the velocity
+	BLDC_setTargetOpenloopVelocity(openloopVelocity);
 
 	// --- PDB ---
 	// Enable clock for programmable delay block (PDB)
@@ -317,11 +325,32 @@ void FTM0_IRQHandler()
 	FTM0_SC &= ~FTM_SC_TOF_MASK;
 
 	static int commutationCounter = 0;
+	static int velocityCounter = 0;
+
+	static int lastHallAngle = 0;
+	static int hallAngleDiffAccu = 0;
 
 	// Measure the hall sensor
 	HallStates actualHallState = inputToHallState(HAL.IOs->config->isHigh(Pins.HALL_U), HAL.IOs->config->isHigh(Pins.HALL_V), HAL.IOs->config->isHigh(Pins.HALL_W));
-
 	hallAngle = hallStateToAngle(actualHallState);
+
+	// Calculate the hall angle difference
+	int hallAngleDiff = (hallAngle - lastHallAngle);         // [-300 ; +360)
+	hallAngleDiff     = (hallAngleDiff + 360) % 360;         // [   0 ; +360)
+	hallAngleDiff     = ((hallAngleDiff + 180) % 360) - 180; // [-180 ; +180)
+	lastHallAngle = hallAngle;
+
+	// Accumulate the hall angle for velocity measurement
+	hallAngleDiffAccu += hallAngleDiff;
+
+	// Calculate the velocity
+	if (++velocityCounter >= PWM_FREQ / VELOCITY_CALC_FREQ)
+	{
+		actualHallVelocity = hallAngleDiffAccu * 60 * VELOCITY_CALC_FREQ / 360; // electrical rotations per minute
+
+		hallAngleDiffAccu = 0;
+		velocityCounter = 0;
+	}
 
 	if (commutationMode == BLDC_OPENLOOP)
 	{
@@ -503,6 +532,19 @@ BLDCMode BLDC_getCommutationMode()
 	return commutationMode;
 }
 
+void BLDC_setPolePairs(uint8 polePairs)
+{
+	if (polePairs == 0)
+		return;
+
+	motorPolePairs = polePairs;
+}
+
+uint8_t BLDC_getPolePairs()
+{
+	return motorPolePairs;
+}
+
 void BLDC_setOpenloopStepTime(uint16_t stepTime)
 {
 	openloopStepTime = stepTime;
@@ -521,6 +563,45 @@ int BLDC_getTargetAngle()
 int BLDC_getHallAngle()
 {
 	return hallAngle;
+}
+
+// Set the open loop velocity in RPM
+void BLDC_setTargetOpenloopVelocity(uint32_t velocity)
+{
+	// 1 [RPM] = polePairs [eRPM]
+	// [eRPM] = [1/60 eRPS] = 6/60 [steps/s]
+	// steps/s = fpwm / openloopStepTime
+	//
+	// openloopStepTime = fpwm * 60 / 6 / velocity / polePairs
+	openloopStepTime = PWM_FREQ * 10 / velocity / motorPolePairs;
+
+	// Store the requested velocity for accurate reading
+	// Otherwise we see rounding errors when reading back.
+	openloopVelocity = velocity;
+}
+
+uint32_t BLDC_getTargetOpenloopVelocity()
+{
+	return openloopVelocity;
+}
+
+int32_t BLDC_getActualOpenloopVelocity()
+{
+	if (commutationMode != BLDC_OPENLOOP)
+		return 0;
+
+	if (targetPWM > 0)
+		return openloopVelocity;
+	else if (targetPWM < 0)
+		return -openloopVelocity;
+	else
+		return 0;
+}
+
+// Velocity measured by hall in RPM
+int BLDC_getActualHallVelocity()
+{
+	return actualHallVelocity / motorPolePairs;
 }
 
 void BLDC_setHallOrder(uint8_t order)
