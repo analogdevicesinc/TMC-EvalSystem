@@ -925,7 +925,7 @@ static void configCallback(TMC5130TypeDef *tmc5130, ConfigState completedState)
 	{
 		// Configuration reset completed
 		// Change hardware preset registers here
-		tmc5130_writeInt(tmc5130, TMC5130_PWMCONF, 0x000504C8);
+		tmc5130_writeInt(tmc5130, TMC5130_PWMCONF, 0x000500C8);
 
 		// Fill missing shadow registers (hardware preset registers)
 		tmc5130_fillShadowRegisters(&TMC5130);
