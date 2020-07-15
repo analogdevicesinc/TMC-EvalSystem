@@ -249,8 +249,8 @@ void BLDC_init(IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
 			| FTM_COMBINE_COMP3_MASK | FTM_COMBINE_COMBINE3_MASK
 			| FTM_COMBINE_FAULTEN0_MASK | FTM_COMBINE_FAULTEN2_MASK | FTM_COMBINE_FAULTEN3_MASK;
 
-	// set dead time prescaler and dead time
-	FTM0_DEADTIME = FTM_DEADTIME_DTVAL(bbmTime);
+	// set dead time prescaler (divisor 1) and dead time
+	FTM0_DEADTIME = FTM_DEADTIME_DTPS(0) | FTM_DEADTIME_DTVAL(bbmTime);
 
 	/* Initial setting of value registers */
 	FTM0_C0V = 0;
@@ -632,8 +632,8 @@ void BLDC_setBBMTime(uint8_t time)
 	// Clip to the maximum value instead of overflowing
 	bbmTime = MIN(time, 63);
 
-	// set dead time prescaler and dead time
-	FTM0_DEADTIME = FTM_DEADTIME_DTVAL(bbmTime);
+	// Set dead time prescaler (divisor 1) and dead time
+	FTM0_DEADTIME = FTM_DEADTIME_DTPS(0) | FTM_DEADTIME_DTVAL(bbmTime);
 }
 
 uint8_t BLDC_getBBMTime()
