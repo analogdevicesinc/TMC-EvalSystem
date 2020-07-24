@@ -28,7 +28,11 @@ extern void __thumb_startup(void);
  */
 void Default_Handler(void)
 {
-	asm volatile ("bkpt");
+	// Uncomment this breakpoint instruction if you are debugging a hard
+	// fault during development. If this breakpoint is hit without a
+	// debugger attached a LOCKUP is triggered. For this processor this
+	// causes an immediate system reset.
+	//asm volatile ("bkpt");
 
 	while(1);
 
