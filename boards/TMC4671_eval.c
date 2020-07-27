@@ -65,13 +65,13 @@ static uint32_t rotate(uint8_t motor, int32_t velocity)
 		// set target velocity directly
 		tmc4671_setTargetVelocity(motor, velocity);
 	}
+
+	// remember switched motion mode
+	actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
 #else
 	// set target velocity directly
 	tmc4671_setTargetVelocity(motor, velocity);
 #endif
-
-	// remember switched motion mode
-	actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
 
 	return TMC_ERROR_NONE;
 }
@@ -113,13 +113,13 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
 		// set target position directly
 		tmc4671_setAbsolutTargetPosition(motor, position);
 	}
+
+	// remember switched motion mode
+	actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
 #else
 	// set target position directly
 	tmc4671_setAbsolutTargetPosition(motor, position);
 #endif
-
-	// remember switched motion mode
-	actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
 
 	return TMC_ERROR_NONE;
 }
@@ -146,13 +146,13 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 		// set target position directly
 		tmc4671_setRelativeTargetPosition(motor, dX);
 	}
+
+	// remember switched motion mode
+	actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
 #else
 	// set target position directly
 	tmc4671_setRelativeTargetPosition(motor, dX);
 #endif
-
-	// remember switched motion mode
-	actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
 
 	return TMC_ERROR_NONE;
 }
@@ -230,11 +230,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 
+#ifdef USE_LINEAR_RAMP
 	case 51: // ramp position
 		if (readWrite == READ) {
 			*value = (float)rampGenerator[motor].rampPosition * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX);
 		}
 		break;
+#endif
 
 	case 56: // position scaler
 		if (readWrite == READ) {
@@ -301,8 +303,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			tmc4671_setTargetTorque_mA(motor, motorConfig[motor].torqueMeasurementFactor, *value);
 
+#ifdef USE_LINEAR_RAMP
 			// remember switched motion mode by setTargetTorque_mA
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_TORQUE;
+#endif
 		}
 		break;
 	case 192:
