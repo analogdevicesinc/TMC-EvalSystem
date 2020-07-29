@@ -25,6 +25,7 @@ typedef struct
 	int16_t   actualTorquePT1;
 	int64_t   akkuActualTorque;
 	int32_t   positionScaler;
+	int32_t   linearScaler;
 } TMinimalMotorConfig;
 
 TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
@@ -35,6 +36,12 @@ TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
 	int32_t lastRampTargetPosition[TMC4671_MOTORS];
 	int32_t lastRampTargetVelocity[TMC4671_MOTORS];
 #endif
+
+// Helper functions for unit conversion
+static int32_t linearPositionToInternalPosition(int32_t position, int32_t scaler, int polePairs);
+static int32_t internalPositionToLinearPosition(int32_t position, int32_t scaler, int polePairs);
+static int32_t linearVelocityToInternalVelocity(int32_t velocity, int32_t scaler);
+static int32_t internalVelocityToLinearVelocity(int32_t velocity, int32_t scaler);
 
 // => SPI wrapper
 uint8_t tmc4671_readwriteByte(uint8_t motor, uint8_t data, uint8_t lastTransfer)
@@ -230,6 +237,175 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 
+	case 20: // Linear scaler [µm/rotation]
+		if (readWrite == READ)
+		{
+			*value = motorConfig[motor].linearScaler;
+		}
+		else
+		{
+			motorConfig[motor].linearScaler = *value;
+		}
+		break;
+	case 21: // Linear maximum speed [µm/s]
+		if (readWrite == READ)
+		{
+			int velocity = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
+#ifdef USE_LINEAR_RAMP
+			// update also ramp generator value
+			rampGenerator[motor].maxVelocity = velocity;
+#endif
+			// Internal -> linear
+			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
+		}
+		else
+		{
+			// Linear -> Internal
+			tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_LIMIT, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
+
+#ifdef USE_LINEAR_RAMP
+			// Also update ramp generator value
+			rampGenerator[motor].maxVelocity = *value;
+#endif
+		}
+		break;
+	case 22: // Linear acceleration [µm/s/s]
+		if (readWrite == READ)
+		{
+			*value = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
+
+#ifdef USE_LINEAR_RAMP
+			// update also ramp generator value
+			rampGenerator[motor].acceleration = *value;
+#endif
+			// Internal -> linear
+			*value = internalVelocityToLinearVelocity(*value, motorConfig[motor].linearScaler);
+		}
+		else
+		{
+			// Linear -> internal
+			tmc4671_writeInt(motor, TMC4671_PID_ACCELERATION_LIMIT, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
+
+#ifdef USE_LINEAR_RAMP
+			// update also ramp generator value
+			rampGenerator[motor].acceleration = *value;
+#endif
+		}
+		break;
+	case 23: // Linear ramp velocity [µm/s]
+		if (readWrite == READ)
+		{
+#ifdef USE_LINEAR_RAMP
+			if (rampGenerator[motor].rampEnabled)
+				*value = rampGenerator[motor].rampVelocity;
+			else
+				*value = tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
+#else
+			*value = tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
+#endif
+			// Internal -> linear
+			*value = internalVelocityToLinearVelocity(*value, motorConfig[motor].linearScaler);
+		}
+		break;
+#ifdef USE_LINEAR_RAMP
+	case 24: // Linear ramp position [µm]
+		if (readWrite == READ)
+		{
+			// Internal -> linear
+			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			*value = internalPositionToLinearPosition(rampGenerator[motor].rampPosition, motorConfig[motor].linearScaler, polePairs);
+		}
+		break;
+#endif
+	case 25: // Linear target position [µm]
+		if (readWrite == READ)
+		{
+			// Internal -> linear
+			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			*value = internalPositionToLinearPosition(tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET), motorConfig[motor].linearScaler, polePairs);
+		}
+		else
+		{
+			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			int position = linearPositionToInternalPosition(*value, motorConfig[motor].linearScaler, polePairs);
+#ifdef USE_LINEAR_RAMP
+			if (rampGenerator[motor].rampEnabled)
+			{
+				// Switch to position motion mode
+				tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
+
+				// Set target position for ramp generator
+				rampGenerator[motor].targetPosition = position;
+			}
+			else
+			{
+				// Set the target position directly
+				tmc4671_setAbsolutTargetPosition(motor, position);
+			}
+
+			// Remember switched motion mode
+			actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
+#else
+			// Set the target position directly
+			tmc4671_setAbsolutTargetPosition(motor, position);
+#endif
+		}
+		break;
+	case 26: // Linear actual velocity [µm/s]
+		if (readWrite == READ)
+		{
+			int velocity = motorConfig[motor].actualVelocityPT1;
+
+			// Internal -> linear
+			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
+		}
+		break;
+	case 27: // Linear actual position [µm]
+		if (readWrite == READ)
+		{
+			int position = tmc4671_getActualPosition(motor);
+
+			// Internal -> linear
+			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			*value = internalPositionToLinearPosition(position, motorConfig[motor].linearScaler, polePairs);
+		}
+		break;
+	case 28: // Linear target velocity [µm/s]
+		if (readWrite == READ)
+		{
+			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 2);
+			int velocity = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
+
+			// Internal -> linear
+			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
+		}
+		else
+		{
+#ifdef USE_LINEAR_RAMP
+			if (rampGenerator[motor].rampEnabled)
+			{
+				// Switch to velocity motion mode
+				tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
+
+				// Set target velocity for ramp generator
+				// Linear -> internal
+				rampGenerator[motor].targetVelocity = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
+			}
+			else
+			{
+				// Linear -> internal
+				tmc4671_setTargetVelocity(motor, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
+			}
+
+			// Remember switched motion mode
+			actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
+#else
+			// Linear -> internal
+			tmc4671_setTargetVelocity(motor, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
+#endif
+		}
+		break;
+
 #ifdef USE_LINEAR_RAMP
 	case 51: // ramp position
 		if (readWrite == READ) {
@@ -355,6 +531,68 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	}
 	return errors;
+}
+
+static int32_t linearPositionToInternalPosition(int32_t linearPosition, int32_t scaler, int polePairs)
+{
+	// Conversion calculation:
+	// scaler    = [µm / mechanicalRotation]
+	// polePairs = [electricalRotation / mechanicalRotation]
+	// internal  = [1/65536 * electricalRotation]
+	//
+	// linear                              = [µm]
+	// linear / scaler                     = [mechanicalRotation]
+	// linear / scaler * polePairs         = [electricalRotation]
+	// linear / scaler * polePairs * 65536 = [1/65536 * electricalRotation]
+	//
+	// Do the multiplications first to minimize rounding errors:
+	return ((int64_t) linearPosition) * 65536 * polePairs / scaler;
+}
+
+static int32_t internalPositionToLinearPosition(int32_t internalPosition, int32_t scaler, int polePairs)
+{
+	// Conversion calculation:
+	// polePairs = [electricalRotation / mechanicalRotation]
+	// scaler    = [µm / mechanicalRotation]
+	// linear    = [µm]
+	//
+	// internal                              = [1/65536 * electricalRotation]
+	// internal / 65536                      = [electricalRotation]
+	// internal / 65536 / polePairs          = [mechanicalRotation]
+	// internal / 65536 / polePairs * scaler = [µm]
+	//
+	// Do the multiplication first to minimize rounding errors:
+	return ((int64_t) internalPosition) * scaler / 65536 / polePairs;
+}
+
+static int32_t linearVelocityToInternalVelocity(int32_t linearVelocity, int32_t scaler)
+{
+	// Conversion calculation
+	// scaler    = [µm / mechanicalRotation]
+	// time:       [60s / minute]
+	// internal  = [mechanicalRotation / minute]
+	//
+	// linear               = [µm / s]
+	// linear / scaler      = [mechanicalRotation / s]
+	// linear / scaler * 60 = [mechanicalRotation / minute]
+	//
+	// Do the multiplication first to minimize rounding errors:
+	return ((int64_t) linearVelocity) * 60 / scaler;
+}
+
+static int32_t internalVelocityToLinearVelocity(int32_t internalVelocity, int32_t scaler)
+{
+	// Conversion calculation
+	// scaler    = [µm / mechanicalRotation]
+	// time:       [60s / minute]
+	// linear:   = [µm / s]
+	//
+	// internal               = [mechanicalRotation / minute]
+	// internal / 60          = [mechanicalRotation / s]
+	// internal / 60 * scaler = [µm / s]
+	//
+	// Do the multiplication first to minimize rounding errors:
+	return ((int64_t) internalVelocity) * scaler / 60;
 }
 
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
@@ -583,6 +821,7 @@ void TMC4671_init(void)
 		motorConfig[motor].actualTorquePT1			= 0;
 		motorConfig[motor].akkuActualTorque         = 0;
 		motorConfig[motor].positionScaler			= POSITION_SCALE_MAX;
+		motorConfig[motor].linearScaler             = 30000; // µm / rotation
 	}
 
 	// set default polarity for evaluation board's power stage on init
