@@ -429,7 +429,30 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = (int32_t) ((float)tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET) * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX));
 		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
+			// scale target position
+			int position = (float)*value * (float)POSITION_SCALE_MAX / (float)motorConfig[motor].positionScaler;
+
+#ifdef USE_LINEAR_RAMP
+			if (rampGenerator[motor].rampEnabled)
+			{
+				// switch to position motion mode
+				tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
+
+				// set target position for ramp generator
+				rampGenerator[motor].targetPosition = position;
+			}
+			else
+			{
+				// set target position directly
+				tmc4671_setAbsolutTargetPosition(motor, position);
+			}
+
+			// remember switched motion mode
+			actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
+#else
+			// set target position directly
+			tmc4671_setAbsolutTargetPosition(motor, position);
+#endif
 		}
 		break;
 	case 176:
@@ -491,7 +514,27 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 2);
 			*value = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
 		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
+#ifdef USE_LINEAR_RAMP
+			if (rampGenerator[motor].rampEnabled)
+			{
+				// switch to velocity motion mode
+				tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
+
+				// set target velocity for ramp generator
+				rampGenerator[motor].targetVelocity = *value;
+			}
+			else
+			{
+				// set target velocity directly
+				tmc4671_setTargetVelocity(motor, *value);
+			}
+
+			// remember switched motion mode
+			actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
+#else
+			// set target velocity directly
+			tmc4671_setTargetVelocity(motor, *value);
+#endif
 		}
 		break;
 	case 251:
