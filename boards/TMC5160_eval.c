@@ -804,14 +804,12 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
-	UNUSED(motor);
-	tmc5160_writeInt(DEFAULT_MOTOR, address, value);
+	tmc5160_writeInt(motorToIC(motor), address, value);
 }
 
 static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
-	UNUSED(motor);
-	*value = tmc5160_readInt(DEFAULT_MOTOR, address);
+	*value = tmc5160_readInt(motorToIC(motor), address);
 }
 
 static void periodicJob(uint32_t tick)
