@@ -71,7 +71,7 @@ static inline TMC2130TypeDef *motorToIC(uint8_t motor)
 }
 
 // => SPI wrapper (also takes care of cover mode)
-void tmc2130_readWriteArray(void *userData, uint8_t *data, size_t length)
+void tmc2130_readWriteArray(uint8_t *data, size_t length, void *userData)
 {
 	if(Evalboards.ch1.fullCover != NULL)
 	{
@@ -853,7 +853,7 @@ void TMC2130_init(void)
 	TMC2130_SPIChannel       = &HAL.SPI->ch2;
 	TMC2130_SPIChannel->CSN  = &HAL.IOs->pins->SPI2_CSN0;
 
-	tmc2130_init(&TMC2130, (void*)TMC2130_SPIChannel, &tmc2130_defaultRegisterResetState[0]);
+	tmc2130_init(&TMC2130, &tmc2130_defaultRegisterResetState[0], (void*)TMC2130_SPIChannel);
 	tmc2130_setCallback(&TMC2130, configCallback);
 
 	// Initialize the hardware pins
