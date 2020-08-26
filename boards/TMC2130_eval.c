@@ -70,27 +70,18 @@ static inline TMC2130TypeDef *motorToIC(uint8_t motor)
 	return &TMC2130;
 }
 
-// Translate channel number to SPI channel
-// When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
-{
-	UNUSED(channel);
-
-	return TMC2130_SPIChannel;
-}
-
 // => SPI wrapper (also takes care of cover mode)
-void tmc2130_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
+void tmc2130_readWriteArray(void *userData, uint8_t *data, size_t length)
 {
 	if(Evalboards.ch1.fullCover != NULL)
 	{
-		UNUSED(channel);
 		Evalboards.ch1.fullCover(&data[0], length);
 	}
 	else
 	{
-		// Map the channel to the corresponding SPI channel
-		channelToSPI(channel)->readWriteArray(&data[0], length);
+		// Take the SPI channel that was stored in userData to access the bus.
+		SPIChannelTypeDef *spi = (SPIChannelTypeDef *) userData;
+		spi->readWriteArray(&data[0], length);
 	}
 }
 // <= SPI wrapper
@@ -858,7 +849,11 @@ static void enableDriver(DriverState state)
 
 void TMC2130_init(void)
 {
-	tmc2130_init(&TMC2130, 1, &tmc2130_defaultRegisterResetState[0]);
+	// Initialize the SPI channel
+	TMC2130_SPIChannel       = &HAL.SPI->ch2;
+	TMC2130_SPIChannel->CSN  = &HAL.IOs->pins->SPI2_CSN0;
+
+	tmc2130_init(&TMC2130, (void*)TMC2130_SPIChannel, &tmc2130_defaultRegisterResetState[0]);
 	tmc2130_setCallback(&TMC2130, configCallback);
 
 	// Initialize the hardware pins
@@ -888,10 +883,6 @@ void TMC2130_init(void)
 	HAL.IOs->config->setLow(Pins.AIN_REF_SW);
 	HAL.IOs->config->setLow(Pins.ENCN_DCO);
 	HAL.IOs->config->setLow(Pins.ENCA_DCIN_CFG5);
-
-	// Initialize the SPI channel
-	TMC2130_SPIChannel       = &HAL.SPI->ch2;
-	TMC2130_SPIChannel->CSN  = &HAL.IOs->pins->SPI2_CSN0;
 
 	// Initialize the software StepDir generator
 	StepDir_init(STEPDIR_PRECISION);
