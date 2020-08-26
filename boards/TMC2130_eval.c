@@ -858,7 +858,7 @@ static void enableDriver(DriverState state)
 
 void TMC2130_init(void)
 {
-	tmc2130_init(&TMC2130, 1, Evalboards.ch2.config, &tmc2130_defaultRegisterResetState[0]);
+	tmc2130_init(&TMC2130, 1, &tmc2130_defaultRegisterResetState[0]);
 	tmc2130_setCallback(&TMC2130, configCallback);
 
 	// Initialize the hardware pins
