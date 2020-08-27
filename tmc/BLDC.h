@@ -12,7 +12,14 @@
 #include "hal/derivative.h"
 #include "hal/HAL.h"
 
-void BLDC_init(IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW);
+typedef enum {
+	MEASURE_ONE_PHASE,
+	MEASURE_THREE_PHASES,
+} BLDCMeasurementType;
+
+void BLDC_init(BLDCMeasurementType type, IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW);
+
+void BLDC_calibrateADCs();
 
 void BLDC_enablePWM(uint8_t enable);
 uint8_t BLDC_isPWMenabled();

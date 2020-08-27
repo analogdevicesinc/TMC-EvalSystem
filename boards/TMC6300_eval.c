@@ -337,7 +337,7 @@ void TMC6300_init(void)
 	Evalboards.ch2.deInit               = deInit;
 	Evalboards.ch2.periodicJob          = periodicJob;
 
-	BLDC_init(Pins.HALL_U, Pins.HALL_V, Pins.HALL_W);
+	BLDC_init(MEASURE_ONE_PHASE, Pins.HALL_U, Pins.HALL_V, Pins.HALL_W);
 
 	enableDriver(DRIVER_ENABLE);
 };
