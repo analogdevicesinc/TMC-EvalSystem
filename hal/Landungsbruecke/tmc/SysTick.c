@@ -14,11 +14,20 @@ void systick_init()
 {
 	SYST_RVR  = 48000;
 	SYST_CSR  = 7;
+
+	// Enable the DWT CYCCNT for the µs counter
+	DWT_CTRL |= 0x00000001;
 }
 
 uint32_t systick_getTick()
 {
 	return systick;
+}
+
+uint32_t systick_getMicrosecondTick()
+{
+	// 48 MHz CYCCNT / 48 -> µs counter
+	return DWT_CYCCNT / 48;
 }
 
 /* Systick values are in milliseconds, accessing the value is faster. As a result
