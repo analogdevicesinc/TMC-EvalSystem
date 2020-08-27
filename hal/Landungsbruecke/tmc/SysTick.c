@@ -29,8 +29,9 @@ uint32_t systick_getTick()
  *  -> systick difference of 1ms, even though only 0.02 ms passed
  * To prevent this, we generally apply a correction of -1 to any systick difference.
  * In wait() this is done by using '<=' instead of '<'
- * In timeSince() the subtraction is carried out on the result. That subtraction is prevented from underflowing
- * to UINT32_MAX, returning 0 in that case (Saturated subtraction).
+ * In timeDiff() the subtraction is carried out on the result.
+ * That subtraction is prevented from underflowing to UINT32_MAX, returning 0 in
+ * that case (Saturated subtraction).
  *
  */
 void wait(uint32_t delay)	// wait for [delay] ms/systicks
@@ -41,7 +42,12 @@ void wait(uint32_t delay)	// wait for [delay] ms/systicks
 
 uint32_t timeSince(uint32_t tick)	// time difference since the [tick] timestamp in ms/systicks
 {
-	uint32_t tickDiff = systick - tick;
+	return timeDiff(systick, tick);
+}
+
+uint32_t timeDiff(uint32_t newTick, uint32_t oldTick) // Time difference between newTick and oldTick timestamps
+{
+	uint32_t tickDiff = newTick - oldTick;
 
 	// Prevent subtraction underflow - saturate to 0 instead
 	if(tickDiff != 0)
