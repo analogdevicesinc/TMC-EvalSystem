@@ -543,7 +543,14 @@ void FTM0_IRQHandler()
 	}
 
 	// Update PDB timing
-	PDB0_CH1DLY0 = duty/2;
+	if (duty < PWM_PERIOD/2)
+	{
+		PDB0_CH1DLY0 = duty + (PWM_PERIOD-duty)/2;
+	}
+	else
+	{
+		PDB0_CH1DLY0 = duty/2;
+	}
 
 	// Update PDB and FTM registers
 	PDB0_SC |= PDB_SC_LDOK_MASK;
