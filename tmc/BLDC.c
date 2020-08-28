@@ -43,7 +43,7 @@ int hallAngle           = 0;
 
 int actualHallVelocity = 0; // electrical RPM
 
-volatile int32_t adcSamples[4] = { 0 };
+volatile int32_t adcSamples[8] = { 0 };
 uint8_t adcSampleIndex = 0;
 
 int32_t adcOffset[3]    = { 0 };
