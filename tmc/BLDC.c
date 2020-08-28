@@ -572,12 +572,16 @@ void BLDC_enablePWM(uint8_t enable)
 	}
 	else
 	{
-		HAL.IOs->config->reset(Pins.PWM_UH);
-		HAL.IOs->config->reset(Pins.PWM_UL);
-		HAL.IOs->config->reset(Pins.PWM_VH);
-		HAL.IOs->config->reset(Pins.PWM_VL);
-		HAL.IOs->config->reset(Pins.PWM_WH);
-		HAL.IOs->config->reset(Pins.PWM_WL);
+		Pins.PWM_UH->configuration.GPIO_Mode  = GPIO_Mode_IN;
+		Pins.PWM_UH->configuration.GPIO_OType = GPIO_OType_PP;
+		Pins.PWM_UH->configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
+
+		HAL.IOs->config->set(Pins.PWM_UH);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_UL);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_VH);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_VL);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_WH);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_WL);
 
 		pwmEnabled = 0;
 	}
