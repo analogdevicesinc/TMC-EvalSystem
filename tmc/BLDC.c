@@ -329,6 +329,7 @@ void BLDC_calibrateADCs()
 		ADC1_SC1A = (ADC1_SC1A & (~ADC_SC1_ADCH_MASK)) | adcPhases[adc];
 
 		// Reset the ADC state
+		adcOffset[adc] = 0;
 		adcState[adc] = ADC_INIT;
 
 		// Wait until the ADC is initialized again
