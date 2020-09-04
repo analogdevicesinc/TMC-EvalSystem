@@ -388,7 +388,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				tempValue = tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF);
 
 				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TFD_3_MASK, TMC2130_TFD_3_SHIFT, (*value & (1<<3))? 1:0);
-				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TFD_ALL_MASK, TMC2130_TFD_ALL_SHIFT, *value);
+				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TFD_2_0_MASK, TMC2130_TFD_2_0_SHIFT, *value);
 			}
 		}
 		break;
