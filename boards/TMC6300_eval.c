@@ -10,6 +10,9 @@
 
 #define MOTORS 1
 
+// todo: Calculate this and describe the calculation instead of measuring it
+#define CURRENT_SCALING_FACTOR 10712
+
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
@@ -337,7 +340,7 @@ void TMC6300_init(void)
 	Evalboards.ch2.deInit               = deInit;
 	Evalboards.ch2.periodicJob          = periodicJob;
 
-	BLDC_init(MEASURE_ONE_PHASE, Pins.HALL_U, Pins.HALL_V, Pins.HALL_W);
+	BLDC_init(MEASURE_ONE_PHASE, CURRENT_SCALING_FACTOR, Pins.HALL_U, Pins.HALL_V, Pins.HALL_W);
 
 	enableDriver(DRIVER_ENABLE);
 };

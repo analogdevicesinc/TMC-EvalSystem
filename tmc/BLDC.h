@@ -17,7 +17,7 @@ typedef enum {
 	MEASURE_THREE_PHASES,
 } BLDCMeasurementType;
 
-void BLDC_init(BLDCMeasurementType type, IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW);
+void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW);
 
 void BLDC_calibrateADCs();
 

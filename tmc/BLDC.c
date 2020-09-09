@@ -49,10 +49,9 @@ uint8_t adcSampleIndex = 0;
 int32_t adcOffset[3]    = { 0 };
 uint32_t sampleCount[3] = { 0 };
 
-#define ADC_SAMPLES 100
+uint32_t currentScalingFactor = 256; // u24q8 format
 
-// todo: Calculate this and describe the calculation instead of measuring it
-#define CURRENT_SCALING_FACTOR 10712
+#define ADC_SAMPLES 100
 
 typedef enum {
 	HALL_INVALID_0 = 0,
@@ -158,7 +157,7 @@ static int16_t hallStateToAngle(HallStates hallState)
 	return 0;
 }
 
-void BLDC_init(BLDCMeasurementType type, IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
+void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
 {
 	if (type == MEASURE_THREE_PHASES)
 	{
@@ -181,6 +180,8 @@ void BLDC_init(BLDCMeasurementType type, IOPinTypeDef *hallU, IOPinTypeDef *hall
 	Pins.PWM_VH       = &HAL.IOs->pins->DIO9;
 	Pins.PWM_WL       = &HAL.IOs->pins->DIO10;
 	Pins.PWM_WH       = &HAL.IOs->pins->DIO11;
+
+	currentScalingFactor = currentScaling;
 
 	Pins.HALL_U       = hallU;
 	Pins.HALL_V       = hallV;
@@ -375,7 +376,7 @@ void ADC1_IRQHandler()
 		}
 		break;
 	case ADC_READY:
-		adcSamples[adcSampleIndex] = (tmp - adcOffset[lastChannel]) * CURRENT_SCALING_FACTOR / 65536;
+		adcSamples[adcSampleIndex] = (tmp - adcOffset[lastChannel]) * currentScalingFactor / 65536;
 		adcSampleIndex = (adcSampleIndex + 1) % ARRAY_SIZE(adcSamples);
 
 		break;
