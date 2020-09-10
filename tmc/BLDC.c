@@ -49,7 +49,7 @@ uint8_t adcSampleIndex = 0;
 int32_t adcOffset[3]    = { 0 };
 uint32_t sampleCount[3] = { 0 };
 
-uint32_t currentScalingFactor = 256; // u24q8 format
+int32_t currentScalingFactor = 256; // u24q8 format
 
 #define ADC_SAMPLES 100
 
