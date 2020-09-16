@@ -30,14 +30,36 @@ static uint8_t reset();
 static void enableDriver(DriverState state);
 
 SPIChannelTypeDef *TMC6100_SPIChannel;
+IOPinTypeDef *TMC6100_SPIchipSelect = NULL;
 
 // => SPI wrapper
 uint8_t tmc6100_readwriteByte(uint8_t motor, uint8_t data, uint8_t lastTransfer)
 {
 	if (motor == TMC6100_DEFAULT_MOTOR)
-		return TMC6100_SPIChannel->readWrite(data, lastTransfer);
+	{
+		IOPinTypeDef *tmp = NULL;
+
+		if (TMC6100_SPIchipSelect)
+		{
+			// Swap to the TMC6100's CSN
+			tmp = TMC6100_SPIChannel->CSN;
+			TMC6100_SPIChannel->CSN = TMC6100_SPIchipSelect;
+		}
+
+		uint8_t retVal = TMC6100_SPIChannel->readWrite(data, lastTransfer);
+
+		if (TMC6100_SPIchipSelect)
+		{
+			// Swap back to the original CSN
+			TMC6100_SPIChannel->CSN = tmp;
+		}
+
+		return retVal;
+	}
 	else
+	{
 		return 0;
+	}
 }
 // <= SPI wrapper
 
@@ -238,4 +260,36 @@ void TMC6100_init(void)
 	tmc6100_writeInt(TMC6100_DEFAULT_MOTOR, TMC6100_GCONF, 0x40);
 
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
+}
+
+// This function is used to initialize the TMC6100 when it is part of the TMC4671+TMC6100-BOB.
+// The only difference to a TMC6100-Eval is the SPI channel - instead of SPI2, SPI1 is used.
+// To use the TMC4671+TMC6100-BOB with the Evaluation system, connect the BOB like this:
+//   Eselsbruecke | BOB
+//   5V_USB       | +5V
+//   GND          | GND
+//   SPI1_CSN     | CS_CTRL
+//   SPI2_CSN0    | CS_DRV
+//   SPI1_SCK     | SPI_SCK
+//   SPI1_SDI     | SPI_MOSI
+//   SPI1_SDO     | SPI_MISO
+//   DIO0         | CTRL_EN
+// Additionally you need to connect the following BOB pins:
+//   - 3V3: Connect this to a 3V3 regulator output
+//   - VM, GND: Connect this to your power supply
+//   - U, V, W: Connect this to your BLDC motor
+// All other BOB pins are optional
+
+void TMC6100_BOB_init(void)
+{
+	// Run the normal init first...
+	TMC6100_init();
+
+	// ...then override the SPI channel to use channel 1
+	TMC6100_SPIChannel = &HAL.SPI->ch1;
+	// Do not override the CSN in the SPIChannel - this would break the motion controller using SPI1
+	// Instead store the pin in a separate variable
+	TMC6100_SPIchipSelect = &HAL.IOs->pins->SPI2_CSN0;
+
+	spi_setFrequency(TMC6100_SPIChannel, 1000000);
 }
