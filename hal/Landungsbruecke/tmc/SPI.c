@@ -181,6 +181,74 @@ void reset_ch2()
 	SPI_MCR_REG(SPI.ch2.periphery) |= SPI_MCR_CLR_RXF_MASK | SPI_MCR_CLR_TXF_MASK;
 }
 
+// Helper lookup tables
+static uint8_t PBR_values[4] = { 2, 3, 5, 7 };
+static uint16_t BR_values[16] = { 2, 4, 6, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
+
+// Set the SPI frequency to the next-best available frequency (rounding down).
+// Returns the actual frequency set or 0 if no suitable frequency was found.
+uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency)
+{
+	if (!SPIChannel)
+		return 0;
+
+	uint32_t bestFrequency = 0;
+	uint8_t bestPBR = 0;
+	uint8_t bestBR  = 0;
+
+	// Find the highest frequency that is lower or equal to the desired frequency
+	for (uint32_t i = 0; i < ARRAY_SIZE(PBR_values); i++)
+	{
+		// For each possible PBR prescaler value...
+		uint8_t pbr = PBR_values[i];
+		uint32_t pbrFreq = CPU_BUS_CLK_HZ / pbr;
+
+		// Calculate the ideal divisor (rounding up to not exceed the desired frequency)
+		uint32_t divisor = (pbrFreq + desiredFrequency - 1) / desiredFrequency;
+
+		// Find the next-largest available BR divisor
+		uint32_t j;
+		for (j = 0; j < ARRAY_SIZE(BR_values); j++)
+		{
+			if (BR_values[j] >= divisor)
+				break;
+		}
+
+		// If no BR divisor value is larger, check the next PBR value
+		if (j == ARRAY_SIZE(BR_values))
+			continue;
+
+		// Calculate the resulting actual frequency
+		uint32_t actualFrequency = pbrFreq / BR_values[j];
+
+		// Sanity check: Verify that the actual frequency is smaller than the desired frequency
+		if (actualFrequency > desiredFrequency)
+			continue;
+
+		// Check if the actual frequency is better than the previous ones
+		// and store the parameters if it is.
+		if (actualFrequency > bestFrequency)
+		{
+			bestFrequency = actualFrequency;
+			bestPBR = i;
+			bestBR  = j;
+		}
+	}
+
+	// If we couldn't find a suitable frequency, abort
+	if (bestFrequency == 0)
+		return 0;
+
+	// Update the hardware parameters
+	uint32_t tmp = SPI_CTAR_REG(SPIChannel->periphery, 0) & ~(SPI_CTAR_DT_MASK | SPI_CTAR_BR_MASK | SPI_CTAR_PBR_MASK);
+	tmp |= SPI_CTAR_DT(0);
+	tmp |= SPI_CTAR_PBR(bestPBR);
+	tmp |= SPI_CTAR_BR(bestBR);
+	SPI_CTAR_REG(SPIChannel->periphery, 0) = tmp;
+
+	return bestFrequency;
+}
+
 int32_t spi_readInt(SPIChannelTypeDef *SPIChannel, uint8_t address)
 {
 	// clear write bit
