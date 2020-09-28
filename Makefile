@@ -216,6 +216,8 @@ else ifeq ($(DEVICE),Landungsbruecke)
 	else
 		LDFLAGS +=-T $(LPCLIBDIR)/MK20DN512.ld
 	endif
+else
+    $(error You need to set the DEVICE parameter to either "Landungsbruecke" or "Startrampe". When calling make directly, do this by adding DEVICE=Landungsbruecke or DEVICE=Startrampe to the commandline)
 endif
 
 CDEFS += -DID_CH1_DEFAULT=$(ID_CH1_DEFAULT) -DID_CH1_OVERRIDE=$(ID_CH1_OVERRIDE)
