@@ -108,6 +108,46 @@ static void reset_ch2()
 	SPI.ch2.readWrite  = spi_ch2_readWrite;
 }
 
+// Set the SPI frequency to the next-best available frequency (rounding down).
+// Returns the actual frequency set or 0 if no suitable frequency was found.
+uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency)
+{
+	RCC_ClocksTypeDef RCC_ClocksStatus;
+
+	RCC_GetClocksFreq(&RCC_ClocksStatus);
+
+	for (int i = 0; i < 8; i++)
+	{
+		uint32_t prescaler = 1<<(i+1);
+		uint32_t frequency = RCC_ClocksStatus.PCLK1_Frequency / prescaler;
+
+		if (frequency <= desiredFrequency)
+		{
+			// Calculate the shift value of the CR1->BD bitfield since it is
+			// not provided as a macro.
+			uint32_t shift = 0;
+			for (uint32_t j = SPI_CR1_BR; (j & 1) == 0; j >>=1)
+			{
+				shift++;
+			}
+
+			// Update the prescaler
+			uint32_t tmp = SPIChannel->periphery->CR1;
+
+			tmp &= ~SPI_CR1_BR;
+
+			tmp |= i << shift;
+
+			SPIChannel->periphery->CR1 = tmp;
+
+			return frequency;
+		}
+	}
+
+	// The requested frequency was too small -> do not update the frequency
+	return 0;
+}
+
 int32_t spi_readInt(SPIChannelTypeDef *SPIChannel, uint8_t address)
 {
 	// clear write bit

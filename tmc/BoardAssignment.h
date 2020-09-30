@@ -69,6 +69,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC2590 		  13
 #define ID_TMC2225        18
 #define ID_TMC6100        19
+#define ID_TMC6100_BOB    25 // For the TMC4671+TMC6100-BOB
 #if defined(Landungsbruecke)
 #define ID_TMC2209        8
 #define ID_TMC2300        14
@@ -104,6 +105,7 @@ extern void TMC5130_init();
 extern void TMC5160_init();
 extern void TMC5161_init();
 extern void TMC6100_init();
+extern void TMC6100_BOB_init();
 extern void TMC6200_init();
 extern void TMC6300_init();
 extern void TMC7300_init();
@@ -150,6 +152,7 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC2590,     .init = TMC2590_init     },
 	{ .id = ID_TMCC160,     .init = TMCC160_init     },
 	{ .id = ID_TMC6100,     .init = TMC6100_init     },
+	{ .id = ID_TMC6100_BOB, .init = TMC6100_BOB_init },
 	{ .id = ID_TMC6200,     .init = TMC6200_init     },
 	{ .id = ID_TMC7300,     .init = TMC7300_init     },
 	{ .id = ID_TMC2160,     .init = TMC2160_init     },

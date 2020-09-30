@@ -27,6 +27,8 @@
 
 	SPITypeDef SPI;
 
+	uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency);
+
 	// read/write 32 bit value at address
 	int32_t spi_readInt(SPIChannelTypeDef *SPIChannel, uint8_t address);
 	void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int value);

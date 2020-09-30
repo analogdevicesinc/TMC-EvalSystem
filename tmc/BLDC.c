@@ -20,6 +20,16 @@
 #define PWM_FREQ 		    20000                  // in Hz
 #define PWM_PERIOD 		    (48000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
 
+typedef enum {
+	ADC_PHASE_U,
+	ADC_PHASE_V,
+	ADC_PHASE_W,
+} ADC_Channel;
+
+uint8_t adcPhases[3] = { 0 };
+uint8_t adcCount = 3;
+volatile ADC_Channel adc = ADC_PHASE_U;
+
 int16_t  targetPWM        = 0;
 uint32_t openloopVelocity = 60; // mechanical RPM
 uint16_t openloopStepTime = 0;  // Calculate on init
@@ -33,16 +43,15 @@ int hallAngle           = 0;
 
 int actualHallVelocity = 0; // electrical RPM
 
-volatile int32_t adcSamples[4] = { 0 };
+volatile int32_t adcSamples[8] = { 0 };
 uint8_t adcSampleIndex = 0;
 
-int32_t adcOffset = 0;
-uint32_t sampleCount = 0;
+int32_t adcOffset[3]    = { 0 };
+uint32_t sampleCount[3] = { 0 };
+
+int32_t currentScalingFactor = 256; // u24q8 format
 
 #define ADC_SAMPLES 100
-
-// todo: Calculate this and describe the calculation instead of measuring it
-#define CURRENT_SCALING_FACTOR 10712
 
 typedef enum {
 	HALL_INVALID_0 = 0,
@@ -64,10 +73,10 @@ static HallStates inputToHallState(uint8_t in_0, uint8_t in_1, uint8_t in_2);
 uint8_t hallOrder = 0;
 uint8_t hallInvert = 0;
 
-enum {
+volatile enum {
 	ADC_INIT,
 	ADC_READY
-} adcState = ADC_INIT;
+} adcState[3] = { ADC_INIT, ADC_INIT, ADC_INIT };
 
 typedef struct
 {
@@ -148,14 +157,31 @@ static int16_t hallStateToAngle(HallStates hallState)
 	return 0;
 }
 
-void BLDC_init(IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
+void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
 {
+	if (type == MEASURE_THREE_PHASES)
+	{
+		// Three phase measurement
+		adcCount = 3;
+		adcPhases[0] = ADC_SC1_ADCH(1); // ADC1_DP1 = AIN0
+		adcPhases[1] = ADC_SC1_ADCH(3); // ADC1_DP3 = AIN1
+		adcPhases[2] = ADC_SC1_ADCH(0); // ADC1_DP0 = AIN2
+	}
+	else if (type == MEASURE_ONE_PHASE)
+	{
+		// One phase measurement
+		adcCount = 1;
+		adcPhases[0] = ADC_SC1_ADCH(0); // ADC1_DP0 = AIN2
+	}
+
 	Pins.PWM_UL       = &HAL.IOs->pins->DIO6;
 	Pins.PWM_UH       = &HAL.IOs->pins->DIO7;
 	Pins.PWM_VL       = &HAL.IOs->pins->DIO8;
 	Pins.PWM_VH       = &HAL.IOs->pins->DIO9;
 	Pins.PWM_WL       = &HAL.IOs->pins->DIO10;
 	Pins.PWM_WH       = &HAL.IOs->pins->DIO11;
+
+	currentScalingFactor = currentScaling;
 
 	Pins.HALL_U       = hallU;
 	Pins.HALL_V       = hallV;
@@ -177,28 +203,27 @@ void BLDC_init(IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
 	PDB0_CH1C1 = PDB_C1_TOS(0x01)
 	           | PDB_C1_EN(0x01);
 
-	PDB0_CH1DLY0 = 3;
+	PDB0_CH1DLY0 = 0;
 
 	PDB0_SC = PDB_SC_LDMOD(3)
 			| PDB_SC_PDBEN_MASK    // enable PDB
 			| PDB_SC_TRGSEL(0x08)  // 0x08 = FTM0
-			//| PDB_SC_TRGSEL(0x0F) // 0x0F = software
-			| PDB_SC_PDBIE_MASK
-			| PDB_SC_LDOK_MASK;
+			| PDB_SC_LDOK_MASK
+			| PDB_SC_PDBEIE_MASK;
+
+	enable_irq(INT_PDB0 - 16);
 
 	// --- ADC ---
 	// Enable clock for ADC1
 	SIM_SCGC3 |= SIM_SCGC3_ADC1_MASK;
 
 	// Input DADP1
-	ADC1_SC1A = ADC_SC1_ADCH(0) | ADC_SC1_AIEN_MASK;
+	ADC1_SC1A = adcPhases[adc] | ADC_SC1_AIEN_MASK;
 
 	// Single-ended 16 bit conversion, ADCK = Bus Clock/2
 	ADC1_CFG1 = ADC_CFG1_MODE(0x03) | ADC_CFG1_ADICLK(1);
 
-	ADC1_CFG2 = ADC_CFG2_ADHSC_MASK
-	          //| ADC_CFG2_ADLSTS(3) // Should be useless
-			  ;
+	ADC1_CFG2 = ADC_CFG2_ADHSC_MASK;
 
 	// Hardware trigger
 	ADC1_SC2 = ADC_SC2_ADTRG_MASK;
@@ -288,34 +313,80 @@ void BLDC_init(IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW)
 	enable_irq(INT_FTM0-16);
 }
 
+void BLDC_calibrateADCs()
+{
+	// Only do the offset compensation if PWM is off
+	if (targetPWM != 0)
+		return;
+
+	// Temporarily disable the FTM interrupt to prevent it from overriding
+	// the adc phase selection
+	disable_irq(INT_FTM0-16);
+
+	for (int myadc = 0; myadc < adcCount; myadc++)
+	{
+		adc = myadc % 3;
+		// Select the ADC phase for offset compensation
+		ADC1_SC1A = (ADC1_SC1A & (~ADC_SC1_ADCH_MASK)) | adcPhases[adc];
+
+		// Reset the ADC state
+		adcOffset[adc] = 0;
+		adcState[adc] = ADC_INIT;
+
+		// Wait until the ADC is initialized again
+		while (adcState[adc] == ADC_INIT);
+	}
+
+	enable_irq(INT_FTM0-16);
+}
+
+void PDB0_IRQHandler()
+{
+	PDB0_CH1S &= ~PDB_S_ERR_MASK;
+
+	// Re-enable the pre-trigger to clear the hardware lock
+	// Refer to 37.4.1: "PDB pre-trigger and trigger outputs" of the K20P100M100SF2V2RM manual
+	PDB0_CH1C1 &= ~PDB_C1_EN(1);
+	PDB0_CH1C1 |= PDB_C1_EN(1);
+}
+
 void ADC1_IRQHandler()
 {
 	int tmp = ADC1_RA;
+	static ADC_Channel lastChannel = ADC_PHASE_U;
 
-	switch(adcState)
+	switch(adcState[lastChannel])
 	{
 	case ADC_INIT:
-		if (sampleCount < ADC_SAMPLES)
+		if (sampleCount[lastChannel] < ADC_SAMPLES)
 		{
 			// Store a calibration sample
-			adcOffset += tmp;
+			adcOffset[lastChannel] += tmp;
 
-			sampleCount++;
+			sampleCount[lastChannel]++;
 		}
 		else
 		{
 			// Finished collection of calibration samples
 			// Calculate offset
-			adcOffset = adcOffset / ADC_SAMPLES;
+			adcOffset[lastChannel] /= ADC_SAMPLES;
 
-			adcState = ADC_READY;
+			adcState[lastChannel] = ADC_READY;
+			sampleCount[lastChannel] = 0;
 		}
 		break;
 	case ADC_READY:
-		adcSamples[adcSampleIndex] = (tmp - adcOffset) * CURRENT_SCALING_FACTOR / 65536;
+		adcSamples[adcSampleIndex] = (tmp - adcOffset[lastChannel]) * currentScalingFactor / 65536;
 		adcSampleIndex = (adcSampleIndex + 1) % ARRAY_SIZE(adcSamples);
 
 		break;
+	}
+
+	if (lastChannel != adc)
+	{
+		// Update the channel
+		lastChannel = adc;
+		ADC1_SC1A = (ADC1_SC1A & (~ADC_SC1_ADCH_MASK)) | adcPhases[adc];
 	}
 }
 
@@ -403,6 +474,8 @@ void FTM0_IRQHandler()
 		FTM0_C1V = 0;
 		FTM0_C5V = duty;
 		FTM0_C7V = 0;
+
+		adc = ADC_PHASE_W;
 		break;
 	case 60:
 		FTM0_OUTMASK = PWM_PHASE_U_ENABLED  | // low
@@ -412,6 +485,8 @@ void FTM0_IRQHandler()
 		FTM0_C1V = 0;
 		FTM0_C5V = duty;
 		FTM0_C7V = 0;
+
+		adc = ADC_PHASE_U;
 		break;
 	case 120:
 		FTM0_OUTMASK = PWM_PHASE_U_ENABLED  | // low
@@ -421,6 +496,8 @@ void FTM0_IRQHandler()
 		FTM0_C1V = 0;
 		FTM0_C5V = 0;
 		FTM0_C7V = duty;
+
+		adc = ADC_PHASE_U;
 		break;
 	case 180:
 		FTM0_OUTMASK = PWM_PHASE_U_DISABLED | // off
@@ -430,6 +507,8 @@ void FTM0_IRQHandler()
 		FTM0_C1V = 0;
 		FTM0_C5V = 0;
 		FTM0_C7V = duty;
+
+		adc = ADC_PHASE_V;
 		break;
 	case 240:
 		FTM0_OUTMASK = PWM_PHASE_U_ENABLED  | // high with pwm
@@ -439,6 +518,8 @@ void FTM0_IRQHandler()
 		FTM0_C1V = duty;
 		FTM0_C5V = 0;
 		FTM0_C7V = 0;
+
+		adc = ADC_PHASE_V;
 		break;
 	case 300:
 		FTM0_OUTMASK = PWM_PHASE_U_ENABLED  | // high with pwm
@@ -448,14 +529,29 @@ void FTM0_IRQHandler()
 		FTM0_C1V = duty;
 		FTM0_C5V = 0;
 		FTM0_C7V = 0;
+
+		adc = ADC_PHASE_W;
 		break;
 	default:
 		FTM0_OUTMASK = PWM_PHASE_U_DISABLED | PWM_PHASE_V_DISABLED | PWM_PHASE_W_DISABLED;
 		break;
 	}
 
+	// For one-phase measurement always use the same phase
+	if (adcCount == 1)
+	{
+		adc = ADC_PHASE_U;
+	}
+
 	// Update PDB timing
-	PDB0_CH1DLY0 = duty/2;
+	if (duty < PWM_PERIOD/2)
+	{
+		PDB0_CH1DLY0 = duty + (PWM_PERIOD-duty)/2;
+	}
+	else
+	{
+		PDB0_CH1DLY0 = duty/2;
+	}
 
 	// Update PDB and FTM registers
 	PDB0_SC |= PDB_SC_LDOK_MASK;
@@ -485,12 +581,16 @@ void BLDC_enablePWM(uint8_t enable)
 	}
 	else
 	{
-		HAL.IOs->config->reset(Pins.PWM_UH);
-		HAL.IOs->config->reset(Pins.PWM_UL);
-		HAL.IOs->config->reset(Pins.PWM_VH);
-		HAL.IOs->config->reset(Pins.PWM_VL);
-		HAL.IOs->config->reset(Pins.PWM_WH);
-		HAL.IOs->config->reset(Pins.PWM_WL);
+		Pins.PWM_UH->configuration.GPIO_Mode  = GPIO_Mode_IN;
+		Pins.PWM_UH->configuration.GPIO_OType = GPIO_OType_PP;
+		Pins.PWM_UH->configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
+
+		HAL.IOs->config->set(Pins.PWM_UH);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_UL);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_VH);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_VL);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_WH);
+		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_WL);
 
 		pwmEnabled = 0;
 	}
