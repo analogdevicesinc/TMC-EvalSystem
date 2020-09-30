@@ -368,6 +368,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
+	case 30: // par::RampType
+		if(readWrite == READ) {
+			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_RAMPMODE, TMC5130_RAMPMODE_MASK, TMC5130_RAMPMODE_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_RAMPMODE, TMC5130_RAMPMODE_MASK, TMC5130_RAMPMODE_SHIFT, *value);
+		}
+		break;
 	case 33:
 		// Analog I Scale
 		if(readWrite == READ) {
