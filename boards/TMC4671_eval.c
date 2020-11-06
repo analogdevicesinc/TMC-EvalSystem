@@ -503,6 +503,28 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 #endif
 		}
 		break;
+	case 181: // Actual torque (unfiltered)
+		if(readWrite == READ)
+		{
+			int16_t actualCurrentRaw = tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, BIT_16_TO_31);
+			*value = ((int32_t)actualCurrentRaw * (int32_t)motorConfig[motor].torqueMeasurementFactor) / 256;
+		}
+		else if(readWrite == WRITE)
+		{
+			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 182: // Actual velocity (unfiltered)
+		if (readWrite == READ)
+		{
+			*value = tmc4671_getActualVelocity(motor);
+		}
+		else
+		{
+			errors |= TMC_ERROR_TYPE;
+		}
+		break;
+
 	case 190:
 		// target torque [mA] (PIDIN_TARGET_TORQUE scaled)
 		if(readWrite == READ) {
