@@ -463,6 +463,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
+	case 177:
+		// actual flux [mA] (PID_FLUX_ACTUAL scaled)
+		if(readWrite == READ) {
+			*value = TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, TMC4671_PID_FLUX_ACTUAL_MASK, TMC4671_PID_FLUX_ACTUAL_SHIFT);
+		} else if(readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
+		}
+		break;
 	case 178:
 		// actual velocity
 		if(readWrite == READ) {
@@ -501,6 +509,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = tmc4671_getTargetTorque_mA(motor, motorConfig[motor].torqueMeasurementFactor);
 		} else if(readWrite == WRITE) {
 			tmc4671_setTargetTorque_mA(motor, motorConfig[motor].torqueMeasurementFactor, *value);
+
+#ifdef USE_LINEAR_RAMP
+			// remember switched motion mode by setTargetTorque_mA
+			actualMotionMode[motor] = TMC4671_MOTION_MODE_TORQUE;
+#endif
+		}
+		break;
+	case 191:
+		// target flux [mA] (PIDIN_TARGET_FLUX scaled)
+		if(readWrite == READ) {
+			*value = tmc4671_getTargetFlux_mA(motor, motorConfig[motor].torqueMeasurementFactor);
+		} else if(readWrite == WRITE) {
+			tmc4671_setTargetFlux_mA(motor, motorConfig[motor].torqueMeasurementFactor, *value);
+			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_TORQUE);
 
 #ifdef USE_LINEAR_RAMP
 			// remember switched motion mode by setTargetTorque_mA
