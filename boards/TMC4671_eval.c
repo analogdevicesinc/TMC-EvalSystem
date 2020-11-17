@@ -424,6 +424,126 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 
+	case 70: // Torque P
+		if (readWrite == READ)
+		{
+			*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_P_TORQUE_I, TMC4671_PID_TORQUE_P_MASK, TMC4671_PID_TORQUE_P_SHIFT);
+		}
+		else
+		{
+			if (*value >= 0 && *value < 32768)
+			{
+				TMC4671_FIELD_UPDATE(motor, TMC4671_PID_TORQUE_P_TORQUE_I, TMC4671_PID_TORQUE_P_MASK, TMC4671_PID_TORQUE_P_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+	case 71: // Torque I
+		if (readWrite == READ)
+		{
+			*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_P_TORQUE_I, TMC4671_PID_TORQUE_I_MASK, TMC4671_PID_TORQUE_I_SHIFT);
+		}
+		else
+		{
+			if (*value >= 0 && *value < 32768)
+			{
+				TMC4671_FIELD_UPDATE(motor, TMC4671_PID_TORQUE_P_TORQUE_I, TMC4671_PID_TORQUE_I_MASK, TMC4671_PID_TORQUE_I_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+	case 72: // Flux P
+		if (readWrite == READ)
+		{
+			*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_FLUX_P_FLUX_I, TMC4671_PID_FLUX_P_MASK, TMC4671_PID_FLUX_P_SHIFT);
+		}
+		else
+		{
+			if (*value >= 0 && *value < 32768)
+			{
+				TMC4671_FIELD_UPDATE(motor, TMC4671_PID_FLUX_P_FLUX_I, TMC4671_PID_FLUX_P_MASK, TMC4671_PID_FLUX_P_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+	case 73: // Flux I
+		if (readWrite == READ)
+		{
+			*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_FLUX_P_FLUX_I, TMC4671_PID_FLUX_I_MASK, TMC4671_PID_FLUX_I_SHIFT);
+		}
+		else
+		{
+			if (*value >= 0 && *value < 32768)
+			{
+				TMC4671_FIELD_UPDATE(motor, TMC4671_PID_FLUX_P_FLUX_I, TMC4671_PID_FLUX_I_MASK, TMC4671_PID_FLUX_I_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+	case 74: // Velocity P
+		if (readWrite == READ)
+		{
+			*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_VELOCITY_P_VELOCITY_I, TMC4671_PID_VELOCITY_P_MASK, TMC4671_PID_VELOCITY_P_SHIFT);
+		}
+		else
+		{
+			if (*value >= 0 && *value < 32768)
+			{
+				TMC4671_FIELD_UPDATE(motor, TMC4671_PID_VELOCITY_P_VELOCITY_I, TMC4671_PID_VELOCITY_P_MASK, TMC4671_PID_VELOCITY_P_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+	case 75: // Velocity I
+		if (readWrite == READ)
+		{
+			*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_VELOCITY_P_VELOCITY_I, TMC4671_PID_VELOCITY_I_MASK, TMC4671_PID_VELOCITY_I_SHIFT);
+		}
+		else
+		{
+			if (*value >= 0 && *value < 32768)
+			{
+				TMC4671_FIELD_UPDATE(motor, TMC4671_PID_VELOCITY_P_VELOCITY_I, TMC4671_PID_VELOCITY_I_MASK, TMC4671_PID_VELOCITY_I_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+	case 76: // Position P
+		if (readWrite == READ)
+		{
+			*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_POSITION_P_POSITION_I, TMC4671_PID_POSITION_P_MASK, TMC4671_PID_POSITION_P_SHIFT);
+		}
+		else
+		{
+			if (*value >= 0 && *value < 32768)
+			{
+				TMC4671_FIELD_UPDATE(motor, TMC4671_PID_POSITION_P_POSITION_I, TMC4671_PID_POSITION_P_MASK, TMC4671_PID_POSITION_P_SHIFT, *value);
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
+
 	case 174:
 		// target position (scaled)
 		if(readWrite == READ) {
