@@ -652,7 +652,7 @@ clean_list :
 ### Make recipe templates for all source file types ###
 # Assemble: create object files from assembler source files.
 define ASSEMBLE_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_ASSEMBLING) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(ASFLAGS) $$< -o $$@
@@ -661,7 +661,7 @@ $(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src))))
 
 # Assemble: create object files from assembler source files. ARM-only
 define ASSEMBLE_ARM_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_ASSEMBLING_ARM) $$< "->" $$@
 	$(CC) -c $$(ASFLAGS) $$< -o $$@
@@ -671,7 +671,7 @@ $(foreach src, $(ASRCARM), $(eval $(call ASSEMBLE_ARM_TEMPLATE, $(src))))
 
 # Compile: create object files from C source files.
 define COMPILE_C_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_COMPILING) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
@@ -680,7 +680,7 @@ $(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src))))
 
 # Compile: create object files from C source files. ARM-only
 define COMPILE_C_ARM_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_COMPILING_ARM) $$< "->" $$@
 	$(CC) -c $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
@@ -690,7 +690,7 @@ $(foreach src, $(SRCARM), $(eval $(call COMPILE_C_ARM_TEMPLATE, $(src))))
 
 # Compile: create object files from C++ source files.
 define COMPILE_CPP_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_COMPILINGCPP) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@
@@ -699,7 +699,7 @@ $(foreach src, $(CPPSRC), $(eval $(call COMPILE_CPP_TEMPLATE, $(src))))
 
 # Compile: create object files from C++ source files. ARM-only
 define COMPILE_CPP_ARM_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_COMPILINGCPP_ARM) $$< "->" $$@
 	$(CC) -c $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@
