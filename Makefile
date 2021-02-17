@@ -388,7 +388,7 @@ CFLAGS += -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align
 #CFLAGS += -pedantic
 CFLAGS += -Wa,-adhlns=$(addprefix $(OUTDIR)/, $(notdir $(addsuffix .lst, $(basename $<))))
 # Compiler flags to generate dependency files:
-CFLAGS += -MD -MP -MF $(OUTDIR)/dep/$(@F).d
+CFLAGS += -MMD -MP -MF $(OUTDIR)/dep/$(@F).d
 
 # flags only for C
 CONLYFLAGS += -Wnested-externs
