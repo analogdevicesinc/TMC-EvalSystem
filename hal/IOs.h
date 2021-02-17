@@ -110,7 +110,7 @@ typedef struct
 	IOsHighLevelFunctionTypeDef HIGH_LEVEL_FUNCTIONS;
 } IOsTypeDef;
 
-IOsTypeDef IOs;
+extern IOsTypeDef IOs;
 
 // A bit weight of 0 is used to indicate a nonexistent pin
 #define DUMMY_BITWEIGHT 0

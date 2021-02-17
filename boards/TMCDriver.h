@@ -8,7 +8,7 @@
 		ConfigurationTypeDef config;
 	} EvalBoardDriverTypeDef;
 
-	EvalBoardDriverTypeDef TMCDriver;
+	extern EvalBoardDriverTypeDef TMCDriver;
 
 	void tmcdriver_init();
 

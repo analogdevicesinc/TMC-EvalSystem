@@ -2,7 +2,8 @@
 #define __WLAN_H_
 
 #include "RXTX.h"
-RXTXTypeDef WLAN;
+
+extern RXTXTypeDef WLAN;
 
 typedef enum
 {

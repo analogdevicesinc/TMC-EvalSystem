@@ -28,7 +28,7 @@ typedef struct
 	int32_t   linearScaler;
 } TMinimalMotorConfig;
 
-TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
+static TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
 
 #ifdef USE_LINEAR_RAMP
 	TMC_LinearRamp rampGenerator[TMC4671_MOTORS];

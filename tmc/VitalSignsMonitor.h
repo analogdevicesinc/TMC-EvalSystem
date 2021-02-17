@@ -15,7 +15,7 @@ typedef struct
 	uint32_t  VM;           // actual measured motor supply VM
 } VitalSignsMonitorTypeDef;
 
-VitalSignsMonitorTypeDef VitalSignsMonitor; // global implementation of interface for system
+extern VitalSignsMonitorTypeDef VitalSignsMonitor; // global implementation of interface for system
 
 // error bits
 #define VSM_CHX                     (1<<0)   // any errors on the evalboards

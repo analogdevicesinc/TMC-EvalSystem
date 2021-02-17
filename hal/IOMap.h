@@ -100,6 +100,6 @@ typedef struct
 	IOPinTypeDef DUMMY;
 } IOPinMapTypeDef;
 
-IOPinMapTypeDef IOMap;
+extern IOPinMapTypeDef IOMap;
 
 #endif /* _IO_PIN_MAP_H_ */

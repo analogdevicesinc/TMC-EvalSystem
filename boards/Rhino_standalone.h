@@ -78,6 +78,6 @@
 
 	} TMCRhinoTypeStandAloneDef;
 
-	TMCRhinoTypeStandAloneDef TMCRhinoSA;
+	extern TMCRhinoTypeStandAloneDef TMCRhinoSA;
 
 #endif /* RHINO_STANDALONE_H */

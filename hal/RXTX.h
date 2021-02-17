@@ -8,7 +8,7 @@ typedef enum {
 	UART0_INTERRUPT_UART,
 	UART0_INTERRUPT_WLAN
 } UART0_Interrupt;
-UART0_Interrupt uart0_interrupt;
+extern UART0_Interrupt uart0_interrupt;
 #endif
 
 typedef struct

@@ -6,6 +6,8 @@ static void NVIC_init(void);
 static void NVIC_DeInit(void);
 static void get_hwid(void);
 
+uint8_t hwid;
+
 static const IOsFunctionsTypeDef IOFunctions =
 {
 	.config  = &IOs,

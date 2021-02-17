@@ -25,7 +25,7 @@
 		void (*init) (void);
 	} SPITypeDef;
 
-	SPITypeDef SPI;
+	extern SPITypeDef SPI;
 
 	uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency);
 

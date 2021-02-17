@@ -42,7 +42,7 @@ static uint8_t reset();
 static uint8_t restore();
 static void checkErrors(uint32_t tick);
 
-IOPinTypeDef *PIN_DRV_ENN;
+static IOPinTypeDef *PIN_DRV_ENN;
 TMC8462TypeDef tmc8462;
 SPIChannelTypeDef *tmc8462_spi_mfc, *tmc8462_spi_esc;
 

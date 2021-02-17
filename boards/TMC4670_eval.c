@@ -19,7 +19,7 @@ typedef struct
 	uint8_t   motionMode;
 } TMinimalMotorConfig;
 
-TMinimalMotorConfig motorConfig[TMC4670_MOTORS];
+static TMinimalMotorConfig motorConfig[TMC4670_MOTORS];
 
 // => SPI wrapper
 uint8_t tmc4670_readwriteByte(uint8_t motor, uint8_t data, uint8_t lastTransfer)

@@ -8,7 +8,7 @@
 		ConfigurationTypeDef config;
 	} EvalBoardMotionControllerTypeDef;
 
-	EvalBoardMotionControllerTypeDef TMCMotionController;
+	extern EvalBoardMotionControllerTypeDef TMCMotionController;
 
 	void tmcmotioncontroller_init();
 

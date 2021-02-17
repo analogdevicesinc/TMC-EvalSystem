@@ -45,7 +45,7 @@ typedef struct {
 	EEPROM_Data ch2;
 } EEPROM_Channels;
 
-EEPROM_Channels EEPROM;
+extern EEPROM_Channels EEPROM;
 
 void eeprom_init(SPIChannelTypeDef *SPIChannel);
 

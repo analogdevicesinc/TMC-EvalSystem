@@ -154,7 +154,7 @@ typedef struct
 } CpuTypeDef;
 
 
-CpuTypeDef Cpu;
+extern CpuTypeDef Cpu;
 
 
 /* {Default RTOS Adapter} ISR function prototype */

@@ -23,6 +23,6 @@ typedef struct
 	uint16_t (*getDuty) (timer_channel channel);
 } TimerTypeDef;
 
-TimerTypeDef Timer;
+extern TimerTypeDef Timer;
 
 #endif /* TIMER_H_ */

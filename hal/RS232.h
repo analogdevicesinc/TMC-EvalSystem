@@ -3,6 +3,6 @@
 
 	#include "RXTX.h"
 
-	RXTXTypeDef RS232;
+	extern RXTXTypeDef RS232;
 
 #endif /* __RS232_H_ */

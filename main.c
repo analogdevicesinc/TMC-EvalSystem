@@ -9,6 +9,8 @@
 
 const char *VersionString = MODULE_ID"V308"; // module id and version of the firmware shown in the TMCL-IDE
 
+EvalboardsTypeDef Evalboards;
+
 /* Keep as is! This lines are important for the update functionality. */
 #if defined(Landungsbruecke)
 	const uint8_t Protection[] __attribute__ ((section(".cfmconfig")))=

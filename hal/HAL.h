@@ -36,8 +36,8 @@ typedef struct
 	UART_Config                *UART;
 } HALTypeDef;
 
-const HALTypeDef HAL;
+extern const HALTypeDef HAL;
 
-uint8_t hwid;
+extern uint8_t hwid;
 
 #endif /* _HAL_H_ */

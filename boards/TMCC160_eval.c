@@ -3,7 +3,7 @@
 
 #define MOTORS 1 // number of motors for this board
 
-IOPinTypeDef *PIN_DRV_ENN;
+static IOPinTypeDef *PIN_DRV_ENN;
 ConfigurationTypeDef *C160_config;
 
 // => SPI wrapper

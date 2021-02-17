@@ -35,6 +35,6 @@
 		LEDTypeDef error;
 	} LEDsTypeDef;
 
-	LEDsTypeDef LEDs;
+	extern LEDsTypeDef LEDs;
 
 #endif /* LEDS_H_ */

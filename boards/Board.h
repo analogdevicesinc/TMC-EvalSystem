@@ -95,7 +95,7 @@ typedef struct
 	DriverState driverEnable; // global driver status
 } EvalboardsTypeDef;
 
-EvalboardsTypeDef Evalboards;
+extern EvalboardsTypeDef Evalboards;
 
 typedef enum {
 	TMC_BOARD_COMM_DEFAULT,

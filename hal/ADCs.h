@@ -17,6 +17,6 @@
 		void (*deInit)();
 	} ADCTypeDef;
 
-	ADCTypeDef ADCs;
+	extern ADCTypeDef ADCs;
 
 #endif /* ADC_H */

@@ -2,6 +2,6 @@
 	#define __USB_H
 
 	#include "RXTX.h"
-	RXTXTypeDef USB;
+	extern RXTXTypeDef USB;
 
 #endif /* __USB_H */

@@ -7,6 +7,8 @@ static void init(void);
 static void reset(uint8_t ResetPeripherals);
 static void NVIC_DeInit(void);
 
+uint8_t hwid = 0;
+
 static const IOsFunctionsTypeDef IOFunctions =
 {
 	.config  = &IOs,
@@ -31,8 +33,6 @@ const HALTypeDef HAL =
 
 static void init(void)
 {
-	hwid = 0;
-
 	__enable_irq();
 
 	systick_init();
