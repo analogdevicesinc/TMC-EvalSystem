@@ -134,7 +134,15 @@ StepDirectionTypedef StepDir[STEP_DIR_CHANNELS];
 
 IOPinTypeDef DummyPin = { .bitWeight = DUMMY_BITWEIGHT };
 
+// Helper functions
 static int32_t calculateStepDifference(int32_t velocity, uint32_t oldAccel, uint32_t newAccel);
+// These helper functions are for optimizing the interrupt without duplicating
+// logic for both interrupt and main loop. We save time in them by omitting
+// safety checks needed only for the main loop in these functions.
+// The main loop then uses functions that wrap these functions together with the
+// necessary safety checks.
+static inline void checkStallguard(StepDirectionTypedef *channel, bool stallSignalActive);
+static inline void stop(StepDirectionTypedef *channel, StepDirStop stopType);
 
 void TIMER_INTERRUPT()
 {
@@ -158,9 +166,11 @@ void TIMER_INTERRUPT()
 		// Reset step output (falling edge of last pulse)
 		*currCh->stepPin->resetBitRegister = currCh->stepPin->bitWeight;
 
-		// Check StallGuard pin if one is registered
-		// Note: The pin expression is FALSE for a dummy pin.
-		StepDir_stallGuard(ch, (GPIO_PDIR_REG(currCh->stallGuardPin->GPIOBase) & currCh->stallGuardPin->bitWeight) != 0);
+		// Check if StallGuard pin is high
+		// Note: If no stall pin is registered, isStallSignalHigh becomes FALSE
+		//       and checkStallguard won't do anything.
+		bool isStallSignalHigh = (GPIO_PDIR_REG(currCh->stallGuardPin->GPIOBase) & currCh->stallGuardPin->bitWeight) != 0;
+		checkStallguard(currCh, isStallSignalHigh);
 
 		// Compute ramp
 		int32_t dx = tmc_ramp_linear_compute(&currCh->ramp);
@@ -242,23 +252,7 @@ void StepDir_periodicJob(uint8_t channel)
 
 void StepDir_stop(uint8_t channel, StepDirStop stopType)
 {
-	switch(stopType)
-	{
-	case STOP_NORMAL:
-		tmc_ramp_linear_set_targetVelocity(&StepDir[channel].ramp, 0);
-		tmc_ramp_linear_set_mode(&StepDir[channel].ramp, TMC_RAMP_LINEAR_MODE_VELOCITY);
-		break;
-	case STOP_EMERGENCY:
-		StepDir[channel].haltingCondition |= STATUS_EMERGENCY_STOP;
-		break;
-	case STOP_STALL:
-		StepDir[channel].haltingCondition |= STATUS_STALLED;
-		tmc_ramp_linear_set_rampVelocity(&StepDir[channel].ramp, 0);
-		StepDir[channel].ramp.accumulatorVelocity = 0;
-		tmc_ramp_linear_set_targetVelocity(&StepDir[channel].ramp, 0);
-		StepDir[channel].ramp.accelerationSteps = 0;
-		break;
-	}
+	stop(&StepDir[channel], stopType);
 }
 
 uint8_t StepDir_getStatus(uint8_t channel)
@@ -325,10 +319,7 @@ void StepDir_stallGuard(uint8_t channel, bool stall)
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
 
-	if (StepDir[channel].stallGuardActive && stall)
-	{
-		StepDir_stop(channel, STOP_STALL);
-	}
+	checkStallguard(&StepDir[channel], stall);
 }
 
 // ===== Setters =====
@@ -731,4 +722,35 @@ static int32_t calculateStepDifference(int32_t velocity, uint32_t oldAccel, uint
 	uint32_t newSteps = tmp / newAccel;
 
 	return newSteps - oldSteps;
+}
+
+// This helper function implements stallguard logic that is used both in the
+// interrupt and main loop code. It is used to optimize the interrupt case.
+static inline void checkStallguard(StepDirectionTypedef *channel, bool stallSignalActive)
+{
+	if (channel->stallGuardActive && stallSignalActive)
+	{
+		stop(channel, STOP_STALL);
+	}
+}
+
+static inline void stop(StepDirectionTypedef *channel, StepDirStop stopType)
+{
+	switch(stopType)
+	{
+	case STOP_NORMAL:
+		tmc_ramp_linear_set_targetVelocity(&channel->ramp, 0);
+		tmc_ramp_linear_set_mode(&channel->ramp, TMC_RAMP_LINEAR_MODE_VELOCITY);
+		break;
+	case STOP_EMERGENCY:
+		channel->haltingCondition |= STATUS_EMERGENCY_STOP;
+		break;
+	case STOP_STALL:
+		channel->haltingCondition |= STATUS_STALLED;
+		tmc_ramp_linear_set_rampVelocity(&channel->ramp, 0);
+		channel->ramp.accumulatorVelocity = 0;
+		tmc_ramp_linear_set_targetVelocity(&channel->ramp, 0);
+		channel->ramp.accelerationSteps = 0;
+		break;
+	}
 }
