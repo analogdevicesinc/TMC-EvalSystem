@@ -112,7 +112,7 @@ typedef struct
 
 IOsTypeDef IOs;
 
-// A bit weight of 0 is used to indicate a nonexitant pin
+// A bit weight of 0 is used to indicate a nonexistent pin
 #define DUMMY_BITWEIGHT 0
 #define IS_DUMMY_PIN(pin) (pin->bitWeight == DUMMY_BITWEIGHT)
 
