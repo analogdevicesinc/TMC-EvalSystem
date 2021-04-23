@@ -159,10 +159,8 @@ void TIMER_INTERRUPT()
 		*currCh->stepPin->resetBitRegister = currCh->stepPin->bitWeight;
 
 		// Check StallGuard pin if one is registered
-		if (!IS_DUMMY_PIN(currCh->stallGuardPin))
-		{
-			StepDir_stallGuard(ch, HAL.IOs->config->isHigh(currCh->stallGuardPin));
-		}
+		// Note: The pin expression is FALSE for a dummy pin.
+		StepDir_stallGuard(ch, (GPIO_PDIR_REG(currCh->stallGuardPin->GPIOBase) & currCh->stallGuardPin->bitWeight) != 0);
 
 		// Compute ramp
 		int32_t dx = tmc_ramp_linear_compute(&currCh->ramp);
