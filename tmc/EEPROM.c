@@ -152,7 +152,7 @@ void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t 
 	do
 	{
 		SPIChannel->readWrite(0x05, false); //Befehl "Get Status"
-	} while((SPIChannel->readWrite(0x00, true) & 0x02) == 0x01); //Warte bis "Write Enable"-Bit zurückgesetzt wird
+	} while((SPIChannel->readWrite(0x00, true) & 0x02) != 0x00); //Warte bis "Write Enable"-Bit zurückgesetzt wird
 
 	HAL.IOs->config->toInput(SPIChannel->CSN);
 	SPIChannel->CSN = io;
@@ -244,7 +244,7 @@ void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t
 	do
 	{
 		SPIChannel->readWrite(0x05, false); // Befehl "Get Status"
-	} while((SPIChannel->readWrite(0x00, true) & 0x02) == 0x01);  // Warte bis "Write Enable"-Bit zurückgesetzt wird
+	} while((SPIChannel->readWrite(0x00, true) & 0x02) != 0x00);  // Warte bis "Write Enable"-Bit zurückgesetzt wird
 
 	HAL.IOs->config->toInput(SPIChannel->CSN);
 	SPIChannel->CSN = io;
