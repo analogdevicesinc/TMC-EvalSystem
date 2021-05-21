@@ -286,6 +286,8 @@ void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t
 
 void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 {
+	UNUSED(channel);
+
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	if (enabled)
