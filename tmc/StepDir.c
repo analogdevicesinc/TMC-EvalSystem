@@ -169,7 +169,11 @@ void TIMER_INTERRUPT()
 		// Check if StallGuard pin is high
 		// Note: If no stall pin is registered, isStallSignalHigh becomes FALSE
 		//       and checkStallguard won't do anything.
+#ifdef Startrampe
+		bool isStallSignalHigh = (currCh->stallGuardPin->port->IDR & currCh->stallGuardPin->bitWeight) != 0;
+#else
 		bool isStallSignalHigh = (GPIO_PDIR_REG(currCh->stallGuardPin->GPIOBase) & currCh->stallGuardPin->bitWeight) != 0;
+#endif
 		checkStallguard(currCh, isStallSignalHigh);
 
 		// Compute ramp
