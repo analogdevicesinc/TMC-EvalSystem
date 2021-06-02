@@ -26,6 +26,12 @@ typedef struct
 	int64_t   akkuActualTorque;
 	int32_t   positionScaler;
 	int32_t   linearScaler;
+	int16_t   hall_phi_e_old;
+	int16_t   hall_phi_e_new;
+	int16_t   hall_actual_coarse_offset;
+	uint16_t  last_Phi_E_Selection;
+	uint32_t  last_UQ_UD_EXT;
+	int16_t   last_PHI_E_EXT;
 } TMinimalMotorConfig;
 
 static TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
@@ -822,7 +828,9 @@ static void periodicJob(uint32_t actualSystick)
 	{
 		tmc4671_periodicJob(motor, actualSystick, motorConfig[motor].initMode,
 				&(motorConfig[motor].initState), motorConfig[motor].initWaitTime,
-				&(motorConfig[motor].actualInitWaitTime), motorConfig[motor].startVoltage);
+				&(motorConfig[motor].actualInitWaitTime), motorConfig[motor].startVoltage,
+				&(motorConfig[motor].hall_phi_e_old), &(motorConfig[motor].hall_phi_e_new), &(motorConfig[motor].hall_actual_coarse_offset),
+				&(motorConfig[motor].last_Phi_E_Selection), &(motorConfig[motor].last_UQ_UD_EXT), &(motorConfig[motor].last_PHI_E_EXT));
 	}
 
 	// 1ms velocity ramp handling
@@ -1023,6 +1031,12 @@ void TMC4671_init(void)
 		motorConfig[motor].initWaitTime             = 1000;
 		motorConfig[motor].startVoltage             = 6000;
 		motorConfig[motor].initMode                 = 0;
+		motorConfig[motor].hall_phi_e_old			= 0;
+		motorConfig[motor].hall_phi_e_new			= 0;
+		motorConfig[motor].hall_actual_coarse_offset= 0;
+		motorConfig[motor].last_Phi_E_Selection		= 0;
+		motorConfig[motor].last_UQ_UD_EXT			= 0;
+		motorConfig[motor].last_PHI_E_EXT			= 0;
 		motorConfig[motor].torqueMeasurementFactor  = 256;
 		motorConfig[motor].actualVelocityPT1		= 0;
 		motorConfig[motor].akkuActualVelocity       = 0;
