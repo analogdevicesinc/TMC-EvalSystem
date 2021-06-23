@@ -73,6 +73,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC2209        8
 #define ID_TMC2225        18
 #define ID_TMC2300        14
+#define ID_TMC6140        23
 #define ID_TMC6300        21
 #define ID_TMC2226        22
 #endif
@@ -106,6 +107,7 @@ extern void TMC5160_init();
 extern void TMC5161_init();
 extern void TMC6100_init();
 extern void TMC6100_BOB_init();
+extern void TMC6140_init();
 extern void TMC6200_init();
 extern void TMC6300_init();
 extern void TMC7300_init();
@@ -160,6 +162,7 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC2225,     .init = TMC2225_init     },
 	{ .id = ID_TMC2226,     .init = TMC2226_init     },
 	{ .id = ID_TMC2300,     .init = TMC2300_init     },
+	{ .id = ID_TMC6140,     .init = TMC6140_init     },
 	{ .id = ID_TMC6300,     .init = TMC6300_init     },
 #endif
 };

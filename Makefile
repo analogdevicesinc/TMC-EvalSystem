@@ -56,6 +56,7 @@ SRC				+= boards/TMC8462_eval.c
 SRC				+= boards/TMCC160_eval.c
 ifeq ($(DEVICE),Landungsbruecke)
 SRC             += boards/TMC2226_eval.c
+SRC             += boards/TMC6140_eval.c
 SRC             += boards/TMC6300_eval.c
 endif
 
