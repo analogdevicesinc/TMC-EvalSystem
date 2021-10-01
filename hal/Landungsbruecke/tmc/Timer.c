@@ -3,6 +3,8 @@
 
 #define MAX_ARR_HALF  TIMER_MAX >> 1
 
+void __attribute__ ((interrupt)) FTM0_IRQHandler(void);
+
 static void init(void);
 static void deInit(void);
 static void setDuty(timer_channel, uint16_t);
@@ -13,7 +15,8 @@ TimerTypeDef Timer =
 	.init     = init,
 	.deInit   = deInit,
 	.setDuty  = setDuty,
-	.getDuty  = getDuty
+	.getDuty  = getDuty,
+	.overflow_callback = NULL
 };
 
 static void init(void)
@@ -92,10 +95,16 @@ static void init(void)
 
 	// enable PWM outputs of FTM0
 	FTM0_OUTMASK = 0;
+
+	FTM0_SC |= (uint32_t)(FTM_SC_TOIE_MASK);
+
+	enable_irq(INT_FTM0-16);
 }
 
 static void deInit(void)
 {
+	FTM0_SC &= ~((uint32_t)(FTM_SC_TOIE_MASK));
+	disable_irq(INT_FTM0-16);
 	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
 }
 
@@ -132,4 +141,18 @@ static uint16_t getDuty(timer_channel channel)
 		break;
 	}
 	return duty;
+}
+
+void FTM0_IRQHandler()
+{
+	if(FTM0_SC & FTM_SC_TOF_MASK)
+	{
+		// overflow detected
+		if(Timer.overflow_callback)
+			Timer.overflow_callback();
+		FTM0_SC &= ~FTM_SC_TOF_MASK;
+	}
+
+	// Stop the timer
+	//FTM2_SC &= ~FTM_SC_CLKS_MASK;
 }

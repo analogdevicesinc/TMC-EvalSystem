@@ -21,6 +21,7 @@ typedef struct
 	void (*deInit) (void);
 	void (*setDuty) (timer_channel channel, uint16_t duty);
 	uint16_t (*getDuty) (timer_channel channel);
+	void (*overflow_callback) (void);
 } TimerTypeDef;
 
 extern TimerTypeDef Timer;

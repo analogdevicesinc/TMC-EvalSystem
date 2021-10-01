@@ -7,6 +7,7 @@
 
 #include "BLDC.h"
 #include "hal/HAL.h"
+#include "hal/Timer.h"
 
 // FTM0_OUTMASK: 0-normal 1-inactive
 #define PWM_PHASE_U_ENABLED		0x00
@@ -310,6 +311,7 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
     FTM0_SC |= (uint32_t)(FTM_SC_TOIE_MASK);
 
     // set FTM0 interrupt handler
+		Timer.overflow_callback = timer_callback;
 	enable_irq(INT_FTM0-16);
 }
 
@@ -390,10 +392,10 @@ void ADC1_IRQHandler()
 	}
 }
 
-void FTM0_IRQHandler()
+void timer_callback(void)
 {
 	// clear timer overflow flag
-	FTM0_SC &= ~FTM_SC_TOF_MASK;
+	//FTM0_SC &= ~FTM_SC_TOF_MASK;
 
 	static int commutationCounter = 0;
 	static int velocityCounter = 0;

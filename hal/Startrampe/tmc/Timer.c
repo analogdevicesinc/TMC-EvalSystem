@@ -11,7 +11,8 @@ TimerTypeDef Timer =
 	.init     = init,
 	.deInit   = deInit,
 	.setDuty  = setDuty,
-	.getDuty  = getDuty
+	.getDuty  = getDuty,
+	.overflow_callback = NULL
 };
 
 static void init(void)
