@@ -103,7 +103,6 @@ static void init(void)
 
 static void deInit(void)
 {
-	FTM0_SC &= ~((uint32_t)(FTM_SC_TOIE_MASK));
 	disable_irq(INT_FTM0-16);
 	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
 }
