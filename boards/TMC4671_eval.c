@@ -1,6 +1,7 @@
 #include "Board.h"
 #include "tmc/ic/TMC4671/TMC4671.h"
 #include "tmc/ramp/LinearRamp.h"
+#include "tmc/RAMDebug.h"
 
 #define DEFAULT_MOTOR  0
 #define TMC4671_MOTORS 1
@@ -32,6 +33,7 @@ typedef struct
 	uint16_t  last_Phi_E_Selection;
 	uint32_t  last_UQ_UD_EXT;
 	int16_t   last_PHI_E_EXT;
+	uint8_t	  enableVelocityFeedForward;
 } TMinimalMotorConfig;
 
 static TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
@@ -418,6 +420,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = (float)rampGenerator[motor].rampPosition * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX);
 		}
 		break;
+	case 52: // feed forward
+		if (readWrite == READ) {
+			*value = motorConfig[motor].enableVelocityFeedForward;
+		} else if (readWrite == WRITE) {
+			if ((*value == 0) || (*value == 1))
+			{
+				motorConfig[motor].enableVelocityFeedForward = *value;
+			}
+			else
+			{
+				errors |= TMC_ERROR_VALUE;
+			}
+		}
+		break;
 #endif
 
 	case 56: // position scaler
@@ -549,6 +565,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
+
+// add biquad settings here!
 
 	case 174:
 		// target position (scaled)
@@ -866,6 +884,9 @@ static void periodicJob(uint32_t actualSystick)
 					{
 						tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, rampGenerator[motor].rampPosition);
 						lastRampTargetPosition[motor] = rampGenerator[motor].rampPosition;
+
+						// use velocity feed forward
+						tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_OFFSET, (motorConfig[motor].enableVelocityFeedForward) ? rampGenerator[motor].rampVelocity : 0);
 					}
 				}
 				else if (actualMotionMode[motor] == TMC4671_MOTION_MODE_VELOCITY)
@@ -878,6 +899,10 @@ static void periodicJob(uint32_t actualSystick)
 						// set new target velocity
 						tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_TARGET, rampGenerator[motor].rampVelocity);
 						lastRampTargetVelocity[motor] = rampGenerator[motor].rampVelocity;
+
+						// turn of velocity feed forward (do not touch if e.g. enabled by the user)
+						if (motorConfig[motor].enableVelocityFeedForward == 0)
+							tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_OFFSET, 0);
 					}
 
 					// keep position ramp and target position on track
@@ -903,6 +928,7 @@ static void periodicJob(uint32_t actualSystick)
 			}
 		}
 #endif
+		debug_process();
 		lastSystick = actualSystick;
 	}
 }
@@ -1028,22 +1054,23 @@ void TMC4671_init(void)
 	int32_t motor;
 	for(motor = 0; motor < TMC4671_MOTORS; motor++)
 	{
-		motorConfig[motor].initWaitTime             = 1000;
-		motorConfig[motor].startVoltage             = 6000;
-		motorConfig[motor].initMode                 = 0;
-		motorConfig[motor].hall_phi_e_old			= 0;
-		motorConfig[motor].hall_phi_e_new			= 0;
-		motorConfig[motor].hall_actual_coarse_offset= 0;
-		motorConfig[motor].last_Phi_E_Selection		= 0;
-		motorConfig[motor].last_UQ_UD_EXT			= 0;
-		motorConfig[motor].last_PHI_E_EXT			= 0;
-		motorConfig[motor].torqueMeasurementFactor  = 256;
-		motorConfig[motor].actualVelocityPT1		= 0;
-		motorConfig[motor].akkuActualVelocity       = 0;
-		motorConfig[motor].actualTorquePT1			= 0;
-		motorConfig[motor].akkuActualTorque         = 0;
-		motorConfig[motor].positionScaler			= POSITION_SCALE_MAX;
-		motorConfig[motor].linearScaler             = 30000; // µm / rotation
+		motorConfig[motor].initWaitTime             	= 1000;
+		motorConfig[motor].startVoltage             	= 6000;
+		motorConfig[motor].initMode                 	= 0;
+		motorConfig[motor].hall_phi_e_old				= 0;
+		motorConfig[motor].hall_phi_e_new				= 0;
+		motorConfig[motor].hall_actual_coarse_offset	= 0;
+		motorConfig[motor].last_Phi_E_Selection			= 0;
+		motorConfig[motor].last_UQ_UD_EXT				= 0;
+		motorConfig[motor].last_PHI_E_EXT				= 0;
+		motorConfig[motor].torqueMeasurementFactor  	= 256;
+		motorConfig[motor].actualVelocityPT1			= 0;
+		motorConfig[motor].akkuActualVelocity       	= 0;
+		motorConfig[motor].actualTorquePT1				= 0;
+		motorConfig[motor].akkuActualTorque         	= 0;
+		motorConfig[motor].positionScaler				= POSITION_SCALE_MAX;
+		motorConfig[motor].enableVelocityFeedForward 	= false;
+		motorConfig[motor].linearScaler             	= 30000; // µm / rotation
 	}
 
 	// set default polarity for evaluation board's power stage on init

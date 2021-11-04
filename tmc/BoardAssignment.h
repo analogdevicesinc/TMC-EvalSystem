@@ -47,7 +47,6 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC4671         13
 #define ID_TMC4330         15
 #define ID_TMC5160         16
-#define ID_TMC5161         18
 #define ID_TMC5062         25
 #define ID_TMC8460         8
 #define ID_TMC8461         26
@@ -62,7 +61,6 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC2041         5
 #define ID_TMC2208         6
 #define ID_TMC2224         7
-#define ID_TMCC160         9
 #define ID_TMC6200        10
 #define ID_TMC2160        11
 #define ID_TMC7300        12
@@ -79,7 +77,6 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #endif
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
-extern void TMCC160_init();
 extern void TMC2041_init();
 extern void TMC2100_init();
 extern void TMC2130_init();
@@ -104,7 +101,6 @@ extern void TMC5062_init();
 extern void TMC5072_init();
 extern void TMC5130_init();
 extern void TMC5160_init();
-extern void TMC5161_init();
 extern void TMC6100_init();
 extern void TMC6100_BOB_init();
 extern void TMC6140_init();
@@ -135,7 +131,6 @@ static const init_assignment init_ch1[] =
 	{ .id = ID_TMC4671,     .init = TMC4671_init     },
 	{ .id = ID_TMC4330,     .init = TMC4330_init     },
 	{ .id = ID_TMC5160,     .init = TMC5160_init     },
-	{ .id = ID_TMC5161,     .init = TMC5161_init     },
 	{ .id = ID_TMC5062,     .init = TMC5062_init     },
 	{ .id = ID_TMC8461,     .init = TMC8461_init_ch1 },
 	{ .id = ID_TMC8462,     .init = TMC8462_init_ch1 },
@@ -151,7 +146,6 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC2208,     .init = TMC2208_init     },
 	{ .id = ID_TMC2224,     .init = TMC2224_init     },
 	{ .id = ID_TMC2590,     .init = TMC2590_init     },
-	{ .id = ID_TMCC160,     .init = TMCC160_init     },
 	{ .id = ID_TMC6100,     .init = TMC6100_init     },
 	{ .id = ID_TMC6100_BOB, .init = TMC6100_BOB_init },
 	{ .id = ID_TMC6200,     .init = TMC6200_init     },

@@ -47,13 +47,11 @@ SRC				+= boards/TMC5062_eval.c
 SRC				+= boards/TMC5072_eval.c
 SRC 			+= boards/TMC5130_eval.c
 SRC 			+= boards/TMC5160_eval.c
-SRC 			+= boards/TMC5161_eval.c
 SRC 			+= boards/TMC6100_eval.c
 SRC 			+= boards/TMC6200_eval.c
 SRC				+= boards/TMC7300_eval.c
 SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
-SRC				+= boards/TMCC160_eval.c
 ifeq ($(DEVICE),Landungsbruecke)
 SRC             += boards/TMC2226_eval.c
 SRC             += boards/TMC6140_eval.c
@@ -78,6 +76,7 @@ SRC 			+= hal/$(DEVICE)/tmc/RXTX.c
 # Control
 SRC 			+= main.c
 SRC 			+= tmc/TMCL.c
+SRC 			+= tmc/RAMDebug.c
 SRC 			+= tmc/IdDetection_$(DEVICE).c
 SRC				+= tmc/EEPROM.c
 SRC 			+= tmc/BoardAssignment.c
@@ -116,13 +115,11 @@ SRC				+= TMC-API/tmc/ic/TMC5062/TMC5062.c
 SRC				+= TMC-API/tmc/ic/TMC5072/TMC5072.c
 SRC 			+= TMC-API/tmc/ic/TMC5130/TMC5130.c
 SRC 			+= TMC-API/tmc/ic/TMC5160/TMC5160.c
-SRC 			+= TMC-API/tmc/ic/TMC5161/TMC5161.c
 SRC				+= TMC-API/tmc/ic/TMC6100/TMC6100.c
 SRC				+= TMC-API/tmc/ic/TMC6200/TMC6200.c
 SRC				+= TMC-API/tmc/ic/TMC7300/TMC7300.c
 SRC				+= TMC-API/tmc/ic/TMC8461/TMC8461.c
 SRC				+= TMC-API/tmc/ic/TMC8462/TMC8462.c
-SRC				+= TMC-API/tmc/ic/TMCC160/TMCC160.c
 
 EXTRAINCDIRS 	+= hal/$(DEVICE)
 

@@ -7,6 +7,7 @@
 #include "VitalSignsMonitor.h"
 #include "tmc/StepDir.h"
 #include "EEPROM.h"
+#include "RAMDebug.h"
 
 // these addresses are fixed
 #define SERIAL_MODULE_ADDRESS  1
@@ -210,6 +211,7 @@ static void SoftwareReset(void);
 static void GetVersion(void);
 static void GetInput(void);
 static void HandleWlanCommand(void);
+static void handleRamDebug(void);
 
 TMCLCommandTypeDef ActualCommand;
 TMCLReplyTypeDef ActualReply;
@@ -353,6 +355,9 @@ void ExecuteActualCommand()
 		break;
 	case TMCL_GetVersion:
 		GetVersion();
+		break;
+	case TMCL_RamDebug:
+		handleRamDebug();
 		break;
 	case TMCL_GetIds:
 		boardAssignment();
@@ -966,6 +971,62 @@ static void HandleWlanCommand(void)
 		break;
 	case 4:
 		ActualReply.Value.Int32 = getCMDReply();
+		break;
+	default:
+		ActualReply.Status = REPLY_INVALID_TYPE;
+		break;
+	}
+}
+
+static void handleRamDebug(void)
+{
+	switch (ActualCommand.Type)
+	{
+	case 0:
+		debug_init();
+		break;
+	case 1:
+		debug_setSampleCount(ActualCommand.Value.Int32);
+		break;
+	case 2:
+		/* Placeholder: Set sampling time reference*/
+		if (ActualCommand.Value.Int32 != 0)
+			ActualReply.Status = REPLY_INVALID_VALUE;
+		break;
+	case 3:
+		debug_setPrescaler(ActualCommand.Value.Int32);
+		break;
+	case 4:
+		if (!debug_setChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 5:
+		if (!debug_setTriggerChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 6:
+		debug_setTriggerMaskShift(ActualCommand.Value.Int32, ActualCommand.Motor);
+		break;
+	case 7:
+		debug_enableTrigger(ActualCommand.Motor, ActualCommand.Value.Int32);
+		break;
+	case 8:
+		ActualReply.Value.Int32 = debug_getState();
+		break;
+	case 9:
+		if (!debug_getSample(ActualCommand.Value.Int32, (uint32_t *)&ActualReply.Value.Int32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 10:
+		ActualReply.Value.Int32 = debug_getInfo(ActualCommand.Value.Int32);
+		break;
+	case 11:
+		if (!debug_getChannelType(ActualCommand.Motor, (uint8_t *) &ActualReply.Value.Int32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 12:
+		if (!debug_getChannelAddress(ActualCommand.Motor, (uint32_t *) &ActualReply.Value.Int32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
 		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
