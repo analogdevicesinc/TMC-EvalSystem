@@ -43,7 +43,6 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC4670         9
 #define ID_TMC4331         10
 #define ID_TMC4361A        11
-#define ID_TMC8690         12
 #define ID_TMC4671         13
 #define ID_TMC4330         15
 #define ID_TMC5160         16
