@@ -66,8 +66,9 @@ void handleTriggering()
 		return;
 
 	// Read the trigger channel value and apply mask/shift values
-	int32_t value = readChannel(trigger.channel);
-	value = (value & trigger.mask) >> trigger.shift;
+	uint32_t value_raw = readChannel(trigger.channel);
+	value_raw = (value_raw & trigger.mask) >> trigger.shift;
+	int32_t value = SIGN_EXTEND(value_raw, __builtin_ctz(BIT31 >> __builtin_clz(trigger.mask >> trigger.shift)), int32_t);
 
 	bool isAboveSigned   = (int32_t)  value > (int32_t)  trigger.threshold;
 	bool isAboveUnsigned = (uint32_t) value > (uint32_t) trigger.threshold;
@@ -152,7 +153,7 @@ void debug_process()
 {
 	static uint32_t prescalerCount = 0;
 
-	if (captureEnabled == false)
+	if (captureEnabled == false)		// unsure here! (ED)
 		return;
 
 	handleTriggering();
@@ -178,14 +179,15 @@ static inline uint32_t readChannel(Channel channel)
 		uint8_t motor   = channel.address >> 24;
 		uint8_t type    = channel.address >> 0;
 
-		Evalboards.ch1.GAP(type, motor, (int32_t *)&sample);
+		Evalboards.ch2.GAP(type, motor, (int32_t *)&sample);
 		break;
 	}
 	case CAPTURE_REGISTER:
 	{
 		uint8_t motor = channel.address >> 24;
 
-		sample = tmc4671_readInt(motor, channel.address);
+		Evalboards.ch2.readRegister(motor, channel.address, &sample);
+
 		break;
 	}
 	case CAPTURE_STACKED_REGISTER:
@@ -209,7 +211,7 @@ static inline uint32_t readChannel(Channel channel)
 		break;
 	}
 	case CAPTURE_SYSTICK:
-		sample = systick_getTick();
+		sample = systick_getTick();//systick_getTimer10ms();
 		break;
 	default:
 		sample = 0;
@@ -365,7 +367,7 @@ int debug_enableTrigger(uint8_t type, uint32_t threshold)
 	// Enable the trigger
 	state = RAMDEBUG_TRIGGER;
 
-	// Enable the capturing
+	// Enable the capturing IRQ
 	captureEnabled = true;
 
 	return 1;

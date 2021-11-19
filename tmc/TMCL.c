@@ -409,6 +409,9 @@ void ExecuteActualCommand()
 	case TMCL_WLAN:
 		HandleWlanCommand();
 		break;
+	case TMCL_RamDebug:
+		handleRamDebug();
+		break;
 	case TMCL_MIN:
 		if(setTMCLStatus(Evalboards.ch1.getMin(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
 		{
