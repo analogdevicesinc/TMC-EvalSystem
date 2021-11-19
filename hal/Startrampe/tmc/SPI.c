@@ -108,6 +108,25 @@ static void reset_ch2()
 	SPI.ch2.readWrite  = spi_ch2_readWrite;
 }
 
+uint32_t spi_getFrequency(SPIChannelTypeDef *SPIChannel)
+{
+	// Calculate the shift value of the CR1->BD bitfield since it is
+	// not provided as a macro.
+	uint32_t br_shift = 0;
+	for (uint32_t j = SPI_CR1_BR; (j & 1) == 0; j >>=1)
+	{
+		br_shift++;
+	}
+
+	RCC_ClocksTypeDef RCC_ClocksStatus;
+
+	RCC_GetClocksFreq(&RCC_ClocksStatus);
+
+	uint8_t br = FIELD_GET(SPIChannel->periphery->CR1, SPI_CR1_BR, br_shift);
+
+	return RCC_ClocksStatus.PCLK1_Frequency >> (br+1);
+}
+
 // Set the SPI frequency to the next-best available frequency (rounding down).
 // Returns the actual frequency set or 0 if no suitable frequency was found.
 uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency)

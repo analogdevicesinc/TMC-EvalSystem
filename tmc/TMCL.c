@@ -683,12 +683,16 @@ static void SetGlobalParameter()
 			break;
 		}
 		break;
-	case 4: // War schon so. Kann weg?
-		break;
 	case 6:
 		if(Evalboards.ch1.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32)
 				&& Evalboards.ch2.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32))
 			HAL.IOs->config->setToState(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32);
+		break;
+	case 7:
+		ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch1, ActualCommand.Value.UInt32);
+		break;
+	case 8:
+		ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch2, ActualCommand.Value.UInt32);
 		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
@@ -722,6 +726,12 @@ static void GetGlobalParameter()
 			break;
 		case 6:
 			ActualReply.Value.UInt32 = HAL.IOs->config->getState(HAL.IOs->pins->pins[ActualCommand.Motor]);
+			break;
+		case 7:
+			ActualReply.Value.UInt32 = spi_getFrequency(&HAL.SPI->ch1);
+			break;
+		case 8:
+			ActualReply.Value.UInt32 = spi_getFrequency(&HAL.SPI->ch2);
 			break;
 		default:
 			ActualReply.Status = REPLY_INVALID_TYPE;

@@ -27,6 +27,7 @@
 
 	extern SPITypeDef SPI;
 
+	uint32_t spi_getFrequency(SPIChannelTypeDef *SPIChannel);
 	uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency);
 
 	// read/write 32 bit value at address

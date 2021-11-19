@@ -185,6 +185,15 @@ void reset_ch2()
 static uint8_t PBR_values[4] = { 2, 3, 5, 7 };
 static uint16_t BR_values[16] = { 2, 4, 6, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
 
+uint32_t spi_getFrequency(SPIChannelTypeDef *SPIChannel)
+{
+	uint32_t tmp = SPI_CTAR_REG(SPIChannel->periphery, 0);
+	uint8_t pbr  = PBR_values[FIELD_GET(tmp, SPI_CTAR_PBR_MASK, SPI_CTAR_PBR_SHIFT)];
+	uint8_t br   = BR_values[FIELD_GET(tmp, SPI_CTAR_BR_MASK, SPI_CTAR_BR_SHIFT)];
+
+	return CPU_BUS_CLK_HZ / pbr / br;
+}
+
 // Set the SPI frequency to the next-best available frequency (rounding down).
 // Returns the actual frequency set or 0 if no suitable frequency was found.
 uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency)
