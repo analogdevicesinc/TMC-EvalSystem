@@ -186,7 +186,7 @@ static inline uint32_t readChannel(Channel channel)
 	{
 		uint8_t motor = channel.address >> 24;
 
-		Evalboards.ch2.readRegister(motor, channel.address, &sample);
+		Evalboards.ch2.readRegister(motor, channel.address, (int32_t *)&sample);
 
 		break;
 	}

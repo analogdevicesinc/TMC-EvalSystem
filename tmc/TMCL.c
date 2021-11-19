@@ -356,9 +356,6 @@ void ExecuteActualCommand()
 	case TMCL_GetVersion:
 		GetVersion();
 		break;
-	case TMCL_RamDebug:
-		handleRamDebug();
-		break;
 	case TMCL_GetIds:
 		boardAssignment();
 		break;
