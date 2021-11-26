@@ -9,6 +9,7 @@
 #define RAMDEBUG_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define RAMDEBUG_FREQUENCY 1000/*0*/
 
@@ -63,5 +64,9 @@ uint32_t debug_getSampleCount();
 int debug_getSample(uint32_t index, uint32_t *value);
 int debug_getState(void);
 int debug_getInfo(uint32_t type);
+
+void debug_useNextProcess(bool enable);
+void debug_nextProcess(void);
+void debug_setGlobalEnable(bool enable);
 
 #endif /* RAMDEBUG_H */

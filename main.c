@@ -6,6 +6,7 @@
 #include "tmc/TMCL.h"
 #include "tmc/VitalSignsMonitor.h"
 #include "tmc/BoardAssignment.h"
+#include "tmc/RAMDebug.h"
 
 const char *VersionString = MODULE_ID"V308"; // module id and version of the firmware shown in the TMCL-IDE
 
@@ -132,6 +133,9 @@ int main(void)
 	{
 		// Check all parameters and life signs and mark errors
 		vitalsignsmonitor_checkVitalSigns();
+
+		// handle RAMDebug
+		debug_process();
 
 		// Perodic jobs of Motion controller/Driver boards
 		Evalboards.ch1.periodicJob(systick_getTick());

@@ -8,6 +8,7 @@
 #include "tmc/StepDir.h"
 #include "EEPROM.h"
 #include "RAMDebug.h"
+#include "hal/Timer.h"
 
 // these addresses are fixed
 #define SERIAL_MODULE_ADDRESS  1
@@ -1037,6 +1038,10 @@ static void handleRamDebug(void)
 	case 12:
 		if (!debug_getChannelAddress(ActualCommand.Motor, (uint32_t *) &ActualReply.Value.Int32))
 			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 15:
+		Timer.setFrequency(ActualCommand.Value.UInt32);
+		ActualReply.Value.UInt32 = Timer.getModulo();
 		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;

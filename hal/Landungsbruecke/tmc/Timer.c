@@ -9,6 +9,11 @@ static void init(void);
 static void deInit(void);
 static void setDuty(timer_channel, uint16_t);
 static uint16_t getDuty(timer_channel);
+static void setModulo(uint16_t modulo);
+static uint16_t getModulo(void);
+static void setFrequency(float freq);
+
+static uint16_t modulo_buf = 0;
 
 TimerTypeDef Timer =
 {
@@ -16,6 +21,9 @@ TimerTypeDef Timer =
 	.deInit   = deInit,
 	.setDuty  = setDuty,
 	.getDuty  = getDuty,
+	.setModulo = setModulo,
+	.getModulo = getModulo,
+	.setFrequency = setFrequency,
 	.overflow_callback = NULL
 };
 
@@ -140,6 +148,61 @@ static uint16_t getDuty(timer_channel channel)
 		break;
 	}
 	return duty;
+}
+
+static void setModulo(uint16_t modulo)
+{
+	disable_irq(INT_FTM0-16);
+	FTM0_MODE |= FTM_MODE_WPDIS_MASK;
+	FTM0_MOD = modulo;
+	FTM0_CNTIN = 0;
+	FTM0_SYNC |= FTM_SYNC_CNTMAX_MASK;
+	FTM0_SYNC |= FTM_SYNC_SWSYNC_MASK;
+	FTM0_PWMLOAD = FTM_PWMLOAD_LDOK_MASK;
+	enable_irq(INT_FTM0-16);
+}
+
+static uint16_t getModulo(void)
+{
+	//return FTM0_MOD;
+	return modulo_buf;
+}
+
+static void setFrequency(float freq)
+{
+	if(freq < ((float)CPU_BUS_CLK_HZ / ((1 << 0b111) * 0xFFFF)))
+		return;
+
+	if(freq > (float)CPU_BUS_CLK_HZ)
+		return;
+
+	disable_irq(INT_FTM0-16);
+
+  uint8_t ps = 0b000;
+	for(; ps < 0b111; ps++)
+	{
+		if(freq > ((float)CPU_BUS_CLK_HZ / ((1 << ps) * 0xFFFF)))
+			break;
+	}
+
+  uint16_t modulo = 0xFFFF;
+	for(; modulo > 0; modulo--)
+	{
+		if(freq < ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo)))
+			break;
+	}
+
+	modulo_buf = modulo;
+
+	FTM0_MODE |= FTM_MODE_WPDIS_MASK;
+	FTM0_SC |= FTM_SC_PS(ps);
+	FTM0_MOD = modulo;
+	FTM0_CNTIN = 0;
+	FTM0_SYNC |= FTM_SYNC_CNTMAX_MASK;
+	FTM0_SYNC |= FTM_SYNC_SWSYNC_MASK;
+	FTM0_PWMLOAD = FTM_PWMLOAD_LDOK_MASK;
+
+	enable_irq(INT_FTM0-16);
 }
 
 void FTM0_IRQHandler()

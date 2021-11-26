@@ -28,6 +28,11 @@ uint32_t debug_read_index  = 0;
 
 RAMDebugState state = RAMDEBUG_IDLE;
 
+static bool global_enable = false;
+static bool processing = false;
+static bool use_next_process = false;
+static bool next_process = false;
+
 // Sampling options
 static uint32_t prescaler   = 1;
 static uint32_t sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
@@ -153,9 +158,19 @@ void debug_process()
 {
 	static uint32_t prescalerCount = 0;
 
+	if(!global_enable)
+		return;
+
+	if(processing)
+		return;
+
+	if(use_next_process && (!next_process))
+		return;
+
 	if (captureEnabled == false)		// unsure here! (ED)
 		return;
 
+	processing = true;
 	handleTriggering();
 
 	// Increment and check the prescaler counter
@@ -166,6 +181,8 @@ void debug_process()
 	prescalerCount = 0;
 
 	handleDebugging();
+	next_process = false;
+	processing = false;
 }
 
 static inline uint32_t readChannel(Channel channel)
@@ -257,6 +274,7 @@ void debug_init()
 	trigger.mask             = 0xFFFFFFFF;
 	trigger.shift            = 0;
 
+	global_enable = true;
 }
 
 int debug_setChannel(uint8_t type, uint32_t address)
@@ -428,4 +446,19 @@ int debug_getInfo(uint32_t type)
 	}
 
 	return -1;
+}
+
+void debug_useNextProcess(bool enable)
+{
+	use_next_process = enable;
+}
+
+void debug_nextProcess(void)
+{
+	next_process = true;
+}
+
+void debug_setGlobalEnable(bool enable)
+{
+	global_enable = enable;
 }
