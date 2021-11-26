@@ -30,7 +30,7 @@ RAMDebugState state = RAMDEBUG_IDLE;
 
 static bool global_enable = false;
 static bool processing = false;
-static bool use_next_process = false;
+static bool use_next_process = true;
 static bool next_process = false;
 
 // Sampling options

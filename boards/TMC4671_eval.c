@@ -928,6 +928,7 @@ static void periodicJob(uint32_t actualSystick)
 			}
 		}
 #endif
+		debug_nextProcess();
 		debug_process();
 		lastSystick = actualSystick;
 	}
