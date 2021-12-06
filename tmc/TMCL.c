@@ -117,6 +117,7 @@
 
 #define TMCL_MIN                     170
 #define TMCL_MAX                     171
+#define TMCL_OTP                     172
 
 #define TMCL_Boot                    242
 #define TMCL_SoftwareReset           255
@@ -213,6 +214,7 @@ static void GetVersion(void);
 static void GetInput(void);
 static void HandleWlanCommand(void);
 static void handleRamDebug(void);
+static void handleOTP(void);
 
 TMCLCommandTypeDef ActualCommand;
 TMCLReplyTypeDef ActualReply;
@@ -409,6 +411,9 @@ void ExecuteActualCommand()
 		break;
 	case TMCL_RamDebug:
 		handleRamDebug();
+		break;
+	case TMCL_OTP:
+		handleOTP();
 		break;
 	case TMCL_MIN:
 		if(setTMCLStatus(Evalboards.ch1.getMin(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
@@ -1071,6 +1076,23 @@ static void handleRamDebug(void)
 		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
+		break;
+	}
+}
+
+static void handleOTP(void)
+{
+	switch (ActualCommand.Type)
+	{
+	case 0:
+		switch(ActualCommand.Motor) {
+		case 0:
+			Evalboards.ch1.OTP_init();
+			break;
+		case 1:
+			Evalboards.ch2.OTP_init();
+			break;
+		}
 		break;
 	}
 }

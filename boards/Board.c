@@ -68,6 +68,11 @@ static uint8_t dummy_onPinChange(IOPinTypeDef *pin, IO_States state)
 	return 1;
 }
 
+static void dummy_OTP_init(void)
+{
+	return;
+}
+
 static uint8_t delegationReturn(void)
 {
 	return 1;
@@ -111,6 +116,7 @@ void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel)
 	channel->getMin            = dummy_getLimit;
 	channel->getMax            = dummy_getLimit;
 	channel->onPinChange       = dummy_onPinChange;
+	channel->OTP_init          = dummy_OTP_init;
 }
 
 void periodicJobDummy(uint32_t tick)
