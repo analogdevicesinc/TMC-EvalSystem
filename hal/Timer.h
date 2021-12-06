@@ -17,6 +17,7 @@ typedef enum {
 
 typedef struct
 {
+	bool initialized;
 	void (*init) (void);
 	void (*deInit) (void);
 	void (*setDuty) (timer_channel channel, uint16_t duty);

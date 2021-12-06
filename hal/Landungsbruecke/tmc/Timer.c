@@ -17,6 +17,7 @@ static uint16_t modulo_buf = 0;
 
 TimerTypeDef Timer =
 {
+	.initialized = false,
 	.init     = init,
 	.deInit   = deInit,
 	.setDuty  = setDuty,
@@ -107,6 +108,8 @@ static void init(void)
 	FTM0_SC |= (uint32_t)(FTM_SC_TOIE_MASK);
 
 	enable_irq(INT_FTM0-16);
+
+	Timer.initialized = true;
 }
 
 static void deInit(void)

@@ -8,6 +8,7 @@ static uint16_t getDuty(timer_channel);
 
 TimerTypeDef Timer =
 {
+	.initialized = false,
 	.init     = init,
 	.deInit   = deInit,
 	.setDuty  = setDuty,
@@ -47,6 +48,8 @@ static void init(void)
 
 	TIM1->EGR    = 1;
 	TIM1->CR1    |= TIM_CR1_CEN;
+
+	Timer.initialized = true;
 }
 
 static void deInit(void)

@@ -1040,8 +1040,10 @@ static void handleRamDebug(void)
 			ActualReply.Status = REPLY_MAX_EXCEEDED;
 		break;
 	case 15:
-		Timer.setFrequency(ActualCommand.Value.UInt32);
-		ActualReply.Value.UInt32 = Timer.getModulo();
+		if(Timer.initialized) {
+			Timer.setFrequency(ActualCommand.Value.UInt32);
+			ActualReply.Value.UInt32 = Timer.getModulo();
+		}
 		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
