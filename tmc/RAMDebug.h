@@ -49,11 +49,15 @@ typedef enum {
 
 void debug_init();
 void debug_process();
-int debug_setChannel(uint8_t type, uint32_t address);
+bool debug_setType(uint8_t type);
+bool debug_setEvalChannel(uint8_t eval_channel);
+bool debug_setAddress(uint32_t address);
 int debug_getChannelType(uint8_t index, uint8_t *type);
 int debug_getChannelAddress(uint8_t index, uint32_t *address);
 
-int debug_setTriggerChannel(uint8_t type, uint32_t threshold);
+bool debug_setTriggerType(uint8_t type);
+bool debug_setTriggerEvalChannel(uint8_t eval_channel);
+bool debug_setTriggerAddress(uint32_t address);
 void debug_setTriggerMaskShift(uint32_t mask, uint8_t shift);
 int debug_enableTrigger(uint8_t type, uint32_t threshold);
 

@@ -9,9 +9,6 @@
 #include "boards/Board.h"
 #include "hal/SysTick.h"
 
-extern int32_t tmc4671_readInt(uint8_t motor, uint8_t address);
-extern void tmc4671_writeInt(uint8_t motor, uint8_t address, int32_t value);
-
 // === RAM debugging ===========================================================
 
 // Debug parameters
@@ -39,6 +36,7 @@ static uint32_t sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
 
 typedef struct {
 	RAMDebugSource type;
+	uint8_t eval_channel;
 	uint32_t address;
 } Channel;
 
@@ -196,14 +194,15 @@ static inline uint32_t readChannel(Channel channel)
 		uint8_t motor   = channel.address >> 24;
 		uint8_t type    = channel.address >> 0;
 
-		Evalboards.ch2.GAP(type, motor, (int32_t *)&sample);
+		((channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1))->GAP(type, motor, (int32_t *)&sample);
+
 		break;
 	}
 	case CAPTURE_REGISTER:
 	{
 		uint8_t motor = channel.address >> 24;
 
-		Evalboards.ch2.readRegister(motor, channel.address, (int32_t *)&sample);
+		((channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1))->readRegister(motor, channel.address, (int32_t *)&sample);
 
 		break;
 	}
@@ -214,17 +213,20 @@ static inline uint32_t readChannel(Channel channel)
 		uint8_t stackedRegisterAddress = channel.address >> 8;
 		uint8_t dataRegisterAddress    = channel.address >> 0;
 
+		EvalboardFunctionsTypeDef *ch = (channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1);
+
 		// Backup the stacked address
-		uint32_t oldAddress = tmc4671_readInt(motor, stackedRegisterAddress);
+		uint32_t oldAddress = 0;
+		ch->readRegister(motor, stackedRegisterAddress, (int32_t *)&oldAddress);
 
 		// Write the new stacked address
-		tmc4671_writeInt(motor, stackedRegisterAddress, stackedRegisterValue);
+		ch->writeRegister(motor, stackedRegisterAddress, stackedRegisterValue);
 
 		// Read the stacked data register
-		sample = tmc4671_readInt(motor, dataRegisterAddress);
+		ch->readRegister(motor, dataRegisterAddress, (int32_t *)&sample);
 
 		// Restore the stacked address
-		tmc4671_writeInt(motor, stackedRegisterAddress, oldAddress);
+		ch->writeRegister(motor, stackedRegisterAddress, oldAddress);
 		break;
 	}
 	case CAPTURE_SYSTICK:
@@ -265,6 +267,7 @@ void debug_init()
 	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
 	{
 		channels[i].type = CAPTURE_DISABLED;
+		channels[i].eval_channel = 0;
 		channels[i].address = 0;
 	}
 
@@ -277,15 +280,15 @@ void debug_init()
 	global_enable = true;
 }
 
-int debug_setChannel(uint8_t type, uint32_t address)
+bool debug_setType(uint8_t type)
 {
 	int i;
 
 	if (type >= CAPTURE_END)
-		return 0;
+		return false;
 
 	if (state != RAMDEBUG_IDLE)
-		return 0;
+		return false;
 
 	// ToDo: Type-specific address verification logic?
 
@@ -296,12 +299,57 @@ int debug_setChannel(uint8_t type, uint32_t address)
 
 		// Add the configuration to the found channel
 		channels[i].type     = type;
-		channels[i].address  = address;
 
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
+}
+
+bool debug_setEvalChannel(uint8_t eval_channel)
+{
+	int i;
+
+	if (state != RAMDEBUG_IDLE)
+		return false;
+
+	// ToDo: Type-specific address verification logic?
+
+	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
+	{
+		if (channels[i].type != CAPTURE_DISABLED)
+			continue;
+
+		// Add the configuration to the found channel
+		channels[i].eval_channel     = eval_channel;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool debug_setAddress(uint32_t address)
+{
+	int i;
+
+	if (state != RAMDEBUG_IDLE)
+		return false;
+
+	// ToDo: Type-specific address verification logic?
+
+	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
+	{
+		if (channels[i].type != CAPTURE_DISABLED)
+			continue;
+
+		// Add the configuration to the found channel
+		channels[i].address  = address;
+
+		return true;
+	}
+
+	return false;
 }
 
 int debug_getChannelType(uint8_t index, uint8_t *type)
@@ -336,21 +384,46 @@ int debug_getChannelAddress(uint8_t index, uint32_t *address)
 	return 1;
 }
 
-int debug_setTriggerChannel(uint8_t type, uint32_t address)
+bool debug_setTriggerType(uint8_t type)
 {
 	if (type >= CAPTURE_END)
-		return 0;
+		return false;
 
 	if (state != RAMDEBUG_IDLE)
-		return 0;
+		return false;
 
 	// ToDo: Type-specific address verification logic?
 
 	// Store the trigger configuration
 	trigger.channel.type     = type;
-	trigger.channel.address  = address;
 
-	return 1;
+	return true;
+}
+
+bool debug_setTriggerEvalChannel(uint8_t eval_channel)
+{
+	if (state != RAMDEBUG_IDLE)
+		return false;
+
+	// ToDo: Type-specific address verification logic?
+
+	// Store the trigger configuration
+	trigger.channel.eval_channel     = eval_channel;
+
+	return true;
+}
+
+bool debug_setTriggerAddress(uint32_t address)
+{
+	if (state != RAMDEBUG_IDLE)
+		return false;
+
+	// ToDo: Type-specific address verification logic?
+
+	// Store the trigger configuration
+	trigger.channel.address     = address;
+
+	return true;
 }
 
 void debug_setTriggerMaskShift(uint32_t mask, uint8_t shift)

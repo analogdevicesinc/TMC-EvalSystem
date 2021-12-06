@@ -1007,14 +1007,14 @@ static void handleRamDebug(void)
 	case 3:
 		debug_setPrescaler(ActualCommand.Value.Int32);
 		break;
-	case 4:
-		if (!debug_setChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
-			ActualReply.Status = REPLY_MAX_EXCEEDED;
-		break;
-	case 5:
-		if (!debug_setTriggerChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
-			ActualReply.Status = REPLY_MAX_EXCEEDED;
-		break;
+//	case 4:
+//		if (!debug_setChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
+//			ActualReply.Status = REPLY_MAX_EXCEEDED;
+//		break;
+//	case 5:
+//		if (!debug_setTriggerChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
+//			ActualReply.Status = REPLY_MAX_EXCEEDED;
+//		break;
 	case 6:
 		debug_setTriggerMaskShift(ActualCommand.Value.Int32, ActualCommand.Motor);
 		break;
@@ -1044,6 +1044,30 @@ static void handleRamDebug(void)
 			Timer.setFrequency(ActualCommand.Value.UInt32);
 			ActualReply.Value.UInt32 = Timer.getModulo();
 		}
+		break;
+	case 16:
+		if (!debug_setType(ActualCommand.Value.UInt32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 17:
+		if (!debug_setEvalChannel(ActualCommand.Value.UInt32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 18:
+		if (!debug_setAddress(ActualCommand.Value.UInt32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 19:
+		if (!debug_setTriggerType(ActualCommand.Value.UInt32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 20:
+		if (!debug_setTriggerEvalChannel(ActualCommand.Value.UInt32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 21:
+		if (!debug_setTriggerAddress(ActualCommand.Value.UInt32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
 		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
