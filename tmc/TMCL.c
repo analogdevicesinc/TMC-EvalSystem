@@ -1084,15 +1084,23 @@ static void handleOTP(void)
 {
 	switch (ActualCommand.Type)
 	{
-	case 0:
-		switch(ActualCommand.Motor) {
-		case 0:
-			Evalboards.ch1.OTP_init();
-			break;
-		case 1:
-			Evalboards.ch2.OTP_init();
-			break;
-		}
+	case 0: // OTP_INIT
+		((ActualCommand.Motor == 1) ? &Evalboards.ch2 : &Evalboards.ch1)->OTP_init();
+		break;
+	case 1: // OTP_ADDRESS
+		((ActualCommand.Motor == 1) ? &Evalboards.ch2 : &Evalboards.ch1)->OTP_address(ActualCommand.Value.UInt32);
+		break;
+	case 2: // OTP_VALUE
+		((ActualCommand.Motor == 1) ? &Evalboards.ch2 : &Evalboards.ch1)->OTP_value(ActualCommand.Value.UInt32);
+		break;
+	case 3: // OTP_PROGRAM
+		((ActualCommand.Motor == 1) ? &Evalboards.ch2 : &Evalboards.ch1)->OTP_program();
+		break;
+	case 4: // OTP_STATUS
+		ActualReply.Value.UInt32 = ((ActualCommand.Motor == 1) ? &Evalboards.ch2 : &Evalboards.ch1)->OTP_status();
+		break;
+	default:
+		ActualReply.Status = REPLY_INVALID_TYPE;
 		break;
 	}
 }

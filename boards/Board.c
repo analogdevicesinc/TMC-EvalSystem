@@ -73,6 +73,28 @@ static void dummy_OTP_init(void)
 	return;
 }
 
+static void dummy_OTP_address(uint32_t address)
+{
+	UNUSED(address);
+	return;
+}
+
+static void dummy_OTP_value(uint32_t value)
+{
+	UNUSED(value);
+	return;
+}
+
+static void dummy_OTP_program(void)
+{
+	return;
+}
+
+static OTP_Status dummy_OTP_status(void)
+{
+	return OTP_STATUS_IDLE;
+}
+
 static uint8_t delegationReturn(void)
 {
 	return 1;
@@ -116,7 +138,12 @@ void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel)
 	channel->getMin            = dummy_getLimit;
 	channel->getMax            = dummy_getLimit;
 	channel->onPinChange       = dummy_onPinChange;
+
 	channel->OTP_init          = dummy_OTP_init;
+	channel->OTP_address       = dummy_OTP_address;
+	channel->OTP_value         = dummy_OTP_value;
+	channel->OTP_program       = dummy_OTP_program;
+	channel->OTP_status        = dummy_OTP_status;
 }
 
 void periodicJobDummy(uint32_t tick)

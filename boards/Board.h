@@ -22,6 +22,13 @@ typedef enum {
 	DRIVER_USE_GLOBAL_ENABLE
 } DriverState;
 
+typedef enum {
+	OTP_STATUS_IDLE = 0,
+	OTP_STATUS_PROGRAMMING = 1,
+	OTP_STATUS_DONE = 2,
+	OTP_STATUS_FAILED = 3
+} OTP_Status;
+
 // Evalboard channel struct
 typedef struct
 {
@@ -63,6 +70,10 @@ typedef struct
 	uint8_t (*onPinChange)(IOPinTypeDef *pin, IO_States state);
 
 	void (*OTP_init)(void);
+	void (*OTP_address)(uint32_t address);
+	void (*OTP_value)(uint32_t value);
+	void (*OTP_program)(void);
+	OTP_Status (*OTP_status)(void);
 } EvalboardFunctionsTypeDef;
 
 
