@@ -138,7 +138,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 12,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -155,7 +155,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 13,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -172,7 +172,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 0,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -189,7 +189,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 1,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -206,7 +206,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 2,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -223,7 +223,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 3,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -241,7 +241,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 2,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -258,7 +258,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 1,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -275,7 +275,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 5,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -292,7 +292,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 4,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -309,7 +309,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 7,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -326,7 +326,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 6,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -530,7 +530,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 16,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -547,7 +547,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 17,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -565,7 +565,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 18,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -582,7 +582,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 1,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -599,7 +599,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 0,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -616,7 +616,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 3,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -633,7 +633,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 2,                    // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
@@ -650,7 +650,7 @@ IOPinMapTypeDef IOMap =
 		.bit                 = 15,                   // uint8_t pinBitWeight;
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_Mode_AN,             // GPIOMode_TypeDef GPIO_Mode;
+			.GPIO_Mode   = GPIO_Mode_IN,             // GPIOMode_TypeDef GPIO_Mode;
 			.GPIO_OType  = GPIO_OType_PP,            // GPIOSpeed_TypeDef GPIO_Speed;
 			.GPIO_Speed  = GPIO_Speed_50MHz,         // GPIOOType_TypeDef GPIO_OType;
 			.GPIO_PuPd   = GPIO_PuPd_NOPULL          // GPIOPuPd_TypeDef GPIO_PuPd;
