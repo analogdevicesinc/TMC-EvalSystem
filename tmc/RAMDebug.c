@@ -9,6 +9,8 @@
 #include "boards/Board.h"
 #include "hal/SysTick.h"
 
+#include <string.h>
+
 // === RAM debugging ===========================================================
 
 // Debug parameters
@@ -22,6 +24,7 @@ bool captureEnabled = false;
 uint32_t debug_buffer[RAMDEBUG_BUFFER_ELEMENTS] = { 0 };
 uint32_t debug_write_index = 0;
 uint32_t debug_read_index  = 0;
+uint32_t pre_index = 0;
 
 RAMDebugState state = RAMDEBUG_IDLE;
 
@@ -33,6 +36,7 @@ static bool next_process = false;
 // Sampling options
 static uint32_t prescaler   = 1;
 static uint32_t sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
+static uint32_t sampleCountPre = 0;
 
 typedef struct {
 	RAMDebugSource type;
@@ -131,24 +135,29 @@ void handleDebugging()
 {
 	int i;
 
-	if (state != RAMDEBUG_CAPTURE)
-		return;
-
 	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
 	{
 		if (channels[i].type == CAPTURE_DISABLED)
 			continue;
 
-		// Add the sample value to the buffer
-		debug_buffer[debug_write_index++] = readChannel(channels[i]);
+        if(state == RAMDEBUG_CAPTURE)
+        {
+            // Add the sample value to the buffer
+            debug_buffer[debug_write_index++] = readChannel(channels[i]);
 
-		if (debug_write_index >= sampleCount)
-		{
-			// End the capture
-			state = RAMDEBUG_COMPLETE;
-			captureEnabled = false;
-			break;
-		}
+            if (debug_write_index >= sampleCount)
+            {
+                // End the capture
+                state = RAMDEBUG_COMPLETE;
+                captureEnabled = false;
+                break;
+            }
+        }
+        else if(sampleCountPre > 0)
+        {
+            debug_buffer[pre_index] = readChannel(channels[i]);
+            pre_index = (pre_index + 1) % sampleCountPre;
+        }
 	}
 }
 
@@ -262,6 +271,7 @@ void debug_init()
 	// Set default values for the capture configuration
 	prescaler   = 1;
 	sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
+    sampleCountPre = 0;
 
 	// Reset the channel configuration
 	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
@@ -482,12 +492,33 @@ uint32_t debug_getSampleCount()
 	return sampleCount;
 }
 
+void debug_setPretriggerSampleCount(uint32_t count)
+{
+    if (count > sampleCount)
+		count = sampleCount;
+
+    sampleCountPre = count;
+    debug_write_index = count;
+}
+
+uint32_t debug_getPretriggerSampleCount()
+{
+    return sampleCountPre;
+}
+
 int debug_getSample(uint32_t index, uint32_t *value)
 {
 	if (index >= debug_write_index)
 		return 0;
 
-	*value = debug_buffer[index];
+    if(index < sampleCountPre)
+    {
+        *value = debug_buffer[(pre_index + index) % sampleCountPre];
+    }
+    else
+    {
+        *value = debug_buffer[index];
+    }
 
 	return 1;
 }

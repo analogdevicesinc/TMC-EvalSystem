@@ -64,6 +64,8 @@ int debug_enableTrigger(uint8_t type, uint32_t threshold);
 void debug_setPrescaler(uint32_t divider);
 void debug_setSampleCount(uint32_t count);
 uint32_t debug_getSampleCount();
+void debug_setPretriggerSampleCount(uint32_t count);
+uint32_t debug_getPretriggerSampleCount();
 
 int debug_getSample(uint32_t index, uint32_t *value);
 int debug_getState(void);
