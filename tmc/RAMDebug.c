@@ -153,7 +153,7 @@ void handleDebugging()
                 break;
             }
         }
-        else if(sampleCountPre > 0)
+        else if((state != RAMDEBUG_COMPLETE) && (sampleCountPre > 0))
         {
             debug_buffer[pre_index] = readChannel(channels[i]);
             pre_index = (pre_index + 1) % sampleCountPre;
@@ -177,12 +177,13 @@ void debug_process()
 	if (captureEnabled == false)		// unsure here! (ED)
 		return;
 
-	processing = true;
 	handleTriggering();
 
 	// Increment and check the prescaler counter
 	if (++prescalerCount < prescaler)
 		return;
+
+    processing = true;
 
 	// Reset the prescaler counter
 	prescalerCount = 0;
