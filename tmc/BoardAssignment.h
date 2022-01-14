@@ -73,9 +73,12 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC6140        23
 #define ID_TMC6300        21
 #define ID_TMC2226        22
+#define ID_MAX22216_EVAL 	30
+#define ID_MAX22216_BOB 	31
 #endif
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
+extern void MAX22216_init();
 extern void TMC2041_init();
 extern void TMC2100_init();
 extern void TMC2130_init();
@@ -138,19 +141,21 @@ static const init_assignment init_ch1[] =
 
 static const init_assignment init_ch2[] =
 {
-	{ .id = ID_TMC2660,     .init = TMC2660_init     },
-	{ .id = ID_TMC2130,     .init = TMC2130_init     },
-	{ .id = ID_TMC2100,     .init = TMC2100_init     },
-	{ .id = ID_TMC2041,     .init = TMC2041_init     },
-	{ .id = ID_TMC2208,     .init = TMC2208_init     },
-	{ .id = ID_TMC2224,     .init = TMC2224_init     },
-	{ .id = ID_TMC2590,     .init = TMC2590_init     },
-	{ .id = ID_TMC6100,     .init = TMC6100_init     },
-	{ .id = ID_TMC6100_BOB, .init = TMC6100_BOB_init },
-	{ .id = ID_TMC6200,     .init = TMC6200_init     },
-	{ .id = ID_TMC7300,     .init = TMC7300_init     },
-	{ .id = ID_TMC2160,     .init = TMC2160_init     },
+	{ .id = ID_TMC2660,       .init = TMC2660_init     },
+	{ .id = ID_TMC2130,       .init = TMC2130_init     },
+	{ .id = ID_TMC2100,       .init = TMC2100_init     },
+	{ .id = ID_TMC2041,       .init = TMC2041_init     },
+	{ .id = ID_TMC2208,       .init = TMC2208_init     },
+	{ .id = ID_TMC2224,       .init = TMC2224_init     },
+	{ .id = ID_TMC2590,       .init = TMC2590_init     },
+	{ .id = ID_TMC6100,       .init = TMC6100_init     },
+	{ .id = ID_TMC6100_BOB,   .init = TMC6100_BOB_init },
+	{ .id = ID_TMC6200,       .init = TMC6200_init     },
+	{ .id = ID_TMC7300,       .init = TMC7300_init     },
+	{ .id = ID_TMC2160,       .init = TMC2160_init     },
 #if defined(Landungsbruecke)
+	{ .id = ID_MAX22216_EVAL, .init = MAX22216_init    },
+	{ .id = ID_MAX22216_BOB,  .init = MAX22216_init    },
 	{ .id = ID_TMC2209,     .init = TMC2209_init     },
 	{ .id = ID_TMC2225,     .init = TMC2225_init     },
 	{ .id = ID_TMC2226,     .init = TMC2226_init     },

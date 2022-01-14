@@ -53,6 +53,7 @@ SRC				+= boards/TMC7300_eval.c
 SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
 ifeq ($(DEVICE),Landungsbruecke)
+SRC				      += boards/MAX22216_eval.c
 SRC             += boards/TMC2226_eval.c
 SRC             += boards/TMC6140_eval.c
 SRC             += boards/TMC6300_eval.c
@@ -92,6 +93,7 @@ SRC				+= TMC-API/tmc/helpers/CRC.c
 SRC				+= TMC-API/tmc/ramp/LinearRamp.c
 SRC				+= TMC-API/tmc/ramp/LinearRamp1.c
 SRC				+= TMC-API/tmc/ramp/Ramp.c
+SRC 			+= TMC-API/tmc/ic/MAX22216/MAX22216.c
 SRC 			+= TMC-API/tmc/ic/TMC2041/TMC2041.c
 SRC 			+= TMC-API/tmc/ic/TMC2130/TMC2130.c
 SRC 			+= TMC-API/tmc/ic/TMC2160/TMC2160.c
@@ -533,7 +535,7 @@ all: begin gccversion build size end
 # Target: clean project.
 clean: begin clean_list end
 
-# Helper targets: This makes selecting all output types easier (see build target below) 
+# Helper targets: This makes selecting all output types easier (see build target below)
 elf: $(OUTDIR)/$(TARGET).elf
 lss: $(OUTDIR)/$(TARGET).lss
 sym: $(OUTDIR)/$(TARGET).sym
@@ -726,4 +728,3 @@ tmp := $(shell cd $(OUTDIR) && mkdir dep 2>&1)
 # Listing of phony targets.
 .PHONY : all begin end size gccversion \
 build elf hex bin lss sym clean clean_list program
-
