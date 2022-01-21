@@ -15,6 +15,7 @@ TimerTypeDef Timer =
 	.getDuty  = getDuty,
 	.setModulo = NULL,
 	.getModulo = NULL,
+	.setModuloMin = NULL,
 	.setFrequency = NULL,
 	.overflow_callback = NULL
 };

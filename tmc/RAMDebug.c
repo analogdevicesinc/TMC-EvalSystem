@@ -8,6 +8,7 @@
 
 #include "boards/Board.h"
 #include "hal/SysTick.h"
+#include "hal/HAL.h"
 
 #include <string.h>
 
@@ -241,6 +242,29 @@ static inline uint32_t readChannel(Channel channel)
 	}
 	case CAPTURE_SYSTICK:
 		sample = systick_getTick();//systick_getTimer10ms();
+		break;
+	case CAPTURE_ANALOG_INPUT:
+		// Use same indices as in TMCL.c GetInput()
+		switch(channel.address) {
+		case 0:
+			sample = *HAL.ADCs->AIN0;
+			break;
+		case 1:
+			sample = *HAL.ADCs->AIN1;
+			break;
+		case 2:
+			sample = *HAL.ADCs->AIN2;
+			break;
+		case 3:
+			sample = *HAL.ADCs->DIO4;
+			break;
+		case 4:
+			sample = *HAL.ADCs->DIO5;
+			break;
+		case 6:
+			sample = *HAL.ADCs->VM;
+			break;
+		}
 		break;
 	default:
 		sample = 0;

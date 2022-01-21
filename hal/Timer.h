@@ -24,6 +24,7 @@ typedef struct
 	uint16_t (*getDuty) (timer_channel channel);
 	void (*setModulo) (uint16_t modulo);
 	uint16_t (*getModulo) (void);
+	void (*setModuloMin) (uint16_t modulo_min);
 	void (*setFrequency) (float freq);
 	void (*overflow_callback) (void);
 } TimerTypeDef;

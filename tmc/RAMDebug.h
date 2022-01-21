@@ -30,6 +30,7 @@ typedef enum {
 	CAPTURE_STACKED_REGISTER    = 3,
 	CAPTURE_SYSTICK             = 4,
 	CAPTURE_RAMDEBUG_PARAMETER  = 5, // For modules that do not support registers
+	CAPTURE_ANALOG_INPUT        = 6,
 
 	CAPTURE_END
 } RAMDebugSource;

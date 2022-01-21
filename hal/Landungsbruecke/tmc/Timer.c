@@ -11,9 +11,11 @@ static void setDuty(timer_channel, uint16_t);
 static uint16_t getDuty(timer_channel);
 static void setModulo(uint16_t modulo);
 static uint16_t getModulo(void);
+static void setModuloMin(uint16_t modulo_min);
 static void setFrequency(float freq);
 
 static uint16_t modulo_buf = 0;
+static uint16_t modulo_min_buf = 0;
 
 TimerTypeDef Timer =
 {
@@ -24,6 +26,7 @@ TimerTypeDef Timer =
 	.getDuty  = getDuty,
 	.setModulo = setModulo,
 	.getModulo = getModulo,
+	.setModuloMin = setModuloMin,
 	.setFrequency = setFrequency,
 	.overflow_callback = NULL
 };
@@ -171,6 +174,11 @@ static uint16_t getModulo(void)
 	return modulo_buf;
 }
 
+static void setModuloMin(uint16_t modulo_min)
+{
+	modulo_min_buf = modulo_min;
+}
+
 static void setFrequency(float freq)
 {
 	if(freq < ((float)CPU_BUS_CLK_HZ / ((1 << 0b111) * 0xFFFF)))
@@ -182,17 +190,24 @@ static void setFrequency(float freq)
 	disable_irq(INT_FTM0-16);
 
   uint8_t ps = 0b000;
+	uint16_t modulo = 0xFFFF;
+
 	for(; ps < 0b111; ps++)
 	{
-		if(freq > ((float)CPU_BUS_CLK_HZ / ((1 << ps) * 0xFFFF)))
+		if(freq > ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo)))
 			break;
 	}
 
-  uint16_t modulo = 0xFFFF;
-	for(; modulo > 0; modulo--)
+	for(; modulo > modulo_min_buf; modulo--)
 	{
-		if(freq < ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo)))
-			break;
+		if(freq < ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo))) {
+			if((modulo == modulo_min_buf) && (ps > 0b000)) {
+				ps--;
+				modulo = 0xFFFF;
+			} else {
+				break;
+			}
+		}
 	}
 
 	modulo_buf = modulo;
