@@ -7,15 +7,18 @@ void __attribute__ ((interrupt)) FTM0_IRQHandler(void);
 
 static void init(void);
 static void deInit(void);
-static void setDuty(timer_channel, uint16_t);
-static uint16_t getDuty(timer_channel);
+static void setDuty(timer_channel, float);
+static float getDuty(timer_channel);
 static void setModulo(uint16_t modulo);
 static uint16_t getModulo(void);
 static void setModuloMin(uint16_t modulo_min);
 static void setFrequency(float freq);
+static void setFrequencyMin(float freq_min);
 
 static uint16_t modulo_buf = 0;
 static uint16_t modulo_min_buf = 0;
+static float duty_buf[] = { .5f, .5f, .5f };
+static float freq_min_buf = 0.0f;
 
 TimerTypeDef Timer =
 {
@@ -28,6 +31,7 @@ TimerTypeDef Timer =
 	.getModulo = getModulo,
 	.setModuloMin = setModuloMin,
 	.setFrequency = setFrequency,
+	.setFrequencyMin = setFrequencyMin,
 	.overflow_callback = NULL
 };
 
@@ -48,6 +52,7 @@ static void init(void)
 
 	// setting for Center Aligned PWM in Combine Mode
 	FTM0_MOD = TIMER_MAX;  // set PWM frequency
+	modulo_buf = TIMER_MAX;
 	FTM0_CNTIN = 0;        // CTNMAX = 1 - PWM update at counter in max. value
 	FTM0_SYNC |= FTM_SYNC_CNTMAX_MASK;
 
@@ -71,11 +76,11 @@ static void init(void)
 
 	// initialize setting of value registers to  duty cycle
 	FTM0_C0V = 0;
-	FTM0_C1V = MAX_ARR_HALF;
+	FTM0_C1V = (uint16_t)(duty_buf[1] * TIMER_MAX);
 	FTM0_C4V = 0;
-	FTM0_C5V = MAX_ARR_HALF;
+	FTM0_C5V = (uint16_t)(duty_buf[2] * TIMER_MAX);
 	FTM0_C6V = 0;
-	FTM0_C7V = MAX_ARR_HALF;
+	FTM0_C7V = (uint16_t)(duty_buf[0] * TIMER_MAX);
 
 	// set channel mode to generate positive PWM
 	FTM0_C0SC |= FTM_CnSC_ELSB_MASK;
@@ -121,24 +126,30 @@ static void deInit(void)
 	SIM_SCGC6 &= ~SIM_SCGC6_FTM0_MASK;
 }
 
-static void setDuty(timer_channel channel, uint16_t duty)
+static void setDuty(timer_channel channel, float duty)
 {
+	duty = (duty < 0.0f) ? 0.0f : duty;
+	duty = (duty > 1.0f) ? 1.0f : duty;
+
 	switch(channel) {
 	case TIMER_CHANNEL_2:
-		FTM0_C1V = (duty < TIMER_MAX) ? duty : TIMER_MAX;
+		duty_buf[1] = duty;
+		FTM0_C1V = duty * modulo_buf;
 		break;
 	case TIMER_CHANNEL_3:
-		FTM0_C5V = (duty < TIMER_MAX) ? duty : TIMER_MAX;
+		duty_buf[2] = duty;
+		FTM0_C5V = duty * modulo_buf;
 		break;
 	case TIMER_CHANNEL_1:
 	default:
-		FTM0_C7V = (duty < TIMER_MAX) ? duty : TIMER_MAX;
+		duty_buf[0] = duty;
+		FTM0_C7V = duty * modulo_buf;
 		break;
 	}
 	FTM0_PWMLOAD = FTM_PWMLOAD_LDOK_MASK;
 }
 
-static uint16_t getDuty(timer_channel channel)
+static float getDuty(timer_channel channel)
 {
 	uint16_t duty = 0;
 	switch(channel) {
@@ -153,7 +164,8 @@ static uint16_t getDuty(timer_channel channel)
 		duty = (FTM0_C7V - FTM0_C6V);
 		break;
 	}
-	return duty;
+
+	return (((float)duty) / modulo_buf);
 }
 
 static void setModulo(uint16_t modulo)
@@ -161,6 +173,7 @@ static void setModulo(uint16_t modulo)
 	disable_irq(INT_FTM0-16);
 	FTM0_MODE |= FTM_MODE_WPDIS_MASK;
 	FTM0_MOD = modulo;
+	modulo_buf = modulo;
 	FTM0_CNTIN = 0;
 	FTM0_SYNC |= FTM_SYNC_CNTMAX_MASK;
 	FTM0_SYNC |= FTM_SYNC_SWSYNC_MASK;
@@ -179,8 +192,16 @@ static void setModuloMin(uint16_t modulo_min)
 	modulo_min_buf = modulo_min;
 }
 
+static void setFrequencyMin(float freq_min)
+{
+	freq_min_buf = freq_min;
+}
+
 static void setFrequency(float freq)
 {
+	if(freq < freq_min_buf)
+		return;
+
 	if(freq < ((float)CPU_BUS_CLK_HZ / ((1 << 0b111) * 0xFFFF)))
 		return;
 
@@ -194,19 +215,11 @@ static void setFrequency(float freq)
 
 	for(; ps < 0b111; ps++)
 	{
-		if(freq > ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo)))
+		if(freq > ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo))) {
+			modulo = (float)CPU_BUS_CLK_HZ / ((1 << ps) * freq);
+			if((modulo < modulo_min_buf) && (ps > 0b000))
+			    modulo = (float)CPU_BUS_CLK_HZ / ((1 << (ps - 1)) * freq);
 			break;
-	}
-
-	for(; modulo > modulo_min_buf; modulo--)
-	{
-		if(freq < ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo))) {
-			if((modulo == modulo_min_buf) && (ps > 0b000)) {
-				ps--;
-				modulo = 0xFFFF;
-			} else {
-				break;
-			}
 		}
 	}
 
@@ -219,6 +232,10 @@ static void setFrequency(float freq)
 	FTM0_SYNC |= FTM_SYNC_CNTMAX_MASK;
 	FTM0_SYNC |= FTM_SYNC_SWSYNC_MASK;
 	FTM0_PWMLOAD = FTM_PWMLOAD_LDOK_MASK;
+
+	setDuty(TIMER_CHANNEL_1, duty_buf[0]);
+	setDuty(TIMER_CHANNEL_2, duty_buf[1]);
+	setDuty(TIMER_CHANNEL_3, duty_buf[2]);
 
 	enable_irq(INT_FTM0-16);
 }

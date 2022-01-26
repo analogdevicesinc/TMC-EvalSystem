@@ -20,12 +20,13 @@ typedef struct
 	bool initialized;
 	void (*init) (void);
 	void (*deInit) (void);
-	void (*setDuty) (timer_channel channel, uint16_t duty);
-	uint16_t (*getDuty) (timer_channel channel);
+	void (*setDuty) (timer_channel channel, float duty);
+	float (*getDuty) (timer_channel channel);
 	void (*setModulo) (uint16_t modulo);
 	uint16_t (*getModulo) (void);
 	void (*setModuloMin) (uint16_t modulo_min);
 	void (*setFrequency) (float freq);
+	void (*setFrequencyMin) (float freq_min);
 	void (*overflow_callback) (void);
 } TimerTypeDef;
 

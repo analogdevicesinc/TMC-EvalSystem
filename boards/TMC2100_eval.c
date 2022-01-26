@@ -174,7 +174,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else {
 			if ((uint32_t) *value < VREF_FULLSCALE) {
 				vref = *value;
-				Timer.setDuty(TIMER_CHANNEL_1, vref * TIMER_MAX / VREF_FULLSCALE);
+				Timer.setDuty(TIMER_CHANNEL_1, ((float)vref) / VREF_FULLSCALE);
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -209,7 +209,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			if(((uint32_t) *value) > 10000)
 				errors |= TMC_ERROR_TYPE;
 			else
-				Timer.setDuty(TIMER_CHANNEL_1, *value);
+				Timer.setDuty(TIMER_CHANNEL_1, ((float)*value) / TIMER_MAX);
 		}
 	break;
 
@@ -566,7 +566,7 @@ void TMC2100_init(void)
 	vref = 2000;
 	HAL.IOs->config->set(Pins.AIN_REF_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_1, vref * TIMER_MAX / VREF_FULLSCALE);
+	Timer.setDuty(TIMER_CHANNEL_1, ((float)vref) / VREF_FULLSCALE);
 
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 	reset();

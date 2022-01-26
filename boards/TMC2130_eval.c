@@ -240,7 +240,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else {
 			if ((uint32_t) *value < VREF_FULLSCALE) {
 				vref = *value;
-				Timer.setDuty(TIMER_CHANNEL_1, vref * TIMER_MAX / VREF_FULLSCALE);
+				Timer.setDuty(TIMER_CHANNEL_1, ((float)vref) / VREF_FULLSCALE);
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -730,7 +730,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		if(uvalue <= 20000)
 		{
 			HAL.IOs->config->setToState(Pins.AIN_REF_SW, (uvalue > 10000) ? IOS_HIGH : IOS_LOW);
-			Timer.setDuty(TIMER_CHANNEL_1, uvalue%10001);
+			Timer.setDuty(TIMER_CHANNEL_1, ((float)(uvalue % 10001)) / TIMER_MAX);
 		}
 		else
 		{
@@ -936,7 +936,7 @@ void TMC2130_init(void)
 	vref = 2000;
 	HAL.IOs->config->set(Pins.AIN_REF_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_1, vref * TIMER_MAX / VREF_FULLSCALE);
+	Timer.setDuty(TIMER_CHANNEL_1, ((float)vref) / VREF_FULLSCALE);
 
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 }

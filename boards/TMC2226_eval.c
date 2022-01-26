@@ -608,7 +608,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		*value = Timer.getDuty(TIMER_CHANNEL_3) * 100 / TIMER_MAX;
 		break;
 	case 4:
-		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
+		Timer.setDuty(TIMER_CHANNEL_3, ((float)*value) / 100);
 		break;
 	case 5: // Set pin state
 		state = (*value) & 0x03;
@@ -717,7 +717,7 @@ static void setVREF(uint16_t value)
 	// Calculating VREF from the timer duty cycle introduces rounding errors
 	vref = value;
 
-	Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
+	Timer.setDuty(TIMER_CHANNEL_3, ((float)vref) / VREF_FULLSCALE);
 }
 
 static void periodicJob(uint32_t tick)

@@ -722,7 +722,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		if(uvalue <= 20000)
 		{
 			//HAL.IOs->config->setToState(Pins.AIN_REF_SW, (uvalue > 10000) ? IOS_HIGH : IOS_LOW);
-			Timer.setDuty(TIMER_CHANNEL_1, uvalue%10001);
+			Timer.setDuty(TIMER_CHANNEL_1, ((float)(uvalue % 10001)) / TIMER_MAX);
 		}
 		else
 		{

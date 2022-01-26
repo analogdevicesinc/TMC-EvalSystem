@@ -238,7 +238,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else {
 			if ((uint32_t) *value < VREF_FULLSCALE) {
 				vref = *value;
-				Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
+				Timer.setDuty(TIMER_CHANNEL_3, ((float)vref) / VREF_FULLSCALE);
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -484,7 +484,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		*value = Timer.getDuty(TIMER_CHANNEL_3) * 100 / TIMER_MAX;
 		break;
 	case 4:
-		Timer.setDuty(TIMER_CHANNEL_3, (uint32_t) ((uint32_t)(*value) * (uint32_t)TIMER_MAX) / (uint32_t)100);
+		Timer.setDuty(TIMER_CHANNEL_3, ((float)*value) / 100);
 		break;
 	default:
 		errors |= TMC_ERROR_TYPE;
@@ -611,7 +611,7 @@ void TMC2225_init(void)
 	vref = 2000;
 	HAL.IOs->config->set(Pins.UC_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_3, vref * TIMER_MAX / VREF_FULLSCALE);
+	Timer.setDuty(TIMER_CHANNEL_3, ((float)vref) / VREF_FULLSCALE);
 
 	enableDriver(DRIVER_ENABLE);
 };

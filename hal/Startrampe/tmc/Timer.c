@@ -3,8 +3,8 @@
 
 static void init(void);
 static void deInit(void);
-static void setDuty(timer_channel, uint16_t);
-static uint16_t getDuty(timer_channel);
+static void setDuty(timer_channel, float);
+static float getDuty(timer_channel);
 
 TimerTypeDef Timer =
 {
@@ -17,6 +17,7 @@ TimerTypeDef Timer =
 	.getModulo = NULL,
 	.setModuloMin = NULL,
 	.setFrequency = NULL,
+	.setFrequencyMin = NULL,
 	.overflow_callback = NULL
 };
 
@@ -58,14 +59,18 @@ static void deInit(void)
 	TIM_DeInit(TIM1);
 }
 
-static void setDuty(timer_channel channel, uint16_t duty)
+static void setDuty(timer_channel channel, float duty)
 {
 	UNUSED(channel);
-	TIM1->CCR3 = (duty < TIMER_MAX) ? duty : TIMER_MAX;
+
+	duty = (duty < 0.0f) ? 0.0f : duty;
+	duty = (duty > 1.0f) ? 1.0f : duty;
+
+	TIM1->CCR3 = duty * TIMER_MAX;
 }
 
-static uint16_t getDuty(timer_channel channel)
+static float getDuty(timer_channel channel)
 {
 	UNUSED(channel);
-	return TIM1->CCR3;
+	return (((float)TIM1->CCR3) / TIMER_MAX);
 }
