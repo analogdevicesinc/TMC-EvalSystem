@@ -127,6 +127,8 @@ void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel)
 	channel->readRegister      = dummy_AddressRef;
 	channel->writeRegister     = dummy_AddressValue;
 	channel->SAP               = dummy_TypeMotorValue;
+	channel->SIO               = dummy_TypeMotorValue;
+	channel->GIO               = dummy_TypeMotorRef;
 	channel->STAP              = dummy_TypeMotorValue;
 	channel->RSAP              = dummy_TypeMotorValue;
 	channel->userFunction      = dummy_TypeMotorRef;

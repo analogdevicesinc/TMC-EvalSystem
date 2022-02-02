@@ -50,6 +50,8 @@ typedef struct
 	uint32_t (*GAP)                 (uint8_t type, uint8_t motor, int32_t *value);  // get axis parameter -> TMCL conformance
 	uint32_t (*STAP)                (uint8_t type, uint8_t motor, int32_t value);   // store axis parameter -> TMCL conformance
 	uint32_t (*RSAP)                (uint8_t type, uint8_t motor, int32_t value);   // restore axis parameter -> TMCL conformance
+	uint32_t (*SIO)                 (uint8_t type, uint8_t motor, int32_t value);
+	uint32_t (*GIO)                 (uint8_t type, uint8_t motor, int32_t *value);
 	void (*readRegister)          (uint8_t motor, uint8_t address, int32_t *value);  // Motor needed since some chips utilize it as a switch between low and high values
 	void (*writeRegister)         (uint8_t motor, uint8_t address, int32_t value);   // Motor needed since some chips utilize it as a switch between low and high values
 	uint32_t (*getMeasuredSpeed)    (uint8_t motor, int32_t *value);

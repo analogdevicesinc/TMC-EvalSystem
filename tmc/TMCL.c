@@ -940,6 +940,10 @@ static void GetVersion(void)
 
 static void GetInput(void)
 {
+	if((Evalboards.ch1.GIO(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32) == TMC_ERROR_NONE)
+		|| (Evalboards.ch2.GIO(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32) == TMC_ERROR_NONE))
+		return;
+
 	switch(ActualCommand.Type)
 	{
 	case 0:
