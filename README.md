@@ -1,6 +1,8 @@
 # TMC-EvalSystem
 
-Trinamic Evaluation System
+Trinamic Evaluation System ([home page](https://www.trinamic.com/support/eval-kits/))
+
+[AN038: Using TRINAMIC’s IC Software API and Examples](https://www.trinamic.com/fileadmin/assets/Support/AppNotes/AN038_Using_TRINAMICs_IC_Software_API_and_Examples.pdf)
 
 ## Setup
 To clone this repository, simply use the following command in order to clone submodules recursively:  
