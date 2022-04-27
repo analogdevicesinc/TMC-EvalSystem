@@ -6,6 +6,7 @@
 #define DEFAULT_MOTOR  0
 #define TMC4671_MOTORS 1
 #define USE_LINEAR_RAMP
+#define TORQUE_FLUX_MAX 	(int32_t)10000
 #define POSITION_SCALE_MAX  (int32_t)65536
 
 static IOPinTypeDef *PIN_DRV_ENN;
@@ -20,11 +21,14 @@ typedef struct
 	uint8_t   initState;
 	uint8_t   initMode;
 	uint16_t  torqueMeasurementFactor;  // uint8_t.uint8_t
+	uint32_t  maximumCurrent;
 	uint8_t	  motionMode;
 	int32_t   actualVelocityPT1;
 	int64_t	  akkuActualVelocity;
 	int16_t   actualTorquePT1;
 	int64_t   akkuActualTorque;
+	int16_t   actualFluxPT1;
+	int64_t   akkuActualFlux;
 	int32_t   positionScaler;
 	int32_t   linearScaler;
 	int16_t   hall_phi_e_old;
@@ -199,6 +203,24 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			// update also ramp generator value
 			rampGenerator[motor].maxVelocity = *value;
 #endif
+		}
+		break;
+
+	case 6: // max torque/flux
+		if (readWrite == READ)
+		{
+			//*value = motorConfig[motor].maximumCurrent;
+			*value = tmc4671_getTorqueFluxLimit_mA(motor, motorConfig[motor].torqueMeasurementFactor);
+		}
+		else if (readWrite == WRITE)
+		{
+			if((*value >= 0) && (*value <= TORQUE_FLUX_MAX))
+			{
+				motorConfig[motor].maximumCurrent = *value;
+				tmc4671_setTorqueFluxLimit_mA(motor, motorConfig[motor].torqueMeasurementFactor, *value);
+			}
+			else
+				errors |= TMC_ERROR_TYPE;
 		}
 		break;
 	case 11: // acceleration
@@ -610,8 +632,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 177:
 		// actual flux [mA] (PID_FLUX_ACTUAL scaled)
 		if(readWrite == READ) {
-			*value = TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, TMC4671_PID_FLUX_ACTUAL_MASK, TMC4671_PID_FLUX_ACTUAL_SHIFT);
-			*value = CAST_Sn_TO_S32(*value, 16);
+			*value = motorConfig[motor].actualFluxPT1;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -732,6 +753,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = motorConfig[motor].torqueMeasurementFactor;
 		} else if(readWrite == WRITE) {
 			motorConfig[motor].torqueMeasurementFactor = *value;
+			// update max torque/flux according new torque measurement factor
+			tmc4671_setTorqueFluxLimit_mA(motor, motorConfig[motor].torqueMeasurementFactor, motorConfig[motor].maximumCurrent);
 		}
 		break;
 	case 252:
@@ -861,11 +884,19 @@ static void periodicJob(uint32_t actualSystick)
 			motorConfig[motor].actualVelocityPT1 = tmc_filterPT1(&motorConfig[motor].akkuActualVelocity, tmc4671_getActualVelocity(motor), motorConfig[motor].actualVelocityPT1, 3, 8);
 
 			// filter actual current
-			int16_t actualCurrentRaw = 	tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, BIT_16_TO_31);
+			int16_t actualCurrentRaw = TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, TMC4671_PID_TORQUE_ACTUAL_MASK, TMC4671_PID_TORQUE_ACTUAL_SHIFT);
 			if ((actualCurrentRaw > -32000) && (actualCurrentRaw < 32000))
 			{
 				int32_t actualCurrent = ((int32_t)actualCurrentRaw * (int32_t)motorConfig[motor].torqueMeasurementFactor) / 256;
 				motorConfig[motor].actualTorquePT1 = tmc_filterPT1(&motorConfig[motor].akkuActualTorque , actualCurrent, motorConfig[motor].actualTorquePT1, 4, 8);
+			}
+
+			// filter actual flux
+			int16_t actualFluxRaw = TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, TMC4671_PID_FLUX_ACTUAL_MASK, TMC4671_PID_FLUX_ACTUAL_SHIFT);
+			if ((actualFluxRaw > -32000) && (actualFluxRaw < 32000))
+			{
+				int32_t actualFlux = ((int32_t)actualFluxRaw * (int32_t)motorConfig[motor].torqueMeasurementFactor) / 256;
+				motorConfig[motor].actualFluxPT1 = tmc_filterPT1(&motorConfig[motor].akkuActualFlux , actualFlux, motorConfig[motor].actualFluxPT1, 2, 8);
 			}
 		}
 
@@ -1065,6 +1096,7 @@ void TMC4671_init(void)
 		motorConfig[motor].last_UQ_UD_EXT				= 0;
 		motorConfig[motor].last_PHI_E_EXT				= 0;
 		motorConfig[motor].torqueMeasurementFactor  	= 256;
+		motorConfig[motor].maximumCurrent				= 1000;
 		motorConfig[motor].actualVelocityPT1			= 0;
 		motorConfig[motor].akkuActualVelocity       	= 0;
 		motorConfig[motor].actualTorquePT1				= 0;
@@ -1084,6 +1116,9 @@ void TMC4671_init(void)
 	// set default acceleration and max velocity
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PID_ACCELERATION_LIMIT, 2000);
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PID_VELOCITY_LIMIT, 4000);
+
+	// set default max torque/flux
+	tmc4671_setTorqueFluxLimit_mA(DEFAULT_MOTOR, motorConfig[DEFAULT_MOTOR].torqueMeasurementFactor, motorConfig[DEFAULT_MOTOR].maximumCurrent);
 
 #ifdef USE_LINEAR_RAMP
 	// init ramp generator
