@@ -839,7 +839,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		// ADCIN converted
 		if(readWrite == READ) {
 			int adc = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_ADC_VSUPPLY_AIN, TMC2240_ADC_AIN_MASK, TMC2240_ADC_AIN_SHIFT);
-			*value = (int)3052*adc/100000;
+			*value = (int)3052*adc/10000;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -848,7 +848,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		// ADCSupply
 		if(readWrite == READ) {
 			int adc = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_ADC_VSUPPLY_AIN, TMC2240_ADC_VSUPPLY_MASK, TMC2240_ADC_VSUPPLY_SHIFT);
-			*value = (int)32*3052*adc/100000;
+			*value = (int)32*3052*adc/10000;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -857,9 +857,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		// Overvoltage Limit converted
 		if(readWrite == READ) {
 			int val = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERVOLTAGE_VTH_MASK, TMC2240_OVERVOLTAGE_VTH_SHIFT);
-			*value = (int)32*3052*val/100000;
+			*value = (int)32*3052*val/10000;
 		} else if(readWrite == WRITE) {
-			int val = (int)(*value*100000/(3052*32));
+			int val = (int)(*value*10000/(3052*32));
 			TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERVOLTAGE_VTH_MASK, TMC2240_OVERVOLTAGE_VTH_SHIFT, val);
 		}
 		break;
