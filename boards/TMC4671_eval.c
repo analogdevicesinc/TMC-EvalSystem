@@ -5,7 +5,7 @@
 
 #define DEFAULT_MOTOR  0
 #define TMC4671_MOTORS 1
-#define USE_LINEAR_RAMP
+
 #define TORQUE_FLUX_MAX 	(int32_t)10000
 #define POSITION_SCALE_MAX  (int32_t)65536
 
@@ -42,12 +42,11 @@ typedef struct
 
 static TMinimalMotorConfig motorConfig[TMC4671_MOTORS];
 
-#ifdef USE_LINEAR_RAMP
-	TMC_LinearRamp rampGenerator[TMC4671_MOTORS];
-	uint8_t actualMotionMode[TMC4671_MOTORS];
-	int32_t lastRampTargetPosition[TMC4671_MOTORS];
-	int32_t lastRampTargetVelocity[TMC4671_MOTORS];
-#endif
+// variables for ramp generator support
+TMC_LinearRamp rampGenerator[TMC4671_MOTORS];
+uint8_t actualMotionMode[TMC4671_MOTORS];
+int32_t lastRampTargetPosition[TMC4671_MOTORS];
+int32_t lastRampTargetVelocity[TMC4671_MOTORS];
 
 // Helper functions for unit conversion
 static int32_t linearPositionToInternalPosition(int32_t position, int32_t scaler, int polePairs);
@@ -70,27 +69,14 @@ static uint32_t rotate(uint8_t motor, int32_t velocity)
 	if(motor >= TMC4671_MOTORS)
 		return TMC_ERROR_MOTOR;
 
-#ifdef USE_LINEAR_RAMP
-	if (rampGenerator[motor].rampEnabled)
-	{
-		// switch to velocity motion mode
-		tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
+	// switch to velocity motion mode
+	tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
 
-		// set target velocity for ramp generator
-		rampGenerator[motor].targetVelocity = velocity;
-	}
-	else
-	{
-		// set target velocity directly
-		tmc4671_setTargetVelocity(motor, velocity);
-	}
+	// set target velocity for ramp generator
+	rampGenerator[motor].targetVelocity = velocity;
 
 	// remember switched motion mode
 	actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
-#else
-	// set target velocity directly
-	tmc4671_setTargetVelocity(motor, velocity);
-#endif
 
 	return TMC_ERROR_NONE;
 }
@@ -118,27 +104,14 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
 	// scale target position
 	position = (float)position * (float)POSITION_SCALE_MAX / (float)motorConfig[motor].positionScaler;
 
-#ifdef USE_LINEAR_RAMP
-	if (rampGenerator[motor].rampEnabled)
-	{
-		// switch to position motion mode
-		tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
+	// switch to position motion mode
+	tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
 
-		// set target position for ramp generator
-		rampGenerator[motor].targetPosition = position;
-	}
-	else
-	{
-		// set target position directly
-		tmc4671_setAbsolutTargetPosition(motor, position);
-	}
+	// set target position for ramp generator
+	rampGenerator[motor].targetPosition = position;
 
 	// remember switched motion mode
 	actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
-#else
-	// set target position directly
-	tmc4671_setAbsolutTargetPosition(motor, position);
-#endif
 
 	return TMC_ERROR_NONE;
 }
@@ -151,27 +124,14 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 	// scale position deviation
 	int32_t dX = (float)*ticks * (float)POSITION_SCALE_MAX / (float)motorConfig[motor].positionScaler;
 
-#ifdef USE_LINEAR_RAMP
-	if (rampGenerator[motor].rampEnabled)
-	{
-		// switch to position motion mode
-		tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
+	// switch to position motion mode
+	tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
 
-		// set target position for ramp generator
-		rampGenerator[motor].targetPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL) + dX;
-	}
-	else
-	{
-		// set target position directly
-		tmc4671_setRelativeTargetPosition(motor, dX);
-	}
+	// set target position for ramp generator
+	rampGenerator[motor].targetPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL) + dX;
 
 	// remember switched motion mode
 	actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
-#else
-	// set target position directly
-	tmc4671_setRelativeTargetPosition(motor, dX);
-#endif
 
 	return TMC_ERROR_NONE;
 }
@@ -190,19 +150,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		{
 			*value = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
 
-#ifdef USE_LINEAR_RAMP
 			// update also ramp generator value
 			rampGenerator[motor].maxVelocity = *value;
-#endif
 		}
 		else if(readWrite == WRITE)
 		{
 			tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_LIMIT, *value);
 
-#ifdef USE_LINEAR_RAMP
 			// update also ramp generator value
 			rampGenerator[motor].maxVelocity = *value;
-#endif
 		}
 		break;
 
@@ -228,22 +184,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		{
 			*value = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
 
-#ifdef USE_LINEAR_RAMP
 			// update also ramp generator value
 			rampGenerator[motor].acceleration = *value;
-#endif
 		}
 		else if(readWrite == WRITE)
 		{
 			tmc4671_writeInt(motor, TMC4671_PID_ACCELERATION_LIMIT, *value);
 
-#ifdef USE_LINEAR_RAMP
 			// update also ramp generator value
 			rampGenerator[motor].acceleration = *value;
-#endif
 		}
 		break;
-#ifdef USE_LINEAR_RAMP
 	case 12: // enable velocity ramp
 		if(readWrite == READ) {
 			*value = rampGenerator[motor].rampEnabled;
@@ -251,17 +202,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			rampGenerator[motor].rampEnabled = *value;
 		}
 		break;
-#endif
 	case 13: // ramp velocity
-		if(readWrite == READ) {
-#ifdef USE_LINEAR_RAMP
-			if (rampGenerator[motor].rampEnabled)
-				*value = rampGenerator[motor].rampVelocity;
-			else
-				*value = tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
-#else
-			*value = tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
-#endif
+		if(readWrite == READ)
+		{
+			*value = rampGenerator[motor].rampVelocity;
 		}   else if (readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -281,10 +225,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if (readWrite == READ)
 		{
 			int velocity = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
-#ifdef USE_LINEAR_RAMP
+
 			// update also ramp generator value
 			rampGenerator[motor].maxVelocity = velocity;
-#endif
+
 			// Internal -> linear
 			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
 		}
@@ -293,10 +237,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			// Linear -> Internal
 			tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_LIMIT, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
 
-#ifdef USE_LINEAR_RAMP
 			// Also update ramp generator value
 			rampGenerator[motor].maxVelocity = *value;
-#endif
 		}
 		break;
 	case 22: // Linear acceleration [µm/s/s]
@@ -304,10 +246,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		{
 			*value = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
 
-#ifdef USE_LINEAR_RAMP
 			// update also ramp generator value
 			rampGenerator[motor].acceleration = *value;
-#endif
+
 			// Internal -> linear
 			*value = internalVelocityToLinearVelocity(*value, motorConfig[motor].linearScaler);
 		}
@@ -316,28 +257,19 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			// Linear -> internal
 			tmc4671_writeInt(motor, TMC4671_PID_ACCELERATION_LIMIT, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
 
-#ifdef USE_LINEAR_RAMP
 			// update also ramp generator value
 			rampGenerator[motor].acceleration = *value;
-#endif
 		}
 		break;
 	case 23: // Linear ramp velocity [µm/s]
 		if (readWrite == READ)
 		{
-#ifdef USE_LINEAR_RAMP
-			if (rampGenerator[motor].rampEnabled)
-				*value = rampGenerator[motor].rampVelocity;
-			else
-				*value = tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
-#else
-			*value = tmc4671_readInt(motor, TMC4671_PID_VELOCITY_TARGET);
-#endif
+			*value = rampGenerator[motor].rampVelocity;
+
 			// Internal -> linear
 			*value = internalVelocityToLinearVelocity(*value, motorConfig[motor].linearScaler);
 		}
 		break;
-#ifdef USE_LINEAR_RAMP
 	case 24: // Linear ramp position [µm]
 		if (readWrite == READ)
 		{
@@ -346,7 +278,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = internalPositionToLinearPosition(rampGenerator[motor].rampPosition, motorConfig[motor].linearScaler, polePairs);
 		}
 		break;
-#endif
 	case 25: // Linear target position [µm]
 		if (readWrite == READ)
 		{
@@ -358,27 +289,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		{
 			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
 			int position = linearPositionToInternalPosition(*value, motorConfig[motor].linearScaler, polePairs);
-#ifdef USE_LINEAR_RAMP
-			if (rampGenerator[motor].rampEnabled)
-			{
-				// Switch to position motion mode
-				tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
 
-				// Set target position for ramp generator
-				rampGenerator[motor].targetPosition = position;
-			}
-			else
-			{
-				// Set the target position directly
-				tmc4671_setAbsolutTargetPosition(motor, position);
-			}
+			// Switch to position motion mode
+			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
+
+			// Set target position for ramp generator
+			rampGenerator[motor].targetPosition = position;
 
 			// Remember switched motion mode
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
-#else
-			// Set the target position directly
-			tmc4671_setAbsolutTargetPosition(motor, position);
-#endif
 		}
 		break;
 	case 26: // Linear actual velocity [µm/s]
@@ -411,32 +330,18 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		else
 		{
-#ifdef USE_LINEAR_RAMP
-			if (rampGenerator[motor].rampEnabled)
-			{
-				// Switch to velocity motion mode
-				tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
+			// Switch to velocity motion mode
+			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
 
-				// Set target velocity for ramp generator
-				// Linear -> internal
-				rampGenerator[motor].targetVelocity = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
-			}
-			else
-			{
-				// Linear -> internal
-				tmc4671_setTargetVelocity(motor, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
-			}
+			// Set target velocity for ramp generator
+			// Linear -> internal
+			rampGenerator[motor].targetVelocity = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
 
 			// Remember switched motion mode
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
-#else
-			// Linear -> internal
-			tmc4671_setTargetVelocity(motor, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
-#endif
 		}
 		break;
 
-#ifdef USE_LINEAR_RAMP
 	case 51: // ramp position
 		if (readWrite == READ) {
 			*value = (float)rampGenerator[motor].rampPosition * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX);
@@ -456,7 +361,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-#endif
 
 	case 56: // position scaler
 		if (readWrite == READ) {
@@ -598,27 +502,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			// scale target position
 			int position = (float)*value * (float)POSITION_SCALE_MAX / (float)motorConfig[motor].positionScaler;
 
-#ifdef USE_LINEAR_RAMP
-			if (rampGenerator[motor].rampEnabled)
-			{
-				// switch to position motion mode
-				tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
+			// switch to position motion mode
+			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
 
-				// set target position for ramp generator
-				rampGenerator[motor].targetPosition = position;
-			}
-			else
-			{
-				// set target position directly
-				tmc4671_setAbsolutTargetPosition(motor, position);
-			}
+			// set target position for ramp generator
+			rampGenerator[motor].targetPosition = position;
 
 			// remember switched motion mode
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
-#else
-			// set target position directly
-			tmc4671_setAbsolutTargetPosition(motor, position);
-#endif
 		}
 		break;
 	case 176:
@@ -658,7 +549,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			// update actual position
 			tmc4671_writeInt(motor, TMC4671_PID_POSITION_ACTUAL, position);
 
-#ifdef USE_LINEAR_RAMP
 			// also update linear ramp during clear of actual position
 			if (actualMotionMode[motor] == TMC4671_MOTION_MODE_POSITION)
 			{
@@ -666,7 +556,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				rampGenerator[motor].rampPosition = position;
 				tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, position);
 			}
-#endif
 		}
 		break;
 	case 181: // Actual torque (unfiltered)
@@ -698,10 +587,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			tmc4671_setTargetTorque_mA(motor, motorConfig[motor].torqueMeasurementFactor, *value);
 
-#ifdef USE_LINEAR_RAMP
 			// remember switched motion mode by setTargetTorque_mA
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_TORQUE;
-#endif
 		}
 		break;
 	case 191:
@@ -709,13 +596,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = tmc4671_getTargetFlux_mA(motor, motorConfig[motor].torqueMeasurementFactor);
 		} else if(readWrite == WRITE) {
-			tmc4671_setTargetFlux_mA(motor, motorConfig[motor].torqueMeasurementFactor, *value);
 			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_TORQUE);
 
-#ifdef USE_LINEAR_RAMP
+			tmc4671_setTargetFlux_mA(motor, motorConfig[motor].torqueMeasurementFactor, *value);
+
 			// remember switched motion mode by setTargetTorque_mA
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_TORQUE;
-#endif
 		}
 		break;
 	case 192:
@@ -723,28 +609,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 2);
 			*value = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
-		} else if(readWrite == WRITE) {
-#ifdef USE_LINEAR_RAMP
-			if (rampGenerator[motor].rampEnabled)
-			{
-				// switch to velocity motion mode
-				tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
+		}
+		else if(readWrite == WRITE)
+		{
+			// switch to velocity motion mode
+			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
 
-				// set target velocity for ramp generator
-				rampGenerator[motor].targetVelocity = *value;
-			}
-			else
-			{
-				// set target velocity directly
-				tmc4671_setTargetVelocity(motor, *value);
-			}
+			// set target velocity for ramp generator
+			rampGenerator[motor].targetVelocity = *value;
 
 			// remember switched motion mode
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
-#else
-			// set target velocity directly
-			tmc4671_setTargetVelocity(motor, *value);
-#endif
 		}
 		break;
 	case 251:
@@ -900,65 +775,53 @@ static void periodicJob(uint32_t actualSystick)
 			}
 		}
 
-#ifdef USE_LINEAR_RAMP
 		// do velocity / position ramping for every motor
 		for (motor = 0; motor < TMC4671_MOTORS; motor++)
 		{
-			if (rampGenerator[motor].rampEnabled)
+			if (actualMotionMode[motor] == TMC4671_MOTION_MODE_POSITION)
 			{
-				if (actualMotionMode[motor] == TMC4671_MOTION_MODE_POSITION)
+				tmc_linearRamp_computeRampPosition(&rampGenerator[motor]);
+
+				// set new target position (only if changed)
+				if (rampGenerator[motor].rampPosition != lastRampTargetPosition[motor])
 				{
-					tmc_linearRamp_computeRampPosition(&rampGenerator[motor]);
+					tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, rampGenerator[motor].rampPosition);
+					lastRampTargetPosition[motor] = rampGenerator[motor].rampPosition;
 
-					// set new target position (only if changed)
-					if (rampGenerator[motor].rampPosition != lastRampTargetPosition[motor])
-					{
-						tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, rampGenerator[motor].rampPosition);
-						lastRampTargetPosition[motor] = rampGenerator[motor].rampPosition;
-
-						// use velocity feed forward
-						tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_OFFSET, (motorConfig[motor].enableVelocityFeedForward) ? rampGenerator[motor].rampVelocity : 0);
-					}
-				}
-				else if (actualMotionMode[motor] == TMC4671_MOTION_MODE_VELOCITY)
-				{
-					tmc_linearRamp_computeRampVelocity(&rampGenerator[motor]);
-
-					// set new target velocity (only if changed)
-					if (rampGenerator[motor].rampVelocity != lastRampTargetVelocity[motor])
-					{
-						// set new target velocity
-						tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_TARGET, rampGenerator[motor].rampVelocity);
-						lastRampTargetVelocity[motor] = rampGenerator[motor].rampVelocity;
-
-						// turn of velocity feed forward (do not touch if e.g. enabled by the user)
-						if (motorConfig[motor].enableVelocityFeedForward == 0)
-							tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_OFFSET, 0);
-					}
-
-					// keep position ramp and target position on track
-					tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL));
-					rampGenerator[motor].rampPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL);
-					rampGenerator[motor].lastdXRest = 0;
-				}
-				else if (actualMotionMode[motor] == TMC4671_MOTION_MODE_TORQUE)
-				{
-					// keep position ramp and target position on track
-					tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL));
-					rampGenerator[motor].rampPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL);
-					rampGenerator[motor].rampVelocity = tmc4671_getActualVelocity(motor);
-					rampGenerator[motor].lastdXRest = 0;
+					// use velocity feed forward
+					tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_OFFSET, (motorConfig[motor].enableVelocityFeedForward) ? rampGenerator[motor].rampVelocity : 0);
 				}
 			}
-			else
+			else if (actualMotionMode[motor] == TMC4671_MOTION_MODE_VELOCITY)
 			{
-				// keep on track if ramp is disabled
+				tmc_linearRamp_computeRampVelocity(&rampGenerator[motor]);
+
+				// set new target velocity (only if changed)
+				if (rampGenerator[motor].rampVelocity != lastRampTargetVelocity[motor])
+				{
+					// set new target velocity
+					tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_TARGET, rampGenerator[motor].rampVelocity);
+					lastRampTargetVelocity[motor] = rampGenerator[motor].rampVelocity;
+
+					// turn of velocity feed forward
+					tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_OFFSET, 0);
+				}
+
+				// keep position ramp and target position on track
+				tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL));
 				rampGenerator[motor].rampPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL);
-				rampGenerator[motor].rampVelocity = 0;
+				rampGenerator[motor].lastdXRest = 0;
+			}
+			else if (actualMotionMode[motor] == TMC4671_MOTION_MODE_TORQUE)
+			{
+				// keep position ramp and target position on track
+				tmc4671_writeInt(motor, TMC4671_PID_POSITION_TARGET, tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL));
+				rampGenerator[motor].rampPosition = tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL);
+				rampGenerator[motor].rampVelocity = tmc4671_getActualVelocity(motor);
 				rampGenerator[motor].lastdXRest = 0;
 			}
 		}
-#endif
+
 		debug_nextProcess();
 		debug_process();
 		lastSystick = actualSystick;
@@ -1018,7 +881,7 @@ static uint8_t reset()
 	for(size_t motor = 0; motor < TMC4671_MOTORS; motor++)
 	{
 		tmc4671_writeInt(motor, TMC4671_PWM_POLARITIES, 0);
-		tmc4671_writeInt(motor, TMC4671_PWM_SV_CHOP, 0x0);
+		tmc4671_writeInt(motor, TMC4671_PWM_SV_CHOP, TMC4671_PWM_SV_MASK);
 		tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 	}
 
@@ -1031,7 +894,7 @@ static uint8_t restore()
 	for(size_t motor = 0; motor < TMC4671_MOTORS; motor++)
 	{
 		tmc4671_writeInt(motor, TMC4671_PWM_POLARITIES, 0);
-		tmc4671_writeInt(motor, TMC4671_PWM_SV_CHOP, 0x0);
+		tmc4671_writeInt(motor, TMC4671_PWM_SV_CHOP, TMC4671_PWM_SV_MASK);
 		tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 	}
 
@@ -1102,13 +965,13 @@ void TMC4671_init(void)
 		motorConfig[motor].actualTorquePT1				= 0;
 		motorConfig[motor].akkuActualTorque         	= 0;
 		motorConfig[motor].positionScaler				= POSITION_SCALE_MAX;
-		motorConfig[motor].enableVelocityFeedForward 	= false;
+		motorConfig[motor].enableVelocityFeedForward 	= true;
 		motorConfig[motor].linearScaler             	= 30000; // µm / rotation
 	}
 
 	// set default polarity for evaluation board's power stage on init
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_POLARITIES, 0x0);
-	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_SV_CHOP, 0x0);
+	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_SV_CHOP, TMC4671_PWM_SV_MASK);	// enable space vector PWM by default
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_dsADC_MCLK_B, 0x0);
@@ -1120,7 +983,6 @@ void TMC4671_init(void)
 	// set default max torque/flux
 	tmc4671_setTorqueFluxLimit_mA(DEFAULT_MOTOR, motorConfig[DEFAULT_MOTOR].torqueMeasurementFactor, motorConfig[DEFAULT_MOTOR].maximumCurrent);
 
-#ifdef USE_LINEAR_RAMP
 	// init ramp generator
 	for (motor = 0; motor < TMC4671_MOTORS; motor++)
 	{
@@ -1133,5 +995,4 @@ void TMC4671_init(void)
 		rampGenerator[motor].maxVelocity = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
 		rampGenerator[motor].acceleration = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
 	}
-#endif
 }
