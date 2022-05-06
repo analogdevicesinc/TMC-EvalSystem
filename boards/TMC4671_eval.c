@@ -791,6 +791,10 @@ static void periodicJob(uint32_t actualSystick)
 					// use velocity feed forward
 					tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_OFFSET, (motorConfig[motor].enableVelocityFeedForward) ? rampGenerator[motor].rampVelocity : 0);
 				}
+
+				// sync ramp velocity by PIDIN_TARGET_VELOCITY if ramp is disabled
+				if (!rampGenerator[motor].rampEnabled)
+					rampGenerator[motor].rampVelocity = tmc4671_readFieldWithDependency(motor, TMC4671_INTERIM_DATA, TMC4671_INTERIM_ADDR, 2, TMC4671_PIDIN_TARGET_VELOCITY_MASK, TMC4671_PIDIN_TARGET_VELOCITY_SHIFT);
 			}
 			else if (actualMotionMode[motor] == TMC4671_MOTION_MODE_VELOCITY)
 			{
