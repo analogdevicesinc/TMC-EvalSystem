@@ -215,7 +215,8 @@ static void setFrequency(float freq)
 
 	for(; ps < 0b111; ps++)
 	{
-		if(freq > ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo))) {
+		if(freq > ((float)CPU_BUS_CLK_HZ / ((1 << ps) * modulo)))
+		{
 			modulo = (float)CPU_BUS_CLK_HZ / ((1 << ps) * freq);
 			if((modulo < modulo_min_buf) && (ps > 0b000))
 			    modulo = (float)CPU_BUS_CLK_HZ / ((1 << (ps - 1)) * freq);

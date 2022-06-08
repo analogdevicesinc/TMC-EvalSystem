@@ -36,6 +36,7 @@ static bool next_process = false;
 
 // Sampling options
 static uint32_t prescaler   = 1;
+static uint32_t frequency	= RAMDEBUG_FREQUENCY;
 static uint32_t sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
 static uint32_t sampleCountPre = 0;
 
@@ -548,6 +549,11 @@ int debug_getSample(uint32_t index, uint32_t *value)
 	return 1;
 }
 
+void debug_updateFrequency(uint32_t freq)
+{
+	frequency = freq;
+}
+
 int debug_getState(void)
 {
 	return state;
@@ -565,7 +571,7 @@ int debug_getInfo(uint32_t type)
 		break;
 	case 2:
 		// PWM/Sampling Frequency
-		return RAMDEBUG_FREQUENCY;
+		return frequency; // RAMDEBUG_FREQUENCY;
 		break;
 	case 3:
 		return debug_write_index;

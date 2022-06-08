@@ -69,6 +69,7 @@ void debug_setPretriggerSampleCount(uint32_t count);
 uint32_t debug_getPretriggerSampleCount();
 
 int debug_getSample(uint32_t index, uint32_t *value);
+void debug_updateFrequency(uint32_t freq);
 int debug_getState(void);
 int debug_getInfo(uint32_t type);
 

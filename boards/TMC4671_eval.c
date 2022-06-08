@@ -2,6 +2,7 @@
 #include "tmc/ic/TMC4671/TMC4671.h"
 #include "tmc/ramp/LinearRamp.h"
 #include "tmc/RAMDebug.h"
+#include "hal/Timer.h"
 
 #define DEFAULT_MOTOR  0
 #define TMC4671_MOTORS 1
@@ -12,6 +13,8 @@
 static IOPinTypeDef *PIN_DRV_ENN;
 static ConfigurationTypeDef *TMC4671_config;
 static SPIChannelTypeDef *TMC4671_SPIChannel;
+
+static void timer_overflow(void);
 
 typedef struct
 {
@@ -825,11 +828,14 @@ static void periodicJob(uint32_t actualSystick)
 				rampGenerator[motor].lastdXRest = 0;
 			}
 		}
-
-		debug_nextProcess();
-		debug_process();
 		lastSystick = actualSystick;
 	}
+}
+
+static void timer_overflow(void)
+{
+	// RAMDebug
+	debug_nextProcess();
 }
 
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
@@ -999,4 +1005,9 @@ void TMC4671_init(void)
 		rampGenerator[motor].maxVelocity = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
 		rampGenerator[motor].acceleration = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
 	}
+
+	Timer.overflow_callback = timer_overflow;
+	Timer.init();
+	Timer.setFrequency(10000);
+	debug_updateFrequency(10000);
 }
