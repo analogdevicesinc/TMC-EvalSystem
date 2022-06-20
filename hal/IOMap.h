@@ -91,7 +91,7 @@ typedef struct
 	IOPinTypeDef MIXED5;
 	IOPinTypeDef MIXED6;
 
-#if defined(Landungsbruecke) // HWID detection for Landungsbruecke v2.0+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) // HWID detection for Landungsbruecke v2.0+
 	IOPinTypeDef ID_HW_0;
 	IOPinTypeDef ID_HW_1;
 	IOPinTypeDef ID_HW_2;

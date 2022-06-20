@@ -29,7 +29,7 @@ VitalSignsMonitorTypeDef VitalSignsMonitor =
 
 #if defined(Startrampe)
 	#define ADC_VM_RES 4095
-#elif defined(Landungsbruecke)
+#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	#define ADC_VM_RES 65535
 #endif
 

@@ -3,7 +3,7 @@
 
 #include "tmc/helpers/API_Header.h"
 
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 typedef enum {
 	UART0_INTERRUPT_UART,
 	UART0_INTERRUPT_WLAN

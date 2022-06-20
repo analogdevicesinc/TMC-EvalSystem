@@ -120,7 +120,7 @@
 
 #if defined(Startrampe)
 	#define TIMER_INTERRUPT TIM2_IRQHandler
-#elif defined(Landungsbruecke)
+#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	#define TIMER_INTERRUPT FTM1_IRQHandler
 #endif
 
@@ -613,7 +613,7 @@ void StepDir_init(uint32_t precision)
 		NVIC_InitStructure.NVIC_IRQChannelSubPriority         = 1;
 		NVIC_InitStructure.NVIC_IRQChannelCmd                 = ENABLE;
 		NVIC_Init(&NVIC_InitStructure);
-	#elif defined(Landungsbruecke)
+	#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 		// enable clock for FTM1
 		SIM_SCGC6 |= SIM_SCGC6_FTM1_MASK;
 
@@ -641,7 +641,7 @@ void StepDir_deInit()
 {
 	#if defined(Startrampe)
 		TIM_DeInit(TIM2);
-	#elif defined(Landungsbruecke)
+	#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 		// Only disable the module if it has been enabled before
 		if (SIM_SCGC6 & SIM_SCGC6_FTM1_MASK)
 		{

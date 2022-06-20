@@ -8,12 +8,12 @@
 #include "tmc/BoardAssignment.h"
 #include "tmc/RAMDebug.h"
 
-const char *VersionString = MODULE_ID"V308"; // module id and version of the firmware shown in the TMCL-IDE
+const char *VersionString = MODULE_ID "V308"; // module id and version of the firmware shown in the TMCL-IDE
 
 EvalboardsTypeDef Evalboards;
 
 /* Keep as is! This lines are important for the update functionality. */
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	const uint8_t Protection[] __attribute__ ((section(".cfmconfig")))=
 	{
 		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  //Backdoor key
@@ -72,7 +72,7 @@ void shallForceBoot()
 /* Call all standard initialization routines. */
 static void init()
 {
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	// Default value: Driver enable gets set high by the bootloader
 	BLConfig.drvEnableResetValue = 1;
 #endif

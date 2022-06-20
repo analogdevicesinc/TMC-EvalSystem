@@ -222,7 +222,7 @@ RXTXTypeDef interfaces[4];
 uint32_t numberOfInterfaces;
 uint32_t resetRequest = 0;
 
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	// ToDo: Remove the duplicate declaration of the struct here and in main.c
 	struct BootloaderConfig {
 		uint32_t BLMagic;
@@ -548,7 +548,7 @@ void rx(RXTXTypeDef *RXTX)
 
 void tmcl_boot()
 {
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	if(Evalboards.ch1.id == ID_TMC4670 || Evalboards.ch1.id == ID_TMC4671)
 	{
 		// Driver Enable has to be set low by the bootloader for these ICs
@@ -594,7 +594,7 @@ void tmcl_boot()
 	EXTI_DeInit();
 	SysTick->CTRL=0;
 	HAL.reset(false);
-#elif defined(Landungsbruecke)
+#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	BLConfig.BLMagic = 0x12345678;
 	HAL.reset(true);
 #endif

@@ -558,7 +558,7 @@ void TMC2100_init(void)
 #if defined(Startrampe)
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_PinAFConfig(Pins.AIN_REF_PWM->port, Pins.AIN_REF_PWM->bit, GPIO_AF_TIM1);
-#elif defined(Landungsbruecke)
+#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.AIN_REF_PWM);
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #endif

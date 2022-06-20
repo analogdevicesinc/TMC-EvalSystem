@@ -3,6 +3,7 @@
 include version.txt
 #DEVICE			= Startrampe
 #DEVICE			= Landungsbruecke
+#DEVICE			= LandungsbrueckeSmall
 LINK			= BL
 #LINK			= NOBL
 OUTDIR 			= _build_$(DEVICE)
@@ -18,7 +19,6 @@ ID_CH2_OVERRIDE	?= false
 
 ### Source File Selection ###
 # Evalboards
-SRC				+= boards/SelfTest_$(DEVICE).c
 SRC 			+= boards/Board.c
 SRC 			+= boards/TMCDriver.c
 SRC 			+= boards/TMCMotionController.c
@@ -53,38 +53,22 @@ SRC 			+= boards/TMC6200_eval.c
 SRC				+= boards/TMC7300_eval.c
 SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
-ifeq ($(DEVICE),Landungsbruecke)
+ifneq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke,LandungsbrueckeSmall))
 SRC				      += boards/MAX22216_eval.c
 SRC             += boards/TMC2226_eval.c
 SRC             += boards/TMC6140_eval.c
 SRC             += boards/TMC6300_eval.c
 endif
 
-# System and hardware abstraction layer
-SRC 			+= hal/$(DEVICE)/tmc/SysTick.c
-SRC 			+= hal/$(DEVICE)/tmc/IOs.c
-SRC 			+= hal/$(DEVICE)/tmc/IOMap.c
-SRC 			+= hal/$(DEVICE)/tmc/HAL.c
-SRC 			+= hal/$(DEVICE)/tmc/SPI.c
-SRC 			+= hal/$(DEVICE)/tmc/USB.c
-SRC 			+= hal/$(DEVICE)/tmc/ADCs.c
-SRC 			+= hal/$(DEVICE)/tmc/LEDs.c
-SRC 			+= hal/$(DEVICE)/tmc/RS232.c
-SRC 			+= hal/$(DEVICE)/tmc/WLAN.c
-SRC 			+= hal/$(DEVICE)/tmc/Timer.c
-SRC 			+= hal/$(DEVICE)/tmc/UART.c
-SRC 			+= hal/$(DEVICE)/tmc/RXTX.c
-
 # Control
 SRC 			+= main.c
 SRC 			+= tmc/TMCL.c
 SRC 			+= tmc/RAMDebug.c
-SRC 			+= tmc/IdDetection_$(DEVICE).c
 SRC				+= tmc/EEPROM.c
 SRC 			+= tmc/BoardAssignment.c
 SRC 			+= tmc/VitalSignsMonitor.c
 SRC 			+= tmc/StepDir.c
-ifeq ($(DEVICE),Landungsbruecke)
+ifneq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke,LandungsbrueckeSmall))
 SRC             += tmc/BLDC.c
 endif
 
@@ -125,7 +109,7 @@ SRC				+= TMC-API/tmc/ic/TMC7300/TMC7300.c
 SRC				+= TMC-API/tmc/ic/TMC8461/TMC8461.c
 SRC				+= TMC-API/tmc/ic/TMC8462/TMC8462.c
 
-EXTRAINCDIRS 	+= hal/$(DEVICE)
+EXTRAINCDIRS 	+= $(TMC_HAL_SRC)
 
 ### Chip-specific variables and files ###
 # Startrampe
@@ -135,7 +119,8 @@ ifeq ($(DEVICE),Startrampe)
     SUBMDL   			= STM32F205VCT6
     CHIP     			= $(SUBMDL)
     BOARD    			= STARTRAMPE
-    STMLIBDIR 			= hal/$(DEVICE)/st
+    TMC_HAL_SRC         = hal/Startrampe
+    STMLIBDIR 			= $(TMC_HAL_SRC)/st
     STMSPDDIR 			= $(STMLIBDIR)/lib
     STMSPDSRCDIR 		= $(STMSPDDIR)/src
     STMSPDINCDIR 		= $(STMSPDDIR)/inc
@@ -144,6 +129,10 @@ ifeq ($(DEVICE),Startrampe)
     #STMEEEMULSRCDIR 	= $(STMEEEMULDIR)/source
     #STMEEEMULINCDIR 	= $(STMEEEMULDIR)/include
     INCLUDE_DIRS 		= -I$(STMSPDINCDIR)
+
+    SRC                 += boards/SelfTest_Startrampe.c
+
+    SRC                 += tmc/IdDetection_Startrampe.c
 
   	SRC 				+= $(STMLIBDIR)/system_stm32f2xx.c
 
@@ -184,13 +173,58 @@ ifeq ($(DEVICE),Startrampe)
 # Landungsbrücke
 else ifeq ($(DEVICE),Landungsbruecke)
     CDEFS = -DLandungsbruecke
-  	CPU					= K20DN512
     MCU      			= cortex-m4
     SUBMDL   			= MK20DN512
     CHIP     			= $(SUBMDL)
     BOARD    			= LANDUNGSBRUECKE
-    LPCLIBDIR 			= hal/$(DEVICE)/freescale
+    TMC_HAL_SRC         = hal/Landungsbruecke
+    LPCLIBDIR 			= $(TMC_HAL_SRC)/freescale
     INCLUDE_DIRS 		= -I$(LPCLIBDIR)
+
+    SRC                 += boards/SelfTest_Landungsbruecke.c
+
+    SRC                 += tmc/IdDetection_Landungsbruecke.c
+
+    SRC 				+= $(LPCLIBDIR)/Cpu.c
+    SRC 				+= $(LPCLIBDIR)/kinetis_sysinit.c
+    SRC 				+= $(LPCLIBDIR)/nvic-m4.c
+
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/CDC1.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/CS1.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/Rx1.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/Tx1.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_cdc.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_cdc_pstn.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_class.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_dci_kinetis.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_descriptor.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_driver.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_framework.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/USB0.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/USB1.c
+    SRC 				+= $(LPCLIBDIR)/USB_CDC/wdt_kinetis.c
+    ASRC 				+= $(LPCLIBDIR)/startup.S
+    EXTRAINCDIRS  		+= $(LPCLIBDIR)
+    
+    ifeq ($(LINK),BL)
+		LDFLAGS +=-T $(LPCLIBDIR)/MK20DN512-TMCM.ld
+	else
+		LDFLAGS +=-T $(LPCLIBDIR)/MK20DN512.ld
+	endif
+# Landungsbrücke (small)
+else ifeq ($(DEVICE),LandungsbrueckeSmall)
+    CDEFS = -DLandungsbrueckeSmall
+    MCU      			= cortex-m4
+    SUBMDL   			= MK20DX256
+    CHIP     			= $(SUBMDL)
+    BOARD    			= LANDUNGSBRUECKE
+    TMC_HAL_SRC         = hal/Landungsbruecke
+    LPCLIBDIR 			= $(TMC_HAL_SRC)/freescale
+    INCLUDE_DIRS 		= -I$(LPCLIBDIR)
+
+    SRC                 += boards/SelfTest_Landungsbruecke.c
+
+    SRC                 += tmc/IdDetection_Landungsbruecke.c
 
     SRC 				+= $(LPCLIBDIR)/Cpu.c
     SRC 				+= $(LPCLIBDIR)/kinetis_sysinit.c
@@ -214,13 +248,29 @@ else ifeq ($(DEVICE),Landungsbruecke)
     EXTRAINCDIRS  		+= $(LPCLIBDIR)
 
     ifeq ($(LINK),BL)
-		LDFLAGS +=-T $(LPCLIBDIR)/MK20DN512-TMCM.ld
+		LDFLAGS +=-T $(LPCLIBDIR)/MK20DX256-TMCM.ld
 	else
-		LDFLAGS +=-T $(LPCLIBDIR)/MK20DN512.ld
+		LDFLAGS +=-T $(LPCLIBDIR)/MK20DX256.ld
 	endif
 else
     $(error You need to set the DEVICE parameter to either "Landungsbruecke" or "Startrampe". When calling make directly, do this by adding DEVICE=Landungsbruecke or DEVICE=Startrampe to the commandline)
 endif
+
+# System and hardware abstraction layer
+SRC 			+= $(TMC_HAL_SRC)/tmc/SysTick.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/IOs.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/IOMap.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/HAL.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/SPI.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/USB.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/ADCs.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/LEDs.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/RS232.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/WLAN.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/Timer.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/UART.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/RXTX.c
+
 
 CDEFS += -DID_CH1_DEFAULT=$(ID_CH1_DEFAULT) -DID_CH1_OVERRIDE=$(ID_CH1_OVERRIDE)
 CDEFS += -DID_CH2_DEFAULT=$(ID_CH2_DEFAULT) -DID_CH2_OVERRIDE=$(ID_CH2_OVERRIDE)

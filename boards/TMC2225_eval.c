@@ -603,7 +603,7 @@ void TMC2225_init(void)
 #if defined(Startrampe)
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_PinAFConfig(Pins.UC_PWM->port, Pins.UC_PWM->bit, GPIO_AF_TIM1);
-#elif defined(Landungsbruecke)
+#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.UC_PWM);
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #endif

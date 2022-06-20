@@ -2667,6 +2667,14 @@
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
+			<target name="LandungsbrueckeSmall_BL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>cs-make</buildCommand>
+				<buildArguments>-s -j8</buildArguments>
+				<buildTarget>all LINK=BL DEVICE=LandungsbrueckeSmall</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>true</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
 		</buildTargets>
 	</storageModule>
 </cproject>

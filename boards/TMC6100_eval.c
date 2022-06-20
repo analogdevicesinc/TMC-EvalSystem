@@ -223,7 +223,7 @@ void TMC6100_init(void)
 
 #ifdef COMPILE_FOR_TMC4671_TMC6100_BOB
 
-	#if defined(Landungsbruecke)
+	#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 		TMC6100_SPIChannel->periphery       = SPI1_BASE_PTR;
 	#else if defined(Startrampe)
 		TMC6100_SPIChannel->periphery       = SPI3;

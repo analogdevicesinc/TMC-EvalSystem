@@ -10,7 +10,7 @@ typedef enum { // Give bits explicitly, because IDE relies on it.
 	IOS_NOCHANGE = 0b11
 } IO_States;
 
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	// use ST like configuration structures also for Landungsbruecke
 
 	typedef enum
@@ -79,7 +79,7 @@ typedef struct
 		GPIO_TypeDef            *port;
 		__IO uint16_t             *setBitRegister;
 		__IO uint16_t             *resetBitRegister;
-	#elif defined(Landungsbruecke)
+	#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 		PORT_MemMapPtr          portBase;
 		GPIO_MemMapPtr          GPIOBase;
 		volatile uint32_t         *setBitRegister;
