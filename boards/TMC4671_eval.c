@@ -625,6 +625,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
 		}
 		break;
+
+	case 250:
+		// encoder init voltage
+		if(readWrite == READ) {
+			*value = motorConfig[motor].startVoltage;
+		} else if(readWrite == WRITE) {
+			motorConfig[motor].startVoltage = *value;
+		}
+		break;
 	case 251:
 		// torque measurement factor
 		if(readWrite == READ) {
