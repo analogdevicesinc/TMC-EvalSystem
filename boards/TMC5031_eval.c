@@ -35,8 +35,10 @@ static uint8_t reset();
 static void enableDriver(DriverState state);
 
 static SPIChannelTypeDef *TMC5031_SPIChannel;
-static TMC5031TypeDef TMC5031;
 static ConfigurationTypeDef *TMC5031_config;
+
+// Helper macro - Access the chip object in the motion controller boards union
+#define TMC5031 (motionControllerBoards.tmc5031)
 
 typedef struct
 {

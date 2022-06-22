@@ -49,8 +49,10 @@ uint32_t tmc2660_readInt(uint8_t motor, uint8_t address);
 static uint32_t compatibilityMode = 1;
 
 static SPIChannelTypeDef *TMC2660_SPIChannel;
-static TMC2660TypeDef TMC2660;
 static ConfigurationTypeDef *TMC2660_config;
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC2660 (driverBoards.tmc2660)
 
 typedef struct
 {

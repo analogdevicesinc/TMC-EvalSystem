@@ -44,8 +44,10 @@ static uint8_t restore();
 static void checkErrors(uint32_t tick);
 
 static IOPinTypeDef *PIN_DRV_ENN;
-TMC8461TypeDef tmc8461;
 SPIChannelTypeDef *tmc8461_spi_mfc, *tmc8461_spi_esc;
+
+// Helper macro - Access the chip object in the motion controller boards union
+#define TMC8461 (motionControllerBoards.tmc8461)
 
 /*
  * Usage note:
@@ -110,7 +112,7 @@ static void register_write(uint8_t motor, uint8_t address, int32_t value)
 		break;
 	}
 
-	tmc8461_mfc_write_auto(&tmc8461, _address, write_buffer);
+	tmc8461_mfc_write_auto(&TMC8461, _address, write_buffer);
 }
 
 static void register_read(uint8_t motor, uint8_t address, int32_t *value)
@@ -119,7 +121,7 @@ static void register_read(uint8_t motor, uint8_t address, int32_t *value)
 
 	address = TMC8461_MFC(address);
 
-	tmc8461_mfc_read_auto(&tmc8461, address, readBuffer);
+	tmc8461_mfc_read_auto(&TMC8461, address, readBuffer);
 
 	switch (motor)
 	{
@@ -137,44 +139,44 @@ static void register_read(uint8_t motor, uint8_t address, int32_t *value)
 
 static void memory_read(uint8_t motor, uint8_t address, int32_t *value)
 {
-	*value = tmc8461_esc_read_16(&tmc8461, (motor << 8) | address);
+	*value = tmc8461_esc_read_16(&TMC8461, (motor << 8) | address);
 }
 
 static void memory_write(uint8_t motor, uint8_t address, int32_t value)
 {
-	tmc8461_esc_write_8(&tmc8461, (motor << 8) | address, BYTE(value, 0));
+	tmc8461_esc_write_8(&TMC8461, (motor << 8) | address, BYTE(value, 0));
 }
 
 static void pdi_reset(void)
 {
-	tmc8461_esc_write_8(&tmc8461, TMC8461_ESC_RESET_PDI, TMC8461_MAGIC_RESET_0);
-	tmc8461_esc_write_8(&tmc8461, TMC8461_ESC_RESET_PDI, TMC8461_MAGIC_RESET_1);
-	tmc8461_esc_write_8(&tmc8461, TMC8461_ESC_RESET_PDI, TMC8461_MAGIC_RESET_2);
+	tmc8461_esc_write_8(&TMC8461, TMC8461_ESC_RESET_PDI, TMC8461_MAGIC_RESET_0);
+	tmc8461_esc_write_8(&TMC8461, TMC8461_ESC_RESET_PDI, TMC8461_MAGIC_RESET_1);
+	tmc8461_esc_write_8(&TMC8461, TMC8461_ESC_RESET_PDI, TMC8461_MAGIC_RESET_2);
 }
 
 static uint32_t eep_read(int32_t *value)
 {
 	// Check if PDI has EEPROM control offered
-	if (!TMC8461_FIELD_READ(&tmc8461, tmc8461_esc_read_8, TMC8461_ESC_EEP_CFG, TMC8461_ESC_EEP_PDI_MASK, TMC8461_ESC_EEP_PDI_SHIFT))
+	if (!TMC8461_FIELD_READ(&TMC8461, tmc8461_esc_read_8, TMC8461_ESC_EEP_CFG, TMC8461_ESC_EEP_PDI_MASK, TMC8461_ESC_EEP_PDI_SHIFT))
 		return TMC_ERROR_CHIP;
 
 	// PDI takes EEPROM control
-	TMC8461_FIELD_WRITE(&tmc8461, tmc8461_esc_read_8, tmc8461_esc_write_8, TMC8461_ESC_EEP_PDI_ACCESS, TMC8461_ESC_PDI_ACCESS_MASK, TMC8461_ESC_PDI_ACCESS_SHIFT, true);
+	TMC8461_FIELD_WRITE(&TMC8461, tmc8461_esc_read_8, tmc8461_esc_write_8, TMC8461_ESC_EEP_PDI_ACCESS, TMC8461_ESC_PDI_ACCESS_MASK, TMC8461_ESC_PDI_ACCESS_SHIFT, true);
 
 	// Wait until EEPROM is idle
-	while (TMC8461_FIELD_READ(&tmc8461, tmc8461_esc_read_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_BUSY_MASK, TMC8461_ESC_EEP_BUSY_SHIFT));
+	while (TMC8461_FIELD_READ(&TMC8461, tmc8461_esc_read_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_BUSY_MASK, TMC8461_ESC_EEP_BUSY_SHIFT));
 
 	// Write the read address
-	tmc8461_esc_write_32(&tmc8461, TMC8461_ESC_EEP_ADDRESS, *value);
+	tmc8461_esc_write_32(&TMC8461, TMC8461_ESC_EEP_ADDRESS, *value);
 
 	// Send the read command
-	TMC8461_FIELD_WRITE(&tmc8461, tmc8461_esc_read_16, tmc8461_esc_write_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_CMD_MASK, TMC8461_ESC_EEP_CMD_SHIFT, TMC8461_ESC_EEP_CMD_READ);
+	TMC8461_FIELD_WRITE(&TMC8461, tmc8461_esc_read_16, tmc8461_esc_write_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_CMD_MASK, TMC8461_ESC_EEP_CMD_SHIFT, TMC8461_ESC_EEP_CMD_READ);
 
 	// Wait until EEPROM is idle
-	while (TMC8461_FIELD_READ(&tmc8461, tmc8461_esc_read_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_BUSY_MASK, TMC8461_ESC_EEP_BUSY_SHIFT));
+	while (TMC8461_FIELD_READ(&TMC8461, tmc8461_esc_read_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_BUSY_MASK, TMC8461_ESC_EEP_BUSY_SHIFT));
 
 	// Read the data
-	*value = tmc8461_esc_read_32(&tmc8461, TMC8461_ESC_EEP_DATA);
+	*value = tmc8461_esc_read_32(&TMC8461, TMC8461_ESC_EEP_DATA);
 
 	return TMC_ERROR_NONE;
 }
@@ -182,24 +184,24 @@ static uint32_t eep_read(int32_t *value)
 static uint32_t eep_write(int32_t value)
 {
 	// Check if PDI has EEPROM control offered
-	if (!TMC8461_FIELD_READ(&tmc8461, tmc8461_esc_read_8, TMC8461_ESC_EEP_CFG, TMC8461_ESC_EEP_PDI_MASK, TMC8461_ESC_EEP_PDI_SHIFT))
+	if (!TMC8461_FIELD_READ(&TMC8461, tmc8461_esc_read_8, TMC8461_ESC_EEP_CFG, TMC8461_ESC_EEP_PDI_MASK, TMC8461_ESC_EEP_PDI_SHIFT))
 		return TMC_ERROR_CHIP;
 
 	// PDI takes EEPROM control
-	TMC8461_FIELD_WRITE(&tmc8461, tmc8461_esc_read_8, tmc8461_esc_write_8, TMC8461_ESC_EEP_PDI_ACCESS, TMC8461_ESC_PDI_ACCESS_MASK, TMC8461_ESC_PDI_ACCESS_SHIFT, true);
+	TMC8461_FIELD_WRITE(&TMC8461, tmc8461_esc_read_8, tmc8461_esc_write_8, TMC8461_ESC_EEP_PDI_ACCESS, TMC8461_ESC_PDI_ACCESS_MASK, TMC8461_ESC_PDI_ACCESS_SHIFT, true);
 
 	// Wait until EEPROM is idle
-	while (TMC8461_FIELD_READ(&tmc8461, tmc8461_esc_read_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_BUSY_MASK, TMC8461_ESC_EEP_BUSY_SHIFT));
+	while (TMC8461_FIELD_READ(&TMC8461, tmc8461_esc_read_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_BUSY_MASK, TMC8461_ESC_EEP_BUSY_SHIFT));
 
 	// Write the address and data
-	tmc8461_esc_write_32(&tmc8461, TMC8461_ESC_EEP_ADDRESS, SHORT(value, 1));
-	tmc8461_esc_write_32(&tmc8461, TMC8461_ESC_EEP_DATA, SHORT(value, 0));
+	tmc8461_esc_write_32(&TMC8461, TMC8461_ESC_EEP_ADDRESS, SHORT(value, 1));
+	tmc8461_esc_write_32(&TMC8461, TMC8461_ESC_EEP_DATA, SHORT(value, 0));
 
 	// Send the write command
-	TMC8461_FIELD_WRITE(&tmc8461, tmc8461_esc_read_16, tmc8461_esc_write_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_CMD_MASK, TMC8461_ESC_EEP_CMD_SHIFT, TMC8461_ESC_EEP_CMD_WRITE);
+	TMC8461_FIELD_WRITE(&TMC8461, tmc8461_esc_read_16, tmc8461_esc_write_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_CMD_MASK, TMC8461_ESC_EEP_CMD_SHIFT, TMC8461_ESC_EEP_CMD_WRITE);
 
 	// Wait until EEPROM is idle
-	while (TMC8461_FIELD_READ(&tmc8461, tmc8461_esc_read_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_BUSY_MASK, TMC8461_ESC_EEP_BUSY_SHIFT));
+	while (TMC8461_FIELD_READ(&TMC8461, tmc8461_esc_read_16, TMC8461_ESC_EEP_STATUS, TMC8461_ESC_EEP_BUSY_MASK, TMC8461_ESC_EEP_BUSY_SHIFT));
 
 	return TMC_ERROR_NONE;
 }
@@ -314,5 +316,5 @@ void TMC8461_init_ch2(void)
 	Evalboards.ch2.VMMin                = 0;
 	Evalboards.ch2.VMMax                = ~0;
 
-	tmc8461_initConfig(&tmc8461, Evalboards.ch1.config, Evalboards.ch2.config);
+	tmc8461_initConfig(&TMC8461, Evalboards.ch1.config, Evalboards.ch2.config);
 }

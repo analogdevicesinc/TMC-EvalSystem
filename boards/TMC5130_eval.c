@@ -31,9 +31,11 @@ static uint8_t reset();
 static void enableDriver(DriverState state);
 
 static SPIChannelTypeDef *TMC5130_SPIChannel;
-static TMC5130TypeDef TMC5130;
 static uint32_t vmax_position;
 static uint16_t vref; // mV
+
+// Helper macro - Access the chip object in the motion controller boards union
+#define TMC5130 (motionControllerBoards.tmc5130)
 
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here

@@ -49,7 +49,9 @@ static void enableDriver(DriverState state);
 
 static UART_Config *TMC5160_UARTChannel;
 static SPIChannelTypeDef *TMC5160_SPIChannel;
-static TMC5160TypeDef TMC5160;
+
+// Helper macro - Access the chip object in the motion controller boards union
+#define TMC5160 (motionControllerBoards.tmc5160)
 
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here

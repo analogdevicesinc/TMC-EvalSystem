@@ -57,7 +57,9 @@ typedef struct
 static PinsTypeDef Pins;
 
 SPIChannelTypeDef *TMC2130_SPIChannel;
-TMC2130TypeDef TMC2130;
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC2130 (driverBoards.tmc2130)
 
 static uint16_t vref; // mV
 

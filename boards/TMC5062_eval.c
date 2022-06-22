@@ -38,7 +38,6 @@ static void enableDriver(DriverState state);
 static void configCallback(TMC5062TypeDef *tmc5062, ConfigState state);
 
 static SPIChannelTypeDef *TMC5062_SPIChannel;
-static TMC5062TypeDef TMC5062;
 static ConfigurationTypeDef *TMC5062_config;
 
 // Position and velocity mode both use VMAX. In order to preserve VMAX of
@@ -49,6 +48,9 @@ static ConfigurationTypeDef *TMC5062_config;
 // using 0 as special value works). No stored value results in VMAX of
 // velocity mode being kept for position mode.
 static uint32_t vMaxPosMode[MOTORS] = { 0 };
+
+// Helper macro - Access the chip object in the motion controller boards union
+#define TMC5062 (motionControllerBoards.tmc5062)
 
 typedef struct
 {

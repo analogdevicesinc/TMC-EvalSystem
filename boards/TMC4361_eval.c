@@ -40,9 +40,11 @@ typedef struct
 static PinsTypeDef Pins;
 
 static SPIChannelTypeDef *TMC4361_SPIChannel;
-static TMC4361TypeDef TMC4361;
 
 static uint32_t vmax_position = 0;
+
+// Helper macro - Access the chip object in the motion controller boards union
+#define TMC4361 (motionControllerBoards.tmc4361)
 
 // Translate motor number to TMC4361TypeDef
 // When using multiple ICs you can map them here

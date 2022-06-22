@@ -41,13 +41,15 @@ static uint16_t getVREF();
 static void setVREF(uint16_t vref);
 
 static UART_Config *TMC2226_UARTChannel;
-static TMC2226TypeDef TMC2226;
 static ConfigurationTypeDef *TMC2226_config;
 
 static int32_t thigh;
 static uint16_t vref; // mV
 
 extern IOPinTypeDef DummyPin;
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC2226 (driverBoards.tmc2226)
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2226_CRC(data, length) tmc_CRC8(data, length, 1)

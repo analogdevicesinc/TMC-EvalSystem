@@ -33,8 +33,10 @@ static void configCallback(TMC5072TypeDef *tmc5072, ConfigState state);
 static void enableDriver(DriverState state);
 
 static SPIChannelTypeDef *TMC5072_SPIChannel;
-static TMC5072TypeDef TMC5072;
 static uint32_t vmax_position[TMC5072_MOTORS];
+
+// Helper macro - Access the chip object in the motion controller boards union
+#define TMC5072 (motionControllerBoards.tmc5072)
 
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here

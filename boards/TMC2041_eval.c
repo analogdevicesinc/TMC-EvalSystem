@@ -34,8 +34,10 @@ static uint8_t reset();
 static void enableDriver(DriverState state);
 
 static SPIChannelTypeDef *TMC2041_SPIChannel;
-static TMC2041TypeDef TMC2041;
 static ConfigurationTypeDef *TMC2041_config;
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC2041 (driverBoards.tmc2041)
 
 typedef struct
 {

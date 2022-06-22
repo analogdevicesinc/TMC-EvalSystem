@@ -34,7 +34,9 @@ static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC7300_UARTChannel;
-static TMC7300TypeDef TMC7300;
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC7300 (driverBoards.tmc7300)
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC7300_CRC(data, length) tmc_CRC8(data, length, 1)

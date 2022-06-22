@@ -56,7 +56,9 @@ typedef struct
 static PinsTypeDef Pins;
 
 SPIChannelTypeDef *TMC2160_SPIChannel;
-TMC2160TypeDef TMC2160;
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC2160 (driverBoards.tmc2160)
 
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here

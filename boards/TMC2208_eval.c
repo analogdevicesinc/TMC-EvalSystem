@@ -37,8 +37,10 @@ static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC2208_UARTChannel;
-static TMC2208TypeDef TMC2208;
 static ConfigurationTypeDef *TMC2208_config;
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC2208 (driverBoards.tmc2208)
 
 static uint16_t vref; // mV
 

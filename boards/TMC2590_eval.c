@@ -40,8 +40,10 @@ static void enableDriver(DriverState state);
 static uint32_t compatibilityMode = 1;
 
 static SPIChannelTypeDef *TMC2590_SPIChannel;
-static TMC2590TypeDef TMC2590;
 static ConfigurationTypeDef *TMC2590_config;
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC2590 (driverBoards.tmc2590)
 
 // Translate motor number to TMC2590TypeDef
 // When using multiple ICs you can map them here

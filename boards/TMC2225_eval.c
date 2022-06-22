@@ -37,10 +37,12 @@ static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC2225_UARTChannel;
-static TMC2225TypeDef TMC2225;
 static ConfigurationTypeDef *TMC2225_config;
 
 static uint16_t vref; // mV
+
+// Helper macro - Access the chip object in the driver boards union
+#define TMC2225 (driverBoards.tmc2225)
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2225_CRC(data, length) tmc_CRC8(data, length, 1)
