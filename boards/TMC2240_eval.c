@@ -28,19 +28,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type,
 		int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor,
-		int32_t *value);
-static uint32_t getMin(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value);
 static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
 
 static int32_t tmc2240_UARTreadInt(UART_Config *channel, uint8_t address);
 static void tmc2240_UARTwriteInt(UART_Config *channel, uint8_t address, int32_t value);
 
-
-//static void write_uart(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4);
-//static int32_t read_uart(uint8_t motor, uint8_t address);
 void	tmc2240_writeInt(TMC2240TypeDef *tmc2240, uint8_t address, int32_t value);
 int32_t tmc2240_readInt(TMC2240TypeDef *tmc2240, uint8_t address);
 static void checkErrors(uint32_t tick);
@@ -53,14 +46,12 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void deInit(void);
 static uint8_t reset();
 static uint8_t restore();
-static void configCallback(TMC2240TypeDef *tmc2240, ConfigState state);
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC2240_UARTChannel;
 static SPIChannelTypeDef *TMC2240_SPIChannel;
 static TMC2240TypeDef TMC2240;
 #define TMC2240_TIMEOUT 50 // UART Timeout in ms
-//static int32_t measured_velocity = 0;
 
 typedef struct {
 	IOPinTypeDef *STEP;
@@ -68,8 +59,6 @@ typedef struct {
 	IOPinTypeDef *DRV_ENN_CFG6;
 	IOPinTypeDef *DIAG0;
 	IOPinTypeDef *DIAG1;
-	//IOPinTypeDef *AIN_REF_SW;
-	//IOPinTypeDef *AIN_REF_PWM;
 	IOPinTypeDef  *UART_MODE;
 	IOPinTypeDef  *nSLEEP;
 	IOPinTypeDef  *IREF_R2;
@@ -934,42 +923,6 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value) {
 	return handleParameter(READ, motor, type, value);
 }
 
-static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor,
-		int32_t *value) {
-	UNUSED(motor);
-	uint32_t errors = TMC_ERROR_NONE;
-	switch (type) {
-	case 2:
-	case 3:
-	case 4:
-	case 24:
-		if (limit == LIMIT_MIN) {
-			*value = 0; // TODO: Determine limits here
-		} else if (limit == LIMIT_MAX) {
-			*value = StepDir_getFrequency(motor);
-		}
-		break;
-	case 5:
-		if (limit == LIMIT_MIN) {
-			*value = 0; // TODO: Determine limits here
-		} else if (limit == LIMIT_MAX) {
-			*value = StepDir_getMaxAcceleration(motor);
-		}
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
-	}
-	return errors;
-}
-
-static uint32_t getMin(uint8_t type, uint8_t motor, int32_t *value) {
-	return getLimit(LIMIT_MIN, type, motor, value);
-}
-
-static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value) {
-	return getLimit(LIMIT_MAX, type, motor, value);
-}
 
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value) {
 	tmc2240_writeInt(motorToIC(motor), address, value);
@@ -1008,7 +961,6 @@ static void periodicJob(uint32_t tick)
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32_t buffer;
 	uint32_t errors = 0;
 
 	UNUSED(motor);
@@ -1039,7 +991,6 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value) {
 
 	switch (motor) {
 	case 0:
-		//*value = StepDir.ch1->actualVelocity;
 		*value = StepDir_getActualVelocity(0);
 		break;
 	default:
@@ -1062,7 +1013,6 @@ static void deInit(void) {
 	HAL.IOs->config->reset(Pins.UART_MODE);
 
 	StepDir_deInit();
-	//Timer.deInit();
 }
 
 static uint8_t reset() {
@@ -1087,14 +1037,6 @@ static uint8_t restore() {
 	StepDir_setAcceleration(0, 25000);
 }
 
-static void configCallback(TMC2240TypeDef *tmc2240, ConfigState completedState) {
-	if (completedState == CONFIG_RESET) {
-		// Configuration reset completed
-		// Change hardware preset registers here
-		tmc2240_writeInt(tmc2240, TMC2240_PWMCONF, 0x000504C8);
-
-	}
-}
 
 static void enableDriver(DriverState state) {
 	if (state == DRIVER_USE_GLOBAL_ENABLE)
@@ -1108,7 +1050,6 @@ static void enableDriver(DriverState state) {
 }
 static void init_comm(TMC_Board_Comm_Mode mode)
 {
-	static TMC_Board_Comm_Mode old = TMC_BOARD_COMM_SPI;
 	switch(mode) {
 	case TMC_BOARD_COMM_UART:
 		HAL.IOs->config->reset(Pins.SCK);
@@ -1135,9 +1076,9 @@ static void init_comm(TMC_Board_Comm_Mode mode)
 		HAL.IOs->config->reset(Pins.CS);
 		SPI.init();
 		HAL.IOs->config->setLow(Pins.UART_MODE);
-		TMC2240_UARTChannel->rxtx.deInit();
-		TMC2240_SPIChannel = &HAL.SPI->ch2;
-		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
+		//TMC2240_UARTChannel->rxtx.deInit();
+		TMC2240_SPIChannel = &HAL.SPI->ch1;
+		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
 		break;
 	case TMC_BOARD_COMM_WLAN: // unused
 	default:
@@ -1148,8 +1089,8 @@ static void init_comm(TMC_Board_Comm_Mode mode)
 		SPI.init();
 		HAL.IOs->config->setLow(Pins.UART_MODE);
 		TMC2240_UARTChannel->rxtx.deInit();
-		TMC2240_SPIChannel = &HAL.SPI->ch2;
-		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
+		TMC2240_SPIChannel = &HAL.SPI->ch1;
+		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
 		commMode = TMC_BOARD_COMM_SPI;
 		break;
 	}
@@ -1166,13 +1107,13 @@ void TMC2240_init(void) {
 	Pins.DIAG0 	 	  = &HAL.IOs->pins->DIO16;
 	Pins.DIAG1        = &HAL.IOs->pins->DIO15;
 	Pins.nSLEEP       = &HAL.IOs->pins->DIO8;
-	Pins.IREF_R2      = &HAL.IOs->pins->DIO1;
-	Pins.IREF_R3      = &HAL.IOs->pins->DIO2;
+	Pins.IREF_R2      = &HAL.IOs->pins->DIO13;
+	Pins.IREF_R3      = &HAL.IOs->pins->DIO14;
 	Pins.UART_MODE    = &HAL.IOs->pins->DIO9;
-	Pins.SCK          = &HAL.IOs->pins->SPI2_SCK; //
-	Pins.SDI          = &HAL.IOs->pins->SPI2_SDI; //
-	Pins.SDO          = &HAL.IOs->pins->SPI2_SDO; //
-	Pins.CS           = &HAL.IOs->pins->SPI2_CSN0; //
+	Pins.SCK          = &HAL.IOs->pins->SPI1_SCK; //Pin31
+	Pins.SDI          = &HAL.IOs->pins->SPI1_SDI; //Pin32
+	Pins.SDO          = &HAL.IOs->pins->SPI1_SDO; //Pin33
+	Pins.CS           = &HAL.IOs->pins->SPI1_CSN; //Pin33
 
 	HAL.IOs->config->toInput(Pins.DIAG0);
 	HAL.IOs->config->toInput(Pins.DIAG1);
