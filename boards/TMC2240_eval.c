@@ -1076,9 +1076,9 @@ static void init_comm(TMC_Board_Comm_Mode mode)
 		HAL.IOs->config->reset(Pins.CS);
 		SPI.init();
 		HAL.IOs->config->setLow(Pins.UART_MODE);
-		//TMC2240_UARTChannel->rxtx.deInit();
-		TMC2240_SPIChannel = &HAL.SPI->ch1;
-		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+		TMC2240_UARTChannel->rxtx.deInit();
+		TMC2240_SPIChannel = &HAL.SPI->ch2;
+		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
 		break;
 	case TMC_BOARD_COMM_WLAN: // unused
 	default:
@@ -1089,8 +1089,8 @@ static void init_comm(TMC_Board_Comm_Mode mode)
 		SPI.init();
 		HAL.IOs->config->setLow(Pins.UART_MODE);
 		TMC2240_UARTChannel->rxtx.deInit();
-		TMC2240_SPIChannel = &HAL.SPI->ch1;
-		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+		TMC2240_SPIChannel = &HAL.SPI->ch2;
+		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
 		commMode = TMC_BOARD_COMM_SPI;
 		break;
 	}
@@ -1107,13 +1107,13 @@ void TMC2240_init(void) {
 	Pins.DIAG0 	 	  = &HAL.IOs->pins->DIO16;
 	Pins.DIAG1        = &HAL.IOs->pins->DIO15;
 	Pins.nSLEEP       = &HAL.IOs->pins->DIO8;
-	Pins.IREF_R2      = &HAL.IOs->pins->DIO13;
-	Pins.IREF_R3      = &HAL.IOs->pins->DIO14;
+	Pins.IREF_R2      = &HAL.IOs->pins->DIO1;
+	Pins.IREF_R3      = &HAL.IOs->pins->DIO2;
 	Pins.UART_MODE    = &HAL.IOs->pins->DIO9;
-	Pins.SCK          = &HAL.IOs->pins->SPI1_SCK; //Pin31
-	Pins.SDI          = &HAL.IOs->pins->SPI1_SDI; //Pin32
-	Pins.SDO          = &HAL.IOs->pins->SPI1_SDO; //Pin33
-	Pins.CS           = &HAL.IOs->pins->SPI1_CSN; //Pin33
+	Pins.SCK          = &HAL.IOs->pins->SPI2_SCK; //
+	Pins.SDI          = &HAL.IOs->pins->SPI2_SDI; //
+	Pins.SDO          = &HAL.IOs->pins->SPI2_SDO; //
+	Pins.CS           = &HAL.IOs->pins->SPI2_CSN0; //
 
 	HAL.IOs->config->toInput(Pins.DIAG0);
 	HAL.IOs->config->toInput(Pins.DIAG1);
