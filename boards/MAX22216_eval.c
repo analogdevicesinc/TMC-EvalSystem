@@ -58,8 +58,11 @@ static OTP_Status otp_status = OTP_STATUS_IDLE;
 
 typedef struct
 {
-	IOPinTypeDef  *CNTL[4];
-	IOPinTypeDef  *CRC_EN;
+	IOPinTypeDef *CNTL[4];
+	IOPinTypeDef *CRC_EN;
+	IOPinTypeDef *FAULT_N;
+	IOPinTypeDef *STAT0;
+	IOPinTypeDef *STAT1;
 } PinsTypeDef;
 
 typedef enum
@@ -386,6 +389,9 @@ void MAX22216_init(void)
 	Pins.CNTL[2] = &HAL.IOs->pins->DIO6;
 	Pins.CNTL[3] = &HAL.IOs->pins->DIO7;
 	Pins.CRC_EN = &HAL.IOs->pins->DIO4;
+	Pins.FAULT_N = &HAL.IOs->pins->DIO3;
+	Pins.STAT0 = &HAL.IOs->pins->DIO1;
+	Pins.STAT1 = &HAL.IOs->pins->DIO2;
 
 	MAX22216_SPIChannel = &HAL.SPI->ch2;
 	MAX22216_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
@@ -396,6 +402,9 @@ void MAX22216_init(void)
 	HAL.IOs->config->toOutput(Pins.CNTL[1]);
 	HAL.IOs->config->toOutput(Pins.CNTL[2]);
 	HAL.IOs->config->toOutput(Pins.CNTL[3]);
+	HAL.IOs->config->toInput(Pins.FAULT_N);
+	HAL.IOs->config->toInput(Pins.STAT0);
+	HAL.IOs->config->toInput(Pins.STAT1);
 
 	HAL.IOs->config->setLow(Pins.CNTL[0]);
 	HAL.IOs->config->setLow(Pins.CNTL[1]);
