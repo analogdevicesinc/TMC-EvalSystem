@@ -50,6 +50,8 @@ typedef enum {
 
 void debug_init();
 void debug_process();
+bool debug_setChannel(uint8_t type, uint32_t channel_value);
+bool debug_setTriggerChannel(uint8_t type, uint32_t channel_value);
 bool debug_setType(uint8_t type);
 bool debug_setEvalChannel(uint8_t eval_channel);
 bool debug_setAddress(uint32_t address);

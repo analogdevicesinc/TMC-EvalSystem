@@ -1016,14 +1016,14 @@ static void handleRamDebug(void)
 	case 3:
 		debug_setPrescaler(ActualCommand.Value.Int32);
 		break;
-//	case 4:
-//		if (!debug_setChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
-//			ActualReply.Status = REPLY_MAX_EXCEEDED;
-//		break;
-//	case 5:
-//		if (!debug_setTriggerChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
-//			ActualReply.Status = REPLY_MAX_EXCEEDED;
-//		break;
+	case 4:
+		if (!debug_setChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
+	case 5:
+		if (!debug_setTriggerChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
+			ActualReply.Status = REPLY_MAX_EXCEEDED;
+		break;
 	case 6:
 		debug_setTriggerMaskShift(ActualCommand.Value.Int32, ActualCommand.Motor);
 		break;

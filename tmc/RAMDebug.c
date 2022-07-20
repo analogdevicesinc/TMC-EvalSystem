@@ -203,8 +203,8 @@ static inline uint32_t readChannel(Channel channel)
 	{
 	case CAPTURE_PARAMETER:
 	{
-		uint8_t motor   = channel.address >> 24;
-		uint8_t type    = channel.address >> 0;
+		uint8_t motor   = (channel.address >> 24) & 0xFF;
+		uint8_t type    = (channel.address >> 0) & 0xFF;
 
 		((channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1))->GAP(type, motor, (int32_t *)&sample);
 
@@ -314,6 +314,24 @@ void debug_init()
 	trigger.shift            = 0;
 
 	global_enable = true;
+}
+
+bool debug_setChannel(uint8_t type, uint32_t channel_value)
+{
+	return (
+		debug_setEvalChannel((channel_value >> 16) & 0xFF) &&
+		debug_setAddress(channel_value) &&
+		debug_setType(type)
+	);
+}
+
+bool debug_setTriggerChannel(uint8_t type, uint32_t channel_value)
+{
+	return (
+		debug_setTriggerType(type) &&
+		debug_setTriggerEvalChannel((channel_value >> 16) & 0xFF) &&
+		debug_setTriggerAddress(channel_value)
+	);
 }
 
 bool debug_setType(uint8_t type)
