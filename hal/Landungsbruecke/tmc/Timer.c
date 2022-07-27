@@ -134,16 +134,16 @@ static void setDuty(timer_channel channel, float duty)
 	switch(channel) {
 	case TIMER_CHANNEL_2:
 		duty_buf[1] = duty;
-		FTM0_C1V = duty * modulo_buf;
+		FTM0_C1V = (uint16_t) (duty * modulo_buf);
 		break;
 	case TIMER_CHANNEL_3:
 		duty_buf[2] = duty;
-		FTM0_C5V = duty * modulo_buf;
+		FTM0_C5V = (uint16_t) (duty * modulo_buf);
 		break;
 	case TIMER_CHANNEL_1:
 	default:
 		duty_buf[0] = duty;
-		FTM0_C7V = duty * modulo_buf;
+		FTM0_C7V = (uint16_t) (duty * modulo_buf);
 		break;
 	}
 	FTM0_PWMLOAD = FTM_PWMLOAD_LDOK_MASK;
