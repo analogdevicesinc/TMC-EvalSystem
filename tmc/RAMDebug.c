@@ -319,7 +319,7 @@ void debug_init()
 bool debug_setChannel(uint8_t type, uint32_t channel_value)
 {
 	return (
-		debug_setEvalChannel((channel_value >> 16) & 0xFF) &&
+		debug_setEvalChannel((channel_value >> 16) & 0x01) &&
 		debug_setAddress(channel_value) &&
 		debug_setType(type)
 	);
@@ -329,7 +329,7 @@ bool debug_setTriggerChannel(uint8_t type, uint32_t channel_value)
 {
 	return (
 		debug_setTriggerType(type) &&
-		debug_setTriggerEvalChannel((channel_value >> 16) & 0xFF) &&
+		debug_setTriggerEvalChannel((channel_value >> 16) & 0x01) &&
 		debug_setTriggerAddress(channel_value)
 	);
 }
