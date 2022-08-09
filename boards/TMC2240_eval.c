@@ -1,6 +1,7 @@
 #include "tmc/StepDir.h"
 #include "Board.h"
 #include "tmc/ic/TMC2240/TMC2240.h"
+//#define BoardVersion2240EvalDEV  //Version 1 Trinamic-Logo, Version 2 ADI-Logo
 
 #define VM_MIN         50   // VM[V/10] min
 #define VM_MAX         660  // VM[V/10] max
@@ -1050,6 +1051,7 @@ static void enableDriver(DriverState state) {
 }
 static void init_comm(TMC_Board_Comm_Mode mode)
 {
+	TMC2240_UARTChannel = HAL.UART;
 	switch(mode) {
 	case TMC_BOARD_COMM_UART:
 		HAL.IOs->config->reset(Pins.SCK);
@@ -1065,7 +1067,6 @@ static void init_comm(TMC_Board_Comm_Mode mode)
 		HAL.IOs->config->setLow(Pins.SDO);
 		HAL.IOs->config->setLow(Pins.CS);
 		HAL.IOs->config->setHigh(Pins.UART_MODE);
-		TMC2240_UARTChannel = HAL.UART;
 		TMC2240_UARTChannel->pinout = UART_PINS_2;
 		TMC2240_UARTChannel->rxtx.init();
 		break;
@@ -1077,8 +1078,13 @@ static void init_comm(TMC_Board_Comm_Mode mode)
 		SPI.init();
 		HAL.IOs->config->setLow(Pins.UART_MODE);
 		TMC2240_UARTChannel->rxtx.deInit();
-		TMC2240_SPIChannel = &HAL.SPI->ch2;
-		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
+		#ifndef BoardVersion2240EvalDEV
+			TMC2240_SPIChannel = &HAL.SPI->ch2;
+			TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
+		#else
+			TMC2240_SPIChannel = &HAL.SPI->ch1;
+			TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+		#endif
 		break;
 	case TMC_BOARD_COMM_WLAN: // unused
 	default:
@@ -1090,8 +1096,14 @@ static void init_comm(TMC_Board_Comm_Mode mode)
 		HAL.IOs->config->setLow(Pins.UART_MODE);
 		TMC2240_UARTChannel->rxtx.deInit();
 		TMC2240_SPIChannel = &HAL.SPI->ch2;
-		TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
-		commMode = TMC_BOARD_COMM_SPI;
+		#ifndef BoardVersion2240EvalDEV
+			TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
+			commMode = TMC_BOARD_COMM_SPI;
+
+		#else
+			TMC2240_SPIChannel = &HAL.SPI->ch1;
+			TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+		#endif
 		break;
 	}
 }
@@ -1100,21 +1112,39 @@ static void init_comm(TMC_Board_Comm_Mode mode)
 void TMC2240_init(void) {
 	tmc_fillCRC8Table(0x07, true, 1);
 
-	// Initialize the hardware pins
-	Pins.DRV_ENN_CFG6 = &HAL.IOs->pins->DIO0;
-	Pins.STEP         = &HAL.IOs->pins->DIO6;
-	Pins.DIR 	      = &HAL.IOs->pins->DIO7;
-	Pins.DIAG0 	 	  = &HAL.IOs->pins->DIO16;
-	Pins.DIAG1        = &HAL.IOs->pins->DIO15;
-	Pins.nSLEEP       = &HAL.IOs->pins->DIO8;
-	Pins.IREF_R2      = &HAL.IOs->pins->DIO1;
-	Pins.IREF_R3      = &HAL.IOs->pins->DIO2;
-	Pins.UART_MODE    = &HAL.IOs->pins->DIO9;
-	Pins.SCK          = &HAL.IOs->pins->SPI2_SCK; //
-	Pins.SDI          = &HAL.IOs->pins->SPI2_SDI; //
-	Pins.SDO          = &HAL.IOs->pins->SPI2_SDO; //
-	Pins.CS           = &HAL.IOs->pins->SPI2_CSN0; //
+#ifndef BoardVersion2240EvalDEV
 
+	// Initialize the hardware pins
+		Pins.DRV_ENN_CFG6 = &HAL.IOs->pins->DIO0;
+		Pins.STEP         = &HAL.IOs->pins->DIO6;
+		Pins.DIR 	      = &HAL.IOs->pins->DIO7;
+		Pins.DIAG0 	 	  = &HAL.IOs->pins->DIO16;
+		Pins.DIAG1        = &HAL.IOs->pins->DIO15;
+		Pins.nSLEEP       = &HAL.IOs->pins->DIO8;
+		Pins.IREF_R2      = &HAL.IOs->pins->DIO1;
+		Pins.IREF_R3      = &HAL.IOs->pins->DIO2;
+		Pins.UART_MODE    = &HAL.IOs->pins->DIO9;
+		Pins.SCK          = &HAL.IOs->pins->SPI2_SCK; //
+		Pins.SDI          = &HAL.IOs->pins->SPI2_SDI; //
+		Pins.SDO          = &HAL.IOs->pins->SPI2_SDO; //
+		Pins.CS           = &HAL.IOs->pins->SPI2_CSN0; //
+
+#else
+		Pins.DRV_ENN_CFG6 = &HAL.IOs->pins->DIO0;
+		Pins.STEP         = &HAL.IOs->pins->DIO6;
+		Pins.DIR 	      = &HAL.IOs->pins->DIO7;
+		Pins.DIAG0 	 	  = &HAL.IOs->pins->DIO16;
+		Pins.DIAG1        = &HAL.IOs->pins->DIO15;
+		Pins.nSLEEP       = &HAL.IOs->pins->DIO8;
+		Pins.IREF_R2      = &HAL.IOs->pins->DIO13;
+		Pins.IREF_R3      = &HAL.IOs->pins->DIO14;
+		Pins.UART_MODE    = &HAL.IOs->pins->DIO9;
+		Pins.SCK          = &HAL.IOs->pins->SPI1_SCK; //Pin31
+		Pins.SDI          = &HAL.IOs->pins->SPI1_SDI; //Pin32
+		Pins.SDO          = &HAL.IOs->pins->SPI1_SDO; //Pin33
+		Pins.CS           = &HAL.IOs->pins->SPI1_CSN; //Pin33
+
+#endif
 	HAL.IOs->config->toInput(Pins.DIAG0);
 	HAL.IOs->config->toInput(Pins.DIAG1);
 
