@@ -165,9 +165,9 @@ ifeq ($(DEVICE),Startrampe)
    	EXTRAINCDIRS  		+= $(STMSPDINCDIR)
 
    	ifeq ($(LINK),BL)
-		LDFLAGS +=-T $(STMLIBDIR)/stm32f2xx-tmcm.ld
+		LD_SCRIPT = $(STMLIBDIR)/stm32f2xx-tmcm.ld
 	else
-		LDFLAGS +=-T $(STMLIBDIR)/stm32f2xx.ld
+		LD_SCRIPT = $(STMLIBDIR)/stm32f2xx.ld
 	endif
 
 # Landungsbrücke
@@ -207,9 +207,9 @@ else ifeq ($(DEVICE),Landungsbruecke)
     EXTRAINCDIRS  		+= $(LPCLIBDIR)
     
     ifeq ($(LINK),BL)
-		LDFLAGS +=-T $(LPCLIBDIR)/MK20DN512-TMCM.ld
+		LD_SCRIPT = $(LPCLIBDIR)/MK20DN512-TMCM.ld
 	else
-		LDFLAGS +=-T $(LPCLIBDIR)/MK20DN512.ld
+		LD_SCRIPT = $(LPCLIBDIR)/MK20DN512.ld
 	endif
 # Landungsbrücke (small)
 else ifeq ($(DEVICE),LandungsbrueckeSmall)
@@ -248,9 +248,9 @@ else ifeq ($(DEVICE),LandungsbrueckeSmall)
     EXTRAINCDIRS  		+= $(LPCLIBDIR)
 
     ifeq ($(LINK),BL)
-		LDFLAGS +=-T $(LPCLIBDIR)/MK20DX256-TMCM.ld
+		LD_SCRIPT = $(LPCLIBDIR)/MK20DX256-TMCM.ld
 	else
-		LDFLAGS +=-T $(LPCLIBDIR)/MK20DX256.ld
+		LD_SCRIPT = $(LPCLIBDIR)/MK20DX256.ld
 	endif
 else
     $(error You need to set the DEVICE parameter to either "Landungsbruecke" or "Startrampe". When calling make directly, do this by adding DEVICE=Landungsbruecke or DEVICE=Startrampe to the commandline)
@@ -478,6 +478,7 @@ MATH_LIB = -lm
 #  -Wl,...:     tell GCC to pass this to linker.
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
+LDFLAGS += -T $(LD_SCRIPT)
 LDFLAGS += -Wl,--gc-sections,-Map=$(OUTDIR)/$(TARGET).map,-cref
 LDFLAGS += -u,Reset_Handler
 LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
@@ -677,7 +678,7 @@ endif
 
 # Link: create ELF output file from object files.
 .SECONDARY : $(TARGET).elf $(ALLOBJ)
-%.elf:  $(ALLOBJ)
+%.elf:  $(ALLOBJ) $(LD_SCRIPT)
 	@echo
 	@echo $(MSG_LINKING) $@
 # use $(CC) for C-only projects or $(CPP) for C++-projects:
