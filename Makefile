@@ -30,6 +30,7 @@ SRC				+= boards/TMC2130_eval.c
 SRC				+= boards/TMC2160_eval.c
 SRC				+= boards/TMC2208_eval.c
 SRC				+= boards/TMC2209_eval.c
+SRC				+= boards/TMC2210_eval.c
 SRC				+= boards/TMC2224_eval.c
 SRC				+= boards/TMC2225_eval.c
 SRC				+= boards/TMC2240_eval.c
