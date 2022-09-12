@@ -173,9 +173,9 @@ void IDDetection_init(void)
 	// Configure Pin
 	HAL.IOs->config->toOutput(&HAL.IOs->pins->ID_CLK);
 
-	// Enable GPIO, edge-triggered interrupt, and PullUp/PullDown
-	PORT_PCR_REG(HAL.IOs->pins->ID_CH0.portBase, HAL.IOs->pins->ID_CH0.bit)  = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
-	PORT_PCR_REG(HAL.IOs->pins->ID_CH1.portBase, HAL.IOs->pins->ID_CH1.bit)  = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
+	// Enable GPIO, edge-triggered interrupt, and PullUp
+	PORT_PCR_REG(HAL.IOs->pins->ID_CH0.portBase, HAL.IOs->pins->ID_CH0.bit)  = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | PORT_PCR_PS_MASK;
+	PORT_PCR_REG(HAL.IOs->pins->ID_CH1.portBase, HAL.IOs->pins->ID_CH1.bit)  = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | PORT_PCR_PS_MASK;
 
 	// Clear interrupt flags
 	PORTB_ISFR = -1;
@@ -386,7 +386,7 @@ static int detectID_EEPROM(IdAssignmentTypeDef *ids)
 			}
 		}
 		// EEPROM access changes the ID_CH0 pin configuration -> write it again // todo CHECK 2: workaround, do this better later (LH) #1
-		PORT_PCR_REG(HAL.IOs->pins->ID_CH0.portBase, HAL.IOs->pins->ID_CH0.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
+		PORT_PCR_REG(HAL.IOs->pins->ID_CH0.portBase, HAL.IOs->pins->ID_CH0.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | PORT_PCR_PS_MASK;
 	}
 
 	// ====== CH2 ======
@@ -405,7 +405,7 @@ static int detectID_EEPROM(IdAssignmentTypeDef *ids)
 			}
 		}
 		// EEPROM access changes the ID_CH1 pin configuration -> write it again // todo CHECK 2: workaround, do this better later (LH) #2
-		PORT_PCR_REG(HAL.IOs->pins->ID_CH1.portBase, HAL.IOs->pins->ID_CH1.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | 0x000000;
+		PORT_PCR_REG(HAL.IOs->pins->ID_CH1.portBase, HAL.IOs->pins->ID_CH1.bit) = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | PORT_PCR_PS_MASK;
 	}
 
 	return true;
