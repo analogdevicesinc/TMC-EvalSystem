@@ -501,7 +501,7 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 
 static void checkErrors(uint32_t tick)
 {
-	static uint32_t tick_old = 0;
+	UNUSED(tick);
 
 	// Error detected -> disable driver for safety
 	if(Evalboards.ch2.errors)
