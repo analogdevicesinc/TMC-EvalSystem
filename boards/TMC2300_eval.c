@@ -573,7 +573,7 @@ static uint8_t onPinChange(IOPinTypeDef *pin, IO_States state)
 static uint8_t reset()
 {
 	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
 
 	return tmc2300_reset(&TMC2300);
 }
@@ -596,18 +596,8 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
-	static uint32_t lastTick = 0;
-
 	tmc2300_periodicJob(&TMC2300, tick);
 	StepDir_periodicJob(0);
-
-	if (tick - lastTick >= 1)
-	{
-		// Only do the IC read every ms. Otherwise the TMCL communication gets slowed drastically.
-		StepDir_stallGuard(0, TMC2300_FIELD_READ(&TMC2300, TMC2300_IOIN, TMC2300_DIAG_MASK, TMC2300_DIAG_SHIFT) == 1);
-
-		lastTick = tick;
-	}
 }
 
 static void configCallback(TMC2300TypeDef *tmc2300, ConfigState state)
