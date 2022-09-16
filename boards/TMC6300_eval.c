@@ -314,10 +314,6 @@ void TMC6300_init(void)
 	// PWM_WL: DIO10
 	// PWM_WH: DIO11
 
-
-	HAL.IOs->config->toOutput(&HAL.IOs->pins->DIO17);
-	HAL.IOs->config->toOutput(&HAL.IOs->pins->DIO18);
-
 	HAL.IOs->config->toOutput(Pins.STDBY);
 	HAL.IOs->config->toOutput(Pins.VBAT_MEASURE);
 
