@@ -255,9 +255,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 14:
 		// Ramp type
 		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_RAMPMODE)<<1;
+			uint32_t rampmode = TMC4361A_FIELD_READ(motorToIC(motor), TMC4361A_RAMPMODE, TMC4361A_RAMP_PROFILE_MASK, TMC4361A_RAMP_PROFILE_SHIFT);
+			*value = (rampmode == TMC4361A_RAMP_SSHAPE);
 		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_RAMPMODE, (*value) ? TMC4361A_RAMP_SSHAPE : TMC4361A_RAMP_TRAPEZ);
+			uint32_t rampmode = (*value) ? TMC4361A_RAMP_SSHAPE : TMC4361A_RAMP_TRAPEZ;
+			TMC4361A_FIELD_WRITE(motorToIC(motor), TMC4361A_RAMPMODE, TMC4361A_RAMP_PROFILE_MASK, TMC4361A_RAMP_PROFILE_SHIFT, rampmode);
 		}
 		break;
 	case 15:
