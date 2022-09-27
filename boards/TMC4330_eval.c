@@ -192,9 +192,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 14:
 		// Ramp type
 		if(readWrite == READ) {
-			*value = tmc4330_readInt(motorToIC(motor), TMC4330_RAMPMODE)<<1;
+			uint32_t rampmode = TMC4330_FIELD_READ(motorToIC(motor), TMC4330_RAMPMODE, TMC4330_RAMP_PROFILE_MASK, TMC4330_RAMP_PROFILE_SHIFT);
+			*value = (rampmode == TMC4330_RAMP_SSHAPE);
 		} else if(readWrite == WRITE) {
-			tmc4330_writeInt(motorToIC(motor), TMC4330_RAMPMODE, (*value) ? TMC4330_RAMP_SSHAPE : TMC4330_RAMP_TRAPEZ);
+			uint32_t rampmode = (*value) ? TMC4330_RAMP_SSHAPE : TMC4330_RAMP_TRAPEZ;
+			TMC4330_FIELD_UPDATE(motorToIC(motor), TMC4330_RAMPMODE, TMC4330_RAMP_PROFILE_MASK, TMC4330_RAMP_PROFILE_SHIFT, rampmode);
 		}
 		break;
 	case 15:
