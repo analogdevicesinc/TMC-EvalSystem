@@ -176,7 +176,7 @@ void debug_process()
 	if(use_next_process && (!next_process))
 		return;
 
-	if (captureEnabled == false)		// unsure here! (ED)
+	if (captureEnabled == false)
 		return;
 
 	handleTriggering();
