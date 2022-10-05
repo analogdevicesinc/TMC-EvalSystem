@@ -8,7 +8,7 @@
 
 #define TIMEOUT_VALUE 10 // 10 ms
 
-#define CONSISTENCY_CHECK_INTERVAL 0
+#define CONSISTENCY_CHECK_INTERVAL 1000 // [ms]
 
 // Eval Error defines
 #define ERROR_INCONSISTENT_MASK (1 << 0)
