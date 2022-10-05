@@ -77,10 +77,20 @@ void handleTriggering()
 	// Read the trigger channel value and apply mask/shift values
 	uint32_t value_raw = readChannel(trigger.channel);
 	value_raw = (value_raw & trigger.mask) >> trigger.shift;
-	int32_t value = SIGN_EXTEND(value_raw, __builtin_ctz(BIT31 >> __builtin_clz(trigger.mask >> trigger.shift)), int32_t);
 
-	bool isAboveSigned   = (int32_t)  value > (int32_t)  trigger.threshold;
-	bool isAboveUnsigned = (uint32_t) value > (uint32_t) trigger.threshold;
+	// Create a signed version of the trigger value
+	int32_t value = value_raw;
+	// Create a mask with only the highest bit of the trigger channel mask set
+	uint32_t msbMask = (trigger.mask>>trigger.shift) ^ (trigger.mask>>(trigger.shift+1));
+	// Check if our value has that bit set.
+	if (value_raw & msbMask)
+	{
+	    // If yes, sign-extend it
+	    value |= ~(trigger.mask>>trigger.shift);
+	}
+
+	bool isAboveSigned   = value > (int32_t)  trigger.threshold;
+	bool isAboveUnsigned = value_raw > (uint32_t) trigger.threshold;
 
 	switch(trigger.type)
 	{
