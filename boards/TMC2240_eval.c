@@ -526,13 +526,30 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 173:
 		// stallGuard4 filter enable
 		if(readWrite == READ) {
+			*value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_FILT_EN_MASK, TMC2240_SG4_FILT_EN_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_FILT_EN_MASK, TMC2240_SG4_FILT_EN_SHIFT, *value);
+		}
+		break;
+	case 174:
+		// stallGuard4 threshold
+		if(readWrite == READ) {
+			*value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_THRS_MASK, TMC2240_SG4_THRS_SHIFT);
+			*value = CAST_Sn_TO_S32(*value, 7);
+		} else if(readWrite == WRITE) {
+			TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_THRS_MASK, TMC2240_SG4_THRS_SHIFT, *value);
+		}
+		break;
+	case 175:
+		// stallGuard2 filter enable
+		if(readWrite == READ) {
 			*value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SFILT_MASK, TMC2240_SFILT_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SFILT_MASK, TMC2240_SFILT_SHIFT, *value);
 		}
 		break;
-	case 174:
-		// stallGuard4 threshold
+	case 176:
+		// stallGuard2 threshold
 		if(readWrite == READ) {
 			*value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SGT_MASK, TMC2240_SGT_SHIFT);
 			*value = CAST_Sn_TO_S32(*value, 7);
@@ -548,7 +565,30 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
+	case 181:
+		// smartEnergy stall velocity
+		if(readWrite == READ) {
+			*value = StepDir_getStallGuardThreshold(motor);
+		} else if(readWrite == WRITE) {
+			// Store the threshold value in the internal StepDir generator
+			StepDir_setStallGuardThreshold(motor, *value);
 
+			// Convert the value for the TCOOLTHRS register
+			// The IC only sends out Stallguard errors while TCOOLTHRS >= TSTEP >= TPWMTHRS
+			// The TSTEP value is measured. To prevent measurement inaccuracies hiding
+			// a stall signal, we decrease the needed velocity by roughly 12% before converting it.
+			*value -= (*value) >> 3;
+			if (*value)
+			{
+				*value = MIN(0x000FFFFF, (1<<24) / (*value));
+			}
+			else
+			{
+				*value = 0x000FFFFF;
+			}
+			tmc2240_writeInt(motorToIC(motor), TMC2240_TCOOLTHRS, *value);
+		}
+		break;
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
@@ -900,14 +940,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				*value = 0;
 				}
 			break;
-	case 225: // UART slave address. Remove later
-		if (readWrite == READ) {
-			*value = targetAddressUart;
-		}
-		else if(readWrite == WRITE) {
-			targetAddressUart = *value;
-		}
-		break;
 
 	default:
 		errors |= TMC_ERROR_TYPE;
@@ -951,7 +983,7 @@ static void periodicJob(uint32_t tick)
 	else
 	{
 		//check if minimum time since chip activation passed. Then restore.
-		if((systick_getTick()-nSLEEPTick)>20) //
+		if((systick_getTick()-nSLEEPTick)>5000) //
 		{
 			tmc2240_restore(&TMC2240);
 			noRegResetnSLEEP = false;
@@ -1021,21 +1053,22 @@ static uint8_t reset() {
 		return 0;
 
 	tmc2240_reset(&TMC2240);
-
 	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
-	StepDir_setVelocityMax(0, 20000);
+	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG1);
+	StepDir_setVelocityMax(0, 100000);
 	StepDir_setAcceleration(0, 25000);
 	enableDriver(DRIVER_ENABLE);
 	return 1;
 }
 
 static uint8_t restore() {
-	return tmc2240_restore(&TMC2240);
+	tmc2240_restore(&TMC2240);
+
 	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
-	StepDir_setVelocityMax(0, 20000);
+	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG1);
+	StepDir_setVelocityMax(0, 100000);
 	StepDir_setAcceleration(0, 25000);
+	return 1;
 }
 
 
@@ -1166,7 +1199,6 @@ void TMC2240_init(void) {
 
 
 	// Initialize the SPI channel
-	//init_comm((uart_mode) ? TMC_BOARD_COMM_UART : TMC_BOARD_COMM_SPI);
 	init_comm(commMode);
 
 
@@ -1176,9 +1208,10 @@ void TMC2240_init(void) {
 	Evalboards.ch2.config->configIndex = 0;
 
 	tmc2240_init(&TMC2240, 0, Evalboards.ch2.config, tmc2240_defaultRegisterResetState);
+
 	// Initialize the software StepDir generator
 	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG1);
 	StepDir_setVelocityMax(0, 100000);
 	StepDir_setAcceleration(0, 25000);
 
