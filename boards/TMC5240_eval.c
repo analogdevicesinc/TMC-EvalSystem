@@ -638,13 +638,30 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 173:
 		// stallGuard4 filter enable
 		if(readWrite == READ) {
+			*value = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_SG4_THRS, TMC5240_SG4_FILT_EN_MASK, TMC5240_SG4_FILT_EN_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC5240_FIELD_WRITE(motorToIC(motor), TMC5240_SG4_THRS, TMC5240_SG4_FILT_EN_MASK, TMC5240_SG4_FILT_EN_SHIFT, *value);
+		}
+		break;
+	case 174:
+		// stallGuard4 threshold
+		if(readWrite == READ) {
+			*value = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_SG4_THRS, TMC5240_SG4_THRS_MASK, TMC5240_SG4_THRS_SHIFT);
+			*value = CAST_Sn_TO_S32(*value, 7);
+		} else if(readWrite == WRITE) {
+			TMC5240_FIELD_WRITE(motorToIC(motor), TMC5240_SG4_THRS, TMC5240_SG4_THRS_MASK, TMC5240_SG4_THRS_SHIFT, *value);
+		}
+		break;
+	case 175:
+		// stallGuard2 filter enable
+		if(readWrite == READ) {
 			*value = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_COOLCONF, TMC5240_SFILT_MASK, TMC5240_SFILT_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC5240_FIELD_WRITE(motorToIC(motor), TMC5240_COOLCONF, TMC5240_SFILT_MASK, TMC5240_SFILT_SHIFT, *value);
 		}
 		break;
-	case 174:
-		// stallGuard4 threshold
+	case 176:
+		// stallGuard2 threshold
 		if(readWrite == READ) {
 			*value = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_COOLCONF, TMC5240_SGT_MASK, TMC5240_SGT_SHIFT);
 			*value = CAST_Sn_TO_S32(*value, 7);
@@ -1016,29 +1033,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 		}
 		break;
-//	case 224: // Enable UART mode
-//		if (readWrite == WRITE) {
-//			if(*value == 1)
-//				commMode = TMC_BOARD_COMM_UART;
-//			else if(*value == 0)
-//				commMode = TMC_BOARD_COMM_SPI;
-//			init_comm(commMode);
-//		}
-//		else if(readWrite == READ) {
-//			if(commMode == TMC_BOARD_COMM_UART)
-//				*value = 1;
-//			else if (commMode == TMC_BOARD_COMM_SPI)
-//				*value = 0;
-//				}
-//			break;
-//	case 225: // UART slave address. Remove later
-//		if (readWrite == READ) {
-//			*value = targetAddressUart;
-//		}
-//		else if(readWrite == WRITE) {
-//			targetAddressUart = *value;
-//		}
-//		break;
 
 	default:
 		errors |= TMC_ERROR_TYPE;
@@ -1090,7 +1084,7 @@ static void periodicJob(uint32_t tick)
 	else
 	{
 		//check if minimum time since chip activation passed. Then restore.
-		if((systick_getTick()-nSLEEPTick)>20) //
+		if((systick_getTick()-nSLEEPTick)>5000) //
 		{
 			tmc5240_restore(&TMC5240);
 			noRegResetnSLEEP = false;
