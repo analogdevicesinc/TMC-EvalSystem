@@ -20,8 +20,6 @@
 
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-//    { .id = ID_MAX22216_EVAL, .init = MAX22216_init    },
-//    { .id = ID_MAX22216_BOB,  .init = MAX22216_init    },
 #include "tmc/ic/TMC2209/TMC2209.h"
 #include "tmc/ic/TMC2225/TMC2225.h"
 #include "tmc/ic/TMC2226/TMC2226.h"
@@ -173,7 +171,7 @@ typedef union {
 extern MotionControllerBoards motionControllerBoards;
 
 // Group all the driver chip objects into a single union to save memory,
-// since we will only ever use one driver at a time
+// since we will only ever use one motion controller at a time
 typedef union {
     TMC2041TypeDef tmc2041;
     TMC2130TypeDef tmc2130;

@@ -12,7 +12,21 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
-### Version 3.06: (Beta)
+### Version 3.08: (Released)
+ * Added TMC2210, TMC2226, TMC2240, TMC2300, TMC6100-BOB, TMC6140, TMC6300 and TMC7300
+ * Added support for Landungsbruecke Small (same PCB, different µC with less memory)
+ * Added RAMDebug for TMC4671 to support automatic PI tuning
+ * Removed TMC5161, TMC8690, TMCC160
+ * Updated board detection mechanism
+ * Various bugfixes & cleanups
+
+### Version 3.07: (Released)
+ * Added TMC2225 and TMC6100
+ * Changed license from GPL to MIT
+ * Improved API structure for UART-based boards
+ * Various bugfixes & cleanups
+
+### Version 3.06: (Released)
 * Full TMC2160 support
 * Landungsbruecke HW v2.0 support with internal HWID detection for future revisions
 * Internal/external step/dir generator handling in FW and IDE

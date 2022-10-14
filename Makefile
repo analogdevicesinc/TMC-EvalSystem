@@ -256,7 +256,7 @@ else ifeq ($(DEVICE),LandungsbrueckeSmall)
 		LD_SCRIPT = $(LPCLIBDIR)/MK20DX256.ld
 	endif
 else
-    $(error You need to set the DEVICE parameter to either "Landungsbruecke" or "Startrampe". When calling make directly, do this by adding DEVICE=Landungsbruecke or DEVICE=Startrampe to the commandline)
+    $(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall" or "Startrampe". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeSmall or DEVICE=Startrampe to the commandline)
 endif
 
 # System and hardware abstraction layer

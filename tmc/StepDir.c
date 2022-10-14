@@ -378,10 +378,11 @@ void StepDir_setAcceleration(uint8_t channel, uint32_t acceleration)
 	if (acceleration == 0)
 		return;
 
-	tmc_ramp_linear_set_acceleration(&StepDir[channel].ramp, acceleration);
-
 	// Store the old acceleration
 	uint32_t oldAcceleration = tmc_ramp_linear_get_acceleration(&StepDir[channel].ramp);
+
+	// Update the acceleration
+	tmc_ramp_linear_set_acceleration(&StepDir[channel].ramp, acceleration);
 
 	// If the channel is not halted we need to synchronise with the interrupt
 	if (StepDir[channel].haltingCondition == 0)
