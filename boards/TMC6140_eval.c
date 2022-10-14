@@ -551,7 +551,7 @@ void PORTC_IRQHandler(void)
 		}
 
 		// Check that the bit time roughly matches
-		if (abs(timeDiff - bitTime) < bitTime/2)
+		if ((timeDiff - bitTime) < bitTime/2)
 		{
 			uartState = SYNC_STOP_BIT;
 		}
@@ -569,7 +569,7 @@ void PORTC_IRQHandler(void)
 		}
 
 		// Check that the bit time roughly matches
-		if (abs(timeDiff - bitTime) < bitTime/2)
+		if ((timeDiff - bitTime) < bitTime/2)
 		{
 			timestamp_data_start = time;
 			data_time = bitTime * 3 / 2;
