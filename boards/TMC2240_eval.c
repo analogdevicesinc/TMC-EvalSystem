@@ -599,20 +599,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			tmc2240_writeInt(motorToIC(motor), TMC2240_TCOOLTHRS, *value);
 		}
 		break;
-	case 183:
-		// SG_FILT_EN
-		if(readWrite == READ) {
-			*value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_FILT_EN_MASK, TMC2240_SG4_FILT_EN_SHIFT);
-		} else if(readWrite == WRITE) {
-			if(*value >= 0 && *value < 2){
-				TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_FILT_EN_MASK, TMC2240_SG4_FILT_EN_SHIFT, *value);
-			}
-			else
-			{
-				errors |= TMC_ERROR_VALUE;
-			}
-		}
-		break;
 	case 184:
 		// SG_ANGLE_OFFSET
 		if(readWrite == READ) {
