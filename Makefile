@@ -3,6 +3,7 @@
 include version.txt
 #DEVICE			= Landungsbruecke
 #DEVICE			= LandungsbrueckeSmall
+#DEVICE			= LandungsbrueckeV3
 LINK			= BL
 #LINK			= NOBL
 OUTDIR 			= _build_$(DEVICE)
@@ -53,7 +54,7 @@ SRC 			+= boards/TMC6200_eval.c
 SRC				+= boards/TMC7300_eval.c
 SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
-ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall))
+ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall LandungsbrueckeV3))
 SRC				      += boards/MAX22216_eval.c
 SRC				+= boards/TMC2209_eval.c
 SRC				+= boards/TMC2225_eval.c
@@ -71,7 +72,7 @@ SRC				+= tmc/EEPROM.c
 SRC 			+= tmc/BoardAssignment.c
 SRC 			+= tmc/VitalSignsMonitor.c
 SRC 			+= tmc/StepDir.c
-ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall))
+ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall LandungsbrueckeV3))
 SRC             += tmc/BLDC.c
 endif
 
@@ -200,8 +201,78 @@ else ifeq ($(DEVICE),LandungsbrueckeSmall)
 	else
 		LD_SCRIPT = $(LPCLIBDIR)/MK20DX256.ld
 	endif
+else ifeq ($(DEVICE),LandungsbrueckeV3)
+    CDEFS = -DLandungsbrueckeV3
+    MCU      			= cortex-m4
+    SUBMDL   			= GD32F425
+    CHIP     			= $(SUBMDL)
+    BOARD    			= LandungsbrueckeV3
+    TMC_HAL_SRC         = hal/Landungsbruecke_V3
+    STMLIBDIR 			= $(TMC_HAL_SRC)/GigaDevice
+    STMSPDDIR 			= $(STMLIBDIR)/lib
+    LIBSRCDIR 			= $(STMSPDDIR)/src
+    STMSPDINCDIR 		= $(STMSPDDIR)/inc
+    #CMSISDIR 			= $(STMLIBDIR)/CMSIS/Core/CM3
+    #STMEEEMULDIR 		= $(STMLIBDIR)/EEPROMEmulation_AN
+    #STMEEEMULSRCDIR 	= $(STMEEEMULDIR)/source
+    #STMEEEMULINCDIR 	= $(STMEEEMULDIR)/include
+    INCLUDE_DIRS 		= -I$(STMSPDINCDIR)
+
+#    SRC                 += boards/SelfTest_Startrampe.c
+#
+#    SRC                 += tmc/IdDetection_Startrampe.c
+
+
+	SRC += $(LIBSRCDIR)/system_gd32f4xx.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_adc.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_can.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_crc.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_ctc.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_dac.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_dbg.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_dci.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_dma.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_enet.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_exmc.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_exti.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_fmc.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_fwdgt.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_gpio.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_i2c.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_ipa.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_iref.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_misc.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_pmu.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_rcu.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_rtc.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_sdio.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_spi.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_syscfg.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_timer.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_tli.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_trng.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_usart.c
+	SRC += $(LIBSRCDIR)/gd32f4xx_wwdgt.c
+	SRC += $(LIBSRCDIR)/usb/cdc_acm_core.c
+	SRC += $(LIBSRCDIR)/usb/drv_usbd_int.c
+	SRC += $(LIBSRCDIR)/usb/drv_usb_core.c
+	SRC += $(LIBSRCDIR)/usb/drv_usb_dev.c
+	SRC += $(LIBSRCDIR)/usb/usbd_core.c
+	SRC += $(LIBSRCDIR)/usb/usbd_enum.c
+	SRC += $(LIBSRCDIR)/usb/usbd_transc.c
+  	
+
+	ASRC +=  $(LIBSRCDIR)/startup_gd32f405_425_gas.S
+   	EXTRAINCDIRS  		+= $(STMSPDINCDIR)
+
+   	ifeq ($(LINK),BL)
+		LD_SCRIPT = $(STMLIBDIR)/gd32f425-tmcm.ld
+	else
+		LD_SCRIPT = $(STMLIBDIR)/gd32f425.ld
+	endif
+	LDFLAGS += -specs=nosys.specs
 else
-    $(error You need to set the DEVICE parameter to "Landungsbruecke" or "LandungsbrueckeSmall". When calling make directly, do this by adding DEVICE=Landungsbruecke or DEVICE=LandungsbrueckeSmall to the commandline)
+    $(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall" or "LandungsbrueckeV3". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeV3 or DEVICE=LandungsbrueckeSmall to the commandline)
 endif
 
 # System and hardware abstraction layer

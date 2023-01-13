@@ -51,6 +51,44 @@ typedef enum { // Give bits explicitly, because IDE relies on it.
 	#include "hal/Landungsbruecke/freescale/PDD/GPIO_PDD.h"
 #endif
 
+#if defined(LandungsbrueckeV3)
+	// This does not need custom values, just some renaming
+	typedef enum
+	{
+	  GPIO_Mode_AN   = 0x00,  /*!< GPIO Analog Mode, Pin disabled */
+	  GPIO_Mode_AF1  = 0x01,  /*!< GPIO Alternate function Mode GPIO*/
+	  GPIO_Mode_AF2  = 0x02,  /*!< GPIO Alternate function Mode*/
+	  GPIO_Mode_AF3  = 0x03,  /*!< GPIO Alternate function Mode*/
+	  GPIO_Mode_AF4  = 0x04,  /*!< GPIO Alternate function Mode*/
+	  GPIO_Mode_AF5  = 0x05,  /*!< GPIO Alternate function Mode*/
+	  GPIO_Mode_AF6  = 0x06,  /*!< GPIO Alternate function Mode*/
+	  GPIO_Mode_AF7  = 0x07,  /*!< GPIO Alternate function Mode*/
+	  GPIO_Mode_IN   = 0x08,  /*!< GPIO Input Mode */
+	  GPIO_Mode_OUT  = 0x09   /*!< GPIO Output Mode */
+	} GPIOMode_TypeDef;
+
+	typedef enum
+	{
+		GPIO_OType_PP = GPIO_OTYPE_PP,
+		GPIO_OType_OD = GPIO_OTYPE_OD
+	} GPIOOType_TypeDef;
+
+	typedef enum
+	{
+		GPIO_PuPd_NOPULL  = GPIO_PUPD_NONE,
+		GPIO_PuPd_UP      = GPIO_PUPD_PULLUP,
+		GPIO_PuPd_DOWN    = GPIO_PUPD_PULLDOWN
+	} GPIOPuPd_TypeDef;
+
+	typedef enum
+	{
+		GPIO_Speed_2MHz    = GPIO_OSPEED_2MHZ, /*!< Low speed */
+		GPIO_Speed_25MHz   = GPIO_OSPEED_25MHZ, /*!< Medium speed */
+		GPIO_Speed_50MHz   = GPIO_OSPEED_50MHZ, /*!< Fast speed */
+		GPIO_Speed_100MHz  = GPIO_OSPEED_MAX  /*!< High speed on 30 pF (80 MHz Output max speed on 15 pF) */
+	} GPIOSpeed_TypeDef;
+#endif
+
 enum IOsHighLevelFunctions { IO_DEFAULT, IO_DI, IO_AI, IO_DO, IO_PWM, IO_SD, IO_CLK16, IO_SPI };
 
 typedef struct
@@ -75,7 +113,11 @@ typedef struct
 
 typedef struct
 {
-	#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+	#if defined(LandungsbrueckeV3)
+		GPIO_TypeDef            *port;
+		__IO uint16_t             *setBitRegister;
+		__IO uint16_t             *resetBitRegister;
+	#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 		PORT_MemMapPtr          portBase;
 		GPIO_MemMapPtr          GPIOBase;
 		volatile uint32_t         *setBitRegister;
