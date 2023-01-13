@@ -1,0 +1,692 @@
+[
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -mcpu=cortex-m4  -I. -x assembler-with-cpp -D__ASSEMBLY__ -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Wa,-adhlns=_build_LandungsbrueckeV3/startup_gd32f405_425_gas.lst -Wa,-gdwarf-2 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API hal/Landungsbruecke_V3/GigaDevice/lib/src/startup_gd32f405_425_gas.S -o _build_LandungsbrueckeV3/startup_gd32f405_425_gas.o",
+    "file": "_build_LandungsbrueckeV3/startup_gd32f405_425_gas.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/Board.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/Board.o.d -Wnested-externs -std=gnu99 boards/Board.c -o _build_LandungsbrueckeV3/Board.o",
+    "file": "_build_LandungsbrueckeV3/Board.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMCDriver.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMCDriver.o.d -Wnested-externs -std=gnu99 boards/TMCDriver.c -o _build_LandungsbrueckeV3/TMCDriver.o",
+    "file": "_build_LandungsbrueckeV3/TMCDriver.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMCMotionController.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMCMotionController.o.d -Wnested-externs -std=gnu99 boards/TMCMotionController.c -o _build_LandungsbrueckeV3/TMCMotionController.o",
+    "file": "_build_LandungsbrueckeV3/TMCMotionController.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/Rhino_standalone.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/Rhino_standalone.o.d -Wnested-externs -std=gnu99 boards/Rhino_standalone.c -o _build_LandungsbrueckeV3/Rhino_standalone.o",
+    "file": "_build_LandungsbrueckeV3/Rhino_standalone.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2041_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2041_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2041_eval.c -o _build_LandungsbrueckeV3/TMC2041_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2041_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2100_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2100_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2100_eval.c -o _build_LandungsbrueckeV3/TMC2100_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2100_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2130_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2130_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2130_eval.c -o _build_LandungsbrueckeV3/TMC2130_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2130_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2160_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2160_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2160_eval.c -o _build_LandungsbrueckeV3/TMC2160_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2160_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2208_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2208_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2208_eval.c -o _build_LandungsbrueckeV3/TMC2208_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2208_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2210_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2210_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2210_eval.c -o _build_LandungsbrueckeV3/TMC2210_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2210_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2224_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2224_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2224_eval.c -o _build_LandungsbrueckeV3/TMC2224_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2224_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2240_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2240_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2240_eval.c -o _build_LandungsbrueckeV3/TMC2240_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2240_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2590_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2590_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2590_eval.c -o _build_LandungsbrueckeV3/TMC2590_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2590_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2660_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2660_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2660_eval.c -o _build_LandungsbrueckeV3/TMC2660_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2660_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4330_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4330_eval.o.d -Wnested-externs -std=gnu99 boards/TMC4330_eval.c -o _build_LandungsbrueckeV3/TMC4330_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC4330_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4331_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4331_eval.o.d -Wnested-externs -std=gnu99 boards/TMC4331_eval.c -o _build_LandungsbrueckeV3/TMC4331_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC4331_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4361_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4361_eval.o.d -Wnested-externs -std=gnu99 boards/TMC4361_eval.c -o _build_LandungsbrueckeV3/TMC4361_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC4361_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4361A_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4361A_eval.o.d -Wnested-externs -std=gnu99 boards/TMC4361A_eval.c -o _build_LandungsbrueckeV3/TMC4361A_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC4361A_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4670_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4670_eval.o.d -Wnested-externs -std=gnu99 boards/TMC4670_eval.c -o _build_LandungsbrueckeV3/TMC4670_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC4670_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4671_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4671_eval.o.d -Wnested-externs -std=gnu99 boards/TMC4671_eval.c -o _build_LandungsbrueckeV3/TMC4671_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC4671_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5031_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5031_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5031_eval.c -o _build_LandungsbrueckeV3/TMC5031_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5031_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5041_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5041_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5041_eval.c -o _build_LandungsbrueckeV3/TMC5041_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5041_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5062_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5062_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5062_eval.c -o _build_LandungsbrueckeV3/TMC5062_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5062_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5072_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5072_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5072_eval.c -o _build_LandungsbrueckeV3/TMC5072_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5072_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5130_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5130_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5130_eval.c -o _build_LandungsbrueckeV3/TMC5130_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5130_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5160_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5160_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5160_eval.c -o _build_LandungsbrueckeV3/TMC5160_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5160_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5240_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5240_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5240_eval.c -o _build_LandungsbrueckeV3/TMC5240_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5240_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5271_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5271_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5271_eval.c -o _build_LandungsbrueckeV3/TMC5271_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5271_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5272_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5272_eval.o.d -Wnested-externs -std=gnu99 boards/TMC5272_eval.c -o _build_LandungsbrueckeV3/TMC5272_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC5272_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC6100_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC6100_eval.o.d -Wnested-externs -std=gnu99 boards/TMC6100_eval.c -o _build_LandungsbrueckeV3/TMC6100_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC6100_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC6200_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC6200_eval.o.d -Wnested-externs -std=gnu99 boards/TMC6200_eval.c -o _build_LandungsbrueckeV3/TMC6200_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC6200_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC7300_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC7300_eval.o.d -Wnested-externs -std=gnu99 boards/TMC7300_eval.c -o _build_LandungsbrueckeV3/TMC7300_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC7300_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC8461_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC8461_eval.o.d -Wnested-externs -std=gnu99 boards/TMC8461_eval.c -o _build_LandungsbrueckeV3/TMC8461_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC8461_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC8462_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC8462_eval.o.d -Wnested-externs -std=gnu99 boards/TMC8462_eval.c -o _build_LandungsbrueckeV3/TMC8462_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC8462_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/MAX22216_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/MAX22216_eval.o.d -Wnested-externs -std=gnu99 boards/MAX22216_eval.c -o _build_LandungsbrueckeV3/MAX22216_eval.o",
+    "file": "_build_LandungsbrueckeV3/MAX22216_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2209_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2209_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2209_eval.c -o _build_LandungsbrueckeV3/TMC2209_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2209_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2225_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2225_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2225_eval.c -o _build_LandungsbrueckeV3/TMC2225_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2225_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2226_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2226_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2226_eval.c -o _build_LandungsbrueckeV3/TMC2226_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2226_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2300_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2300_eval.o.d -Wnested-externs -std=gnu99 boards/TMC2300_eval.c -o _build_LandungsbrueckeV3/TMC2300_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC2300_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC6140_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC6140_eval.o.d -Wnested-externs -std=gnu99 boards/TMC6140_eval.c -o _build_LandungsbrueckeV3/TMC6140_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC6140_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC6300_eval.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC6300_eval.o.d -Wnested-externs -std=gnu99 boards/TMC6300_eval.c -o _build_LandungsbrueckeV3/TMC6300_eval.o",
+    "file": "_build_LandungsbrueckeV3/TMC6300_eval.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/main.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/main.o.d -Wnested-externs -std=gnu99 main.c -o _build_LandungsbrueckeV3/main.o",
+    "file": "_build_LandungsbrueckeV3/main.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMCL.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMCL.o.d -Wnested-externs -std=gnu99 tmc/TMCL.c -o _build_LandungsbrueckeV3/TMCL.o",
+    "file": "_build_LandungsbrueckeV3/TMCL.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/RAMDebug.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/RAMDebug.o.d -Wnested-externs -std=gnu99 tmc/RAMDebug.c -o _build_LandungsbrueckeV3/RAMDebug.o",
+    "file": "_build_LandungsbrueckeV3/RAMDebug.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/EEPROM.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/EEPROM.o.d -Wnested-externs -std=gnu99 tmc/EEPROM.c -o _build_LandungsbrueckeV3/EEPROM.o",
+    "file": "_build_LandungsbrueckeV3/EEPROM.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/BoardAssignment.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/BoardAssignment.o.d -Wnested-externs -std=gnu99 tmc/BoardAssignment.c -o _build_LandungsbrueckeV3/BoardAssignment.o",
+    "file": "_build_LandungsbrueckeV3/BoardAssignment.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/VitalSignsMonitor.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/VitalSignsMonitor.o.d -Wnested-externs -std=gnu99 tmc/VitalSignsMonitor.c -o _build_LandungsbrueckeV3/VitalSignsMonitor.o",
+    "file": "_build_LandungsbrueckeV3/VitalSignsMonitor.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/StepDir.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/StepDir.o.d -Wnested-externs -std=gnu99 tmc/StepDir.c -o _build_LandungsbrueckeV3/StepDir.o",
+    "file": "_build_LandungsbrueckeV3/StepDir.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/BLDC.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/BLDC.o.d -Wnested-externs -std=gnu99 tmc/BLDC.c -o _build_LandungsbrueckeV3/BLDC.o",
+    "file": "_build_LandungsbrueckeV3/BLDC.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/Functions.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/Functions.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/helpers/Functions.c -o _build_LandungsbrueckeV3/Functions.o",
+    "file": "_build_LandungsbrueckeV3/Functions.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/CRC.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/CRC.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/helpers/CRC.c -o _build_LandungsbrueckeV3/CRC.o",
+    "file": "_build_LandungsbrueckeV3/CRC.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/LinearRamp.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/LinearRamp.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ramp/LinearRamp.c -o _build_LandungsbrueckeV3/LinearRamp.o",
+    "file": "_build_LandungsbrueckeV3/LinearRamp.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/LinearRamp1.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/LinearRamp1.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ramp/LinearRamp1.c -o _build_LandungsbrueckeV3/LinearRamp1.o",
+    "file": "_build_LandungsbrueckeV3/LinearRamp1.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/Ramp.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/Ramp.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ramp/Ramp.c -o _build_LandungsbrueckeV3/Ramp.o",
+    "file": "_build_LandungsbrueckeV3/Ramp.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/MAX22216.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/MAX22216.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/MAX22216/MAX22216.c -o _build_LandungsbrueckeV3/MAX22216.o",
+    "file": "_build_LandungsbrueckeV3/MAX22216.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2041.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2041.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2041/TMC2041.c -o _build_LandungsbrueckeV3/TMC2041.o",
+    "file": "_build_LandungsbrueckeV3/TMC2041.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2130.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2130.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2130/TMC2130.c -o _build_LandungsbrueckeV3/TMC2130.o",
+    "file": "_build_LandungsbrueckeV3/TMC2130.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2160.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2160.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2160/TMC2160.c -o _build_LandungsbrueckeV3/TMC2160.o",
+    "file": "_build_LandungsbrueckeV3/TMC2160.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2208.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2208.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2208/TMC2208.c -o _build_LandungsbrueckeV3/TMC2208.o",
+    "file": "_build_LandungsbrueckeV3/TMC2208.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2209.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2209.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2209/TMC2209.c -o _build_LandungsbrueckeV3/TMC2209.o",
+    "file": "_build_LandungsbrueckeV3/TMC2209.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2224.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2224.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2224/TMC2224.c -o _build_LandungsbrueckeV3/TMC2224.o",
+    "file": "_build_LandungsbrueckeV3/TMC2224.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2225.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2225.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2225/TMC2225.c -o _build_LandungsbrueckeV3/TMC2225.o",
+    "file": "_build_LandungsbrueckeV3/TMC2225.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2226.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2226.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2226/TMC2226.c -o _build_LandungsbrueckeV3/TMC2226.o",
+    "file": "_build_LandungsbrueckeV3/TMC2226.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2240.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2240.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2240/TMC2240.c -o _build_LandungsbrueckeV3/TMC2240.o",
+    "file": "_build_LandungsbrueckeV3/TMC2240.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2590.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2590.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2590/TMC2590.c -o _build_LandungsbrueckeV3/TMC2590.o",
+    "file": "_build_LandungsbrueckeV3/TMC2590.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2660.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2660.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2660/TMC2660.c -o _build_LandungsbrueckeV3/TMC2660.o",
+    "file": "_build_LandungsbrueckeV3/TMC2660.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC2300.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC2300.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC2300/TMC2300.c -o _build_LandungsbrueckeV3/TMC2300.o",
+    "file": "_build_LandungsbrueckeV3/TMC2300.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4330.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4330.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC4330/TMC4330.c -o _build_LandungsbrueckeV3/TMC4330.o",
+    "file": "_build_LandungsbrueckeV3/TMC4330.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4331.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4331.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC4331/TMC4331.c -o _build_LandungsbrueckeV3/TMC4331.o",
+    "file": "_build_LandungsbrueckeV3/TMC4331.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4361.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4361.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC4361/TMC4361.c -o _build_LandungsbrueckeV3/TMC4361.o",
+    "file": "_build_LandungsbrueckeV3/TMC4361.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4361A.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4361A.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC4361A/TMC4361A.c -o _build_LandungsbrueckeV3/TMC4361A.o",
+    "file": "_build_LandungsbrueckeV3/TMC4361A.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4670.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4670.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC4670/TMC4670.c -o _build_LandungsbrueckeV3/TMC4670.o",
+    "file": "_build_LandungsbrueckeV3/TMC4670.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC4671.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC4671.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC4671/TMC4671.c -o _build_LandungsbrueckeV3/TMC4671.o",
+    "file": "_build_LandungsbrueckeV3/TMC4671.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5031.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5031.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5031/TMC5031.c -o _build_LandungsbrueckeV3/TMC5031.o",
+    "file": "_build_LandungsbrueckeV3/TMC5031.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5041.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5041.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5041/TMC5041.c -o _build_LandungsbrueckeV3/TMC5041.o",
+    "file": "_build_LandungsbrueckeV3/TMC5041.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5062.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5062.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5062/TMC5062.c -o _build_LandungsbrueckeV3/TMC5062.o",
+    "file": "_build_LandungsbrueckeV3/TMC5062.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5072.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5072.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5072/TMC5072.c -o _build_LandungsbrueckeV3/TMC5072.o",
+    "file": "_build_LandungsbrueckeV3/TMC5072.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5130.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5130.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5130/TMC5130.c -o _build_LandungsbrueckeV3/TMC5130.o",
+    "file": "_build_LandungsbrueckeV3/TMC5130.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5160.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5160.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5160/TMC5160.c -o _build_LandungsbrueckeV3/TMC5160.o",
+    "file": "_build_LandungsbrueckeV3/TMC5160.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5240.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5240.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5240/TMC5240.c -o _build_LandungsbrueckeV3/TMC5240.o",
+    "file": "_build_LandungsbrueckeV3/TMC5240.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5271.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5271.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5271/TMC5271.c -o _build_LandungsbrueckeV3/TMC5271.o",
+    "file": "_build_LandungsbrueckeV3/TMC5271.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC5272.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC5272.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC5272/TMC5272.c -o _build_LandungsbrueckeV3/TMC5272.o",
+    "file": "_build_LandungsbrueckeV3/TMC5272.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC6100.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC6100.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC6100/TMC6100.c -o _build_LandungsbrueckeV3/TMC6100.o",
+    "file": "_build_LandungsbrueckeV3/TMC6100.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC6200.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC6200.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC6200/TMC6200.c -o _build_LandungsbrueckeV3/TMC6200.o",
+    "file": "_build_LandungsbrueckeV3/TMC6200.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC7300.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC7300.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC7300/TMC7300.c -o _build_LandungsbrueckeV3/TMC7300.o",
+    "file": "_build_LandungsbrueckeV3/TMC7300.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC8461.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC8461.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC8461/TMC8461.c -o _build_LandungsbrueckeV3/TMC8461.o",
+    "file": "_build_LandungsbrueckeV3/TMC8461.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/TMC8462.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/TMC8462.o.d -Wnested-externs -std=gnu99 TMC-API/tmc/ic/TMC8462/TMC8462.c -o _build_LandungsbrueckeV3/TMC8462.o",
+    "file": "_build_LandungsbrueckeV3/TMC8462.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/system_gd32f4xx.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/system_gd32f4xx.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/system_gd32f4xx.c -o _build_LandungsbrueckeV3/system_gd32f4xx.o",
+    "file": "_build_LandungsbrueckeV3/system_gd32f4xx.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_adc.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_adc.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_adc.c -o _build_LandungsbrueckeV3/gd32f4xx_adc.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_adc.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_can.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_can.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_can.c -o _build_LandungsbrueckeV3/gd32f4xx_can.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_can.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_crc.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_crc.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_crc.c -o _build_LandungsbrueckeV3/gd32f4xx_crc.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_crc.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_ctc.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_ctc.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_ctc.c -o _build_LandungsbrueckeV3/gd32f4xx_ctc.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_ctc.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_dac.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_dac.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_dac.c -o _build_LandungsbrueckeV3/gd32f4xx_dac.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_dac.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_dbg.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_dbg.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_dbg.c -o _build_LandungsbrueckeV3/gd32f4xx_dbg.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_dbg.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_dci.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_dci.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_dci.c -o _build_LandungsbrueckeV3/gd32f4xx_dci.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_dci.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_dma.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_dma.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_dma.c -o _build_LandungsbrueckeV3/gd32f4xx_dma.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_dma.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_enet.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_enet.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_enet.c -o _build_LandungsbrueckeV3/gd32f4xx_enet.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_enet.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_exmc.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_exmc.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_exmc.c -o _build_LandungsbrueckeV3/gd32f4xx_exmc.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_exmc.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_exti.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_exti.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_exti.c -o _build_LandungsbrueckeV3/gd32f4xx_exti.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_exti.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_fmc.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_fmc.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_fmc.c -o _build_LandungsbrueckeV3/gd32f4xx_fmc.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_fmc.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_fwdgt.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_fwdgt.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_fwdgt.c -o _build_LandungsbrueckeV3/gd32f4xx_fwdgt.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_fwdgt.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_gpio.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_gpio.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_gpio.c -o _build_LandungsbrueckeV3/gd32f4xx_gpio.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_gpio.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_i2c.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_i2c.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_i2c.c -o _build_LandungsbrueckeV3/gd32f4xx_i2c.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_i2c.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_ipa.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_ipa.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_ipa.c -o _build_LandungsbrueckeV3/gd32f4xx_ipa.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_ipa.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_iref.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_iref.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_iref.c -o _build_LandungsbrueckeV3/gd32f4xx_iref.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_iref.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_misc.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_misc.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_misc.c -o _build_LandungsbrueckeV3/gd32f4xx_misc.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_misc.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_pmu.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_pmu.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_pmu.c -o _build_LandungsbrueckeV3/gd32f4xx_pmu.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_pmu.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_rcu.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_rcu.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_rcu.c -o _build_LandungsbrueckeV3/gd32f4xx_rcu.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_rcu.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_rtc.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_rtc.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_rtc.c -o _build_LandungsbrueckeV3/gd32f4xx_rtc.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_rtc.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_sdio.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_sdio.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_sdio.c -o _build_LandungsbrueckeV3/gd32f4xx_sdio.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_sdio.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_spi.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_spi.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_spi.c -o _build_LandungsbrueckeV3/gd32f4xx_spi.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_spi.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_syscfg.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_syscfg.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_syscfg.c -o _build_LandungsbrueckeV3/gd32f4xx_syscfg.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_syscfg.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_timer.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_timer.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_timer.c -o _build_LandungsbrueckeV3/gd32f4xx_timer.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_timer.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_tli.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_tli.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_tli.c -o _build_LandungsbrueckeV3/gd32f4xx_tli.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_tli.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_trng.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_trng.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_trng.c -o _build_LandungsbrueckeV3/gd32f4xx_trng.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_trng.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_usart.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_usart.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_usart.c -o _build_LandungsbrueckeV3/gd32f4xx_usart.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_usart.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/gd32f4xx_wwdgt.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/gd32f4xx_wwdgt.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/gd32f4xx_wwdgt.c -o _build_LandungsbrueckeV3/gd32f4xx_wwdgt.o",
+    "file": "_build_LandungsbrueckeV3/gd32f4xx_wwdgt.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/cdc_acm_core.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/cdc_acm_core.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/usb/cdc_acm_core.c -o _build_LandungsbrueckeV3/cdc_acm_core.o",
+    "file": "_build_LandungsbrueckeV3/cdc_acm_core.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/drv_usbd_int.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/drv_usbd_int.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/usb/drv_usbd_int.c -o _build_LandungsbrueckeV3/drv_usbd_int.o",
+    "file": "_build_LandungsbrueckeV3/drv_usbd_int.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/drv_usb_core.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/drv_usb_core.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/usb/drv_usb_core.c -o _build_LandungsbrueckeV3/drv_usb_core.o",
+    "file": "_build_LandungsbrueckeV3/drv_usb_core.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/drv_usb_dev.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/drv_usb_dev.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/usb/drv_usb_dev.c -o _build_LandungsbrueckeV3/drv_usb_dev.o",
+    "file": "_build_LandungsbrueckeV3/drv_usb_dev.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/usbd_core.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/usbd_core.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/usb/usbd_core.c -o _build_LandungsbrueckeV3/usbd_core.o",
+    "file": "_build_LandungsbrueckeV3/usbd_core.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/usbd_enum.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/usbd_enum.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/usb/usbd_enum.c -o _build_LandungsbrueckeV3/usbd_enum.o",
+    "file": "_build_LandungsbrueckeV3/usbd_enum.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/usbd_transc.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/usbd_transc.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/GigaDevice/lib/src/usb/usbd_transc.c -o _build_LandungsbrueckeV3/usbd_transc.o",
+    "file": "_build_LandungsbrueckeV3/usbd_transc.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/SysTick.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/SysTick.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/SysTick.c -o _build_LandungsbrueckeV3/SysTick.o",
+    "file": "_build_LandungsbrueckeV3/SysTick.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/IOs.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/IOs.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/IOs.c -o _build_LandungsbrueckeV3/IOs.o",
+    "file": "_build_LandungsbrueckeV3/IOs.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/IOMap.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/IOMap.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/IOMap.c -o _build_LandungsbrueckeV3/IOMap.o",
+    "file": "_build_LandungsbrueckeV3/IOMap.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/HAL.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/HAL.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/HAL.c -o _build_LandungsbrueckeV3/HAL.o",
+    "file": "_build_LandungsbrueckeV3/HAL.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/SPI.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/SPI.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/SPI.c -o _build_LandungsbrueckeV3/SPI.o",
+    "file": "_build_LandungsbrueckeV3/SPI.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/USB.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/USB.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/USB.c -o _build_LandungsbrueckeV3/USB.o",
+    "file": "_build_LandungsbrueckeV3/USB.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/ADCs.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/ADCs.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/ADCs.c -o _build_LandungsbrueckeV3/ADCs.o",
+    "file": "_build_LandungsbrueckeV3/ADCs.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/LEDs.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/LEDs.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/LEDs.c -o _build_LandungsbrueckeV3/LEDs.o",
+    "file": "_build_LandungsbrueckeV3/LEDs.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/RS232.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/RS232.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/RS232.c -o _build_LandungsbrueckeV3/RS232.o",
+    "file": "_build_LandungsbrueckeV3/RS232.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/WLAN.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/WLAN.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/WLAN.c -o _build_LandungsbrueckeV3/WLAN.o",
+    "file": "_build_LandungsbrueckeV3/WLAN.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/Timer.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/Timer.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/Timer.c -o _build_LandungsbrueckeV3/Timer.o",
+    "file": "_build_LandungsbrueckeV3/Timer.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/UART.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/UART.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/UART.c -o _build_LandungsbrueckeV3/UART.o",
+    "file": "_build_LandungsbrueckeV3/UART.o"
+  },
+  {
+    "directory": ".",
+    "command": "arm-none-eabi-gcc -c -mthumb -gdwarf-2 -Os -mcpu=cortex-m4  -DLandungsbrueckeV3 -DID_CH1_DEFAULT=0 -DID_CH1_OVERRIDE=false -DID_CH2_DEFAULT=0 -DID_CH2_OVERRIDE=false -DBUILD_VERSION=3091 -DBOOTLOADER -DVECT_TAB_ROM -DROM_RUN -DGD32F425 -Ihal/Landungsbruecke_V3 -Ihal/Landungsbruecke_V3/GigaDevice/lib/inc -ITMC-API -I. -Wall -Wextra -Wimplicit -Wcast-align -Wpointer-arith -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align -Wa,-adhlns=_build_LandungsbrueckeV3/RXTX.lst -MMD -MP -MF _build_LandungsbrueckeV3/dep/RXTX.o.d -Wnested-externs -std=gnu99 hal/Landungsbruecke_V3/tmc/RXTX.c -o _build_LandungsbrueckeV3/RXTX.o",
+    "file": "_build_LandungsbrueckeV3/RXTX.o"
+  }
+]

@@ -7,9 +7,10 @@
  * The Build process already selects one via makefile & makeFor.h files,
  * this choice will therefore not influence the build process.
  */
-#if !defined(Landungsbruecke) && !defined(LandungsbrueckeSmall) && !defined(Startrampe)
+#if !defined(Landungsbruecke) && !defined(LandungsbrueckeV3) && !defined(LandungsbrueckeSmall) && !defined(Startrampe)
 #warning "No Board selected by makefile, defining one for debug purposes"
-#define Landungsbruecke
+//#define Landungsbruecke
+#define LandungsbrueckeV3
 //#define LandungsbrueckeSmall
 //#define Startrampe
 #endif
@@ -26,6 +27,9 @@
         #include "hal/Landungsbruecke/freescale/nvic.h"
         #define CPU_LITTLE_ENDIAN
         #define __MK_xxx_H__
+    #elif defined(LandungsbrueckeV3)
+        #define MODULE_ID "0017"
+		#include "gd32f4xx.h"
     #elif defined(LandungsbrueckeSmall)
         // The Landungsbruecke (Small) is a normal Landungsbruecke but with a MK20DX256VLL10 µC instead.
         // This other µC has less memory. We assign a different module ID, otherwise the functionality

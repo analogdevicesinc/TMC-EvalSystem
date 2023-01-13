@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "hal/Landungsbruecke_V3/GigaDevice/lib/inc",
+                "hal/Landungsbruecke_V3",
+                "TMC-API",
+                "${workspaceFolder}"
+            ]
+        }
+    ],
+    "version": 4
+}
