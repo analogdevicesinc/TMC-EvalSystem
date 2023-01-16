@@ -49,45 +49,43 @@ typedef enum { // Give bits explicitly, because IDE relies on it.
 	} GPIOSpeed_TypeDef;
 
 	#include "hal/Landungsbruecke/freescale/PDD/GPIO_PDD.h"
+#elif defined(LandungsbrueckeV3)
+//	typedef enum
+//		{
+//		GPIO_MODE_INPUT   = 0x00,  /*!< GPIO Input Mode */
+//		GPIO_MODE_OUTPUT  = 0x01,  /*!< GPIO Output Mode */
+//		GPIO_MODE_AF  	  = 0x02,  /*!< GPIO Alternate function Mode*/
+//		GPIO_MODE_ANALOG  = 0x03,  /*!< GPIO Analog Mode*/
+//		} GPIOMode_TypeDef;
+//
+//		typedef enum
+//		{
+//			GPIO_OTYPE_PP = 0x00,
+//			GPIO_OTYPE_OD = 0x01
+//		} GPIOOType_TypeDef;
+//
+//		typedef enum
+//		{
+//			GPIO_PUPD_NONE  = 0x00,
+//			GPIO_PUPD_PULLUP      = 0x01,
+//			GPIO_PUPD_PULLDOWN    = 0x02
+//		} GPIOPuPd_TypeDef;
+//
+//		typedef enum
+//		{
+//			GPIO_OSPEED_2MHZ    = 0x00, /*!< Low speed */
+//			GPIO_OSPEED_25MHZ   = 0x01, /*!< Medium speed */
+//			GPIO_OSPEED_50MHZ   = 0x02, /*!< Fast speed */
+//			GPIO_OSPEED_MAX     = 0x03  /*!< GPIO very high output speed, max speed more than 50MHz */
+//		} GPIOSpeed_TypeDef;
+	typedef uint32_t GPIOMode_TypeDef;
+	typedef uint32_t GPIOOType_TypeDef;
+	typedef uint32_t GPIOPuPd_TypeDef;
+	typedef uint32_t GPIOSpeed_TypeDef;
+
+
 #endif
 
-#if defined(LandungsbrueckeV3)
-	// This does not need custom values, just some renaming
-	typedef enum
-	{
-	  GPIO_Mode_AN   = 0x00,  /*!< GPIO Analog Mode, Pin disabled */
-	  GPIO_Mode_AF1  = 0x01,  /*!< GPIO Alternate function Mode GPIO*/
-	  GPIO_Mode_AF2  = 0x02,  /*!< GPIO Alternate function Mode*/
-	  GPIO_Mode_AF3  = 0x03,  /*!< GPIO Alternate function Mode*/
-	  GPIO_Mode_AF4  = 0x04,  /*!< GPIO Alternate function Mode*/
-	  GPIO_Mode_AF5  = 0x05,  /*!< GPIO Alternate function Mode*/
-	  GPIO_Mode_AF6  = 0x06,  /*!< GPIO Alternate function Mode*/
-	  GPIO_Mode_AF7  = 0x07,  /*!< GPIO Alternate function Mode*/
-	  GPIO_Mode_IN   = 0x08,  /*!< GPIO Input Mode */
-	  GPIO_Mode_OUT  = 0x09   /*!< GPIO Output Mode */
-	} GPIOMode_TypeDef;
-
-	typedef enum
-	{
-		GPIO_OType_PP = GPIO_OTYPE_PP,
-		GPIO_OType_OD = GPIO_OTYPE_OD
-	} GPIOOType_TypeDef;
-
-	typedef enum
-	{
-		GPIO_PuPd_NOPULL  = GPIO_PUPD_NONE,
-		GPIO_PuPd_UP      = GPIO_PUPD_PULLUP,
-		GPIO_PuPd_DOWN    = GPIO_PUPD_PULLDOWN
-	} GPIOPuPd_TypeDef;
-
-	typedef enum
-	{
-		GPIO_Speed_2MHz    = GPIO_OSPEED_2MHZ, /*!< Low speed */
-		GPIO_Speed_25MHz   = GPIO_OSPEED_25MHZ, /*!< Medium speed */
-		GPIO_Speed_50MHz   = GPIO_OSPEED_50MHZ, /*!< Fast speed */
-		GPIO_Speed_100MHz  = GPIO_OSPEED_MAX  /*!< High speed on 30 pF (80 MHz Output max speed on 15 pF) */
-	} GPIOSpeed_TypeDef;
-#endif
 
 enum IOsHighLevelFunctions { IO_DEFAULT, IO_DI, IO_AI, IO_DO, IO_PWM, IO_SD, IO_CLK16, IO_SPI };
 
@@ -118,9 +116,9 @@ typedef struct
 		__IO uint16_t             *setBitRegister;
 		__IO uint16_t             *resetBitRegister;
 	#elif defined(LandungsbrueckeV3)
-		GPIO_TypeDef            *port;
-		__IO uint16_t             *setBitRegister;
-		__IO uint16_t             *resetBitRegister;
+		uint32_t				  port;
+		volatile uint32_t         *setBitRegister;
+		volatile uint32_t         *resetBitRegister;
 	#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 		PORT_MemMapPtr          portBase;
 		GPIO_MemMapPtr          GPIOBase;

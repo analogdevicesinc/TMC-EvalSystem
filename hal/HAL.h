@@ -4,13 +4,13 @@
 #include "derivative.h"
 #include "IOs.h"
 #include "IOMap.h"
-#include "SPI.h"
-#include "ADCs.h"
-#include "USB.h"
+//#include "SPI.h"
+//#include "ADCs.h"
+//#include "USB.h"
 #include "LEDs.h"
 #include "RS232.h"
 #include "WLAN.h"
-#include "Timer.h"
+//#include "Timer.h"
 #include "SysTick.h"
 #include "UART.h"
 
@@ -27,12 +27,12 @@ typedef struct
 	void                       (*NVIC_DeInit)(void);
 	const IOsFunctionsTypeDef  *IOs;
 	SPITypeDef                 *SPI;
-	RXTXTypeDef                *USB;
+//	RXTXTypeDef                *USB;
 	LEDsTypeDef                *LEDs;
-	ADCTypeDef                 *ADCs;
+//	ADCTypeDef                 *ADCs;
 	RXTXTypeDef                *RS232;
 	RXTXTypeDef                *WLAN;
-	TimerTypeDef               *Timer;
+//	TimerTypeDef               *Timer;
 	UART_Config                *UART;
 } HALTypeDef;
 

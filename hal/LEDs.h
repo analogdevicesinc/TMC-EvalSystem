@@ -9,6 +9,16 @@
 	#define LED_ERROR_ON()      *HAL.IOs->pins->LED_ERROR.resetBitRegister  = HAL.IOs->pins->LED_ERROR.bitWeight
 	#define LED_ERROR_OFF()     *HAL.IOs->pins->LED_ERROR.setBitRegister    = HAL.IOs->pins->LED_ERROR.bitWeight
 	#define LED_ERROR_TOGGLE()  HAL.IOs->pins->LED_ERROR.port->ODR          ^= HAL.IOs->pins->LED_ERROR.bitWeight
+#endif
+
+#ifdef LandungsbrueckeV3
+	#define LED_ON()            *HAL.IOs->pins->LED_STAT.resetBitRegister   = HAL.IOs->pins->LED_STAT.bitWeight
+	#define LED_OFF()           *HAL.IOs->pins->LED_STAT.setBitRegister     = HAL.IOs->pins->LED_STAT.bitWeight
+	#define LED_TOGGLE()         GPIO_TG(HAL.IOs->pins->LED_STAT.port)      = HAL.IOs->pins->LED_STAT.bitWeight
+
+	#define LED_ERROR_ON()      *HAL.IOs->pins->LED_ERROR.resetBitRegister  = HAL.IOs->pins->LED_ERROR.bitWeight
+	#define LED_ERROR_OFF()     *HAL.IOs->pins->LED_ERROR.setBitRegister    = HAL.IOs->pins->LED_ERROR.bitWeight
+	#define LED_ERROR_TOGGLE()  GPIO_TG(HAL.IOs->pins->LED_ERROR.port)      = HAL.IOs->pins->LED_ERROR.bitWeight
 #else
 	#define LED_ON()            *HAL.IOs->pins->LED_STAT.resetBitRegister   = HAL.IOs->pins->LED_STAT.bitWeight
 	#define LED_OFF()           *HAL.IOs->pins->LED_STAT.setBitRegister     = HAL.IOs->pins->LED_STAT.bitWeight
