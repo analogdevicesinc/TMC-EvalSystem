@@ -51,105 +51,101 @@ static RXTXBufferingTypeDef buffers =
 };
 
 
-void __attribute__ ((interrupt)) USART3_IRQHandler(void);
+void __attribute__ ((interrupt)) USART1_IRQHandler(void);
 
 static void init()
 {
-	USART_InitTypeDef 	UART_InitStructure;
-	NVIC_InitTypeDef	NVIC_InitStructure;
 
-	//HAL.IOs->config->toOutput(&HAL.IOs->pins->WIRELESS_NRST);
-	//HAL.IOs->config->setLow(&HAL.IOs->pins->WIRELESS_NRST);
+	usart_deinit(USART1);
 
-	USART_DeInit(USART3);
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-
-	HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_RX);
-	HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_TX);
-
-	GPIO_PinAFConfig(HAL.IOs->pins->WIRELESS_RX.port, HAL.IOs->pins->WIRELESS_RX.bit, GPIO_AF_USART3);
-	GPIO_PinAFConfig(HAL.IOs->pins->WIRELESS_TX.port, HAL.IOs->pins->WIRELESS_TX.bit, GPIO_AF_USART3);
-
-	USART_StructInit(&UART_InitStructure);
-	UART_InitStructure.USART_BaudRate = WLAN.baudRate;
-	USART_Init(USART3,&UART_InitStructure);
-
-	NVIC_InitStructure.NVIC_IRQChannel                    = USART3_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority  = INTR_PRI;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority         = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd                 = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+    rcu_periph_clock_enable(RCU_USART1);
 
 
-	USART_ClearFlag(USART3, USART_FLAG_CTS | USART_FLAG_LBD  | USART_FLAG_TXE  |
-	                        USART_FLAG_TC  | USART_FLAG_RXNE | USART_FLAG_IDLE |
-	                        USART_FLAG_ORE | USART_FLAG_NE   | USART_FLAG_FE |
-	                        USART_FLAG_PE);
-	USART_ITConfig(USART3,USART_IT_PE, DISABLE);
-	USART_ITConfig(USART3,USART_IT_TXE, ENABLE);
-	USART_ITConfig(USART3,USART_IT_TC,  ENABLE);
-	USART_ITConfig(USART3,USART_IT_RXNE, ENABLE);
-	USART_ITConfig(USART3,USART_IT_IDLE, DISABLE);
-	USART_ITConfig(USART3,USART_IT_LBD, DISABLE);
-	USART_ITConfig(USART3,USART_IT_CTS, DISABLE);
-	USART_ITConfig(USART3,USART_IT_ERR, DISABLE);
+	//TxD as open drain output
+	gpio_mode_set(HAL.IOs->pins->RS232_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->RS232_TX.bitWeight);
+	gpio_output_options_set(HAL.IOs->pins->RS232_TX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->RS232_TX.bitWeight);
 
-	USART_Cmd(USART3, ENABLE);
+	//RxD with pull-up resistor
+	gpio_mode_set(HAL.IOs->pins->RS232_RX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->RS232_RX.bitWeight);
+	gpio_output_options_set(HAL.IOs->pins->RS232_RX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->RS232_RX.bitWeight);
+
+    gpio_af_set(HAL.IOs->pins->RS232_TX.port, GPIO_AF_7, HAL.IOs->pins->RS232_TX.bitWeight);
+    gpio_af_set(HAL.IOs->pins->RS232_RX.port, GPIO_AF_7, HAL.IOs->pins->RS232_RX.bitWeight);
+
+    usart_baudrate_set(USART1, WLAN.baudRate);
+    usart_word_length_set(USART1, USART_WL_8BIT);
+    usart_stop_bit_set(USART1, USART_STB_1BIT);
+    usart_parity_config(USART1, USART_PM_NONE);
+    usart_hardware_flow_rts_config(USART1, USART_RTS_DISABLE);
+    usart_hardware_flow_cts_config(USART1, USART_CTS_DISABLE);
+    usart_receive_config(USART1, USART_RECEIVE_ENABLE);
+    usart_transmit_config(USART1, USART_TRANSMIT_ENABLE);
+
+    nvic_irq_enable(USART1_IRQn, INTR_PRI, 0);
+
+	usart_flag_clear(USART1, USART_FLAG_CTS);
+	usart_flag_clear(USART1, USART_FLAG_LBD);
+	usart_flag_clear(USART1, USART_FLAG_TBE);
+	usart_flag_clear(USART1, USART_FLAG_TC);
+	usart_flag_clear(USART1, USART_FLAG_RBNE);
+	usart_flag_clear(USART1, USART_FLAG_IDLE);
+	usart_flag_clear(USART1, USART_FLAG_ORERR);
+	usart_flag_clear(USART1, USART_FLAG_NERR);
+	usart_flag_clear(USART1, USART_FLAG_FERR);
+	usart_flag_clear(USART1, USART_FLAG_PERR);
+
+    usart_interrupt_enable(USART1, USART_INT_TBE);
+    usart_interrupt_enable(USART1, USART_INT_TC);
+    usart_interrupt_enable(USART1, USART_INT_RBNE);
+
+    usart_enable(USART1);
+
 }
 
 static void deInit()
 {
-	NVIC_InitTypeDef NVIC_InitStructure;
+    usart_disable(USART1);
+    nvic_irq_disable(USART1_IRQn);
 
-	USART_Cmd(USART3, DISABLE);
-	NVIC_InitStructure.NVIC_IRQChannel     = USART3_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelCmd  = DISABLE;
-	NVIC_Init(&NVIC_InitStructure);
-
-	USART_ClearFlag
-	(
-		USART3,
-		0
-		| USART_FLAG_CTS
-		| USART_FLAG_LBD
-		| USART_FLAG_TXE
-		| USART_FLAG_TC
-		| USART_FLAG_RXNE
-		| USART_FLAG_IDLE
-		| USART_FLAG_ORE
-		| USART_FLAG_NE
-		| USART_FLAG_FE
-		| USART_FLAG_PE
-	);
+	usart_flag_clear(USART1, USART_FLAG_CTS);
+	usart_flag_clear(USART1, USART_FLAG_LBD);
+	usart_flag_clear(USART1, USART_FLAG_TBE);
+	usart_flag_clear(USART1, USART_FLAG_TC);
+	usart_flag_clear(USART1, USART_FLAG_RBNE);
+	usart_flag_clear(USART1, USART_FLAG_IDLE);
+	usart_flag_clear(USART1, USART_FLAG_ORERR);
+	usart_flag_clear(USART1, USART_FLAG_NERR);
+	usart_flag_clear(USART1, USART_FLAG_FERR);
+	usart_flag_clear(USART1, USART_FLAG_PERR);
 
 	clearBuffers();
 }
 
-void USART3_IRQHandler(void)
+void USART1_IRQHandler(void)
 {
-	if(USART3->SR & USART_FLAG_RXNE)
+	if(USART_STAT0(USART1) & USART_STAT0_RBNE)
 	{
-		buffers.rx.buffer[buffers.rx.wrote] = USART3->DR;
+		buffers.rx.buffer[buffers.rx.wrote] = USART_DATA(USART1);
 		buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
 		available++;
 	}
 
-	if(USART3->SR & USART_FLAG_TXE)
+	if(USART_STAT0(USART1) & USART_STAT0_TBE)
 	{
 		if(buffers.tx.read != buffers.tx.wrote)
 		{
-			USART3->DR	= buffers.tx.buffer[buffers.tx.read];
+			USART_DATA(USART1)	= buffers.tx.buffer[buffers.tx.read];
 			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
 		}
 		else
 		{
-			USART_ITConfig(USART3, USART_IT_TXE, DISABLE);
+		    usart_interrupt_disable(USART1, USART_INT_TBE);
 		}
 	}
 
-	if(USART3->SR & USART_FLAG_TC)
+	if(USART_STAT0(USART1) & USART_STAT0_TC)
 	{
-		USART_ClearITPendingBit(USART3, USART_IT_TC);
+	    usart_interrupt_flag_clear(USART1, USART_INT_FLAG_TC);
 	}
 }
 
@@ -157,7 +153,8 @@ static void tx(uint8_t ch)
 {
 	buffers.tx.buffer[buffers.tx.wrote] = ch;
 	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
-	USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
+    usart_interrupt_enable(USART1, USART_INT_TBE);
+
 }
 
 static uint8_t rx(uint8_t *ch)

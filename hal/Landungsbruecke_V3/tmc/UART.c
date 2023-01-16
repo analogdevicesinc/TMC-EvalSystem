@@ -56,83 +56,87 @@ static RXTXBufferingTypeDef buffers =
 	}
 };
 
-void __attribute__ ((interrupt)) USART2_IRQHandler(void);
+void __attribute__ ((interrupt)) USART1_IRQHandler(void);
 
 static void init()
 {
 
-//	usart_deinit(USART2);
 	usart_deinit(USART1);
 
     rcu_periph_clock_enable(RCU_USART1);
 
-    gpio_af_set(HAL.IOs->pins->RS232_TX.port, GPIO_AF_7, HAL.IOs->pins->RS232_TX.bitWeight);
-    gpio_af_set(HAL.IOs->pins->RS232_RX.port, GPIO_AF_7, HAL.IOs->pins->RS232_RX.bitWeight);
 
+	//TxD as open drain output
+	gpio_mode_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->WIRELESS_TX.bitWeight);
+	gpio_output_options_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIRELESS_TX.bitWeight);
 
-	USART_StructInit(&UART_InitStructure);
-	UART_InitStructure.USART_BaudRate = 115200;
-	USART_Init(USART2,&UART_InitStructure);
+	//RxD with pull-up resistor
+	gpio_mode_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->WIRELESS_RX.bitWeight);
+	gpio_output_options_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIRELESS_RX.bitWeight);
 
+    gpio_af_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_AF_7, HAL.IOs->pins->WIRELESS_TX.bitWeight);
+    gpio_af_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_AF_7, HAL.IOs->pins->WIRELESS_RX.bitWeight);
 
-	NVIC_InitStructure.NVIC_IRQChannel                    = USART2_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority  = INTR_PRI;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority         = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd                 = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+    usart_baudrate_set(USART1, 115200);
+    usart_word_length_set(USART1, USART_WL_8BIT);
+    usart_stop_bit_set(USART1, USART_STB_1BIT);
+    usart_parity_config(USART1, USART_PM_NONE);
+    usart_hardware_flow_rts_config(USART1, USART_RTS_DISABLE);
+    usart_hardware_flow_cts_config(USART1, USART_CTS_DISABLE);
+    usart_receive_config(USART1, USART_RECEIVE_ENABLE);
+    usart_transmit_config(USART1, USART_TRANSMIT_ENABLE);
 
+    nvic_irq_enable(USART1_IRQn, INTR_PRI, 0);
 
-	USART_ClearFlag(USART2, USART_FLAG_CTS | USART_FLAG_LBD  | USART_FLAG_TXE  |
-	                        USART_FLAG_TC  | USART_FLAG_RXNE | USART_FLAG_IDLE |
-	                        USART_FLAG_ORE | USART_FLAG_NE   | USART_FLAG_FE   |
-	                        USART_FLAG_PE);
-	USART_ITConfig(USART2,USART_IT_PE, DISABLE);
-	USART_ITConfig(USART2,USART_IT_TXE, ENABLE);
-	USART_ITConfig(USART2,USART_IT_TC, ENABLE);
-	USART_ITConfig(USART2,USART_IT_RXNE, ENABLE);
-	USART_ITConfig(USART2,USART_IT_IDLE, DISABLE);
-	USART_ITConfig(USART2,USART_IT_LBD, DISABLE);
-	USART_ITConfig(USART2,USART_IT_CTS, DISABLE);
-	USART_ITConfig(USART2,USART_IT_ERR, DISABLE);
+	usart_flag_clear(USART1, USART_FLAG_CTS);
+	usart_flag_clear(USART1, USART_FLAG_LBD);
+	usart_flag_clear(USART1, USART_FLAG_TBE);
+	usart_flag_clear(USART1, USART_FLAG_TC);
+	usart_flag_clear(USART1, USART_FLAG_RBNE);
+	usart_flag_clear(USART1, USART_FLAG_IDLE);
+	usart_flag_clear(USART1, USART_FLAG_ORERR);
+	usart_flag_clear(USART1, USART_FLAG_NERR);
+	usart_flag_clear(USART1, USART_FLAG_FERR);
+	usart_flag_clear(USART1, USART_FLAG_PERR);
 
-	USART_Cmd(USART2, ENABLE);
+    usart_interrupt_enable(USART1, USART_INT_TBE);
+    usart_interrupt_enable(USART1, USART_INT_TC);
+    usart_interrupt_enable(USART1, USART_INT_RBNE);
+
+    usart_enable(USART1);
+
 }
 
 static void deInit()
 {
-	NVIC_InitTypeDef  NVIC_InitStructure;
-	USART_Cmd(USART2, DISABLE);
+    usart_disable(USART1);
+    nvic_irq_disable(USART1_IRQn);
 
-	NVIC_InitStructure.NVIC_IRQChannel     = USART2_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelCmd  = DISABLE;
-	NVIC_Init(&NVIC_InitStructure);
-
-	USART_ClearFlag(USART2, 0
-	                        | USART_FLAG_CTS
-	                        | USART_FLAG_LBD
-	                        | USART_FLAG_TXE
-	                        | USART_FLAG_TC
-	                        | USART_FLAG_RXNE
-	                        | USART_FLAG_IDLE
-	                        | USART_FLAG_ORE
-	                        | USART_FLAG_NE
-	                        | USART_FLAG_FE
-	                        | USART_FLAG_PE
-	               );
+	usart_flag_clear(USART1, USART_FLAG_CTS);
+	usart_flag_clear(USART1, USART_FLAG_LBD);
+	usart_flag_clear(USART1, USART_FLAG_TBE);
+	usart_flag_clear(USART1, USART_FLAG_TC);
+	usart_flag_clear(USART1, USART_FLAG_RBNE);
+	usart_flag_clear(USART1, USART_FLAG_IDLE);
+	usart_flag_clear(USART1, USART_FLAG_ORERR);
+	usart_flag_clear(USART1, USART_FLAG_NERR);
+	usart_flag_clear(USART1, USART_FLAG_FERR);
+	usart_flag_clear(USART1, USART_FLAG_PERR);
 
 	clearBuffers();
 }
 
-void USART2_IRQHandler(void)
+void USART1_IRQHandler(void)
 {
 	uint8_t byte;
 
 	// Receive interrupt
-	if(USART2->SR & USART_FLAG_RXNE)
+	if(USART_STAT0(USART1) & USART_STAT0_RBNE)
 	{
 		// One-wire UART communication:
 		// Ignore received byte when a byte has just been sent (echo).
-		byte = USART2->DR;
+		byte = USART_DATA(USART1);
+
 		if(!UARTSendFlag)
 		{	// not sending, received real data instead of echo -> advance ring buffer index and available counter
       buffers.rx.buffer[buffers.rx.wrote]=byte;
@@ -143,31 +147,34 @@ void USART2_IRQHandler(void)
 
 	// Transmit buffer empty interrupt => send next byte if there is something
 	// to be sent.
-	if(USART2->SR & USART_FLAG_TXE)
+	if(USART_STAT0(USART1) & USART_STAT0_TBE)
 	{
 		if(buffers.tx.read != buffers.tx.wrote)
 		{
 			UARTSendFlag = true;
-			USART2->DR  = buffers.tx.buffer[buffers.tx.read];
+			USART_DATA(USART1)  = buffers.tx.buffer[buffers.tx.read];
 			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
 		}
 		else
 		{
-			USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
+		    usart_interrupt_disable(USART1, USART_INT_TBE);
+
 		}
 	}
 
 	// Transmission complete interrupt => do not ignore echo any more
 	// after last bit has been sent.
-	if(USART2->SR & USART_FLAG_TC)
+	if(USART_STAT0(USART1) & USART_STAT0_TC)
 	{
 		//Only if there are no more bytes left in the transmit buffer
 		if(buffers.tx.read == buffers.tx.wrote)
 		{
-  		byte = USART2->DR;  //Ignore spurios echos of the last sent byte that sometimes occur.
+  		byte = USART_DATA(USART1);  //Ignore spurios echos of the last sent byte that sometimes occur.
 			UARTSendFlag = false;
 		}
-		USART_ClearITPendingBit(USART2, USART_IT_TC);
+//		USART_ClearITPendingBit(USART2, USART_IT_TC);
+	    usart_interrupt_flag_clear(USART1, USART_INT_FLAG_TC);
+
 	}
 }
 
@@ -258,32 +265,26 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 {
 	UNUSED(channel);
 
-	GPIO_InitTypeDef GPIO_InitStructure;
 
 	if (enabled)
 	{
-		// UART2-Pins zuweisen (PD5 und PD6)
-		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_6;
-		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-		GPIO_InitStructure.GPIO_OType  = GPIO_OType_OD;
-		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_NOPULL;
-		GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-		GPIO_InitStructure.GPIO_Pin    = GPIO_Pin_5;
-		GPIO_InitStructure.GPIO_Mode   = GPIO_Mode_AF;
-		GPIO_InitStructure.GPIO_OType  = GPIO_OType_PP;
-		GPIO_InitStructure.GPIO_Speed  = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_PuPd   = GPIO_PuPd_UP;
-		GPIO_Init(GPIOD, &GPIO_InitStructure);
+		//TxD as open drain output
+		gpio_mode_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->WIRELESS_TX.bitWeight);
+		gpio_output_options_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIRELESS_TX.bitWeight);
 
-		GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
-		GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
+		//RxD with pull-up resistor
+		gpio_mode_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->WIRELESS_RX.bitWeight);
+		gpio_output_options_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIRELESS_RX.bitWeight);
+
+	    gpio_af_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_AF_7, HAL.IOs->pins->WIRELESS_TX.bitWeight);
+	    gpio_af_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_AF_7, HAL.IOs->pins->WIRELESS_RX.bitWeight);
 	}
 	else
 	{
-		HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
-		HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
+
+		HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_TX);
+		HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_RX);
 	}
 }
 
@@ -291,7 +292,8 @@ static void tx(uint8_t ch)
 {
 	buffers.tx.buffer[buffers.tx.wrote] = ch;
 	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
-	USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+    usart_interrupt_enable(USART1, USART_INT_TBE);
+
 }
 
 static uint8_t rx(uint8_t *ch)

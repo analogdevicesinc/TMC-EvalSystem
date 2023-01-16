@@ -39,9 +39,9 @@ static IOPinTypeDef *_pins[] =
 //	&IOMap.DIO17,
 //	&IOMap.DIO18,
 //	&IOMap.DIO19,
-//	&IOMap.WIRELESS_TX,
-//	&IOMap.WIRELESS_RX,
-//	&IOMap.WIRELESS_NRST,
+	&IOMap.WIRELESS_TX,
+	&IOMap.WIRELESS_RX,
+	&IOMap.WIRELESS_NRST,
 	&IOMap.RS232_TX,
 	&IOMap.RS232_RX,
 //	&IOMap.USB_V_BUS,
@@ -70,6 +70,8 @@ static IOPinTypeDef *_pins[] =
 //	&IOMap.AIN0,
 //	&IOMap.AIN1,
 //	&IOMap.AIN2,
+	&IOMap.WIFI_EN,
+	&IOMap.WIFI_RST,
 //	&IOMap.DUMMY
 };
 
@@ -669,55 +671,7 @@ IOPinMapTypeDef IOMap =
 //		}
 //	},
 //
-//	.WIRELESS_TX =  // IOPinTypeDef WIRELESS_TX
-//	{
-//		.setBitRegister      = (GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_8,       // uint32_t pinBitWeight
-//		.bit                 = 8,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.WIRELESS_RX =  // IOPinTypeDef WIRELESS_RX
-//	{
-//		.setBitRegister      = (GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_9,       // uint32_t pinBitWeight
-//		.bit                 = 9,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.WIRELESS_NRST =  // IOPinTypeDef WIRELESS_NRST
-//	{
-//		.setBitRegister      = (GPIOD->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOD->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_10,      // uint32_t pinBitWeight
-//		.bit                 = 10,               // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_OUTPUT,        // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-
-	.RS232_TX =  // IOPinTypeDef RS232_TX
+	.WIRELESS_TX =  // IOPinTypeDef USART1_TX
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
@@ -733,12 +687,12 @@ IOPinMapTypeDef IOMap =
 		}
 	},
 
-	.RS232_RX =  // IOPinTypeDef RS232_RX
+	.WIRELESS_RX =  // IOPinTypeDef USART1_RX
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_Pin_6,       // uint32_t pinBitWeight
+		.bitWeight           = GPIO_PIN_6,       // uint32_t pinBitWeight
 		.bit                 = 6,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -746,6 +700,52 @@ IOPinMapTypeDef IOMap =
 			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
 			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+	.WIRELESS_NRST =  // IOPinTypeDef WIRELESS_NRST
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = DUMMY_BITWEIGHT,      // uint32_t pinBitWeight
+		.bit                 = -1,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_OUTPUT,        // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+	.RS232_TX =  // IOPinTypeDef RS232_TX
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = DUMMY_BITWEIGHT,       // uint32_t pinBitWeight
+		.bit                 = -1,                // unsigned char bit
+		.resetConfiguration  =
+		{
+				.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+				.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+				.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+				.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.RS232_RX =  // IOPinTypeDef RS232_RX
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = DUMMY_BITWEIGHT,       // uint32_t pinBitWeight
+		.bit                 = -1,                // unsigned char bit
+		.resetConfiguration  =
+		{
+				.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+				.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+				.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+				.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
 
@@ -1117,6 +1117,36 @@ IOPinMapTypeDef IOMap =
 //		}
 //	},
 //
+	.WIFI_EN =  // IOPinTypeDef WIFI_EN
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_7,       // uint32_t pinBitWeight
+		.bit                 = 7,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+	.WIFI_RST =  // IOPinTypeDef WIFI_RST
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_4,       // uint32_t pinBitWeight
+		.bit                 = 4,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
 //	.DUMMY =  // IOPinTypeDef
 //	{
 //		.setBitRegister      = (GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
@@ -1172,11 +1202,13 @@ static void init()
 //	HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
 //	HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
 //	HAL.IOs->config->reset(&HAL.IOs->pins->DIO19);
-//	HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_TX);
-//	HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_RX);
-//	HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_NRST);
-//	HAL.IOs->config->reset(&HAL.IOs->pins->RS232_TX);
-//	HAL.IOs->config->reset(&HAL.IOs->pins->RS232_RX);
+	HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_TX);
+	HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_RX);
+	HAL.IOs->config->reset(&HAL.IOs->pins->WIRELESS_NRST);
+	HAL.IOs->config->reset(&HAL.IOs->pins->RS232_TX);
+	HAL.IOs->config->reset(&HAL.IOs->pins->RS232_RX);
+	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_EN);
+	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_RST);
 //	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_BUS);
 //	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DM);
 //	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DP);
