@@ -9,6 +9,13 @@ typedef struct
 
 	IOPinTypeDef **pins; // Map Pin ID <=> Pin
 
+#if defined(LandungsbrueckeV3)
+	IOPinTypeDef VM_MEAS;
+	IOPinTypeDef AIN0;
+	IOPinTypeDef AIN1;
+	IOPinTypeDef AIN2;
+#endif
+
 	IOPinTypeDef ID_CLK;
 //	IOPinTypeDef ID_CH0;
 //	IOPinTypeDef ID_CH1;
