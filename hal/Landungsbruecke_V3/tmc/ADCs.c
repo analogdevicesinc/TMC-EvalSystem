@@ -21,15 +21,19 @@ ADCTypeDef ADCs =
 
 void init(void)
 {
-	ADC_InitTypeDef ADC_InitStructure;
-	ADC_CommonInitTypeDef ADC_CommonInitStructure;
-	DMA_InitTypeDef DMA_InitStructure;
+//	ADC_InitTypeDef ADC_InitStructure;
+//	ADC_CommonInitTypeDef ADC_CommonInitStructure;
+	dma_multi_data_parameter_struct DMA_InitStructure;
 
-	ADC_DeInit();
+	adc_deinit();
 
 	/* Enable peripheral clocks *************************************************/
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+    rcu_periph_clock_enable(RCU_DMA1);
+    rcu_periph_clock_enable(RCU_ADC1);
+
+
+//	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
+//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 
 	HAL.IOs->config->reset(&HAL.IOs->pins->AIN0);
 	HAL.IOs->config->reset(&HAL.IOs->pins->AIN1);
@@ -38,65 +42,101 @@ void init(void)
 
 
 	/* DMA2_Stream0 channel0 configuration **************************************/
-	DMA_DeInit(DMA2_Stream0);
-	DMA_InitStructure.DMA_Channel             = DMA_Channel_0;
-	DMA_InitStructure.DMA_PeripheralBaseAddr  = (uint32_t)ADC1_DR_ADDRESS;
-	DMA_InitStructure.DMA_Memory0BaseAddr     = (uint32_t)&ADCValue;
-	DMA_InitStructure.DMA_DIR                 = DMA_DIR_PeripheralToMemory;
-	DMA_InitStructure.DMA_BufferSize          = N_O_ADC_CHANNELS;
-	DMA_InitStructure.DMA_PeripheralInc       = DMA_PeripheralInc_Disable;
-	DMA_InitStructure.DMA_MemoryInc           = DMA_MemoryInc_Enable;
-	DMA_InitStructure.DMA_PeripheralDataSize  = DMA_PeripheralDataSize_HalfWord;
-	DMA_InitStructure.DMA_MemoryDataSize      = DMA_MemoryDataSize_HalfWord;
-	DMA_InitStructure.DMA_Mode                = DMA_Mode_Circular;
-	DMA_InitStructure.DMA_Priority            = DMA_Priority_High;
+	dma_deinit(DMA1, DMA_CH0);
+
+//	DMA_DeInit(DMA2_Stream0);
+//	DMA_InitStructure.DMA_Channel             = DMA_Channel_0;
+	DMA_InitStructure.periph_addr  = (uint32_t)ADC1_DR_ADDRESS;
+	DMA_InitStructure.memory0_addr     = (uint32_t)&ADCValue;
+	DMA_InitStructure.direction                 = DMA_PERIPH_TO_MEMORY;
+
+//	DMA_InitStructure.DMA_BufferSize          = N_O_ADC_CHANNELS;
+	IS_DMA_BUFFER_SIZE(N_O_ADC_CHANNELS);
+
+	DMA_InitStructure.periph_inc       = DMA_PERIPH_INCREASE_DISABLE;
+	DMA_InitStructure.memory_inc           = DMA_MEMORY_INCREASE_ENABLE;
+	DMA_InitStructure.periph_width  = DMA_PERIPH_WIDTH_16BIT;
+	DMA_InitStructure.memory_width      = DMA_MEMORY_WIDTH_16BIT;
+	DMA_InitStructure.circular_mode                = DMA_CIRCULAR_MODE_ENABLE;
+	DMA_InitStructure.priority            = DMA_PRIORITY_HIGH;
 	DMA_InitStructure.DMA_FIFOMode            = DMA_FIFOMode_Disable;
 	DMA_InitStructure.DMA_FIFOThreshold       = DMA_FIFOThreshold_HalfFull;
-	DMA_InitStructure.DMA_MemoryBurst         = DMA_MemoryBurst_Single;
-	DMA_InitStructure.DMA_PeripheralBurst     = DMA_PeripheralBurst_Single;
-	DMA_Init(DMA2_Stream0, &DMA_InitStructure);
+	DMA_InitStructure.memory_burst_width         = DMA_MEMORY_BURST_SINGLE;
+	DMA_InitStructure.periph_burst_width     = DMA_PERIPH_BURST_SINGLE;
+//	DMA_Init(DMA2_Stream0, &DMA_InitStructure);
+
+	dma_multi_data_mode_init(DMA1, DMA_CH0, &DMA_InitStructure);
+
 	/* DMA2_Stream0 enable */
 	DMA_Cmd(DMA2_Stream0, ENABLE);
 
 
 	/* ADC Common Init **********************************************************/
-	ADC_CommonInitStructure.ADC_Mode              = ADC_Mode_Independent;
+	adc_sync_mode_config(ADC_SYNC_MODE_INDEPENDENT);
+//	ADC_CommonInitStructure.ADC_Mode              = ADC_Mode_Independent;
+
 	ADC_CommonInitStructure.ADC_Prescaler         = ADC_Prescaler_Div2;
 	ADC_CommonInitStructure.ADC_DMAAccessMode     = ADC_DMAAccessMode_Disabled;
-	ADC_CommonInitStructure.ADC_TwoSamplingDelay  = ADC_TwoSamplingDelay_5Cycles;
-	ADC_CommonInit(&ADC_CommonInitStructure);
+
+	adc_sync_delay_config(ADC_SYNC_DELAY_5CYCLE);
+//	ADC_CommonInitStructure.ADC_TwoSamplingDelay  = ADC_TwoSamplingDelay_5Cycles;
+
+//	ADC_CommonInit(&ADC_CommonInitStructure);
 
 	/* ADC1 Init ****************************************************************/
-	ADC_InitStructure.ADC_Resolution            = ADC_Resolution_12b;
-	ADC_InitStructure.ADC_ScanConvMode          = ENABLE;
-	ADC_InitStructure.ADC_ContinuousConvMode    = ENABLE;
-	ADC_InitStructure.ADC_ExternalTrigConvEdge  = ADC_ExternalTrigConvEdge_None;
-	ADC_InitStructure.ADC_ExternalTrigConv      = ADC_ExternalTrigConv_T1_CC1;
-	ADC_InitStructure.ADC_DataAlign             = ADC_DataAlign_Right;
+	adc_resolution_config(ADC1, ADC_RESOLUTION_12B);
+//	ADC_InitStructure.ADC_Resolution            = ADC_Resolution_12b;
+
+	adc_special_function_config(ADC1, ADC_SCAN_MODE, ENABLE);
+//	ADC_InitStructure.ADC_ScanConvMode          = ENABLE;
+
+	adc_special_function_config(ADC1, ADC_CONTINUOUS_MODE, ENABLE);
+//	ADC_InitStructure.ADC_ContinuousConvMode    = ENABLE;
+
+	adc_external_trigger_config(EXTERNAL_TRIGGER_DISABLE);
+//	ADC_InitStructure.ADC_ExternalTrigConvEdge  = ADC_ExternalTrigConvEdge_None;
+
+	adc_external_trigger_source_config(ADC1, , ADC_EXTTRIG_ROUTINE_T1_CH1);
+//	ADC_InitStructure.ADC_ExternalTrigConv      = ADC_ExternalTrigConv_T1_CC1;
+
+	adc_data_alignment_config(ADC1,ADC_DATAALIGN_RIGHT);
+//	ADC_InitStructure.ADC_DataAlign             = ADC_DataAlign_Right;
+
 	ADC_InitStructure.ADC_NbrOfConversion       = N_O_ADC_CHANNELS;
-	ADC_Init(ADC1, &ADC_InitStructure);
+//	ADC_Init(ADC1, &ADC_InitStructure);
 
 	/* Enable ADC1 DMA */
-	ADC_DMACmd(ADC1, ENABLE);
+	adc_dma_mode_enable(ADC1);
+//	ADC_DMACmd(ADC1, ENABLE);
 
 	/* ADC1 regular channel configuration ******************************/
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_7, 1, ADC_SampleTime_15Cycles);
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_8, 2, ADC_SampleTime_15Cycles);
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_9, 3, ADC_SampleTime_15Cycles);
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_4, 4, ADC_SampleTime_15Cycles);
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 5, ADC_SampleTime_15Cycles);
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_12, 6, ADC_SampleTime_15Cycles);
+	adc_routine_channel_config(ADC1, 0, ADC_CHANNEL_7, ADC_SAMPLETIME_15);
+	adc_routine_channel_config(ADC1, 1, ADC_CHANNEL_8, ADC_SAMPLETIME_15);
+	adc_routine_channel_config(ADC1, 2, ADC_CHANNEL_9, ADC_SAMPLETIME_15);
+	adc_routine_channel_config(ADC1, 3, ADC_CHANNEL_4, ADC_SAMPLETIME_15);
+	adc_routine_channel_config(ADC1, 4, ADC_CHANNEL_5, ADC_SAMPLETIME_15);
+	adc_routine_channel_config(ADC1, 5, ADC_CHANNEL_12, ADC_SAMPLETIME_15);
+
+//	ADC_RegularChannelConfig(ADC1, ADC_Channel_7, 1, ADC_SampleTime_15Cycles);
+//	ADC_RegularChannelConfig(ADC1, ADC_Channel_8, 2, ADC_SampleTime_15Cycles);
+//	ADC_RegularChannelConfig(ADC1, ADC_Channel_9, 3, ADC_SampleTime_15Cycles);
+//	ADC_RegularChannelConfig(ADC1, ADC_Channel_4, 4, ADC_SampleTime_15Cycles);
+//	ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 5, ADC_SampleTime_15Cycles);
+//	ADC_RegularChannelConfig(ADC1, ADC_Channel_12, 6, ADC_SampleTime_15Cycles);
 
 	/* Enable DMA request after last transfer (Single-ADC mode) */
-	ADC_DMARequestAfterLastTransferCmd(ADC1, ENABLE);
+	adc_dma_request_after_last_enable(ADC1);
+//	ADC_DMARequestAfterLastTransferCmd(ADC1, ENABLE);
 
 	/* Enable ADC1 **************************************************************/
-	ADC_Cmd(ADC1, ENABLE);
+	adc_enable(ADC1);
+//	ADC_Cmd(ADC1, ENABLE);
 
-	ADC_SoftwareStartConv(ADC1);
+	adc_software_trigger_enable(ADC1, ADC_ROUTINE_CHANNEL);
+//	ADC_SoftwareStartConv(ADC1);
 }
 
 static void deInit(void)
 {
-	 ADC_DeInit();
+	adc_deinit();
 }
