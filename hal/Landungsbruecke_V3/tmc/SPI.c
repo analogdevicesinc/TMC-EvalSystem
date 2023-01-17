@@ -20,7 +20,7 @@ SPITypeDef SPI=
 {
 	.ch1 =
 	{
-		.periphery       = SPI3,
+		.periphery       = SPI1,
 		.CSN             = &IODummy,
 		.readWrite       = spi_ch1_readWrite,
 		.readWriteArray  = spi_ch1_readWriteArray,
@@ -29,7 +29,7 @@ SPITypeDef SPI=
 
 	.ch2 =
 	{
-		.periphery       = SPI2,
+		.periphery       = SPI0,
 		.CSN             = &IODummy,
 		.readWrite       = spi_ch2_readWrite,
 		.readWriteArray  = spi_ch2_readWriteArray,
@@ -41,47 +41,39 @@ SPITypeDef SPI=
 
 static void init(void)
 {
-	SPI_InitTypeDef SPIInit;
+	rcu_periph_clock_enable(RCU_SPI1);
+	rcu_periph_clock_enable(RCU_SPI0);
 
-	//-------- SPI2 initialisieren und mit den Pins verbinden ---------
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
+	// Config
+	spi_parameter_struct params;
 
-	//SPI initialisieren
-	SPIInit.SPI_Direction          = SPI_Direction_2Lines_FullDuplex;
-	SPIInit.SPI_Mode               = SPI_Mode_Master;
-	SPIInit.SPI_DataSize           = SPI_DataSize_8b;
-	SPIInit.SPI_CPOL               = SPI_CPOL_High;
-	SPIInit.SPI_CPHA               = SPI_CPHA_2Edge;
-	SPIInit.SPI_NSS                = SPI_NSS_Soft;
-	SPIInit.SPI_BaudRatePrescaler  = SPI_BaudRatePrescaler_8;
-	SPIInit.SPI_FirstBit           = SPI_FirstBit_MSB;
-	SPIInit.SPI_CRCPolynomial      = 0;
-	SPI_Init(SPI2, &SPIInit);
-	SPI_Cmd(SPI2, ENABLE);
+	params.device_mode = SPI_MASTER;
+	params.trans_mode = SPI_TRANSMODE_FULLDUPLEX;
+	params.frame_size = SPI_FRAMESIZE_8BIT;
+	params.nss = SPI_NSS_SOFT;
+	params.endian = SPI_ENDIAN_MSB;
+	params.clock_polarity_phase = SPI_CK_PL_HIGH_PH_2EDGE;
+	params.prescale = SPI_PSC_8;
 
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_SPI2);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_SPI2);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource15, GPIO_AF_SPI2);
+	spi_init(SPI.ch1.periphery, &params);
 
-	//-------- SPI3 initialisieren und mit den Pins verbinden ---------
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
+	params.prescale = SPI_PSC_32;
 
-	//SPI initialisieren
-	SPIInit.SPI_Direction          = SPI_Direction_2Lines_FullDuplex;
-	SPIInit.SPI_Mode               = SPI_Mode_Master;
-	SPIInit.SPI_DataSize           = SPI_DataSize_8b;
-	SPIInit.SPI_CPOL               = SPI_CPOL_High;
-	SPIInit.SPI_CPHA               = SPI_CPHA_2Edge;
-	SPIInit.SPI_NSS                = SPI_NSS_Soft;
-	SPIInit.SPI_BaudRatePrescaler  = SPI_BaudRatePrescaler_32;
-	SPIInit.SPI_FirstBit           = SPI_FirstBit_MSB;
-	SPIInit.SPI_CRCPolynomial      = 0;
-	SPI_Init(SPI3, &SPIInit);
-	SPI_Cmd(SPI3, ENABLE);
+	spi_init(SPI.ch2.periphery, &params);
 
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_SPI3);
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_SPI3);
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_SPI3);
+	// Enable
+	spi_enable(SPI.ch1.periphery);
+	spi_enable(SPI.ch2.periphery);
+
+	// Set pin AFs
+
+	gpio_af_set(GPIOB, GPIO_AF_5, GPIO_PIN_15);
+	gpio_af_set(GPIOB, GPIO_AF_5, GPIO_PIN_14);
+	gpio_af_set(GPIOB, GPIO_AF_5, GPIO_PIN_13);
+
+	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_7);
+	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_6);
+	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_5);
 
 	reset_ch1();
 	reset_ch2();
@@ -97,72 +89,26 @@ static void init(void)
 static void reset_ch1()
 {
 	SPI.ch1.CSN        = &IODummy;
-	SPI.ch1.periphery  = SPI3;
+	SPI.ch1.periphery  = SPI1;
 	SPI.ch1.readWrite  = spi_ch1_readWrite;
 }
 
 static void reset_ch2()
 {
 	SPI.ch2.CSN        = &IODummy;
-	SPI.ch2.periphery  = SPI2;
+	SPI.ch2.periphery  = SPI0;
 	SPI.ch2.readWrite  = spi_ch2_readWrite;
 }
 
 uint32_t spi_getFrequency(SPIChannelTypeDef *SPIChannel)
 {
-	// Calculate the shift value of the CR1->BD bitfield since it is
-	// not provided as a macro.
-	uint32_t br_shift = 0;
-	for (uint32_t j = SPI_CR1_BR; (j & 1) == 0; j >>=1)
-	{
-		br_shift++;
-	}
-
-	RCC_ClocksTypeDef RCC_ClocksStatus;
-
-	RCC_GetClocksFreq(&RCC_ClocksStatus);
-
-	uint8_t br = FIELD_GET(SPIChannel->periphery->CR1, SPI_CR1_BR, br_shift);
-
-	return RCC_ClocksStatus.PCLK1_Frequency >> (br+1);
+	return 0;
 }
 
 // Set the SPI frequency to the next-best available frequency (rounding down).
 // Returns the actual frequency set or 0 if no suitable frequency was found.
 uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency)
 {
-	RCC_ClocksTypeDef RCC_ClocksStatus;
-
-	RCC_GetClocksFreq(&RCC_ClocksStatus);
-
-	for (int i = 0; i < 8; i++)
-	{
-		uint32_t prescaler = 1<<(i+1);
-		uint32_t frequency = RCC_ClocksStatus.PCLK1_Frequency / prescaler;
-
-		if (frequency <= desiredFrequency)
-		{
-			// Calculate the shift value of the CR1->BD bitfield since it is
-			// not provided as a macro.
-			uint32_t shift = 0;
-			for (uint32_t j = SPI_CR1_BR; (j & 1) == 0; j >>=1)
-			{
-				shift++;
-			}
-
-			// Update the prescaler
-			uint32_t tmp = SPIChannel->periphery->CR1;
-
-			tmp &= ~SPI_CR1_BR;
-
-			tmp |= i << shift;
-
-			SPIChannel->periphery->CR1 = tmp;
-
-			return frequency;
-		}
-	}
-
 	// The requested frequency was too small -> do not update the frequency
 	return 0;
 }
@@ -251,11 +197,11 @@ static unsigned char readWrite(SPIChannelTypeDef *SPIChannel, uint8_t data, uint
 
 	HAL.IOs->config->setLow(SPIChannel->CSN);
 
-	while(SPI_I2S_GetFlagStatus(SPIChannel->periphery, SPI_I2S_FLAG_TXE) == RESET) {};
-	SPI_I2S_SendData(SPIChannel->periphery, data);
-	while(SPI_I2S_GetFlagStatus(SPIChannel->periphery, SPI_I2S_FLAG_RXNE) == RESET) {};
+	while(spi_i2s_flag_get(SPIChannel->periphery, SPI_FLAG_TBE) == RESET);
+	spi_i2s_data_transmit(SPIChannel->periphery, data);
+	while(spi_i2s_flag_get(SPIChannel->periphery, SPI_FLAG_RBNE) == RESET);
 	if(lastTransfer)
 		HAL.IOs->config->setHigh(SPIChannel->CSN);
 
-	return SPI_I2S_ReceiveData(SPIChannel->periphery);
+	return spi_i2s_data_receive(SPIChannel->periphery);
 }

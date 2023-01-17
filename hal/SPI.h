@@ -6,7 +6,11 @@
 
 	typedef struct
 	{
-		SPI_MemMapPtr periphery; // pointer to freescale SPI memory base pointer
+		#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+			SPI_MemMapPtr periphery; // pointer to freescale SPI memory base pointer
+		#elif defined(LandungsbrueckeV3)
+			uint32_t periphery; // GD32 SPI parameters
+		#endif
 
 		IOPinTypeDef *CSN;
 		unsigned char (*readWrite) (unsigned char data, unsigned char lastTransfer);
