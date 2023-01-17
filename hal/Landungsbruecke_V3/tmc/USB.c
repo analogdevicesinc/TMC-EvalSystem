@@ -25,22 +25,22 @@ static uint32_t bytesAvailable(void);
 static usb_core_driver cdc_acm;
 static uint8_t USBDataTxBuffer[256];
 
-static RXTXBufferingTypeDef buffers =
-{
-	.rx =
-	{
-		.read    = 0,
-		.wrote   = 0,
-		.buffer  = rxBuffer
-	},
+// static RXTXBufferingTypeDef buffers =
+// {
+// 	.rx =
+// 	{
+// 		.read    = 0,
+// 		.wrote   = 0,
+// 		.buffer  = rxBuffer
+// 	},
 
-	.tx =
-	{
-		.read    = 0,
-		.wrote   = 0,
-		.buffer  = APP_Rx_Buffer
-	}
-};
+// 	.tx =
+// 	{
+// 		.read    = 0,
+// 		.wrote   = 0,
+// 		.buffer  = APP_Rx_Buffer
+// 	}
+// };
 
 RXTXTypeDef USB =
 {
@@ -173,20 +173,32 @@ static void init(void)
 
 static void tx(uint8_t ch)
 {
-	buffers.tx.buffer[buffers.tx.wrote] = ch;
-	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
-	APP_Rx_ptr_in = buffers.tx.wrote;
+	//buffers.tx.buffer[buffers.tx.wrote] = ch;
+	//buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
+  usbd_ep_send((usb_dev *) &cdc_acm, CDC_DATA_IN_EP, &ch, 1);
 }
 
 static uint8_t rx(uint8_t *ch)
 {
-	if(!available)
-		return 0;
-	*ch = buffers.rx.buffer[buffers.rx.read];
-	buffers.rx.read = (buffers.rx.read + 1) % BUFFER_SIZE;
-	available--;
+  uint8_t data = 0;
+  uint8_t i = 0;
+  usb_cdc_handler *cdc = (usb_cdc_handler *) (&cdc_acm)->dev.class_data[CDC_COM_INTERFACE];
 
-	return 1;
+  if(USBD_CONFIGURED == cdc_acm.dev.cur_status)
+  {
+  	if(cdc->packet_receive)
+  	{
+	  	if(cdc->receive_length > 0)
+  		{
+        data = cdc->data[0];
+        i = 1;
+  		}
+  		cdc->packet_receive--;
+    	usbd_ep_recev((usb_dev *) &cdc_acm, CDC_DATA_OUT_EP, (uint8_t *)(cdc->data), USB_CDC_DATA_PACKET_SIZE);
+    }
+  }
+
+  return i;
 }
 
 static void txN(uint8_t *str, unsigned char number)
@@ -208,14 +220,14 @@ static uint8_t rxN(uint8_t *str, unsigned char number)
 
 static void clearBuffers(void)
 {
-	__disable_irq();
-	available         = 0;
-	buffers.rx.read   = 0;
-	buffers.rx.wrote  = 0;
+	// __disable_irq();
+	// available         = 0;
+	// buffers.rx.read   = 0;
+	// buffers.rx.wrote  = 0;
 
-	buffers.tx.read   = 0;
-	buffers.tx.wrote  = 0;
-	__enable_irq();
+	// buffers.tx.read   = 0;
+	// buffers.tx.wrote  = 0;
+	// __enable_irq();
 }
 
 static uint32_t bytesAvailable(void)
