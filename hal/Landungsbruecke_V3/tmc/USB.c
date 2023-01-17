@@ -1,59 +1,29 @@
-/****************************************************
-  Projekt: TMCM-3110 etc.
-
-  Modul:   USB-STX2.c
-           USB Virtual COM Port
-           für Module mit dem STM32F2xx.
-
-  Datum:   3.8.2012 OK
-*****************************************************/
-
-#include <stdlib.h>
-#include "stm32f2xx.h"
-#include "usbd_usr.h"
-#include "usbd_desc.h"
-#include "usbd_cdc_core.h"
-#include "usb_dcd_int.h"
+#include "gd32f4xx.h"
+#include "usb/drv_usbd_int.h"
+#include "usb/drv_usb_hw.h"
+#include "usb/cdc_acm_core.h"
 #include "hal/HAL.h"
-
-// USB Device Descriptor
-#define USBD_VID                      0x16D0
-#define USBD_PID                      0x07E4
-#define USBD_LANGID_STRING            0x409
-#define USBD_MANUFACTURER_STRING      "Trinamic Motion Control"
-#define USBD_PRODUCT_FS_STRING        "Trinamic-Eval (virtual COM)"
-#define USBD_SERIALNUMBER_FS_STRING   "TMCEVAL"
-#define USBD_CONFIGURATION_FS_STRING  "VCP Config"
-#define USBD_INTERFACE_FS_STRING      "VCP Interface"
 
 #define BUFFER_SIZE 2048 // KEEP THIS SIZE AS IT MATCHES BUFFERSIZE OF usbd_cdc_core.c
 
-void __attribute__ ((interrupt)) OTG_FS_IRQHandler(void);
+// Specific functions
+static void USBSendData(uint8_t *Buffer, uint32_t Size);
+static uint32_t USBGetData(uint8_t *Buffer);
+static uint8_t GetUSBCmd(uint8_t *Cmd);
+static void InitUSB(void);
+static void DetachUSB(void);
 
-static uint16_t VCP_Init(void);
-static uint16_t VCP_DeInit(void);
-static uint16_t VCP_Ctrl(uint32_t Cmd, uint8_t* Buf, uint32_t Len);
-static uint16_t VCP_DataTx(uint8_t* Buf, uint32_t Len);
-static uint16_t VCP_DataRx(uint8_t* Buf, uint32_t Len);
-
-static void init();
-static void deInit();
+// Interface functions
+static void init(void);
 static void tx(uint8_t ch);
 static uint8_t rx(uint8_t *ch);
 static void txN(uint8_t *str, unsigned char number);
-static uint8_t rxN(uint8_t *ch, unsigned char number);
+static uint8_t rxN(uint8_t *str, unsigned char number);
 static void clearBuffers(void);
-static uint32_t bytesAvailable();
-extern void USBD_GetString(uint8_t *desc, uint8_t *unicode, uint16_t *len);
+static uint32_t bytesAvailable(void);
 
-USB_OTG_CORE_HANDLE USB_OTG_dev;  // Handle for USB Core Functions
-extern uint8_t  APP_Rx_Buffer[];  // TX Buffer
-extern uint32_t APP_Rx_ptr_in;    // TX ptr
-
-
-static volatile uint8_t rxBuffer[BUFFER_SIZE];
-
-static volatile uint32_t available = 0;
+static usb_core_driver cdc_acm;
+static uint8_t USBDataTxBuffer[256];
 
 static RXTXBufferingTypeDef buffers =
 {
@@ -85,371 +55,120 @@ RXTXTypeDef USB =
 	.bytesAvailable  = bytesAvailable
 };
 
-typedef struct
+void usb_timer_irq (void);
+
+void TIMER6_IRQHandler(void)
 {
-	uint32_t  bitrate;
-	uint8_t   format;
-	uint8_t   paritytype;
-	uint8_t   datatype;
-} LINE_CODING;
-
-
-// User Callback Funktionen for den USB-Core
-USBD_Usr_cb_TypeDef USR_cb =
-{
-	USBD_USR_Init,
-	USBD_USR_DeviceReset,
-	USBD_USR_DeviceConfigured,
-	USBD_USR_DeviceSuspended,
-	USBD_USR_DeviceResumed,
-	USBD_USR_DeviceConnected,
-	USBD_USR_DeviceDisconnected
-};
-
-CDC_IF_Prop_TypeDef VCP_fops =
-{
-	VCP_Init,
-	VCP_DeInit,
-	VCP_Ctrl,
-	VCP_DataTx,
-	VCP_DataRx
-};
-
-//COM-Port-Verbindungsdaten
-static LINE_CODING linecoding =
-{
-	2048000, /* baud rate*/
-	0x00,    /* stop bits-1*/
-	0x00,    /* parity - none*/
-	0x08     /* nb. of bits 8*/
-};
-
-//Datenstruktur mit Funktionen zur Generierung der Desktriptor-Strings
-USBD_DEVICE USR_desc =
-{
-	USBD_USR_DeviceDescriptor,
-	USBD_USR_LangIDStrDescriptor,
-	USBD_USR_ManufacturerStrDescriptor,
-	USBD_USR_ProductStrDescriptor,
-	USBD_USR_SerialStrDescriptor,
-	USBD_USR_ConfigStrDescriptor,
-	USBD_USR_InterfaceStrDescriptor
-};
-
-//Deskriptor-Datenstrukturen
-__ALIGN_BEGIN uint8_t USBD_DeviceDesc[USB_SIZ_DEVICE_DESC] __ALIGN_END =
-{
-	0x12,                        /*bLength */
-	USB_DEVICE_DESCRIPTOR_TYPE,  /*bDescriptorType*/
-	0x00,                        /*bcdUSB */
-	0x02,
-	0x02,                        /*bDeviceClass*/
-	0x00,                        /*bDeviceSubClass*/
-	0x00,                        /*bDeviceProtocol*/
-	USB_OTG_MAX_EP0_SIZE,        /*bMaxPacketSize*/
-	LOBYTE(USBD_VID),            /*idVendor*/
-	HIBYTE(USBD_VID),            /*idVendor*/
-	LOBYTE(USBD_PID),            /*idVendor*/
-	HIBYTE(USBD_PID),            /*idVendor*/
-	0x00,                        /*bcdDevice rel. 2.00*/
-	0x02,
-	USBD_IDX_MFC_STR,            /*Index of manufacturer  string*/
-	USBD_IDX_PRODUCT_STR,        /*Index of product string*/
-	USBD_IDX_SERIAL_STR,         /*Index of serial number string*/
-	USBD_CFG_MAX_NUM             /*bNumConfigurations*/
-};  /* USB_DeviceDescriptor */
-
-__ALIGN_BEGIN uint8_t USBD_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_DESC] __ALIGN_END =
-{
-	USB_LEN_DEV_QUALIFIER_DESC,
-	USB_DESC_TYPE_DEVICE_QUALIFIER,
-	0x00,
-	0x02,
-	0x00,
-	0x00,
-	0x00,
-	0x40,
-	0x01,
-	0x00
-};
-
-__ALIGN_BEGIN uint8_t USBD_LangIDDesc[USB_SIZ_STRING_LANGID] __ALIGN_END =
-{
-	USB_SIZ_STRING_LANGID,
-	USB_DESC_TYPE_STRING,
-	LOBYTE(USBD_LANGID_STRING),
-	HIBYTE(USBD_LANGID_STRING)
-};
-
-
-//-----------------------------------------------------------------
-// USB Core Callbacks
-//-----------------------------------------------------------------
-
-void USB_OTG_BSP_Init(USB_OTG_CORE_HANDLE *pdev)
-{
-	UNUSED(pdev);
-
-	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DM);
-	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DP);
-	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_BUS);
-
-	GPIO_PinAFConfig(HAL.IOs->pins->USB_V_DM.port, HAL.IOs->pins->USB_V_DM.bit, GPIO_AF_OTG1_FS);
-	GPIO_PinAFConfig(GPIOA,GPIO_PinSource12,GPIO_AF_OTG1_FS);
-	GPIO_PinAFConfig(GPIOA,GPIO_PinSource9,GPIO_AF_OTG1_FS);
-
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-	RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_OTG_FS, ENABLE) ;
+    usb_timer_irq();
 }
 
-void USB_OTG_BSP_EnableInterrupt(USB_OTG_CORE_HANDLE *pdev)
+void USBFS_IRQHandler(void)
 {
-	UNUSED(pdev);
-
-	NVIC_InitTypeDef NVIC_InitStructure;
-
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-	NVIC_InitStructure.NVIC_IRQChannel                    = OTG_FS_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority  = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority         = 3;
-	NVIC_InitStructure.NVIC_IRQChannelCmd                 = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+    usbd_isr(&cdc_acm);
 }
 
-void USB_OTG_BSP_uDelay (const uint32_t usec)
+static void InitUSB(void)
 {
-	uint32_t count = 0;
-	const uint32_t utime = (120 * usec / 7);
-
-	do
-	{
-		if(++count > utime)
-			return;
-	} while(1);
+  usb_gpio_config();
+  usb_rcu_config();
+  usb_timer_init();
+  usbd_init(&cdc_acm, USB_CORE_ENUM_FS, &cdc_desc, &cdc_class);
+  usb_intr_config();
 }
 
-void USB_OTG_BSP_mDelay (const uint32_t msec)
+static void DetachUSB(void)
 {
-	USB_OTG_BSP_uDelay(msec * 1000);
+ 	usb_dev_stop(&cdc_acm);
 }
 
-void USBD_USR_Init(void)
+/*******************************************************************
+   Funktion: USBSendData()
+   Parameter: Buffer: Array mit den zu sendenden Daten
+              Size: Anzahl der zu sendenden Bytes
+
+   R�ckgabewert:  ---
+
+   Zweck: Senden von Daten �ber USB.
+********************************************************************/
+static void USBSendData(uint8_t *Buffer, uint32_t Size)
 {
-
-}
-
-void USBD_USR_DeviceReset(uint8_t speed )
-{
-	switch (speed)
-	{
-	case USB_OTG_SPEED_HIGH:
-		break;
-	case USB_OTG_SPEED_FULL:
-		break;
-	default:
-		break;
-	}
-}
-
-void USBD_USR_DeviceConfigured(void)
-{
-
-}
-
-void USBD_USR_DeviceSuspended(void)
-{
-
-}
-
-void USBD_USR_DeviceResumed(void)
-{
-
-}
-
-void USBD_USR_DeviceConnected(void)
-{
-
-}
-
-void USBD_USR_DeviceDisconnected(void)
-{
-
-}
-
-//-----------------------------------------------------------------
-// USB Core Descriptor Functions
-//-----------------------------------------------------------------
-uint8_t* USBD_USR_DeviceDescriptor(uint8_t speed , uint16_t *length)
-{
-	UNUSED(speed);
-
-	*length = sizeof(USBD_DeviceDesc);
-
-	return USBD_DeviceDesc;
+	uint32_t i;
+	
+	for(i=0; i<Size; i++) USBDataTxBuffer[i]=Buffer[i];
+	
+	usbd_ep_send((usb_dev *) &cdc_acm, CDC_DATA_IN_EP, USBDataTxBuffer, Size);
 }
 
 
-uint8_t* USBD_USR_LangIDStrDescriptor(uint8_t speed , uint16_t *length)
+/*******************************************************************
+   Funktion: USBGetData()
+   Parameter: Array in das die Daten kopiert werden (max. 64 Bytes)
+
+   R�ckgabewert:  Anzahl der empfangenen Bytes
+
+   Zweck: Abholen empfangener Daten von USB (maximal 64 Bytes).
+********************************************************************/
+static uint32_t USBGetData(uint8_t *Buffer)
 {
-	UNUSED(speed);
-
-	*length = sizeof(USBD_LangIDDesc);
-
-	return USBD_LangIDDesc;
+	uint32_t i;
+  usb_cdc_handler *cdc = (usb_cdc_handler *) (&cdc_acm)->dev.class_data[CDC_COM_INTERFACE];
+	
+	i=0;
+  if(USBD_CONFIGURED == cdc_acm.dev.cur_status)
+  {
+  	if(cdc->packet_receive)
+  	{
+	  	if(cdc->receive_length>0)
+  		{
+    	  for(i=0; i<cdc->receive_length; i++) Buffer[i]=cdc->data[i];
+      	i=cdc->receive_length;
+  		}
+  		cdc->packet_receive=0;
+    	usbd_ep_recev((usb_dev *) &cdc_acm, CDC_DATA_OUT_EP, (uint8_t *)(cdc->data), USB_CDC_DATA_PACKET_SIZE);
+    }
+  }
+  return i;
 }
 
 
-uint8_t* USBD_USR_ProductStrDescriptor(uint8_t speed , uint16_t *length)
+/*******************************************************************
+   Funktion: GetUSBCmd()
+   Parameter: Cmd: Array (9 Bytes) f�r den TMCL-Befehl.
+
+   R�ckgabewert:  TRUE bei Erfolg
+                  FALSE wenn kein Befehl vorhanden
+
+   Zweck: Abholen eines TMCL-Befehls �ber USB.
+********************************************************************/
+static uint8_t GetUSBCmd(uint8_t *Cmd)
 {
-	UNUSED(speed);
+  uint8_t flag;
+  uint32_t i;
+  usb_cdc_handler *cdc = (usb_cdc_handler *) (&cdc_acm)->dev.class_data[CDC_COM_INTERFACE];
 
-	USBD_GetString((uint8_t *) USBD_PRODUCT_FS_STRING, USBD_StrDesc, length);
-
-	return USBD_StrDesc;
+  flag=FALSE;
+  if(USBD_CONFIGURED == cdc_acm.dev.cur_status)
+  {
+  	if(cdc->packet_receive)
+  	{
+    	if(cdc->receive_length>=9)
+    	{
+      	for(i=0; i<9; i++) Cmd[i]=cdc->data[i];
+      	flag=TRUE;
+    	}
+    	cdc->packet_receive=0;
+    	usbd_ep_recev((usb_dev *) &cdc_acm, CDC_DATA_OUT_EP, (uint8_t *)(cdc->data), USB_CDC_DATA_PACKET_SIZE);
+    }
+  }
+  return flag;
 }
 
-
-uint8_t* USBD_USR_ManufacturerStrDescriptor(uint8_t speed , uint16_t *length)
-{
-	UNUSED(speed);
-
-	USBD_GetString((uint8_t *) USBD_MANUFACTURER_STRING, USBD_StrDesc, length);
-
-	return USBD_StrDesc;
-}
-
-
-uint8_t* USBD_USR_SerialStrDescriptor(uint8_t speed , uint16_t *length)
-{
-	UNUSED(speed);
-
-	USBD_GetString((uint8_t *) USBD_SERIALNUMBER_FS_STRING, USBD_StrDesc, length);
-
-	return USBD_StrDesc;
-}
-
-
-uint8_t* USBD_USR_ConfigStrDescriptor(uint8_t speed , uint16_t *length)
-{
-	UNUSED(speed);
-
-	USBD_GetString((uint8_t *) USBD_CONFIGURATION_FS_STRING, USBD_StrDesc, length);
-
-	return USBD_StrDesc;
-}
-
-
-uint8_t* USBD_USR_InterfaceStrDescriptor(uint8_t speed , uint16_t *length)
-{
-	UNUSED(speed);
-
-	USBD_GetString((uint8_t *) USBD_INTERFACE_FS_STRING, USBD_StrDesc, length);
-
-	return USBD_StrDesc;
-}
-
-
-//-----------------------------------------------------------------
-// Virtual COM Port Functions
-//-----------------------------------------------------------------
-
-static uint16_t VCP_Init(void)
-{
-	return USBD_OK;
-}
-
-static uint16_t VCP_DeInit(void)
-{
-	return USBD_OK;
-}
-
-static uint16_t VCP_Ctrl(uint32_t Cmd, uint8_t* Buf, uint32_t Len)
-{
-	UNUSED(Len);
-
-	switch (Cmd)
-	{
-	case SEND_ENCAPSULATED_COMMAND:
-		break;
-	case GET_ENCAPSULATED_RESPONSE:
-		break;
-	case SET_COMM_FEATURE:
-		break;
-	case GET_COMM_FEATURE:
-		break;
-	case CLEAR_COMM_FEATURE:
-		break;
-	case SET_LINE_CODING:
-		linecoding.bitrate = (uint32_t)(Buf[0] | (Buf[1] << 8) | (Buf[2] << 16) | (Buf[3] << 24));
-		linecoding.format = Buf[4];
-		linecoding.paritytype = Buf[5];
-		linecoding.datatype = Buf[6];
-		break;
-	case GET_LINE_CODING:
-		Buf[0] = (uint8_t) (linecoding.bitrate);
-		Buf[1] = (uint8_t) (linecoding.bitrate >> 8);
-		Buf[2] = (uint8_t) (linecoding.bitrate >> 16);
-		Buf[3] = (uint8_t) (linecoding.bitrate >> 24);
-		Buf[4] = linecoding.format;
-		Buf[5] = linecoding.paritytype;
-		Buf[6] = linecoding.datatype;
-		break;
-	case SET_CONTROL_LINE_STATE:
-		break;
-	case SEND_BREAK:
-		break;
-	default:
-		break;
-	}
-
-	return USBD_OK;
-}
-
-static uint16_t VCP_DataTx (uint8_t* Buf, uint32_t Len)
-{
-	UNUSED(Buf);
-	UNUSED(Len);
-
-	return USBD_OK;
-}
-
-static uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
-{
-	for(uint32_t i = 0; i < Len; i++)
-	{
-		buffers.rx.buffer[buffers.rx.wrote] = Buf[i];
-		buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
-		available++;
-	}
-
-	return USBD_OK;
-}
-
-
-// Forward Interrupt to Core
-void OTG_FS_IRQHandler(void)
-{
-	USBD_OTG_ISR_Handler(&USB_OTG_dev);
-}
-
-
-
-//-----------------------------------------------------------------
-// Funtions for interface
-//-----------------------------------------------------------------
 static void init(void)
 {
-	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_BUS);
 	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DM);
 	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DP);
 
-	USBD_Init(
-				&USB_OTG_dev,
-				USB_OTG_FS_CORE_ID,
-				&USR_desc,
-				&USBD_CDC_cb,
-				&USR_cb
-			);
+	InitUSB(void);
 }
 
 static void tx(uint8_t ch)
@@ -499,12 +218,7 @@ static void clearBuffers(void)
 	__enable_irq();
 }
 
-static uint32_t bytesAvailable()
+static uint32_t bytesAvailable(void)
 {
 	return available;
-}
-
-static void deInit(void)
-{
-	DCD_DevDisconnect(&USB_OTG_dev);
 }
