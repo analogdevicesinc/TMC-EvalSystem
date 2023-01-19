@@ -6,7 +6,7 @@
 
 	typedef struct
 	{
-		#ifdef defined(Startrampe)
+		#if defined(Startrampe)
 			SPI_TypeDef *periphery; // pointer to ST SPI configuration structure
 		#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 			SPI_MemMapPtr periphery; // pointer to freescale SPI memory base pointer
