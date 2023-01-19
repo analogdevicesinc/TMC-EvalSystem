@@ -6,20 +6,20 @@ static void init();
 static IOPinTypeDef *_pins[] =
 {
 	&IOMap.ID_CLK,
-//	&IOMap.ID_CH0,
-//	&IOMap.ID_CH1,
-//	&IOMap.DIO0,
-//	&IOMap.DIO1,
-//	&IOMap.DIO2,
-//	&IOMap.DIO3,
-//	&IOMap.DIO4,
-//	&IOMap.DIO5,
-//	&IOMap.DIO6,
-//	&IOMap.DIO7,
-//	&IOMap.DIO8,
-//	&IOMap.DIO9,
-//	&IOMap.DIO10,
-//	&IOMap.DIO11,
+	&IOMap.ID_CH0,
+	&IOMap.ID_CH1,
+	&IOMap.DIO0,
+	&IOMap.DIO1,
+	&IOMap.DIO2,
+	&IOMap.DIO3,
+	&IOMap.DIO4,
+	&IOMap.DIO5,
+	&IOMap.DIO6,
+	&IOMap.DIO7,
+	&IOMap.DIO8,
+	&IOMap.DIO9,
+	&IOMap.DIO10,
+	&IOMap.DIO11,
 	&IOMap.CLK16,
 	&IOMap.SPI2_CSN0,
 	&IOMap.SPI2_CSN1,
@@ -31,34 +31,35 @@ static IOPinTypeDef *_pins[] =
 	&IOMap.SPI1_SCK,
 	&IOMap.SPI1_SDI,
 	&IOMap.SPI1_SDO,
-//	&IOMap.DIO12,
-//	&IOMap.DIO13,
-//	&IOMap.DIO14,
-//	&IOMap.DIO15,
-//	&IOMap.DIO16,
-//	&IOMap.DIO17,
-//	&IOMap.DIO18,
-//	&IOMap.DIO19,
+	&IOMap.DIO12,
+	&IOMap.DIO13,
+	&IOMap.DIO14,
+	&IOMap.DIO15,
+	&IOMap.DIO16,
+	&IOMap.DIO17,
+	&IOMap.DIO18,
+	&IOMap.DIO19,
 	&IOMap.WIRELESS_TX,
 	&IOMap.WIRELESS_RX,
 	&IOMap.WIRELESS_NRST,
 	&IOMap.RS232_TX,
 	&IOMap.RS232_RX,
-//	&IOMap.USB_V_BUS,
+	&IOMap.USB_V_BUS,
 	&IOMap.USB_V_DM,
 	&IOMap.USB_V_DP,
 	&IOMap.LED_STAT,
 	&IOMap.LED_ERROR,
-//	&IOMap.EXTIO_2,
-//	&IOMap.EXTIO_3,
-//	&IOMap.EXTIO_4,
-//	&IOMap.EXTIO_5,
-//	&IOMap.EXTIO_6,
+	&IOMap.EXT0,
+	&IOMap.EXT1,
+	&IOMap.EXT2,
+	&IOMap.EXT3,
+	&IOMap.EXT4,
 //	&IOMap.EXTIO_7,
-//	&IOMap.EEPROM_SCK,
-//	&IOMap.EEPROM_SI,
-//	&IOMap.EEPROM_SO,
-//	&IOMap.EEPROM_NCS,
+	&IOMap.DUMMY,
+	&IOMap.EEPROM_SCK,
+	&IOMap.EEPROM_SI,
+	&IOMap.EEPROM_SO,
+	&IOMap.EEPROM_NCS,
 //	&IOMap.MIXED0,
 //	&IOMap.MIXED1,
 //	&IOMap.MIXED2,
@@ -66,13 +67,20 @@ static IOPinTypeDef *_pins[] =
 //	&IOMap.MIXED4,
 //	&IOMap.MIXED5,
 //	&IOMap.MIXED6,
-//	&IOMap.VM_MEAS,
-//	&IOMap.AIN0,
-//	&IOMap.AIN1,
-//	&IOMap.AIN2,
+	&IOMap.DUMMY,
+	&IOMap.DUMMY,
+	&IOMap.DUMMY,
+	&IOMap.DUMMY,
+	&IOMap.DUMMY,
+	&IOMap.DUMMY,
+	&IOMap.DUMMY,
+	&IOMap.ADC_VM,
+	&IOMap.AIN0,
+	&IOMap.AIN1,
+	&IOMap.AIN2,
 	&IOMap.WIFI_EN,
 	&IOMap.WIFI_RST,
-//	&IOMap.DUMMY
+	&IOMap.DUMMY
 };
 
 IOPinMapTypeDef IOMap =
@@ -95,277 +103,229 @@ IOPinMapTypeDef IOMap =
 		}
 	},
 
-//	.ID_CH0 =  // IOPinTypeDef ID_CH0
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_8,       // uint32_t pinBitWeight
-//		.bit                 = 8,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.ID_CH1 =  // IOPinTypeDef ID_CH1
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_7,       // uint32_t pinBitWeight
-//		.bit                 = 7,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO0 =  // IOPinTypeDef DIO0
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_2,       // uint32_t pinBitWeight
-//		.bit                 = 2,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO1 =  // IOPinTypeDef DIO1
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_3,       // uint32_t pinBitWeight
-//		.bit                 = 3,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO2 =  // IOPinTypeDef
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_0,       // uint32_t pinBitWeight
-//		.bit                 = 0,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO3 =  // IOPinTypeDef DIO3
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_1,       // uint32_t pinBitWeight
-//		.bit                 = 1,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO4 =  // IOPinTypeDef DIO4
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOB,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_8,       // uint32_t pinBitWeight
-//		.bit                 = 8,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO5 =  // IOPinTypeDef DIO5
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOB,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_9,       // uint32_t pinBitWeight
-//		.bit                 = 9,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.AIN0 =  // IOPinTypeDef AIN0
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_4,       // uint32_t pinBitWeight
-//		.bit                 = 4,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.AIN1 =  // IOPinTypeDef AIN1
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_5,       // uint32_t pinBitWeight
-//		.bit                 = 5,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.AIN2 =  // IOPinTypeDef AIN2
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOB,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_0,       // uint32_t pinBitWeight
-//		.bit                 = 0,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO6 =  // IOPinTypeDef DIO6
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_8,       // uint32_t pinBitWeight
-//		.bit                 = 8,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO7 =  // IOPinTypeDef DIO7
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_9,       // uint32_t pinBitWeight
-//		.bit                 = 9,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO8 =  // IOPinTypeDef DIO8
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_10,      // uint32_t pinBitWeight
-//		.bit                 = 10,               // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO9 =  // IOPinTypeDef DIO9
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_11,      // uint32_t pinBitWeight
-//		.bit                 = 11,               // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO10 =  // IOPinTypeDef DIO10
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_12,      // uint32_t pinBitWeight
-//		.bit                 = 12,               // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO11 =  // IOPinTypeDef DIO11
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOE,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_13,      // uint32_t pinBitWeight
-//		.bit                 = 13,               // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
+	.ID_CH0 =  // IOPinTypeDef ID_CH0
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_8,       // uint32_t pinBitWeight
+		.bit                 = 8,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.ID_CH1 =  // IOPinTypeDef ID_CH1
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_7,       // uint32_t pinBitWeight
+		.bit                 = 7,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO0 =  // IOPinTypeDef DIO0
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_2,       // uint32_t pinBitWeight
+		.bit                 = 2,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO1 =  // IOPinTypeDef DIO1
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_3,       // uint32_t pinBitWeight
+		.bit                 = 3,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO2 =  // IOPinTypeDef
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_0,       // uint32_t pinBitWeight
+		.bit                 = 0,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO3 =  // IOPinTypeDef DIO3
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_1,       // uint32_t pinBitWeight
+		.bit                 = 1,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO4 =  // IOPinTypeDef DIO4
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_8,       // uint32_t pinBitWeight
+		.bit                 = 8,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO5 =  // IOPinTypeDef DIO5
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_9,       // uint32_t pinBitWeight
+		.bit                 = 9,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO6 =  // IOPinTypeDef DIO6
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_8,       // uint32_t pinBitWeight
+		.bit                 = 8,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO7 =  // IOPinTypeDef DIO7
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_9,       // uint32_t pinBitWeight
+		.bit                 = 9,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO8 =  // IOPinTypeDef DIO8
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_10,      // uint32_t pinBitWeight
+		.bit                 = 10,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO9 =  // IOPinTypeDef DIO9
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_11,      // uint32_t pinBitWeight
+		.bit                 = 11,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO10 =  // IOPinTypeDef DIO10
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_12,      // uint32_t pinBitWeight
+		.bit                 = 12,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO11 =  // IOPinTypeDef DIO11
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_13,      // uint32_t pinBitWeight
+		.bit                 = 13,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
 
 	.CLK16 =  // IOPinTypeDef CLK16
 	{
@@ -543,134 +503,358 @@ IOPinMapTypeDef IOMap =
 		}
 	},
 
-//	.DIO12 =  // IOPinTypeDef DIO12
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_8,       // uint32_t pinBitWeight
-//		.bit                 = 8,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO13 =  // IOPinTypeDef DIO13
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_9,       // uint32_t pinBitWeight
-//		.bit                 = 9,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO14 =  // IOPinTypeDef DIO14
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_10,       // uint32_t pinBitWeight
-//		.bit                 = 10,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO15 =  // IOPinTypeDef DIO15
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_11,       // uint32_t pinBitWeight
-//		.bit                 = 11,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO16 =  // IOPinTypeDef DIO016
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_12,       // uint32_t pinBitWeight
-//		.bit                 = 12,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO17 =  // IOPinTypeDef DIO017
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_13,       // uint32_t pinBitWeight
-//		.bit                 = 13,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO18 =  // IOPinTypeDef DIO18
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_14,       // uint32_t pinBitWeight
-//		.bit                 = 14,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.DIO19 =  // IOPinTypeDef DIO19
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOD,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_15,       // uint32_t pinBitWeight
-//		.bit                 = 15,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
+	.DIO12 =  // IOPinTypeDef DIO12
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_8,       // uint32_t pinBitWeight
+		.bit                 = 8,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO13 =  // IOPinTypeDef DIO13
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_9,       // uint32_t pinBitWeight
+		.bit                 = 9,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO14 =  // IOPinTypeDef DIO14
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_10,       // uint32_t pinBitWeight
+		.bit                 = 10,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO15 =  // IOPinTypeDef DIO15
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_11,       // uint32_t pinBitWeight
+		.bit                 = 11,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO16 =  // IOPinTypeDef DIO016
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_12,       // uint32_t pinBitWeight
+		.bit                 = 12,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO17 =  // IOPinTypeDef DIO017
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_13,       // uint32_t pinBitWeight
+		.bit                 = 13,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO18 =  // IOPinTypeDef DIO18
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_14,       // uint32_t pinBitWeight
+		.bit                 = 14,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.DIO19 =  // IOPinTypeDef DIO19
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_15,       // uint32_t pinBitWeight
+		.bit                 = 15,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.RS232_TX =  // IOPinTypeDef RS232_TX
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = DUMMY_BITWEIGHT,       // uint32_t pinBitWeight
+		.bit                 = -1,                // unsigned char bit
+		.resetConfiguration  =
+		{
+				.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+				.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+				.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+				.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.RS232_RX =  // IOPinTypeDef RS232_RX
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = DUMMY_BITWEIGHT,       // uint32_t pinBitWeight
+		.bit                 = -1,                // unsigned char bit
+		.resetConfiguration  =
+		{
+				.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+				.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+				.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+				.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.USB_V_BUS =  // IOPinTypeDef USB_V_BUS
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOA,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_15,       // uint32_t pinBitWeight
+		.bit                 = 9,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_MAX,    // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.USB_V_DM =  // IOPinTypeDef USB_V_DM
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOA,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_11,      // uint32_t pinBitWeight
+		.bit                 = 11,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_MAX,    // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.USB_V_DP =  // IOPinTypeDef USB_V_DP
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOA,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_12,      // uint32_t pinBitWeight
+		.bit                 = 12,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_MAX,    // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.LED_STAT =  // IOPinTypeDef LED_STAT
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_0,       // uint32_t pinBitWeight
+		.bit                 = 0,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_OUTPUT,        // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.LED_ERROR =  // IOPinTypeDef LED_ERROR
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_1,       // uint32_t pinBitWeight
+		.bit                 = 1,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_OUTPUT,        // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.EEPROM_SCK =  // IOPinTypeDef EEPROM_SCK
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_10,       // uint32_t pinBitWeight
+		.bit                 = 10,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.EEPROM_SI =  // IOPinTypeDef EEPROM_SI
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_12,       // uint32_t pinBitWeight
+		.bit                 = 12,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.EEPROM_SO =  // IOPinTypeDef EEPROM_SO
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_11,       // uint32_t pinBitWeight
+		.bit                 = 11,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.EEPROM_NCS =  // IOPinTypeDef
+	{
+		.setBitRegister      = (GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_Pin_6,       // uint32_t pinBitWeight
+		.bit                 = 6,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_OUTPUT,        // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.AIN0 =  // IOPinTypeDef AIN0
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_4,       // uint32_t pinBitWeight
+		.bit                 = 4,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.AIN1 =  // IOPinTypeDef AIN1
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_5,       // uint32_t pinBitWeight
+		.bit                 = 5,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.AIN2 =  // IOPinTypeDef AIN2
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_0,       // uint32_t pinBitWeight
+		.bit                 = 0,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
 	.WIRELESS_TX =  // IOPinTypeDef USART1_TX
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
@@ -717,86 +901,7 @@ IOPinMapTypeDef IOMap =
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
-	.RS232_TX =  // IOPinTypeDef RS232_TX
-	{
-		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = DUMMY_BITWEIGHT,       // uint32_t pinBitWeight
-		.bit                 = -1,                // unsigned char bit
-		.resetConfiguration  =
-		{
-				.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-				.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-				.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-				.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-		}
-	},
 
-	.RS232_RX =  // IOPinTypeDef RS232_RX
-	{
-		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = DUMMY_BITWEIGHT,       // uint32_t pinBitWeight
-		.bit                 = -1,                // unsigned char bit
-		.resetConfiguration  =
-		{
-				.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-				.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-				.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-				.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-		}
-	},
-
-//	.USB_V_BUS =  // IOPinTypeDef USB_V_BUS
-//	{
-//		.setBitRegister      = (GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOA,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_9,       // uint32_t pinBitWeight
-//		.bit                 = 9,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_MAX,    // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.USB_V_DM =  // IOPinTypeDef USB_V_DM
-//	{
-//		.setBitRegister      = (GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOA,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_11,      // uint32_t pinBitWeight
-//		.bit                 = 11,               // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_MAX,    // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.USB_V_DP =  // IOPinTypeDef USB_V_DP
-//	{
-//		.setBitRegister      = (GPIOA->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOA->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOA,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_12,      // uint32_t pinBitWeight
-//		.bit                 = 12,               // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_MAX,    // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
 //	.VM_MEAS =  // IOPinTypeDef VM_MEAS
 //	{
 //		.setBitRegister      = (GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
@@ -813,13 +918,62 @@ IOPinMapTypeDef IOMap =
 //		}
 //	},
 
-	.LED_STAT =  // IOPinTypeDef LED_STAT
+	
+	.EEPROM_SCK =  // IOPinTypeDef EEPROM_SCK
 	{
-		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_0,       // uint32_t pinBitWeight
-		.bit                 = 0,                // unsigned char bit
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_10,       // uint32_t pinBitWeight
+		.bit                 = 10,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.EEPROM_SI =  // IOPinTypeDef EEPROM_SI
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_12,       // uint32_t pinBitWeight
+		.bit                 = 12,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.EEPROM_SO =  // IOPinTypeDef EEPROM_SO
+	{
+		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOC,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_11,       // uint32_t pinBitWeight
+		.bit                 = 11,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
+	.EEPROM_NCS =  // IOPinTypeDef
+	{
+		.setBitRegister      = (GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = (GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_Pin_6,       // uint32_t pinBitWeight
+		.bit                 = 6,                // unsigned char bit
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_MODE_OUTPUT,        // GPIOMode_TypeDef GPIO_Mode
@@ -828,182 +982,6 @@ IOPinMapTypeDef IOMap =
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
-
-	.LED_ERROR =  // IOPinTypeDef LED_ERROR
-	{
-		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_1,       // uint32_t pinBitWeight
-		.bit                 = 1,                // unsigned char bit
-		.resetConfiguration  =
-		{
-			.GPIO_Mode   = GPIO_MODE_OUTPUT,        // GPIOMode_TypeDef GPIO_Mode
-			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-		}
-	},
-
-//	.EXTIO_2 =  // IOPinTypeDef EXTIO_2
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOB,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_5,       // uint32_t pinBitWeight
-//		.bit                 = 5,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EXTIO_3 =  // IOPinTypeDef EXTIO_3
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOB,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_4,       // uint32_t pinBitWeight
-//		.bit                 = 4,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EXTIO_4 =  // IOPinTypeDef EXTIO_4
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOB,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_3,       // uint32_t pinBitWeight
-//		.bit                 = 3,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EXTIO_5 =  // IOPinTypeDef EXTIO_5
-//	{
-//		.setBitRegister      = (GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_4,       // uint32_t pinBitWeight
-//		.bit                 = 4,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EXTIO_6 =  // IOPinTypeDef EXTIO_6
-//	{
-//		.setBitRegister      = (GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_5,       // uint32_t pinBitWeight
-//		.bit                 = 5,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EXTIO_7 =  // IOPinTypeDef EXTIO_7
-//	{
-//		.setBitRegister      = (GPIOC->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOC->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_5,       // uint32_t pinBitWeight
-//		.bit                 = 5,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EEPROM_SCK =  // IOPinTypeDef EEPROM_SCK
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_10,       // uint32_t pinBitWeight
-//		.bit                 = 10,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EEPROM_SI =  // IOPinTypeDef EEPROM_SI
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_12,       // uint32_t pinBitWeight
-//		.bit                 = 12,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EEPROM_SO =  // IOPinTypeDef EEPROM_SO
-//	{
-//		.setBitRegister      = (GPIO_BOP(GPIOC)),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIO_BC(GPIOC)),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOC,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_PIN_11,       // uint32_t pinBitWeight
-//		.bit                 = 11,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
-//
-//	.EEPROM_NCS =  // IOPinTypeDef
-//	{
-//		.setBitRegister      = (GPIOB->BSRRL),  // __IO uint16_t *setBitRegister
-//		.resetBitRegister    = (GPIOB->BSRRH),  // __IO uint16_t *resetBitRegister
-//		.port                = GPIOB,            // GPIO_TypeDef *port
-//		.bitWeight           = GPIO_Pin_6,       // uint32_t pinBitWeight
-//		.bit                 = 6,                // unsigned char bit
-//		.resetConfiguration  =
-//		{
-//			.GPIO_Mode   = GPIO_MODE_OUTPUT,        // GPIOMode_TypeDef GPIO_Mode
-//			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-//			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-//			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-//		}
-//	},
 //
 //	.MIXED0 =  // !!! DUMMY -> NOT IN HADWARE !!!
 //	{
