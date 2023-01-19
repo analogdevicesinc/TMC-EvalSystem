@@ -47,22 +47,23 @@ void init(void)
 //	DMA_DeInit(DMA2_Stream0);
 //	DMA_InitStructure.DMA_Channel             = DMA_Channel_0;
 	DMA_InitStructure.periph_addr  = (uint32_t)ADC1_DR_ADDRESS;
-	DMA_InitStructure.memory0_addr     = (uint32_t)&ADCValue;
-	DMA_InitStructure.direction                 = DMA_PERIPH_TO_MEMORY;
-
-//	DMA_InitStructure.DMA_BufferSize          = N_O_ADC_CHANNELS;
-	IS_DMA_BUFFER_SIZE(N_O_ADC_CHANNELS);
-
-	DMA_InitStructure.periph_inc       = DMA_PERIPH_INCREASE_DISABLE;
-	DMA_InitStructure.memory_inc           = DMA_MEMORY_INCREASE_ENABLE;
 	DMA_InitStructure.periph_width  = DMA_PERIPH_WIDTH_16BIT;
+	DMA_InitStructure.periph_inc       = DMA_PERIPH_INCREASE_DISABLE;
+
+	DMA_InitStructure.memory0_addr     = (uint32_t)&ADCValue;
 	DMA_InitStructure.memory_width      = DMA_MEMORY_WIDTH_16BIT;
-	DMA_InitStructure.circular_mode                = DMA_CIRCULAR_MODE_ENABLE;
-	DMA_InitStructure.priority            = DMA_PRIORITY_HIGH;
-	DMA_InitStructure.DMA_FIFOMode            = DMA_FIFOMode_Disable;
-	DMA_InitStructure.DMA_FIFOThreshold       = DMA_FIFOThreshold_HalfFull;
+	DMA_InitStructure.memory_inc           = DMA_MEMORY_INCREASE_ENABLE;
+
 	DMA_InitStructure.memory_burst_width         = DMA_MEMORY_BURST_SINGLE;
 	DMA_InitStructure.periph_burst_width     = DMA_PERIPH_BURST_SINGLE;
+
+	DMA_InitStructure.circular_mode                = DMA_CIRCULAR_MODE_ENABLE;
+	DMA_InitStructure.direction                 = DMA_PERIPH_TO_MEMORY;
+	DMA_InitStructure.priority            = DMA_PRIORITY_HIGH;
+
+	DMA_InitStructure.DMA_BufferSize          = N_O_ADC_CHANNELS;
+	DMA_InitStructure.DMA_FIFOMode            = DMA_FIFOMode_Disable;
+	DMA_InitStructure.DMA_FIFOThreshold       = DMA_FIFOThreshold_HalfFull;
 //	DMA_Init(DMA2_Stream0, &DMA_InitStructure);
 
 	dma_multi_data_mode_init(DMA1, DMA_CH0, &DMA_InitStructure);

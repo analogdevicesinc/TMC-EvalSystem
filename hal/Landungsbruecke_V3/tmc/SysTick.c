@@ -9,7 +9,6 @@ volatile uint32_t systick = 0;
 void __attribute__ ((interrupt)) SysTick_Handler(void);
 
 
-static volatile uint32_t SysTickTimer;
 
 void systick_init(void)
 {
@@ -20,12 +19,12 @@ void systick_init(void)
 
 void SysTick_Handler(void)
 {
-	SysTickTimer++;
+	systick++;
 }
 
 uint32_t systick_getTick(void)
 {
-	return SysTickTimer;
+	return systick;
 }
 
 void wait(uint32_t delay)	// wait for [delay] ms/systicks
