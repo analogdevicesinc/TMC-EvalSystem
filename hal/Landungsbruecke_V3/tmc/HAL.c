@@ -20,14 +20,14 @@ const HALTypeDef HAL =
 	.init         = init,
 	.reset        = reset,
 	.NVIC_DeInit  = NVIC_DeInit,
-//	.SPI          = &SPI,
-//	.USB          = &USB,
+	.SPI          = &SPI,
+	.USB          = &USB,
 	.LEDs         = &LEDs,
-//	.ADCs         = &ADCs,
+	.ADCs         = &ADCs,
 	.IOs          = &IOFunctions,
 	.RS232        = &RS232,
 	.WLAN         = &WLAN,
-//	.Timer        = &Timer,
+	.Timer        = &Timer,
 	.UART         = &UART
 };
 
@@ -40,11 +40,11 @@ static void init(void)
 
 	IOs.init();
 	IOMap.init();
-//	USB.init();
-//	SPI.init();
+	USB.init();
+	SPI.init();
 	RS232.init();
 	LEDs.init();
-//	ADCs.init();
+	ADCs.init();
 	WLAN.init();
 }
 
@@ -65,18 +65,18 @@ static void __attribute((noreturn)) reset(uint8_t ResetPeripherals)
 
 static void NVIC_DeInit(void)
 {
-	uint32_t index;
-
-	for(index = 0; index < 8; index++)
-	{
-		NVIC->ICER[index] = 0xFFFFFFFF;
-		NVIC->ICPR[index] = 0xFFFFFFFF;
-	}
-
-	for(index = 0; index < 240; index++)
-	{
-		 NVIC->IP[index] = 0x00000000;
-	}
+//	uint32_t index;
+//
+//	for(index = 0; index < 8; index++)
+//	{
+//		NVIC->ICER[index] = 0xFFFFFFFF;
+//		NVIC->ICPR[index] = 0xFFFFFFFF;
+//	}
+//
+//	for(index = 0; index < 240; index++)
+//	{
+//		 NVIC->IP[index] = 0x00000000;
+//	}
 }
 
 void _exit(int i)	// function has the attribute noreturn per default
