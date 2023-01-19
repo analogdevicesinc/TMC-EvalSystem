@@ -54,7 +54,7 @@ SRC 			+= boards/TMC6200_eval.c
 SRC				+= boards/TMC7300_eval.c
 SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
-ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall LandungsbrueckeV3))
+ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall))
 SRC				      += boards/MAX22216_eval.c
 SRC				+= boards/TMC2209_eval.c
 SRC				+= boards/TMC2225_eval.c
@@ -72,7 +72,7 @@ SRC				+= tmc/EEPROM.c
 SRC 			+= tmc/BoardAssignment.c
 SRC 			+= tmc/VitalSignsMonitor.c
 SRC 			+= tmc/StepDir.c
-ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall LandungsbrueckeV3))
+ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall))
 SRC             += tmc/BLDC.c
 endif
 
