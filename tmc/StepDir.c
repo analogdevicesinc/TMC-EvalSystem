@@ -120,6 +120,8 @@
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	#define TIMER_INTERRUPT FTM1_IRQHandler
+#elif defined(LandungsbrueckeV3)
+	#define TIMER_INTERRUPT TIMER2_IRQHandler
 #endif
 
 #define STEP_DIR_CHANNELS 2
@@ -144,7 +146,13 @@ static inline void stop(StepDirectionTypedef *channel, StepDirStop stopType);
 
 void TIMER_INTERRUPT()
 {
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	FTM1_SC &= ~FTM_SC_TOF_MASK; // clear timer overflow flag
+#elif defined(LandungsbrueckeV3)
+	if(timer_interrupt_flag_get(TIMER2, TIMER_INT_FLAG_UP) == RESET)
+		return;
+	timer_interrupt_flag_clear(TIMER2, TIMER_INT_FLAG_UP);
+#endif
 
 	for (uint8_t ch = 0; ch < STEP_DIR_CHANNELS; ch++)
 	{
@@ -161,7 +169,11 @@ void TIMER_INTERRUPT()
 		// Check if StallGuard pin is high
 		// Note: If no stall pin is registered, isStallSignalHigh becomes FALSE
 		//       and checkStallguard won't do anything.
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 		bool isStallSignalHigh = (GPIO_PDIR_REG(currCh->stallGuardPin->GPIOBase) & currCh->stallGuardPin->bitWeight) != 0;
+#elif defined(LandungsbrueckeV3)
+		bool isStallSignalHigh = HAL.IOs->config->isHigh(currCh->stallGuardPin);
+#endif
 		checkStallguard(currCh, isStallSignalHigh);
 
 		// Compute ramp
@@ -602,6 +614,22 @@ void StepDir_init(uint32_t precision)
 
 		// set FTM1 interrupt handler
 		enable_irq(INT_FTM1-16);
+	#elif defined(LandungsbrueckeV3)
+	#else
+		rcu_periph_clock_enable(RCU_TIMER2);
+		timer_deinit(TIMER2);
+
+		timer_parameter_struct tps;
+		timer_struct_para_init(&tps);
+
+		tps.period = 914;
+
+		timer_init(TIMER2, &tps);
+		timer_interrupt_enable(TIMER2, TIMER_INT_UP);
+		timer_update_event_enable(TIMER2);
+		timer_enable(TIMER2);
+
+		nvic_irq_enable(TIMER2_IRQn, 1, 1);
 	#endif
 }
 
