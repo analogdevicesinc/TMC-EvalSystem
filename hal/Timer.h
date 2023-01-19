@@ -5,6 +5,8 @@
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 #define TIMER_MAX 8000
+#elif defined(LandungsbrueckeV3)
+#define TIMER_MAX 10000
 #endif
 
 typedef enum {
