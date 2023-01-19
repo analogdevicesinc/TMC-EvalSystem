@@ -34,7 +34,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 OF SUCH DAMAGE.
 */
 
-#include "usbd_conf.h"
+#include "tmc/usbd_conf.h"
 #include "drv_usbd_int.h"
 #include "usbd_transc.h"
 
