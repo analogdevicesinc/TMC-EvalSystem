@@ -61,16 +61,17 @@ static void init()
     rcu_periph_clock_enable(RCU_USART1);
 
 
-	//TxD as open drain output
-	gpio_mode_set(HAL.IOs->pins->RS232_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->RS232_TX.bitWeight);
-	gpio_output_options_set(HAL.IOs->pins->RS232_TX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->RS232_TX.bitWeight);
+	//TxD with pull-up resistor
+	 gpio_mode_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->WIRELESS_TX.bitWeight);
+	 gpio_output_options_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIRELESS_TX.bitWeight);
 
-	//RxD with pull-up resistor
-	gpio_mode_set(HAL.IOs->pins->RS232_RX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->RS232_RX.bitWeight);
-	gpio_output_options_set(HAL.IOs->pins->RS232_RX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->RS232_RX.bitWeight);
 
-    gpio_af_set(HAL.IOs->pins->RS232_TX.port, GPIO_AF_7, HAL.IOs->pins->RS232_TX.bitWeight);
-    gpio_af_set(HAL.IOs->pins->RS232_RX.port, GPIO_AF_7, HAL.IOs->pins->RS232_RX.bitWeight);
+	 //RxD with pull-up resistor
+	  gpio_mode_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->WIRELESS_RX.bitWeight);
+	  gpio_output_options_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIRELESS_RX.bitWeight);
+
+	  gpio_af_set(HAL.IOs->pins->WIRELESS_TX.port, GPIO_AF_7, HAL.IOs->pins->WIRELESS_TX.bitWeight);
+	  gpio_af_set(HAL.IOs->pins->WIRELESS_RX.port, GPIO_AF_7, HAL.IOs->pins->WIRELESS_RX.bitWeight);
 
     usart_baudrate_set(USART1, WLAN.baudRate);
     usart_word_length_set(USART1, USART_WL_8BIT);
