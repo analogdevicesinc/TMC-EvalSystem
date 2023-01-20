@@ -238,6 +238,7 @@ else ifeq ($(DEVICE),LandungsbrueckeV3)
 	SRC += $(LIBSRCDIR)/gd32f4xx_fmc.c
 	SRC += $(LIBSRCDIR)/gd32f4xx_fwdgt.c
 	SRC += $(LIBSRCDIR)/gd32f4xx_gpio.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_hw.c
 	SRC += $(LIBSRCDIR)/gd32f4xx_i2c.c
 	SRC += $(LIBSRCDIR)/gd32f4xx_ipa.c
 	SRC += $(LIBSRCDIR)/gd32f4xx_iref.c
@@ -264,6 +265,7 @@ else ifeq ($(DEVICE),LandungsbrueckeV3)
 
 	ASRC +=  $(LIBSRCDIR)/startup_gd32f405_425_gas.S
    	EXTRAINCDIRS  		+= $(STMSPDINCDIR)
+    EXTRAINCDIRS  		+= $(STMSPDINCDIR)/usb
 
    	ifeq ($(LINK),BL)
 		LD_SCRIPT = $(STMLIBDIR)/gd32f425-tmcm.ld
