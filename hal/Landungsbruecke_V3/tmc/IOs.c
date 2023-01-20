@@ -109,7 +109,7 @@ static IO_States getPinState(IOPinTypeDef *pin)
 	if(IS_DUMMY_PIN(pin))
 		return IOS_OPEN;
 
-	if(pin->configuration.GPIO_Mode == GPIO_Mode_AN)
+	if(pin->configuration.GPIO_Mode == GPIO_MODE_ANALOG)
 		pin->state = IOS_OPEN;
 	else if(GPIO_ISTAT(pin->port) & pin->bitWeight)
 		pin->state = IOS_HIGH;
