@@ -29,6 +29,8 @@ VitalSignsMonitorTypeDef VitalSignsMonitor =
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	#define ADC_VM_RES 65535
+#elif defined(LandungsbrueckeV3)
+	#define ADC_VM_RES 4095
 #endif
 
 // Make the status LED blink
