@@ -15,6 +15,7 @@ static void DetachUSB(void);
 
 // Interface functions
 static void init(void);
+static void deInit(void);
 static void tx(uint8_t ch);
 static uint8_t rx(uint8_t *ch);
 static void txN(uint8_t *str, unsigned char number);
@@ -24,6 +25,7 @@ static uint32_t bytesAvailable(void);
 
 static usb_core_driver cdc_acm;
 static uint8_t USBDataTxBuffer[256];
+static volatile uint32_t available = 0;
 
 // static RXTXBufferingTypeDef buffers =
 // {
@@ -168,7 +170,7 @@ static void init(void)
 	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DM);
 	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DP);
 
-	InitUSB(void);
+	InitUSB();
 }
 
 static void tx(uint8_t ch)
@@ -233,4 +235,9 @@ static void clearBuffers(void)
 static uint32_t bytesAvailable(void)
 {
 	return available;
+}
+
+static void deInit(void)
+{
+
 }
