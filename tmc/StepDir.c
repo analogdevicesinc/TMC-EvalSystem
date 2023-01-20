@@ -170,7 +170,9 @@ void TIMER_INTERRUPT()
 			continue;
 
 		// Reset step output (falling edge of last pulse)
-		*currCh->stepPin->resetBitRegister = currCh->stepPin->bitWeight;
+
+		//*currCh->stepPin->resetBitRegister = currCh->stepPin->bitWeight;
+		HAL.IOs->config->setLow(currCh->stepPin);
 
 		// Check if StallGuard pin is high
 		// Note: If no stall pin is registered, isStallSignalHigh becomes FALSE
