@@ -95,12 +95,19 @@ typedef struct
 #endif
 
 #if defined(LandungsbrueckeV3)
+	IOPinTypeDef EXT0;
+	IOPinTypeDef EXT1;
+	IOPinTypeDef EXT2;
+	IOPinTypeDef EXT3;
+	IOPinTypeDef EXT4;
 	IOPinTypeDef ADC_VM;
 	IOPinTypeDef AIN0;
 	IOPinTypeDef AIN1;
 	IOPinTypeDef AIN2;
 	IOPinTypeDef WIFI_EN;
 	IOPinTypeDef WIFI_RST;
+	IOPinTypeDef WIFI_TX;
+	IOPinTypeDef WIFI_RX;
 #endif
 
 	IOPinTypeDef DUMMY;
