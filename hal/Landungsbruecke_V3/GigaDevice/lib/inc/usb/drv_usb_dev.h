@@ -37,7 +37,7 @@ OF SUCH DAMAGE.
 #ifndef __DRV_USB_DEV_H
 #define __DRV_USB_DEV_H
 
-#include "usbd_conf.h"
+#include "tmc/usbd_conf.h"
 #include "drv_usb_core.h"
 
 #define EP_IN(x)                            ((uint8_t)(0x80U | (x)))    /*!< device IN endpoint */
