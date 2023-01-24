@@ -37,7 +37,7 @@ OF SUCH DAMAGE.
 #ifndef __DRV_USB_HW_H
 #define __DRV_USB_HW_H
 
-#include "tmc/usb_conf.h"
+#include "usb_conf.h"
 
 /* function declarations */
 /* configure USB clock */
