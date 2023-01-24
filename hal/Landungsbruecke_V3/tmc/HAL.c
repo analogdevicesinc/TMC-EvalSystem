@@ -33,6 +33,7 @@ const HALTypeDef HAL =
 
 static void init(void)
 {
+	nvic_priority_group_set(NVIC_PRIGROUP_PRE4_SUB0);
 	__enable_irq();
 
 	systick_init();
@@ -65,18 +66,18 @@ static void __attribute((noreturn)) reset(uint8_t ResetPeripherals)
 
 static void NVIC_DeInit(void)
 {
-//	uint32_t index;
-//
-//	for(index = 0; index < 8; index++)
-//	{
-//		NVIC->ICER[index] = 0xFFFFFFFF;
-//		NVIC->ICPR[index] = 0xFFFFFFFF;
-//	}
-//
-//	for(index = 0; index < 240; index++)
-//	{
-//		 NVIC->IP[index] = 0x00000000;
-//	}
+	uint32_t index;
+
+  for(index=0; index<8; index++)
+  {
+    NVIC->ICER[index] = 0xFFFFFFFF;
+    NVIC->ICPR[index] = 0xFFFFFFFF;
+  }
+
+  for(index = 0; index < 240; index++)
+  {
+     NVIC->IP[index] = 0x00000000;
+  }
 }
 
 void _exit(int i)	// function has the attribute noreturn per default
