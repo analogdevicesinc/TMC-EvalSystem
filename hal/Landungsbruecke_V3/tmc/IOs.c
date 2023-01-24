@@ -95,7 +95,7 @@ static void setPinState(IOPinTypeDef *pin, IO_States state)
 		*pin->setBitRegister = pin->bitWeight;
 		break;
 	case IOS_OPEN:
-		pin->configuration.GPIO_Mode = GPIO_MODE_INPUT;
+		pin->configuration.GPIO_Mode = GPIO_MODE_ANALOG;
 		break;
 	default:
 		break;
@@ -109,12 +109,12 @@ static IO_States getPinState(IOPinTypeDef *pin)
 	if(IS_DUMMY_PIN(pin))
 		return IOS_OPEN;
 
-	if(pin->configuration.GPIO_Mode == GPIO_MODE_ANALOG)
-		pin->state = IOS_OPEN;
-	else if(GPIO_ISTAT(pin->port) & pin->bitWeight)
-		pin->state = IOS_HIGH;
+	if(pin->configuration.GPIO_Mode == GPIO_MODE_INPUT)
+		pin->state = (GPIO_ISTAT(pin->port) & pin->bitWeight) ? IOS_HIGH : IOS_LOW;
+	else if(pin->configuration.GPIO_Mode == GPIO_MODE_OUTPUT)
+		pin->state = (GPIO_OCTL(pin->port) & pin->bitWeight) ? IOS_HIGH : IOS_LOW;
 	else
-		pin->state = IOS_LOW;
+		pin->state = IOS_OPEN;
 
 	return pin->state;
 }
