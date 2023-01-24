@@ -325,6 +325,7 @@ else ifeq ($(DEVICE),LandungsbrueckeV3)
 	ASRC +=  $(LIBSRCDIR)/startup_gd32f405_425_gas.S
    	EXTRAINCDIRS  		+= $(STMSPDINCDIR)
     EXTRAINCDIRS  		+= $(STMSPDINCDIR)/usb
+    EXTRAINCDIRS  		+= $(TMC_HAL_SRC)/tmc
 
    	ifeq ($(LINK),BL)
 		LD_SCRIPT = $(STMLIBDIR)/gd32f425-tmcm.ld
