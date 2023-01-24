@@ -8,7 +8,7 @@
 
 // Specific functions
 static void USBSendData(uint8_t *Buffer, uint32_t Size);
-static uint32_t USBGetData(uint8_t *Buffer);
+static uint32_t USBGetData(uint8_t *Buffer, size_t amount);
 static uint8_t GetUSBCmd(uint8_t *Cmd);
 static void InitUSB(void);
 static void DetachUSB(void);
@@ -48,8 +48,8 @@ RXTXTypeDef USB =
 {
 	.init            = init,
 	.deInit          = deInit,
-	.rx              = rx,
-	.tx              = tx,
+	.rx              = NULL,
+	.tx              = NULL,
 	.rxN             = rxN,
 	.txN             = txN,
 	.clearBuffers    = clearBuffers,
@@ -110,9 +110,10 @@ static void USBSendData(uint8_t *Buffer, uint32_t Size)
 
    Zweck: Abholen empfangener Daten von USB (maximal 64 Bytes).
 ********************************************************************/
-static uint32_t USBGetData(uint8_t *Buffer)
+static uint32_t USBGetData(uint8_t *Buffer, size_t amount)
 {
 	uint32_t i;
+	bool flag = FALSE;
   usb_cdc_handler *cdc = (usb_cdc_handler *) (&cdc_acm)->dev.class_data[CDC_COM_INTERFACE];
 	
 	i=0;
@@ -120,16 +121,16 @@ static uint32_t USBGetData(uint8_t *Buffer)
   {
   	if(cdc->packet_receive)
   	{
-	  	if(cdc->receive_length>0)
+	  	if(cdc->receive_length >= amount)
   		{
-    	  for(i=0; i<cdc->receive_length; i++) Buffer[i]=cdc->data[i];
-      	i=cdc->receive_length;
+			for(i=0; i < amount; i++) Buffer[i]=cdc->data[i];
+      		flag = TRUE;
   		}
-  		cdc->packet_receive=0;
+  		cdc->packet_receive = 0;
     	usbd_ep_recev((usb_dev *) &cdc_acm, CDC_DATA_OUT_EP, (uint8_t *)(cdc->data), USB_CDC_DATA_PACKET_SIZE);
     }
   }
-  return i;
+  return flag;
 }
 
 
@@ -192,8 +193,8 @@ static uint8_t rx(uint8_t *ch)
   	{
 	  	if(cdc->receive_length > 0)
   		{
-        data = cdc->data[0];
-        i = 1;
+			data = cdc->data[0];
+			i = 1;
   		}
   		cdc->packet_receive--;
     	usbd_ep_recev((usb_dev *) &cdc_acm, CDC_DATA_OUT_EP, (uint8_t *)(cdc->data), USB_CDC_DATA_PACKET_SIZE);
@@ -205,19 +206,12 @@ static uint8_t rx(uint8_t *ch)
 
 static void txN(uint8_t *str, unsigned char number)
 {
-	for(int32_t i = 0; i < number; i++)
-		tx(str[i]);
+	USBSendData(str, number);
 }
 
 static uint8_t rxN(uint8_t *str, unsigned char number)
 {
-	if(bytesAvailable() < number)
-		return 0;
-
-	for(int32_t i = 0; i < number; i++)
-		rx(&str[i]);
-
-	return 1;
+	return USBGetData(str, number);
 }
 
 static void clearBuffers(void)
@@ -235,6 +229,8 @@ static void clearBuffers(void)
 static uint32_t bytesAvailable(void)
 {
 	return available;
+	usb_cdc_handler *cdc = (usb_cdc_handler *) (&cdc_acm)->dev.class_data[CDC_COM_INTERFACE];
+	return cdc->receive_length;
 }
 
 static void deInit(void)
