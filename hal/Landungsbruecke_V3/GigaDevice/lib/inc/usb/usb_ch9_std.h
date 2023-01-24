@@ -37,7 +37,7 @@ OF SUCH DAMAGE.
 #ifndef __USB_CH9_STD_H
 #define __USB_CH9_STD_H
 
-#include "tmc/usb_conf.h"
+#include "usb_conf.h"
 
 #define USB_DEV_QUALIFIER_DESC_LEN   0x0AU       /*!< USB device qualifier descriptor length */
 #define USB_DEV_DESC_LEN             0x12U       /*!< USB device descriptor length */

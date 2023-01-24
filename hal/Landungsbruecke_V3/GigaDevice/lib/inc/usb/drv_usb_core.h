@@ -41,7 +41,7 @@ OF SUCH DAMAGE.
 #include "usb_ch9_std.h"
 
 #ifdef USE_DEVICE_MODE
-    #include "tmc/usbd_conf.h"
+    #include "usbd_conf.h"
 #endif /* USE_DEVICE_MODE */
 
 #define USB_FS_EP0_MAX_LEN                  64U                                 /*!< maximum packet size of endpoint 0 */
