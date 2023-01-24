@@ -277,9 +277,9 @@ else ifeq ($(DEVICE),LandungsbrueckeV3)
     #STMEEEMULINCDIR 	= $(STMEEEMULDIR)/include
     INCLUDE_DIRS 		= -I$(STMSPDINCDIR)
 
-#    SRC                 += boards/SelfTest_Startrampe.c
+    SRC                 += boards/SelfTest_LandungsbrueckeV3.c
 #
-#    SRC                 += tmc/IdDetection_Startrampe.c
+    SRC                 += tmc/IdDetection_LandungsbrueckeV3.c
 
 
 	SRC += $(LIBSRCDIR)/system_gd32f4xx.c
