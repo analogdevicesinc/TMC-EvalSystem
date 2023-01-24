@@ -28,7 +28,7 @@
         #define CPU_LITTLE_ENDIAN
         #define __MK_xxx_H__
     #elif defined(LandungsbrueckeV3)
-        #define MODULE_ID "0017"
+        #define MODULE_ID "0026"
 		#include "gd32f4xx.h"
     #elif defined(LandungsbrueckeSmall)
         // The Landungsbruecke (Small) is a normal Landungsbruecke but with a MK20DX256VLL10 µC instead.
