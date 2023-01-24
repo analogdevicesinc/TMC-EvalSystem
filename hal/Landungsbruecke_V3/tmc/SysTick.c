@@ -6,10 +6,6 @@ volatile uint32_t systick = 0;
 
 #define SYSTICK_PRE_EMPTION_PRIORITY 3
 
-void __attribute__ ((interrupt)) SysTick_Handler(void);
-
-
-
 void systick_init(void)
 {
   SysTick_Config(SystemCoreClock/1000);
