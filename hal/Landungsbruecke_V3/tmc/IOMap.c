@@ -1078,4 +1078,6 @@ static void init()
 	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_TX);
 	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_RX);
 	HAL.IOs->config->reset(&HAL.IOs->pins->CLK16);
+	gpio_af_set(HAL.IOs->pins->CLK16.port, GPIO_AF_0, HAL.IOs->pins->CLK16.bitWeight);
+
 }
