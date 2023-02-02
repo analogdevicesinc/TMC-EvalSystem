@@ -875,8 +875,8 @@ IOPinMapTypeDef IOMap =
 		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_4,       // uint32_t pinBitWeight
-		.bit                 = 4,                // unsigned char bit
+		.bitWeight           = GPIO_PIN_2,       // uint32_t pinBitWeight
+		.bit                 = 2,                // unsigned char bit
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
