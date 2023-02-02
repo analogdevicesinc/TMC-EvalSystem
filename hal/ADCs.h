@@ -1,22 +1,24 @@
 #ifndef ADC_H
 #define ADC_H
 
-	#define N_O_ADC_CHANNELS 6
+#include <stdint.h>
 
-	static volatile unsigned short ADCValue[N_O_ADC_CHANNELS];
+#define N_O_ADC_CHANNELS 6
 
-	typedef struct
-	{
-		volatile unsigned short *AIN0;
-		volatile unsigned short *AIN1;
-		volatile unsigned short *AIN2;
-		volatile unsigned short *DIO4;
-		volatile unsigned short *DIO5;
-		volatile unsigned short *VM;
-		void (*init)();
-		void (*deInit)();
-	} ADCTypeDef;
+static volatile uint16_t ADCValue[N_O_ADC_CHANNELS];
 
-	extern ADCTypeDef ADCs;
+typedef struct
+{
+	volatile uint16_t *AIN0;
+	volatile uint16_t *AIN1;
+	volatile uint16_t *AIN2;
+	volatile uint16_t *DIO4;
+	volatile uint16_t *DIO5;
+	volatile uint16_t *VM;
+	void (*init)();
+	void (*deInit)();
+} ADCTypeDef;
+
+extern ADCTypeDef ADCs;
 
 #endif /* ADC_H */
