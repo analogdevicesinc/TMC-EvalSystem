@@ -160,7 +160,7 @@ void IDDetection_init(void)
 	 */
 
 	rcu_periph_clock_enable(RCU_TIMER1);
-	rcu_timer_clock_prescaler_config(RCU_TIMER_PSC_MUL2);
+	rcu_timer_clock_prescaler_config(RCU_TIMER_PSC_MUL2); // CK_TIMER1 = 2 x CK_APB1
 	timer_internal_clock_config(TIMER1);
 	timer_deinit(TIMER1);
 
