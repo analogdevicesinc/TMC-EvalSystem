@@ -1,8 +1,7 @@
 /*
- * IdDetection_Startrampe.c
  *
- *  Created on:  20.01.2023
- *  Author:      AS
+ *  Created on:  07.02.2023
+ *  Author:      ASU
  *
  *  Calling IDDetection_detect(IdAssignmentTypeDef *result) will start the ID detection process.
  *  The function returns the ID Results through the IdAssignmentTypeDef struct result points to.
