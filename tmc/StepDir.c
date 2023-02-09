@@ -646,7 +646,6 @@ void StepDir_init(uint32_t precision)
 		// set FTM1 interrupt handler
 		enable_irq(INT_FTM1-16);
 	#elif defined(LandungsbrueckeV3)
-	#else
 		rcu_periph_clock_enable(RCU_TIMER2);
 		timer_deinit(TIMER2);
 
