@@ -1019,6 +1019,9 @@ void TMC5130_init(void)
 #elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.AIN_REF_PWM);
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#elif defined(LandungsbrueckeV3)
+	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_MODE_AF;
+	gpio_af_set(Pins.AIN_REF_PWM->port, GPIO_AF_1, Pins.AIN_REF_PWM->bitWeight);
 #endif
 
 	vref = 2000;
