@@ -53,7 +53,8 @@ static void init(void)
 	params.nss = SPI_NSS_SOFT;
 	params.endian = SPI_ENDIAN_MSB;
 	params.clock_polarity_phase = SPI_CK_PL_HIGH_PH_2EDGE;
-	params.prescale = SPI_PSC_8;
+//	params.prescale = SPI_PSC_8;
+	params.prescale = SPI_PSC_16;
 
 	spi_init(SPI.ch1.periphery, &params);
 
