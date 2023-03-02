@@ -53,12 +53,11 @@ static void init(void)
 	params.nss = SPI_NSS_SOFT;
 	params.endian = SPI_ENDIAN_MSB;
 	params.clock_polarity_phase = SPI_CK_PL_HIGH_PH_2EDGE;
-//	params.prescale = SPI_PSC_8;
-	params.prescale = SPI_PSC_16;
+	params.prescale = SPI_PSC_16; // PCLK for SPI1 is 60MHz => SPI1 freq = 60/16 = 3,75MHz
 
 	spi_init(SPI.ch1.periphery, &params);
 
-	params.prescale = SPI_PSC_32;
+	params.prescale = SPI_PSC_32; // PCLK for SPI0 is 120MHz => SPI0 freq = 120/32 = 3,75MHz
 
 	spi_init(SPI.ch2.periphery, &params);
 
