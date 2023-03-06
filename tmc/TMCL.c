@@ -1053,8 +1053,8 @@ static void handleRamDebug(void)
         break;
 	case 15:
 		if(Timer.initialized) {
-			Timer.setFrequency(ActualCommand.Value.UInt32);
-			ActualReply.Value.UInt32 = Timer.getModulo();
+			Timer.setFrequency(TIMER_CHANNEL_2, ActualCommand.Value.UInt32);
+			ActualReply.Value.UInt32 = Timer.getPeriod(TIMER_CHANNEL_2);
 		}
 		break;
 	case 16:

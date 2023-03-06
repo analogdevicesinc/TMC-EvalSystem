@@ -19,12 +19,12 @@
 #include "tmc/ic/TMC7300/TMC7300.h"
 
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 #include "tmc/ic/TMC2209/TMC2209.h"
 #include "tmc/ic/TMC2225/TMC2225.h"
 #include "tmc/ic/TMC2226/TMC2226.h"
 #include "tmc/ic/TMC2300/TMC2300.h"
-
+#include "tmc/ic/MAX22216/MAX22216.h"
 #endif
 
 #include "tmc/ic/TMC4330/TMC4330.h"
@@ -182,11 +182,12 @@ typedef union {
     TMC2660TypeDef tmc2660;
     TMC7300TypeDef tmc7300;
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
     TMC2209TypeDef tmc2209;
     TMC2225TypeDef tmc2225;
     TMC2226TypeDef tmc2226;
     TMC2300TypeDef tmc2300;
+	MAX22216TypeDef max22216;
 #endif
 } DriverBoards;
 extern DriverBoards driverBoards;
