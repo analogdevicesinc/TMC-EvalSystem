@@ -8,7 +8,7 @@
 #elif defined(Startrampe)
 #define TIMER_MAX 10000 // Frequenz von 6kHz => 166,66us pro Periode => 8000 Schritte bei 48Mhz
 #elif defined(LandungsbrueckeV3)
-#define TIMER_MAX 50000
+#define TIMER_MAX 65535
 #endif
 
 typedef enum {
@@ -24,12 +24,12 @@ typedef struct
 	void (*deInit) (void);
 	void (*setDuty) (timer_channel channel, float duty);
 	float (*getDuty) (timer_channel channel);
-	void (*setModulo) (uint16_t modulo);
-	uint16_t (*getModulo) (void);
-	void (*setModuloMin) (uint16_t modulo_min);
-	void (*setFrequency) (float freq);
-	void (*setFrequencyMin) (float freq_min);
-	void (*overflow_callback) (void);
+	void (*setPeriod) (timer_channel channel, uint16_t period);
+	uint16_t (*getPeriod) (timer_channel channel);
+	void (*setPeriodMin) (timer_channel channel, uint16_t period_min);
+	void (*setFrequency) (timer_channel channel, float freq);
+	void (*setFrequencyMin) (timer_channel channel, float freq_min);
+	void (*overflow_callback) (timer_channel channel);
 } TimerTypeDef;
 
 extern TimerTypeDef Timer;

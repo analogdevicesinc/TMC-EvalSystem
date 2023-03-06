@@ -3,8 +3,8 @@
 
 static void init(void);
 static void deInit(void);
-static void setDuty(timer_channel, float);
-static float getDuty(timer_channel);
+static void setDuty(timer_channel channel, float duty);
+static float getDuty(timer_channel channel);
 
 TimerTypeDef Timer =
 {
@@ -13,9 +13,9 @@ TimerTypeDef Timer =
 	.deInit   = deInit,
 	.setDuty  = setDuty,
 	.getDuty  = getDuty,
-	.setModulo = NULL,
-	.getModulo = NULL,
-	.setModuloMin = NULL,
+	.setPeriod = NULL,
+	.getPeriod = NULL,
+	.setPeriodMin = NULL,
 	.setFrequency = NULL,
 	.setFrequencyMin = NULL,
 	.overflow_callback = NULL
