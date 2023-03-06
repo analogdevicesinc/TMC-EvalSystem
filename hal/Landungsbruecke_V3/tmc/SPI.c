@@ -14,6 +14,8 @@ static void spi_ch2_readWriteArray(uint8_t *data, size_t length);
 SPIChannelTypeDef *SPIChannel_1_default;
 SPIChannelTypeDef *SPIChannel_2_default;
 
+static uint16_t SPI_PSC_Factor[16] = { 2, 4, 8, 16, 32, 64, 128, 256};
+
 static IOPinTypeDef IODummy = { .bitWeight = DUMMY_BITWEIGHT };
 
 SPITypeDef SPI=
@@ -84,6 +86,7 @@ static void init(void)
 	// configure default SPI channel_2
 	SPIChannel_2_default = &HAL.SPI->ch2;
 	SPIChannel_2_default->CSN = &HAL.IOs->pins->SPI2_CSN0;
+
 }
 
 static void reset_ch1()
@@ -102,13 +105,60 @@ static void reset_ch2()
 
 uint32_t spi_getFrequency(SPIChannelTypeDef *SPIChannel)
 {
-	return 0;
+	uint32_t PCLK;
+	if(SPIChannel->periphery == SPI1 || SPIChannel->periphery == SPI2)
+	{
+		PCLK = rcu_clock_freq_get(CK_APB1);
+	}
+	else
+	{
+		PCLK = rcu_clock_freq_get(CK_APB2);
+	}
+	uint8_t PSC_Val = (SPI_CTL0(SPIChannel->periphery) & SPI_CTL0_PSC)>>3;
+	return PCLK/SPI_PSC_Factor[PSC_Val];
 }
 
 // Set the SPI frequency to the next-best available frequency (rounding down).
 // Returns the actual frequency set or 0 if no suitable frequency was found.
 uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequency)
 {
+	uint32_t PCLK;
+	if(SPIChannel->periphery == SPI1 || SPIChannel->periphery == SPI2)
+	{
+		PCLK = rcu_clock_freq_get(CK_APB1);
+	}
+	else
+	{
+		PCLK = rcu_clock_freq_get(CK_APB2);
+	}
+
+	uint32_t prescaler;
+	if(desiredFrequency > 0)
+	{
+		prescaler = PCLK/desiredFrequency;
+	}
+	else{
+
+		return 0;
+	}
+
+	if(prescaler == 1)
+	{
+		return PCLK;
+	}
+	else if(prescaler>1)
+	{
+		// Find the highest frequency that is lower or equal to the desired frequency
+		for(int i=0; i<ARRAY_SIZE(SPI_PSC_Factor); i++){
+
+			if(prescaler <= SPI_PSC_Factor[i]){
+				prescaler = SPI_PSC_Factor[i];
+				uint32_t PSC_Val = ( SPI_CTL0_PSC & (i<<3) );
+			    SPI_CTL0(SPIChannel->periphery) = ( SPI_CTL0(SPIChannel->periphery) & (~SPI_CTL0_PSC) ) | PSC_Val;
+				return PCLK/prescaler;
+			}
+		}
+	}
 	// The requested frequency was too small -> do not update the frequency
 	return 0;
 }
