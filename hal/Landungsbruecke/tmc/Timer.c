@@ -7,13 +7,13 @@ void __attribute__ ((interrupt)) FTM0_IRQHandler(void);
 
 static void init(void);
 static void deInit(void);
-static void setDuty(timer_channel, float);
-static float getDuty(timer_channel);
-static void setModulo(uint16_t modulo);
-static uint16_t getModulo(void);
-static void setModuloMin(uint16_t modulo_min);
-static void setFrequency(float freq);
-static void setFrequencyMin(float freq_min);
+static void setDuty(timer_channel channel, float duty);
+static float getDuty(timer_channel channel);
+static void setModulo(timer_channel channel, uint16_t modulo);
+static uint16_t getModulo(timer_channel channel);
+static void setModuloMin(timer_channel channel, uint16_t modulo_min);
+static void setFrequency(timer_channel channel, float freq);
+static void setFrequencyMin(timer_channel channel, float freq_min);
 
 static uint16_t modulo_buf = 0;
 static uint16_t modulo_min_buf = 0;
@@ -27,9 +27,9 @@ TimerTypeDef Timer =
 	.deInit   = deInit,
 	.setDuty  = setDuty,
 	.getDuty  = getDuty,
-	.setModulo = setModulo,
-	.getModulo = getModulo,
-	.setModuloMin = setModuloMin,
+	.setPeriod = setModulo,
+	.getPeriod = getModulo,
+	.setPeriodMin = setModuloMin,
 	.setFrequency = setFrequency,
 	.setFrequencyMin = setFrequencyMin,
 	.overflow_callback = NULL
@@ -168,8 +168,9 @@ static float getDuty(timer_channel channel)
 	return (((float)duty) / modulo_buf);
 }
 
-static void setModulo(uint16_t modulo)
+static void setModulo(timer_channel channel, uint16_t modulo)
 {
+	UNUSED(channel);
 	disable_irq(INT_FTM0-16);
 	FTM0_MODE |= FTM_MODE_WPDIS_MASK;
 	FTM0_MOD = modulo;
@@ -181,24 +182,29 @@ static void setModulo(uint16_t modulo)
 	enable_irq(INT_FTM0-16);
 }
 
-static uint16_t getModulo(void)
+static uint16_t getModulo(timer_channel channel)
 {
+	UNUSED(channel);
 	//return FTM0_MOD;
 	return modulo_buf;
 }
 
-static void setModuloMin(uint16_t modulo_min)
+static void setModuloMin(timer_channel channel, uint16_t modulo_min)
 {
+	UNUSED(channel);
 	modulo_min_buf = modulo_min;
 }
 
-static void setFrequencyMin(float freq_min)
+static void setFrequencyMin(timer_channel channel, float freq_min)
 {
+	UNUSED(channel);
 	freq_min_buf = freq_min;
 }
 
-static void setFrequency(float freq)
+static void setFrequency(timer_channel channel, float freq)
 {
+	UNUSED(channel);
+
 	if(freq < freq_min_buf)
 		return;
 
@@ -247,7 +253,7 @@ void FTM0_IRQHandler()
 	{
 		// overflow detected
 		if(Timer.overflow_callback)
-			Timer.overflow_callback();
+			Timer.overflow_callback(TIMER_CHANNEL_2);
 		FTM0_SC &= ~FTM_SC_TOF_MASK;
 	}
 
