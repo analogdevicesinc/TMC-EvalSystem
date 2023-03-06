@@ -39,7 +39,7 @@ static void OTP_program(void);
 static OTP_Status OTP_status(void);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
-static void timer_overflow(void);
+static void timer_overflow(timer_channel channel);
 
 static SPIChannelTypeDef *MAX22216_SPIChannel;
 static MAX22216TypeDef MAX22216;
@@ -188,7 +188,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			rapid_fire_enabled[motor] = *value;
 			for(size_t channel = 0; channel < ARRAY_SIZE(rapid_fire_enabled); channel++)
 				if(rapid_fire_enabled[channel])
-					Timer.setFrequency(6000);
+					Timer.setFrequency(TIMER_CHANNEL_2, 6000);
 		}
 		break;
 	case 51: // Rapid fire on-time
@@ -334,8 +334,10 @@ static OTP_Status OTP_status(void)
 	return otp_status;
 }
 
-static void timer_overflow(void)
+static void timer_overflow(timer_channel channel)
 {
+	UNUSED(channel);
+	
 	// RAMDebug
 	debug_nextProcess();
 
