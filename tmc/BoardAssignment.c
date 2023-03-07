@@ -136,7 +136,7 @@ static uint8_t assignCh2(uint8_t id, uint8_t justCheck)
 // This also handles special case logic for the motion controller + driver chain (different pins etc.)
 static void hookDriverSPI(IdAssignmentTypeDef *ids)
 {
-	if((ids->ch1.id == ID_TMC4361) || (ids->ch1.id == ID_TMC4361A) || (ids->ch1.id == ID_TMC4331))
+	if(ids->ch1.id == ID_TMC4361A)
 	{
 		// Redirect ch2 SPI to the SPI cover function of the TMC43XX Board
 		HAL.SPI->ch2.readWrite = Evalboards.ch1.cover;
@@ -150,23 +150,7 @@ static void hookDriverSPI(IdAssignmentTypeDef *ids)
 	}
 
 
-	if(ids->ch1.id == ID_TMC4330)
-	{
-		if(ids->ch2.id == ID_TMC2100)
-		{
-			Evalboards.ch2.userFunction(1, 0, NULL);
-		}
-		else if(ids->ch2.id == ID_TMC2130)
-		{
-			Evalboards.ch2.userFunction(5, 0, NULL);
-		}
-		else if(ids->ch2.id == ID_TMC2160)
-		{
-			Evalboards.ch2.userFunction(5, 0, NULL);
-		}
-	}
-
-	if ((ids->ch1.id == ID_TMC4330) || (ids->ch1.id == ID_TMC4331) || (ids->ch1.id == ID_TMC4361) || (ids->ch1.id == ID_TMC4361A))
+	if (ids->ch1.id == ID_TMC4361A)
 	{
 		if (ids->ch2.id == ID_TMC2130)
 		{
