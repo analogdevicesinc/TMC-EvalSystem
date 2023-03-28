@@ -1023,7 +1023,7 @@ void TMC4671_init(void)
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 	Timer.overflow_callback = timer_overflow;
 	Timer.init();
-	Timer.setFrequency(TIMER_CHANNEL_1, 10000);
+	Timer.setFrequency(TIMER_CHANNEL_2, 10000);
 	debug_updateFrequency(10000);
 #endif
 }
