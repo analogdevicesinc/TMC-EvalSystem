@@ -76,6 +76,12 @@ typedef struct
 	IOPinTypeDef ID_HW_0;
 	IOPinTypeDef ID_HW_1;
 	IOPinTypeDef ID_HW_2;
+	IOPinTypeDef EXTIO_2;
+	IOPinTypeDef EXTIO_3;
+	IOPinTypeDef EXTIO_4;
+	IOPinTypeDef EXTIO_5;
+	IOPinTypeDef EXTIO_6;
+	IOPinTypeDef EXTIO_7;
 #endif
 
 #if defined(LandungsbrueckeV3)
