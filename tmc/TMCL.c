@@ -549,7 +549,7 @@ void rx(RXTXTypeDef *RXTX)
 void tmcl_boot()
 {
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	if(Evalboards.ch1.id == ID_TMC4670 || Evalboards.ch1.id == ID_TMC4671)
+	if(Evalboards.ch1.id == ID_TMC4671)
 	{
 		// Driver Enable has to be set low by the bootloader for these ICs
 		BLConfig.drvEnableResetValue = 0;
