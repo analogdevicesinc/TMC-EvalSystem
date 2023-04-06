@@ -62,11 +62,18 @@ void tmc2224_writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	UNUSED(motor);
 	UART_writeInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), address, value);
+	TMC2224_config->shadowRegister[address] = value;
+	TMC2224.registerAccess[address] |= TMC_ACCESS_DIRTY;
 }
 
 void tmc2224_readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
 	UNUSED(motor);
+	if (!TMC_IS_READABLE(TMC2224.registerAccess[address])){
+
+		*value= TMC2224_config->shadowRegister[address];
+		return;
+	}
 	UART_readInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), address, value);
 }
 
@@ -244,7 +251,7 @@ static uint8_t reset()
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 
-	return tmc2224_reset(TMC2224_config);
+	return tmc2224_reset(&TMC2224,TMC2224_config);
 }
 
 static uint8_t restore()
