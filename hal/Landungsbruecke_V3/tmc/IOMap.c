@@ -19,7 +19,13 @@ static IOPinTypeDef *_pins[] =
 	&IOMap.DIO8,
 	&IOMap.DIO9,
 	&IOMap.DIO10,
+	&IOMap.DIO10_A,
+	&IOMap.DIO10_B,
 	&IOMap.DIO11,
+	&IOMap.DIO11_A,
+	&IOMap.DIO11_B,
+	&IOMap.MUX_1,
+	&IOMap.MUX_2,
 	&IOMap.CLK16,
 	&IOMap.SPI2_CSN0,
 	&IOMap.SPI2_CSN1,
@@ -283,11 +289,41 @@ IOPinMapTypeDef IOMap =
 		.setBitRegister      = &(GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = DUMMY_BITWEIGHT,      // uint32_t pinBitWeight
+		.bit                 = -1,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+	.DIO10_A =  // IOPinTypeDef DIO10_A
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
 		.bitWeight           = GPIO_PIN_12,      // uint32_t pinBitWeight
 		.bit                 = 12,               // unsigned char bit
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+	.DIO10_B =  // IOPinTypeDef DIO10_B
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOA,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_0,      // uint32_t pinBitWeight
+		.bit                 = 0,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
 			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
 			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
@@ -299,8 +335,8 @@ IOPinMapTypeDef IOMap =
 		.setBitRegister      = &(GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOE,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_13,      // uint32_t pinBitWeight
-		.bit                 = 13,               // unsigned char bit
+		.bitWeight           = DUMMY_BITWEIGHT,      // uint32_t pinBitWeight
+		.bit                 = -1,               // unsigned char bit
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
@@ -309,7 +345,66 @@ IOPinMapTypeDef IOMap =
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
-
+	.DIO11_A =  // IOPinTypeDef DIO11_A
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOE,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_13,      // uint32_t pinBitWeight
+		.bit                 = 13,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+	.DIO11_B =  // IOPinTypeDef DIO11_B
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOA,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_1,      // uint32_t pinBitWeight
+		.bit                 = 1,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+	.MUX_1 =  // IOPinTypeDef MUX_1
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_2,      // uint32_t pinBitWeight
+		.bit                 = 2,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_OUTPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+	.MUX_2 =  // IOPinTypeDef MUX_2
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_1,      // uint32_t pinBitWeight
+		.bit                 = 1,               // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_OUTPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
 	.CLK16 =  // IOPinTypeDef CLK16
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
@@ -568,14 +663,14 @@ IOPinMapTypeDef IOMap =
 
 	.DIO17 =  // IOPinTypeDef DIO017
 	{
-		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_13,       // uint32_t pinBitWeight
-		.bit                 = 13,                // unsigned char bit
+		.setBitRegister      = &(GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_10,       // uint32_t pinBitWeight
+		.bit                 = 10,                // unsigned char bit
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
 			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
 			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
@@ -584,14 +679,14 @@ IOPinMapTypeDef IOMap =
 
 	.DIO18 =  // IOPinTypeDef DIO18
 	{
-		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
-		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
-		.port                = GPIOD,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_14,       // uint32_t pinBitWeight
-		.bit                 = 14,                // unsigned char bit
+		.setBitRegister      = &(GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOB,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_11,       // uint32_t pinBitWeight
+		.bit                 = 11,                // unsigned char bit
 		.resetConfiguration  =
 		{
-			.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_Mode   = GPIO_MODE_AF,         // GPIOMode_TypeDef GPIO_Mode
 			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
 			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
@@ -651,7 +746,7 @@ IOPinMapTypeDef IOMap =
 		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_15,       // uint32_t pinBitWeight
+		.bitWeight           = GPIO_PIN_9,       // uint32_t pinBitWeight
 		.bit                 = 9,                // unsigned char bit
 		.resetConfiguration  =
 		{
@@ -875,8 +970,8 @@ IOPinMapTypeDef IOMap =
 		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOA,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_2,       // uint32_t pinBitWeight
-		.bit                 = 2,                // unsigned char bit
+		.bitWeight           = GPIO_PIN_3,       // uint32_t pinBitWeight
+		.bit                 = 3,                // unsigned char bit
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
@@ -1034,7 +1129,13 @@ static void init()
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO8);
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO9);
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO10);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_A);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_B);
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO11);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_A);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_B);
+	HAL.IOs->config->reset(&HAL.IOs->pins->MUX_1);
+	HAL.IOs->config->reset(&HAL.IOs->pins->MUX_2);
 	HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN0);
 	HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN1);
 	HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN2);

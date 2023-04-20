@@ -68,7 +68,7 @@ void init(void)
 	adc_routine_channel_config(ADC0, 2, ADC_CHANNEL_8, ADC_SAMPLETIME_15);
 	adc_routine_channel_config(ADC0, 3, ADC_CHANNEL_0, ADC_SAMPLETIME_15);
 	adc_routine_channel_config(ADC0, 4, ADC_CHANNEL_1, ADC_SAMPLETIME_15);
-	adc_routine_channel_config(ADC0, 5, ADC_CHANNEL_2, ADC_SAMPLETIME_15);
+	adc_routine_channel_config(ADC0, 5, ADC_CHANNEL_3, ADC_SAMPLETIME_15);
 
 	adc_dma_request_after_last_enable(ADC0);
 
