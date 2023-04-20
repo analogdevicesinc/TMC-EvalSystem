@@ -47,7 +47,7 @@ OF SUCH DAMAGE.
   /* #define GD32F405 */
   /* #define GD32F407 */
   /* #define GD32F470 */
-  /* #define GD32F425 */
+ #define GD32F425
   /* #define GD32F427 */
 #endif /* define GD32F4xx */
    

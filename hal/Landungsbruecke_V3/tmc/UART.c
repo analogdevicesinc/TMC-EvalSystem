@@ -18,6 +18,8 @@ static uint8_t UARTSendFlag;
 
 static volatile uint8_t rxBuffer[BUFFER_SIZE];
 static volatile uint8_t txBuffer[BUFFER_SIZE];
+static volatile	uint32_t usart_periph;
+uint8_t volatile nvic_irq;
 
 static volatile uint32_t available = 0;
 
@@ -56,88 +58,109 @@ static RXTXBufferingTypeDef buffers =
 	}
 };
 
-void __attribute__ ((interrupt)) USART1_IRQHandler(void);
+void __attribute__ ((interrupt)) USART2_IRQHandler(void);
+void __attribute__ ((interrupt)) UART3_IRQHandler(void);
+
 
 static void init()
 {
 
-	usart_deinit(USART1);
+	switch(UART.pinout) {
+	case UART_PINS_2:
+		*HAL.IOs->pins->MUX_1.resetBitRegister     = HAL.IOs->pins->MUX_1.bitWeight;
+		*HAL.IOs->pins->MUX_2.resetBitRegister     = HAL.IOs->pins->MUX_2.bitWeight;
 
-	  rcu_periph_clock_enable(RCU_USART1);
+		usart_periph = UART3;
+		usart_deinit(usart_periph);
+		//DIO10_B(TxD) with pull-up resistor
+		 gpio_mode_set(HAL.IOs->pins->DIO10_B.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO10_B.bitWeight);
+		 gpio_output_options_set(HAL.IOs->pins->DIO10_B.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO10_B.bitWeight);
 
-	//TxD with pull-up resistor
-	 gpio_mode_set(HAL.IOs->pins->WIFI_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->WIFI_TX.bitWeight);
-	 gpio_output_options_set(HAL.IOs->pins->WIFI_TX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIFI_TX.bitWeight);
+		 //DIO11_B(RxD) with pull-up resistor
+		  gpio_mode_set(HAL.IOs->pins->DIO11_B.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO11_B.bitWeight);
+		  gpio_output_options_set(HAL.IOs->pins->DIO11_B.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO11_B.bitWeight);
+
+		  gpio_af_set(HAL.IOs->pins->DIO10_B.port, GPIO_AF_8, HAL.IOs->pins->DIO10_B.bitWeight);
+		  gpio_af_set(HAL.IOs->pins->DIO11_B.port, GPIO_AF_8, HAL.IOs->pins->DIO11_B.bitWeight);
+		  rcu_periph_clock_enable(RCU_UART3);
+		  nvic_irq = UART3_IRQn;
+		  break;
+	case UART_PINS_1:
+		usart_periph = USART2;
+		usart_deinit(usart_periph);
+		//DIO17(TxD) with pull-up resistor
+		 gpio_mode_set(HAL.IOs->pins->DIO17.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO17.bitWeight);
+		 gpio_output_options_set(HAL.IOs->pins->DIO17.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO17.bitWeight);
+
+		 //DIO18(RxD) with pull-up resistor
+		  gpio_mode_set(HAL.IOs->pins->DIO18.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO18.bitWeight);
+		  gpio_output_options_set(HAL.IOs->pins->DIO18.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO18.bitWeight);
+
+		  gpio_af_set(HAL.IOs->pins->DIO17.port, GPIO_AF_7, HAL.IOs->pins->DIO17.bitWeight);
+		  gpio_af_set(HAL.IOs->pins->DIO18.port, GPIO_AF_7, HAL.IOs->pins->DIO18.bitWeight);
+		  rcu_periph_clock_enable(RCU_USART2);
+		  usart_hardware_flow_rts_config(usart_periph, USART_RTS_DISABLE);
+		  usart_hardware_flow_cts_config(usart_periph, USART_CTS_DISABLE);
+		  nvic_irq = USART2_IRQn;
+		  break;
+	}
 
 
-	 //RxD with pull-up resistor
-	  gpio_mode_set(HAL.IOs->pins->WIFI_RX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->WIFI_RX.bitWeight);
-	  gpio_output_options_set(HAL.IOs->pins->WIFI_RX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIFI_RX.bitWeight);
+    usart_baudrate_set(usart_periph, 115200);
+    usart_word_length_set(usart_periph, USART_WL_8BIT);
+    usart_stop_bit_set(usart_periph, USART_STB_1BIT);
+    usart_parity_config(usart_periph, USART_PM_NONE);
+    usart_receive_config(usart_periph, USART_RECEIVE_ENABLE);
+    usart_transmit_config(usart_periph, USART_TRANSMIT_ENABLE);
+    usart_enable(usart_periph);
+    usart_interrupt_enable(usart_periph, USART_INT_TBE);
+    usart_interrupt_enable(usart_periph, USART_INT_TC);
+    usart_interrupt_enable(usart_periph, USART_INT_RBNE);
 
-	  gpio_af_set(HAL.IOs->pins->WIFI_TX.port, GPIO_AF_7, HAL.IOs->pins->WIFI_TX.bitWeight);
-	  gpio_af_set(HAL.IOs->pins->WIFI_RX.port, GPIO_AF_7, HAL.IOs->pins->WIFI_RX.bitWeight);
+    nvic_irq_enable(nvic_irq, INTR_PRI, 0);
 
-
-
-    usart_baudrate_set(USART1, 115200);
-    usart_word_length_set(USART1, USART_WL_8BIT);
-    usart_stop_bit_set(USART1, USART_STB_1BIT);
-    usart_parity_config(USART1, USART_PM_NONE);
-    usart_hardware_flow_rts_config(USART1, USART_RTS_DISABLE);
-    usart_hardware_flow_cts_config(USART1, USART_CTS_DISABLE);
-    usart_receive_config(USART1, USART_RECEIVE_ENABLE);
-    usart_transmit_config(USART1, USART_TRANSMIT_ENABLE);
-    usart_enable(USART1);
-
-    usart_interrupt_enable(USART1, USART_INT_TBE);
-    usart_interrupt_enable(USART1, USART_INT_TC);
-    usart_interrupt_enable(USART1, USART_INT_RBNE);
-
-    nvic_irq_enable(USART1_IRQn, INTR_PRI, 0);
-
-	usart_flag_clear(USART1, USART_FLAG_CTS);
-	usart_flag_clear(USART1, USART_FLAG_LBD);
-	usart_flag_clear(USART1, USART_FLAG_TBE);
-	usart_flag_clear(USART1, USART_FLAG_TC);
-	usart_flag_clear(USART1, USART_FLAG_RBNE);
-	usart_flag_clear(USART1, USART_FLAG_IDLE);
-	usart_flag_clear(USART1, USART_FLAG_ORERR);
-	usart_flag_clear(USART1, USART_FLAG_NERR);
-	usart_flag_clear(USART1, USART_FLAG_FERR);
-	usart_flag_clear(USART1, USART_FLAG_PERR);
-
+	usart_flag_clear(usart_periph, USART_FLAG_CTS);
+	usart_flag_clear(usart_periph, USART_FLAG_LBD);
+	usart_flag_clear(usart_periph, USART_FLAG_TBE);
+	usart_flag_clear(usart_periph, USART_FLAG_TC);
+	usart_flag_clear(usart_periph, USART_FLAG_RBNE);
+	usart_flag_clear(usart_periph, USART_FLAG_IDLE);
+	usart_flag_clear(usart_periph, USART_FLAG_ORERR);
+	usart_flag_clear(usart_periph, USART_FLAG_NERR);
+	usart_flag_clear(usart_periph, USART_FLAG_FERR);
+	usart_flag_clear(usart_periph, USART_FLAG_PERR);
 
 }
 
 static void deInit()
 {
-    usart_disable(USART1);
-    nvic_irq_disable(USART1_IRQn);
+    usart_disable(usart_periph);
+    nvic_irq_disable(nvic_irq);
 
-	usart_flag_clear(USART1, USART_FLAG_CTS);
-	usart_flag_clear(USART1, USART_FLAG_LBD);
-	usart_flag_clear(USART1, USART_FLAG_TBE);
-	usart_flag_clear(USART1, USART_FLAG_TC);
-	usart_flag_clear(USART1, USART_FLAG_RBNE);
-	usart_flag_clear(USART1, USART_FLAG_IDLE);
-	usart_flag_clear(USART1, USART_FLAG_ORERR);
-	usart_flag_clear(USART1, USART_FLAG_NERR);
-	usart_flag_clear(USART1, USART_FLAG_FERR);
-	usart_flag_clear(USART1, USART_FLAG_PERR);
+	usart_flag_clear(usart_periph, USART_FLAG_CTS);
+	usart_flag_clear(usart_periph, USART_FLAG_LBD);
+	usart_flag_clear(usart_periph, USART_FLAG_TBE);
+	usart_flag_clear(usart_periph, USART_FLAG_TC);
+	usart_flag_clear(usart_periph, USART_FLAG_RBNE);
+	usart_flag_clear(usart_periph, USART_FLAG_IDLE);
+	usart_flag_clear(usart_periph, USART_FLAG_ORERR);
+	usart_flag_clear(usart_periph, USART_FLAG_NERR);
+	usart_flag_clear(usart_periph, USART_FLAG_FERR);
+	usart_flag_clear(usart_periph, USART_FLAG_PERR);
 
 	clearBuffers();
 }
 
-void USART1_IRQHandler(void)
+void USART2_IRQHandler(void)
 {
 	uint8_t byte;
-
+	usart_periph = USART2;
 	// Receive interrupt
-	if(USART_STAT0(USART1) & USART_STAT0_RBNE)
+	if(USART_STAT0(usart_periph) & USART_STAT0_RBNE)
 	{
 		// One-wire UART communication:
 		// Ignore received byte when a byte has just been sent (echo).
-		byte = USART_DATA(USART1);
+		byte = USART_DATA(usart_periph);
 
 		if(!UARTSendFlag)
 		{	// not sending, received real data instead of echo -> advance ring buffer index and available counter
@@ -149,33 +172,85 @@ void USART1_IRQHandler(void)
 
 	// Transmit buffer empty interrupt => send next byte if there is something
 	// to be sent.
-	if(USART_STAT0(USART1) & USART_STAT0_TBE)
+	if(USART_STAT0(usart_periph) & USART_STAT0_TBE)
 	{
 		if(buffers.tx.read != buffers.tx.wrote)
 		{
 			UARTSendFlag = true;
-			USART_DATA(USART1)  = buffers.tx.buffer[buffers.tx.read];
+			USART_DATA(usart_periph)  = buffers.tx.buffer[buffers.tx.read];
 			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
 		}
 		else
 		{
-		    usart_interrupt_disable(USART1, USART_INT_TBE);
+		    usart_interrupt_disable(usart_periph, USART_INT_TBE);
 
 		}
 	}
 
 	// Transmission complete interrupt => do not ignore echo any more
 	// after last bit has been sent.
-	if(USART_STAT0(USART1) & USART_STAT0_TC)
+	if(USART_STAT0(usart_periph) & USART_STAT0_TC)
 	{
 		//Only if there are no more bytes left in the transmit buffer
 		if(buffers.tx.read == buffers.tx.wrote)
 		{
-  		byte = USART_DATA(USART1);  //Ignore spurios echos of the last sent byte that sometimes occur.
+  		byte = USART_DATA(usart_periph);  //Ignore spurios echos of the last sent byte that sometimes occur.
 			UARTSendFlag = false;
 		}
 //		USART_ClearITPendingBit(USART2, USART_IT_TC);
-	    usart_interrupt_flag_clear(USART1, USART_INT_FLAG_TC);
+	    usart_interrupt_flag_clear(usart_periph, USART_INT_FLAG_TC);
+
+	}
+}
+
+void UART3_IRQHandler(void)
+{
+	uint8_t byte;
+	usart_periph = UART3;
+	// Receive interrupt
+	if(USART_STAT0(usart_periph) & USART_STAT0_RBNE)
+	{
+		// One-wire UART communication:
+		// Ignore received byte when a byte has just been sent (echo).
+		byte = USART_DATA(usart_periph);
+
+		if(!UARTSendFlag)
+		{	// not sending, received real data instead of echo -> advance ring buffer index and available counter
+      buffers.rx.buffer[buffers.rx.wrote]=byte;
+			buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
+			available++;
+		}
+	}
+
+	// Transmit buffer empty interrupt => send next byte if there is something
+	// to be sent.
+	if(USART_STAT0(usart_periph) & USART_STAT0_TBE)
+	{
+		if(buffers.tx.read != buffers.tx.wrote)
+		{
+			UARTSendFlag = true;
+			USART_DATA(usart_periph)  = buffers.tx.buffer[buffers.tx.read];
+			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
+		}
+		else
+		{
+		    usart_interrupt_disable(usart_periph, USART_INT_TBE);
+
+		}
+	}
+
+	// Transmission complete interrupt => do not ignore echo any more
+	// after last bit has been sent.
+	if(USART_STAT0(usart_periph) & USART_STAT0_TC)
+	{
+		//Only if there are no more bytes left in the transmit buffer
+		if(buffers.tx.read == buffers.tx.wrote)
+		{
+  		byte = USART_DATA(usart_periph);  //Ignore spurios echos of the last sent byte that sometimes occur.
+			UARTSendFlag = false;
+		}
+//		USART_ClearITPendingBit(USART2, USART_IT_TC);
+	    usart_interrupt_flag_clear(usart_periph, USART_INT_FLAG_TC);
 
 	}
 }
@@ -266,35 +341,56 @@ void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t
 void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 {
 	UNUSED(channel);
-
-
-	if (enabled)
+	switch(channel->pinout)
 	{
+	case UART_PINS_2:
+		if (enabled)
+		{
 
-		//TxD as open drain output
-		gpio_mode_set(HAL.IOs->pins->WIFI_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->WIFI_TX.bitWeight);
-		gpio_output_options_set(HAL.IOs->pins->WIFI_TX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIFI_TX.bitWeight);
+			//TxD as open drain output
+			gpio_mode_set(HAL.IOs->pins->DIO10_B.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO10_B.bitWeight);
+			gpio_output_options_set(HAL.IOs->pins->DIO10_B.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO10_B.bitWeight);
 
-		//RxD with pull-up resistor
-		gpio_mode_set(HAL.IOs->pins->WIFI_RX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->WIFI_RX.bitWeight);
-		gpio_output_options_set(HAL.IOs->pins->WIFI_RX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->WIFI_RX.bitWeight);
+			//RxD with pull-up resistor
+			gpio_mode_set(HAL.IOs->pins->DIO11_B.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->DIO11_B.bitWeight);
+			gpio_output_options_set(HAL.IOs->pins->DIO11_B.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO11_B.bitWeight);
 
-	    gpio_af_set(HAL.IOs->pins->WIFI_TX.port, GPIO_AF_7, HAL.IOs->pins->WIFI_TX.bitWeight);
-	    gpio_af_set(HAL.IOs->pins->WIFI_RX.port, GPIO_AF_7, HAL.IOs->pins->WIFI_RX.bitWeight);
+		    gpio_af_set(HAL.IOs->pins->DIO10_B.port, GPIO_AF_8, HAL.IOs->pins->DIO10_B.bitWeight);
+		    gpio_af_set(HAL.IOs->pins->DIO11_B.port, GPIO_AF_8, HAL.IOs->pins->DIO11_B.bitWeight);
+		}
+		else{
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_B);
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_B);
+		}
+		break;
+	case UART_PINS_1:
+		if (enabled)
+		{
+			//TxD as open drain output
+			gpio_mode_set(HAL.IOs->pins->DIO17.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO17.bitWeight);
+			gpio_output_options_set(HAL.IOs->pins->DIO17.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO17.bitWeight);
+
+			//RxD with pull-up resistor
+			gpio_mode_set(HAL.IOs->pins->DIO18.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->DIO18.bitWeight);
+			gpio_output_options_set(HAL.IOs->pins->DIO18.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO18.bitWeight);
+
+		    gpio_af_set(HAL.IOs->pins->DIO17.port, GPIO_AF_7, HAL.IOs->pins->DIO17.bitWeight);
+		    gpio_af_set(HAL.IOs->pins->DIO18.port, GPIO_AF_7, HAL.IOs->pins->DIO18.bitWeight);
+		}
+		else{
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
+		}
+		break;
 	}
-	else
-	{
 
-		HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_TX);
-		HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_RX);
-	}
 }
 
 static void tx(uint8_t ch)
 {
 	buffers.tx.buffer[buffers.tx.wrote] = ch;
 	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
-    usart_interrupt_enable(USART1, USART_INT_TBE);
+    usart_interrupt_enable(usart_periph, USART_INT_TBE);
 
 }
 
