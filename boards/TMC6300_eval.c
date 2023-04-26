@@ -5,8 +5,10 @@
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
 
-#define VM_MIN  18   // VM[V/10] min
-#define VM_MAX  121  // VM[V/10] max (11V + 10%)
+// #define VM_MIN  18   // VM[V/10] min
+// #define VM_MAX  121  // VM[V/10] max (11V + 10%)
+#define VM_MIN  0   // VM[V/10] min
+#define VM_MAX  991  // VM[V/10] max (11V + 10%)
 
 #define MOTORS 1
 
