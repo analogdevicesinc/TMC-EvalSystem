@@ -960,7 +960,13 @@ void TMC5130_init(void)
 	Pins.ENCB_DCEN_CFG4  = &HAL.IOs->pins->DIO3;
 	Pins.REFL_UC         = &HAL.IOs->pins->DIO6;
 	Pins.REFR_UC         = &HAL.IOs->pins->DIO7;
+#if defined(LandungsbrueckeV3)
+	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10_A;
+	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11_A;
+#else
 	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10;
+	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11;
+#endif
 	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11;
 	Pins.SWSEL           = &HAL.IOs->pins->DIO14;
 	Pins.SWP_DIAG1       = &HAL.IOs->pins->DIO15;
