@@ -221,7 +221,7 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 
 	// Timer
 
-	Timer.deInit();
+	rcu_periph_clock_enable(RCU_TIMER0);
 
 	timer_parameter_struct params;
 	timer_oc_parameter_struct oc_params;
@@ -248,7 +248,7 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 	oc_params.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
 	oc_params.outputnstate = TIMER_CCXN_ENABLE;
 	oc_params.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
-	oc_params.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
+	oc_params.ocnidlestate = TIMER_OCN_IDLE_STATE_HIGH;
 	timer_channel_output_config(TIMER0, TIMER_CH_0, &oc_params);
 	timer_channel_output_config(TIMER0, TIMER_CH_1, &oc_params);
 	timer_channel_output_config(TIMER0, TIMER_CH_2, &oc_params);
@@ -270,6 +270,7 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 	timer_auto_reload_shadow_enable(TIMER0);
 
 	timer_interrupt_enable(TIMER0, TIMER_INT_UP);
+	timer_update_event_enable(TIMER0);
 	nvic_irq_enable(TIMER0_UP_TIMER9_IRQn, 0, 1);
 	timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_UP);
 
@@ -554,12 +555,18 @@ void BLDC_enablePWM(uint8_t enable)
 		Pins.PWM_UH->configuration.GPIO_Mode  = GPIO_MODE_AF;
 		Pins.PWM_UH->configuration.GPIO_OType = GPIO_OTYPE_PP;
 		Pins.PWM_UH->configuration.GPIO_PuPd  = GPIO_PUPD_NONE;
+		gpio_af_set(Pins.PWM_UH->port, GPIO_AF_1, Pins.PWM_UH->bitWeight);
 		HAL.IOs->config->set(Pins.PWM_UH);
 
+		gpio_af_set(Pins.PWM_UL->port, GPIO_AF_1, Pins.PWM_UL->bitWeight);
 		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_UL);
+		gpio_af_set(Pins.PWM_VH->port, GPIO_AF_1, Pins.PWM_VH->bitWeight);
 		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_VH);
+		gpio_af_set(Pins.PWM_VL->port, GPIO_AF_1, Pins.PWM_VL->bitWeight);
 		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_VL);
+		gpio_af_set(Pins.PWM_WH->port, GPIO_AF_1, Pins.PWM_WH->bitWeight);
 		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_WH);
+		gpio_af_set(Pins.PWM_WL->port, GPIO_AF_1, Pins.PWM_WL->bitWeight);
 		HAL.IOs->config->copy(&Pins.PWM_UH->configuration, Pins.PWM_WL);
 
 		pwmEnabled = 1;
