@@ -17,7 +17,6 @@ void SelfTest_init()
 	groupA[3]   = &HAL.IOs->pins->DIO3;
 	groupA[4]   = &HAL.IOs->pins->DIO5;
 	groupA[5]   = &HAL.IOs->pins->DIO8;
-	groupA[6]   = &HAL.IOs->pins->DIO10;
 	groupA[7]   = &HAL.IOs->pins->CLK16;
 	groupA[8]   = &HAL.IOs->pins->SPI2_CSN1;
 	groupA[9]   = &HAL.IOs->pins->SPI2_SCK;
@@ -36,7 +35,6 @@ void SelfTest_init()
 	groupB[4]   = &HAL.IOs->pins->DIO4;
 	groupB[5]   = &HAL.IOs->pins->DIO7;
 	groupB[6]   = &HAL.IOs->pins->DIO9;
-	groupB[7]   = &HAL.IOs->pins->DIO11;
 	groupB[8]   = &HAL.IOs->pins->SPI2_CSN0;
 	groupB[9]   = &HAL.IOs->pins->SPI2_CSN2;
 	groupB[10]  = &HAL.IOs->pins->SPI2_SDO;
@@ -46,6 +44,14 @@ void SelfTest_init()
 	groupB[14]  = &HAL.IOs->pins->DIO14;
 	groupB[15]  = &HAL.IOs->pins->DIO16;
 	groupB[16]  = &HAL.IOs->pins->DIO18;
+
+#if defined(LandungsbrueckeV3)
+	groupA[6]   = &HAL.IOs->pins->DIO10_A;
+	groupB[7]   = &HAL.IOs->pins->DIO11_A;
+#else
+	groupA[6]   = &HAL.IOs->pins->DIO10;
+	groupB[7]   = &HAL.IOs->pins->DIO11;
+#endif
 
 	VitalSignsMonitor.debugMode = 1;
 

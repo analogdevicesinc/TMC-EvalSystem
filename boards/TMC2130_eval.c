@@ -867,8 +867,13 @@ void TMC2130_init(void)
 	Pins.DRV_ENN_CFG6    = &HAL.IOs->pins->DIO0;
 	Pins.REFL_STEP       = &HAL.IOs->pins->DIO6;
 	Pins.REFR_DIR        = &HAL.IOs->pins->DIO7;
+#if defined(LandungsbrueckeV3)
+	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10_A;
+	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11_A;
+#else
 	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10;
 	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11;
+#endif
 	Pins.ENCA_DCIN_CFG5  = &HAL.IOs->pins->DIO12;
 	Pins.ENCB_DCEN_CFG4  = &HAL.IOs->pins->DIO13;
 	Pins.ENCN_DCO        = &HAL.IOs->pins->DIO14;

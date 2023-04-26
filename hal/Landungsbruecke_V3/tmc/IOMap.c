@@ -1180,5 +1180,8 @@ static void init()
 	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_RX);
 	HAL.IOs->config->reset(&HAL.IOs->pins->CLK16);
 	gpio_af_set(HAL.IOs->pins->CLK16.port, GPIO_AF_0, HAL.IOs->pins->CLK16.bitWeight);
+	// By default DIO10 and DIO11 are connected to DIO10_A and DIO11_A respectively.
+	*HAL.IOs->pins->MUX_1.setBitRegister     = HAL.IOs->pins->MUX_1.bitWeight;
+	*HAL.IOs->pins->MUX_2.setBitRegister     = HAL.IOs->pins->MUX_2.bitWeight;
 
 }

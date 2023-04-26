@@ -34,8 +34,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="TMC-API" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="boards|TMC-API" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="TMC-API"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="boards"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

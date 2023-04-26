@@ -67,6 +67,7 @@ static void init()
 
 	switch(UART.pinout) {
 	case UART_PINS_2:
+		//Set MUX_1 and MUX_2 to zero to connect DIO10 and DIO11 to UART pins DIO10_B and DIO11_B respectively.
 		*HAL.IOs->pins->MUX_1.resetBitRegister     = HAL.IOs->pins->MUX_1.bitWeight;
 		*HAL.IOs->pins->MUX_2.resetBitRegister     = HAL.IOs->pins->MUX_2.bitWeight;
 

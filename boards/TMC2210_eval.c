@@ -477,8 +477,13 @@ void TMC2210_init(void)
 	*/
 	Pins.CFG0         = &HAL.IOs->pins->DIO3;
 	Pins.CFG1         = &HAL.IOs->pins->DIO9;
+#if defined(LandungsbrueckeV3)
+	Pins.CFG2         = &HAL.IOs->pins->DIO10_A;
+	Pins.CFG3         = &HAL.IOs->pins->DIO11_A;
+#else
 	Pins.CFG2         = &HAL.IOs->pins->DIO10;
 	Pins.CFG3         = &HAL.IOs->pins->DIO11;
+#endif
 	Pins.CFG4         = &HAL.IOs->pins->SPI2_CSN1;
 	Pins.CFG5         = &HAL.IOs->pins->SPI2_CSN2;
 
