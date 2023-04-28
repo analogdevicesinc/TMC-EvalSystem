@@ -46,8 +46,8 @@ void SelfTest_init()
 	groupB[16]  = &HAL.IOs->pins->DIO18;
 
 #if defined(LandungsbrueckeV3)
-	groupA[6]   = &HAL.IOs->pins->DIO10_A;
-	groupB[7]   = &HAL.IOs->pins->DIO11_A;
+	groupA[6]   = &HAL.IOs->pins->DIO10_PWM_WL;
+	groupB[7]   = &HAL.IOs->pins->DIO11_PWM_WH;
 #else
 	groupA[6]   = &HAL.IOs->pins->DIO10;
 	groupB[7]   = &HAL.IOs->pins->DIO11;

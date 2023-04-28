@@ -868,8 +868,8 @@ void TMC2130_init(void)
 	Pins.REFL_STEP       = &HAL.IOs->pins->DIO6;
 	Pins.REFR_DIR        = &HAL.IOs->pins->DIO7;
 #if defined(LandungsbrueckeV3)
-	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10_A;
-	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11_A;
+	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10_PWM_WL;
+	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11_PWM_WH;
 #else
 	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10;
 	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11;

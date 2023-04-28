@@ -11,8 +11,8 @@
 #include "hal/ADCs.h"
 
 #define VELOCITY_CALC_FREQ  10                     // in Hz
-#define PWM_FREQ 		    20000                  // in Hz
-#define PWM_PERIOD 		    (120000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
+#define PWM_FREQ 		    10000                  // in Hz
+#define PWM_PERIOD 		    (40000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
 
 typedef enum {
 	PWM_PHASE_U = TIMER_CH_0,
@@ -174,12 +174,19 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 		adcPhases[0] = ADC_CHANNEL_8; // AIN2
 	}
 
+	//Set MUX_1 and MUX_2 to one to connect DIO10 and DIO11 to PWM pins DIO10_A and DIO11_A respectively.
+//	*HAL.IOs->pins->SW_UART_PWM.setBitRegister     = HAL.IOs->pins->SW_UART_PWM.bitWeight;
+	HAL.IOs->config->toOutput(&HAL.IOs->pins->SW_UART_PWM);
+
+	HAL.IOs->config->setHigh(&HAL.IOs->pins->SW_UART_PWM);
+
+
 	Pins.PWM_UL       = &HAL.IOs->pins->DIO6;
 	Pins.PWM_UH       = &HAL.IOs->pins->DIO7;
 	Pins.PWM_VL       = &HAL.IOs->pins->DIO8;
 	Pins.PWM_VH       = &HAL.IOs->pins->DIO9;
-	Pins.PWM_WL       = &HAL.IOs->pins->DIO10;
-	Pins.PWM_WH       = &HAL.IOs->pins->DIO11;
+	Pins.PWM_WL       = &HAL.IOs->pins->DIO10_PWM_WL;
+	Pins.PWM_WH       = &HAL.IOs->pins->DIO11_PWM_WH;
 
 	currentScalingFactor = currentScaling;
 
@@ -197,27 +204,27 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 	// ADC
 	// Operation mode: Continuous mode on single selected channel
 
-	rcu_periph_clock_enable(RCU_ADC0);
+	rcu_periph_clock_enable(RCU_ADC1);
 
 	adc_clock_config(ADC_ADCCK_PCLK2_DIV2);
 	adc_sync_mode_config(ADC_SYNC_MODE_INDEPENDENT);
 	adc_sync_delay_config(ADC_SYNC_DELAY_5CYCLE);
-	adc_resolution_config(ADC0, ADC_RESOLUTION_12B);
-	adc_special_function_config(ADC0, ADC_CONTINUOUS_MODE, ENABLE);
-	adc_external_trigger_config(ADC0, ADC_ROUTINE_CHANNEL, EXTERNAL_TRIGGER_DISABLE);
-	adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT);
-	adc_channel_length_config(ADC0, ADC_ROUTINE_CHANNEL, 1);
+	adc_resolution_config(ADC1, ADC_RESOLUTION_12B);
+	adc_special_function_config(ADC1, ADC_CONTINUOUS_MODE, ENABLE);
+	adc_external_trigger_config(ADC1, ADC_ROUTINE_CHANNEL, EXTERNAL_TRIGGER_DISABLE);
+	adc_data_alignment_config(ADC1, ADC_DATAALIGN_RIGHT);
+	adc_channel_length_config(ADC1, ADC_ROUTINE_CHANNEL, 1);
 
-	adc_routine_channel_config(ADC0, 0, adcPhases[adc], ADC_SAMPLETIME_15);
+	adc_routine_channel_config(ADC1, 0, adcPhases[adc], ADC_SAMPLETIME_15);
 
-	adc_interrupt_enable(ADC0, ADC_INT_EOC);
+	adc_interrupt_enable(ADC1, ADC_INT_EOC);
 	nvic_irq_enable(ADC_IRQn, 0, 1);
 
-	adc_enable(ADC0);
+	adc_enable(ADC1);
 
-	adc_calibration_enable(ADC0);
+	adc_calibration_enable(ADC1);
 
-	adc_software_trigger_enable(ADC0, ADC_ROUTINE_CHANNEL);
+	adc_software_trigger_enable(ADC1, ADC_ROUTINE_CHANNEL);
 
 	// Timer
 
@@ -226,9 +233,10 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 	timer_parameter_struct params;
 	timer_oc_parameter_struct oc_params;
 	timer_break_parameter_struct break_params;
+	timer_deinit(TIMER0);
 
 	timer_struct_para_init(&params);
-	params.prescaler = 0;
+	params.prescaler = 2;
 	params.alignedmode = TIMER_COUNTER_CENTER_BOTH;
 	params.counterdirection = TIMER_COUNTER_UP;
 	params.period = PWM_PERIOD - 1;
@@ -240,7 +248,7 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 	break_params.deadtime = bbmTime;
 	break_params.outputautostate = TIMER_OUTAUTO_ENABLE;
 	break_params.breakstate = TIMER_BREAK_ENABLE;
-	timer_break_config(TIMER0, &break_params);
+//	timer_break_config(TIMER0, &break_params);
 
 	timer_channel_output_struct_para_init(&oc_params);
 	oc_params.ocpolarity = TIMER_OC_POLARITY_HIGH;
@@ -291,7 +299,7 @@ void BLDC_calibrateADCs()
 	{
 		adc = myadc % 3;
 		// Select the ADC phase for offset compensation
-		adc_routine_channel_config(ADC0, 0, adcPhases[adc], ADC_SAMPLETIME_15);
+		adc_routine_channel_config(ADC1, 0, adcPhases[adc], ADC_SAMPLETIME_15);
 
 		// Reset the ADC state
 		adcOffset[adc] = 0;
@@ -306,9 +314,9 @@ void BLDC_calibrateADCs()
 
 void ADC_IRQHandler()
 {
-	if(adc_interrupt_flag_get(ADC0, ADC_INT_FLAG_EOC) == SET)
+	if(adc_interrupt_flag_get(ADC1, ADC_INT_FLAG_EOC) == SET)
 	{
-		uint16_t tmp = adc_routine_data_read(ADC0);
+		uint16_t tmp = adc_routine_data_read(ADC1);
 		static ADC_Channel lastChannel = ADC_PHASE_U;
 
 		switch(adcState[lastChannel])
@@ -343,10 +351,10 @@ void ADC_IRQHandler()
 			// Update the channel
 			lastChannel = adc;
 
-			adc_routine_channel_config(ADC0, 0, adcPhases[adc], ADC_SAMPLETIME_15);
+			adc_routine_channel_config(ADC1, 0, adcPhases[adc], ADC_SAMPLETIME_15);
 		}
 
-		adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_EOC);
+		adc_interrupt_flag_clear(ADC1, ADC_INT_FLAG_EOC);
 	}
 }
 

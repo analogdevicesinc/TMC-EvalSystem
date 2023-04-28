@@ -85,12 +85,11 @@ typedef struct
 #endif
 
 #if defined(LandungsbrueckeV3)
-	IOPinTypeDef DIO10_A;
-	IOPinTypeDef DIO10_B;
-	IOPinTypeDef DIO11_A;
-	IOPinTypeDef DIO11_B;
-	IOPinTypeDef MUX_1;
-	IOPinTypeDef MUX_2;
+	IOPinTypeDef DIO10_PWM_WL;
+	IOPinTypeDef DIO10_UART_TX;
+	IOPinTypeDef DIO11_PWM_WH;
+	IOPinTypeDef DIO11_UART_RX;
+	IOPinTypeDef SW_UART_PWM;
 	IOPinTypeDef EXT0;
 	IOPinTypeDef EXT1;
 	IOPinTypeDef EXT2;

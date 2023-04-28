@@ -67,22 +67,21 @@ static void init()
 
 	switch(UART.pinout) {
 	case UART_PINS_2:
-		//Set MUX_1 and MUX_2 to zero to connect DIO10 and DIO11 to UART pins DIO10_B and DIO11_B respectively.
-		*HAL.IOs->pins->MUX_1.resetBitRegister     = HAL.IOs->pins->MUX_1.bitWeight;
-		*HAL.IOs->pins->MUX_2.resetBitRegister     = HAL.IOs->pins->MUX_2.bitWeight;
+		//Set MUX_1 and MUX_2 to zero to connect DIO10 and DIO11 to UART pins DIO10_UART_TX and DIO11_UART_RX respectively.
+		*HAL.IOs->pins->SW_UART_PWM.resetBitRegister     = HAL.IOs->pins->SW_UART_PWM.bitWeight;
 
 		usart_periph = UART3;
 		usart_deinit(usart_periph);
-		//DIO10_B(TxD) with pull-up resistor
-		 gpio_mode_set(HAL.IOs->pins->DIO10_B.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO10_B.bitWeight);
-		 gpio_output_options_set(HAL.IOs->pins->DIO10_B.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO10_B.bitWeight);
+		//DIO10_UART_TX(TxD) with pull-up resistor
+		 gpio_mode_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
+		 gpio_output_options_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
 
-		 //DIO11_B(RxD) with pull-up resistor
-		  gpio_mode_set(HAL.IOs->pins->DIO11_B.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO11_B.bitWeight);
-		  gpio_output_options_set(HAL.IOs->pins->DIO11_B.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO11_B.bitWeight);
+		 //DIO11_UART_RX(RxD) with pull-up resistor
+		  gpio_mode_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
+		  gpio_output_options_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
 
-		  gpio_af_set(HAL.IOs->pins->DIO10_B.port, GPIO_AF_8, HAL.IOs->pins->DIO10_B.bitWeight);
-		  gpio_af_set(HAL.IOs->pins->DIO11_B.port, GPIO_AF_8, HAL.IOs->pins->DIO11_B.bitWeight);
+		  gpio_af_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_AF_8, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
+		  gpio_af_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_AF_8, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
 		  rcu_periph_clock_enable(RCU_UART3);
 		  nvic_irq = UART3_IRQn;
 		  break;
@@ -349,19 +348,19 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 		{
 
 			//TxD as open drain output
-			gpio_mode_set(HAL.IOs->pins->DIO10_B.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO10_B.bitWeight);
-			gpio_output_options_set(HAL.IOs->pins->DIO10_B.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO10_B.bitWeight);
+			gpio_mode_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
+			gpio_output_options_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
 
 			//RxD with pull-up resistor
-			gpio_mode_set(HAL.IOs->pins->DIO11_B.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->DIO11_B.bitWeight);
-			gpio_output_options_set(HAL.IOs->pins->DIO11_B.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO11_B.bitWeight);
+			gpio_mode_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
+			gpio_output_options_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
 
-		    gpio_af_set(HAL.IOs->pins->DIO10_B.port, GPIO_AF_8, HAL.IOs->pins->DIO10_B.bitWeight);
-		    gpio_af_set(HAL.IOs->pins->DIO11_B.port, GPIO_AF_8, HAL.IOs->pins->DIO11_B.bitWeight);
+		    gpio_af_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_AF_8, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
+		    gpio_af_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_AF_8, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
 		}
 		else{
-			HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_B);
-			HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_B);
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_UART_TX);
+			HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_UART_RX);
 		}
 		break;
 	case UART_PINS_1:
