@@ -478,8 +478,8 @@ void TMC2210_init(void)
 	Pins.CFG0         = &HAL.IOs->pins->DIO3;
 	Pins.CFG1         = &HAL.IOs->pins->DIO9;
 #if defined(LandungsbrueckeV3)
-	Pins.CFG2         = &HAL.IOs->pins->DIO10_A;
-	Pins.CFG3         = &HAL.IOs->pins->DIO11_A;
+	Pins.CFG2         = &HAL.IOs->pins->DIO10_PWM_WL;
+	Pins.CFG3         = &HAL.IOs->pins->DIO11_PWM_WH;
 #else
 	Pins.CFG2         = &HAL.IOs->pins->DIO10;
 	Pins.CFG3         = &HAL.IOs->pins->DIO11;

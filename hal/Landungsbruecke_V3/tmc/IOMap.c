@@ -19,13 +19,12 @@ static IOPinTypeDef *_pins[] =
 	&IOMap.DIO8,
 	&IOMap.DIO9,
 	&IOMap.DIO10,
-	&IOMap.DIO10_A,
-	&IOMap.DIO10_B,
+	&IOMap.DIO10_PWM_WL,
+	&IOMap.DIO10_UART_TX,
 	&IOMap.DIO11,
-	&IOMap.DIO11_A,
-	&IOMap.DIO11_B,
-	&IOMap.MUX_1,
-	&IOMap.MUX_2,
+	&IOMap.DIO11_PWM_WH,
+	&IOMap.DIO11_UART_RX,
+	&IOMap.SW_UART_PWM,
 	&IOMap.CLK16,
 	&IOMap.SPI2_CSN0,
 	&IOMap.SPI2_CSN1,
@@ -71,7 +70,6 @@ static IOPinTypeDef *_pins[] =
 	&IOMap.WIFI_RX,
 	&IOMap.DUMMY
 };
-
 IOPinMapTypeDef IOMap =
 {
 	.init   = init,
@@ -299,7 +297,7 @@ IOPinMapTypeDef IOMap =
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
-	.DIO10_A =  // IOPinTypeDef DIO10_A
+	.DIO10_PWM_WL =  // IOPinTypeDef DIO10_PWM_WL
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
@@ -314,7 +312,7 @@ IOPinMapTypeDef IOMap =
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
-	.DIO10_B =  // IOPinTypeDef DIO10_B
+	.DIO10_UART_TX =  // IOPinTypeDef DIO10_UART_TX
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
@@ -345,7 +343,7 @@ IOPinMapTypeDef IOMap =
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
-	.DIO11_A =  // IOPinTypeDef DIO11_A
+	.DIO11_PWM_WH =  // IOPinTypeDef DIO11_PWM_WH
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOE)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOE)),  // __IO uint16_t *resetBitRegister
@@ -360,7 +358,7 @@ IOPinMapTypeDef IOMap =
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
-	.DIO11_B =  // IOPinTypeDef DIO11_B
+	.DIO11_UART_RX =  // IOPinTypeDef DIO11_UART_RX
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
@@ -375,28 +373,13 @@ IOPinMapTypeDef IOMap =
 			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
 		}
 	},
-	.MUX_1 =  // IOPinTypeDef MUX_1
+	.SW_UART_PWM =  // IOPinTypeDef SW_UART_PWM
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
 		.resetBitRegister    = &(GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
 		.port                = GPIOB,            // GPIO_TypeDef *port
 		.bitWeight           = GPIO_PIN_2,      // uint32_t pinBitWeight
 		.bit                 = 2,               // unsigned char bit
-		.resetConfiguration  =
-		{
-			.GPIO_Mode   = GPIO_MODE_OUTPUT,         // GPIOMode_TypeDef GPIO_Mode
-			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
-			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
-			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
-		}
-	},
-	.MUX_2 =  // IOPinTypeDef MUX_2
-	{
-		.setBitRegister      = &(GPIO_BOP(GPIOB)),  // __IO uint16_t *setBitRegister
-		.resetBitRegister    = &(GPIO_BC(GPIOB)),  // __IO uint16_t *resetBitRegister
-		.port                = GPIOB,            // GPIO_TypeDef *port
-		.bitWeight           = GPIO_PIN_1,      // uint32_t pinBitWeight
-		.bit                 = 1,               // unsigned char bit
 		.resetConfiguration  =
 		{
 			.GPIO_Mode   = GPIO_MODE_OUTPUT,         // GPIOMode_TypeDef GPIO_Mode
@@ -1129,13 +1112,12 @@ static void init()
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO8);
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO9);
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO10);
-	HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_A);
-	HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_B);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_PWM_WL);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_UART_TX);
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO11);
-	HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_A);
-	HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_B);
-	HAL.IOs->config->reset(&HAL.IOs->pins->MUX_1);
-	HAL.IOs->config->reset(&HAL.IOs->pins->MUX_2);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_PWM_WH);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_UART_RX);
+	HAL.IOs->config->reset(&HAL.IOs->pins->SW_UART_PWM);
 	HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN0);
 	HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN1);
 	HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN2);
@@ -1180,8 +1162,7 @@ static void init()
 	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_RX);
 	HAL.IOs->config->reset(&HAL.IOs->pins->CLK16);
 	gpio_af_set(HAL.IOs->pins->CLK16.port, GPIO_AF_0, HAL.IOs->pins->CLK16.bitWeight);
-	// By default DIO10 and DIO11 are connected to DIO10_A and DIO11_A respectively.
-	*HAL.IOs->pins->MUX_1.setBitRegister     = HAL.IOs->pins->MUX_1.bitWeight;
-	*HAL.IOs->pins->MUX_2.setBitRegister     = HAL.IOs->pins->MUX_2.bitWeight;
+	// By default DIO10 and DIO11 are connected to DIO10_PWM_WL and DIO11_PWM_WH respectively.
+	*HAL.IOs->pins->SW_UART_PWM.setBitRegister     = HAL.IOs->pins->SW_UART_PWM.bitWeight;
 
 }
