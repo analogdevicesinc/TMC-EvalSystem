@@ -51,6 +51,8 @@ SRC				+= boards/TMC8461_eval.c
 SRC				+= boards/TMC8462_eval.c
 ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall LandungsbrueckeV3))
 SRC				+= boards/MAX22216_eval.c
+#SRC				+= boards/MAX22204_eval.c
+#SRC				+= boards/MAX22210_eval.c
 SRC				+= boards/TMC2209_eval.c
 SRC				+= boards/TMC2225_eval.c
 SRC             += boards/TMC2226_eval.c
