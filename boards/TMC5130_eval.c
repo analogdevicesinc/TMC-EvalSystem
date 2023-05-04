@@ -967,7 +967,6 @@ void TMC5130_init(void)
 	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10;
 	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11;
 #endif
-	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11;
 	Pins.SWSEL           = &HAL.IOs->pins->DIO14;
 	Pins.SWP_DIAG1       = &HAL.IOs->pins->DIO15;
 	Pins.SWN_DIAG0       = &HAL.IOs->pins->DIO16;

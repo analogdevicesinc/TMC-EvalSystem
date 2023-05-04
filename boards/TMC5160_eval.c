@@ -1047,7 +1047,11 @@ void TMC5160_init(void)
 	Pins.REFL_UC         = &HAL.IOs->pins->DIO6;
 	Pins.REFR_UC         = &HAL.IOs->pins->DIO7;
 	Pins.SD_MODE         = &HAL.IOs->pins->DIO9;
+#if defined(LandungsbrueckeV3)
+	Pins.SPI_MODE        = &HAL.IOs->pins->DIO11_PWM_WH;
+#else
 	Pins.SPI_MODE        = &HAL.IOs->pins->DIO11;
+#endif
 	Pins.SWP_DIAG1       = &HAL.IOs->pins->DIO15;
 	Pins.SWN_DIAG0       = &HAL.IOs->pins->DIO16;
 
