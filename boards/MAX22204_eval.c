@@ -489,14 +489,25 @@ void MAX22204_init(void)
 #elif defined(Landungsbruecke)
 	HAL.IOs->config->toOutput(Pins.REF_PWM);
 	Pins.REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#elif defined(LandungsbrueckeV3)
+	Pins.REF_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;
+	gpio_af_set(Pins.REF_PWM->port, GPIO_AF_1, Pins.REF_PWM->bitWeight);
 #endif
 
 	HAL.IOs->config->set(Pins.REF_PWM);
 	Timer.overflow_callback = timer_overflow;
 	Timer.init();
-	Timer.setModuloMin(1000);
-	Timer.setFrequencyMin(1000);
-	Timer.setDuty(TIMER_CHANNEL_3, 0.5);
+#if defined(Landungsbruecke)
+	Timer.setModuloMin(TIMER_CHANNEL_1, 1000);
+	Timer.setFrequencyMin(TIMER_CHANNEL_1, 1000);
+	Timer.setDuty(TIMER_CHANNEL_1, 0.5);
+
+#else
+	Timer.setPeriodMin(TIMER_CHANNEL_4, 1000);
+	Timer.setFrequencyMin(TIMER_CHANNEL_4, 1000);
+	Timer.setDuty(TIMER_CHANNEL_4, 0.5);
+
+#endif
 
 	//enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 }
