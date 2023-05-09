@@ -73,8 +73,8 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC2226        22
 #define ID_MAX22216_EVAL 	30
 #define ID_MAX22216_BOB 	31
-//#define ID_MAX22204_EVAL 	32
-//#define ID_MAX22210_EVAL 	33
+#define ID_MAX22204_EVAL 	32
+#define ID_MAX22210_EVAL 	33
 #define ID_TMC6300        21
 #endif
 
@@ -84,8 +84,8 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
 extern void MAX22216_init();
-//extern void MAX22204_init();
-//extern void MAX22210_init();
+extern void MAX22204_init();
+extern void MAX22210_init();
 extern void TMC2100_init();
 extern void TMC2130_init();
 extern void TMC2160_init();
@@ -163,8 +163,8 @@ static const init_assignment init_ch2[] =
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 	{ .id = ID_MAX22216_EVAL, .init = MAX22216_init    },
 	{ .id = ID_MAX22216_BOB,  .init = MAX22216_init    },
-//	{ .id = ID_MAX22204_EVAL, .init = MAX22204_init    },
-//	{ .id = ID_MAX22210_EVAL, .init = MAX22210_init    },
+	{ .id = ID_MAX22204_EVAL, .init = MAX22204_init    },
+	{ .id = ID_MAX22210_EVAL, .init = MAX22210_init    },
 	{ .id = ID_TMC2209,     .init = TMC2209_init     },
 	{ .id = ID_TMC2225,     .init = TMC2225_init     },
 	{ .id = ID_TMC2226,     .init = TMC2226_init     },
