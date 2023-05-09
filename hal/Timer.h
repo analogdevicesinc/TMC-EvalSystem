@@ -12,7 +12,8 @@
 typedef enum {
 	TIMER_CHANNEL_1,
 	TIMER_CHANNEL_2,
-	TIMER_CHANNEL_3
+	TIMER_CHANNEL_3,
+	TIMER_CHANNEL_4
 } timer_channel;
 
 typedef struct

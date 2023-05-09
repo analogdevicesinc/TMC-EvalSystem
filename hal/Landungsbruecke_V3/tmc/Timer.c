@@ -70,10 +70,18 @@ static void init(void)
 	oc_params.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
 	oc_params.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
 	timer_channel_output_config(TIMER0, TIMER_CH_2, &oc_params);
+	// TIMER_CHANNEL_4
+	timer_channel_output_config(TIMER0, TIMER_CH_1, &oc_params);
+
 
 	timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, TIMER_MAX >> 1);
 	timer_channel_output_mode_config(TIMER0, TIMER_CH_2, TIMER_OC_MODE_PWM1);
 	timer_channel_output_shadow_config(TIMER0, TIMER_CH_2, TIMER_OC_SHADOW_DISABLE);
+
+	// TIMER_CHANNEL_4
+	timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, TIMER_MAX >> 1);
+	timer_channel_output_mode_config(TIMER0, TIMER_CH_1, TIMER_OC_MODE_PWM1);
+	timer_channel_output_shadow_config(TIMER0, TIMER_CH_1, TIMER_OC_SHADOW_DISABLE);
 
 	timer_primary_output_config(TIMER0, ENABLE);
 
