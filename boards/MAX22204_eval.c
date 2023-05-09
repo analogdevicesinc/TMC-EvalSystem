@@ -498,7 +498,7 @@ void MAX22204_init(void)
 	Timer.overflow_callback = timer_overflow;
 	Timer.init();
 #if defined(Landungsbruecke)
-	Timer.setModuloMin(TIMER_CHANNEL_1, 1000);
+	Timer.setPeriodMin(TIMER_CHANNEL_1, 1000);
 	Timer.setFrequencyMin(TIMER_CHANNEL_1, 1000);
 	Timer.setDuty(TIMER_CHANNEL_1, 0.5);
 
@@ -506,7 +506,6 @@ void MAX22204_init(void)
 	Timer.setPeriodMin(TIMER_CHANNEL_4, 1000);
 	Timer.setFrequencyMin(TIMER_CHANNEL_4, 1000);
 	Timer.setDuty(TIMER_CHANNEL_4, 0.5);
-
 #endif
 
 	//enableDriver(DRIVER_USE_GLOBAL_ENABLE);
