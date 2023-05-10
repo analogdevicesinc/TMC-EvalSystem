@@ -1,3 +1,12 @@
+/*
+ * WLAN.c
+ *
+ *  Created on: 09.05.2023
+ *  Author: AS based on LH
+ *
+ *  Note: This file needs to be tested.
+ *
+ */
 #include "hal/HAL.h"
 #include "hal/RS232.h"
 #include "hal/WLAN.h"
