@@ -1018,10 +1018,8 @@ void TMC5130_init(void)
 
 	vmax_position = TMC5130.config->shadowRegister[TMC5130_VMAX];
 
-#if defined(Startrampe)
-	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_PinAFConfig(Pins.AIN_REF_PWM->port, Pins.AIN_REF_PWM->bit, GPIO_AF_TIM1);
-#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.AIN_REF_PWM);
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #elif defined(LandungsbrueckeV3)

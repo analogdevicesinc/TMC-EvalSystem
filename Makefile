@@ -1,7 +1,6 @@
 ### Generic settings ###
 #VERSION			= 3.06
 include version.txt
-#DEVICE			= Startrampe
 #DEVICE			= Landungsbruecke
 #DEVICE			= LandungsbrueckeSmall
 #DEVICE			= LandungsbrueckeV3
@@ -59,7 +58,6 @@ SRC				+= boards/TMC2225_eval.c
 SRC             += boards/TMC2226_eval.c
 SRC				+= boards/TMC2300_eval.c
 SRC             += boards/TMC6300_eval.c
-#SRC             += boards/TMC6140_eval.c
 endif
 ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall))
 SRC             += boards/TMC6140_eval.c
@@ -118,66 +116,8 @@ SRC				+= TMC-API/tmc/ic/TMC8462/TMC8462.c
 EXTRAINCDIRS 	+= $(TMC_HAL_SRC)
 
 ### Chip-specific variables and files ###
-# Startrampe
-ifeq ($(DEVICE),Startrampe)
-    CDEFS = -DStartrampe
-    MCU      			= cortex-m3
-    SUBMDL   			= STM32F205VCT6
-    CHIP     			= $(SUBMDL)
-    BOARD    			= STARTRAMPE
-    TMC_HAL_SRC         = hal/Startrampe
-    STMLIBDIR 			= $(TMC_HAL_SRC)/st
-    STMSPDDIR 			= $(STMLIBDIR)/lib
-    STMSPDSRCDIR 		= $(STMSPDDIR)/src
-    STMSPDINCDIR 		= $(STMSPDDIR)/inc
-    #CMSISDIR 			= $(STMLIBDIR)/CMSIS/Core/CM3
-    #STMEEEMULDIR 		= $(STMLIBDIR)/EEPROMEmulation_AN
-    #STMEEEMULSRCDIR 	= $(STMEEEMULDIR)/source
-    #STMEEEMULINCDIR 	= $(STMEEEMULDIR)/include
-    INCLUDE_DIRS 		= -I$(STMSPDINCDIR)
-
-    SRC                 += boards/SelfTest_Startrampe.c
-
-    SRC                 += tmc/IdDetection_Startrampe.c
-
-  	SRC 				+= $(STMLIBDIR)/system_stm32f2xx.c
-
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_adc.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_can.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_dma.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_exti.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_flash.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_gpio.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_i2c.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_it.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_iwdg.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_rcc.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_rtc.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_spi.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_syscfg.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_tim.c
-    SRC 				+= $(STMSPDSRCDIR)/stm32f2xx_usart.c
-    SRC					+= $(STMSPDSRCDIR)/stm32f2xx_wwdg.c
-    SRC 				+= $(STMSPDSRCDIR)/misc.c
-    SRC 				+= $(STMSPDSRCDIR)/usbd_core.c
-    SRC 				+= $(STMSPDSRCDIR)/usbd_cdc_core.c
-    SRC 				+= $(STMSPDSRCDIR)/usbd_ioreq.c
-    SRC 				+= $(STMSPDSRCDIR)/usbd_req.c
-    SRC 				+= $(STMSPDSRCDIR)/usb_core.c
-    SRC 				+= $(STMSPDSRCDIR)/usb_dcd.c
-    SRC 				+= $(STMSPDSRCDIR)/usb_dcd_int.c
-
-    ASRC 				+= $(STMLIBDIR)/startup.S
-   	EXTRAINCDIRS  		+= $(STMSPDINCDIR)
-
-   	ifeq ($(LINK),BL)
-		LD_SCRIPT = $(STMLIBDIR)/stm32f2xx-tmcm.ld
-	else
-		LD_SCRIPT = $(STMLIBDIR)/stm32f2xx.ld
-	endif
-
 # Landungsbrücke
-else ifeq ($(DEVICE),Landungsbruecke)
+ifeq ($(DEVICE),Landungsbruecke)
     CDEFS = -DLandungsbruecke
     MCU      			= cortex-m4
     SUBMDL   			= MK20DN512
@@ -332,7 +272,7 @@ else ifeq ($(DEVICE),LandungsbrueckeV3)
 	endif
 	LDFLAGS += -specs=nosys.specs
 else
-    $(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall", "LandungsbrueckeV3" or "Startrampe". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeV3, DEVICE=LandungsbrueckeSmall or DEVICE=Startrampe to the commandline)
+    $(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall", or "LandungsbrueckeV3". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeV3, or DEVICE=LandungsbrueckeSmall to the commandline)
 endif
 
 # System and hardware abstraction layer

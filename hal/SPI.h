@@ -6,9 +6,8 @@
 
 	typedef struct
 	{
-		#if defined(Startrampe)
-			SPI_TypeDef *periphery; // pointer to ST SPI configuration structure
-		#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+
+		#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 			SPI_MemMapPtr periphery; // pointer to freescale SPI memory base pointer
 		#elif defined(LandungsbrueckeV3)
 			uint32_t periphery; // GD32 SPI parameters

@@ -840,10 +840,7 @@ static void periodicJob(uint32_t actualSystick)
 			}
 		}
 
-#if defined(Startrampe)
-		// RAMDebug for Startrampe
-		debug_nextProcess();
-#endif
+
 
 		lastSystick = actualSystick;
 	}

@@ -701,10 +701,7 @@ void TMC2590_init(void)
 	HAL.IOs->config->toInput(Pins.SG_TST);
 	HAL.IOs->config->toOutput(Pins.CSN);
 
-#if defined(Startrampe)
-	Pins.TEMP_BRIDGE	= &HAL.IOs->pins->AIN0;
-	HAL.IOs->config->reset(Pins.TEMP_BRIDGE);
-#endif
+
 
 	TMC2590_SPIChannel = &HAL.SPI->ch2;
 	TMC2590_SPIChannel->CSN = Pins.CSN;

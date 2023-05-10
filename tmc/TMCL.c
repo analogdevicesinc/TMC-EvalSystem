@@ -583,18 +583,8 @@ void tmcl_boot()
 
 	HAL.NVIC_DeInit();
 
-#if defined(Startrampe)
-	__disable_irq();
-	TIM_DeInit(TIM1);
-	TIM_DeInit(TIM2);
-	TIM_DeInit(TIM5);
-	DMA_Cmd(DMA2_Stream0, DISABLE);
-	DMA_DeInit(DMA2_Stream0);
-	ADC_DeInit();
-	EXTI_DeInit();
-	SysTick->CTRL=0;
-	HAL.reset(false);
-#elif defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	BLConfig.BLMagic = 0x12345678;
 	HAL.reset(true);
 #endif

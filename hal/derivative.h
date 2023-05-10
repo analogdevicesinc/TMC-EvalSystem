@@ -7,20 +7,17 @@
  * The Build process already selects one via makefile & makeFor.h files,
  * this choice will therefore not influence the build process.
  */
-#if !defined(Landungsbruecke) && !defined(LandungsbrueckeV3) && !defined(LandungsbrueckeSmall) && !defined(Startrampe)
+#if !defined(Landungsbruecke) && !defined(LandungsbrueckeV3) && !defined(LandungsbrueckeSmall)
 #warning "No Board selected by makefile, defining one for debug purposes"
 //#define Landungsbruecke
 #define LandungsbrueckeV3
 //#define LandungsbrueckeSmall
-//#define Startrampe
 #endif
 
 	#include "tmc/helpers/API_Header.h"
 
-	#if defined(Startrampe)
-		#define MODULE_ID "0011"
-		#include "stm32f2xx.h"
-    #elif defined(Landungsbruecke)
+
+	#if defined(Landungsbruecke)
         #define MODULE_ID "0012"
         #include <MK20D10.h>
         #include "hal/Landungsbruecke/freescale/Cpu.h"

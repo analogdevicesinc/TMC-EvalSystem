@@ -62,15 +62,7 @@ typedef struct
 	IOPinTypeDef EEPROM_SO;
 	IOPinTypeDef EEPROM_NCS;
 
-#if defined(Startrampe)
-	IOPinTypeDef VM_MEAS;
-	IOPinTypeDef AIN0;
-	IOPinTypeDef AIN1;
-	IOPinTypeDef AIN2;
-	IOPinTypeDef WIRELESS_TX;
-	IOPinTypeDef WIRELESS_RX;
-	IOPinTypeDef WIRELESS_NRST;
-#endif
+
 
 #if defined(Landungsbruecke)
 	IOPinTypeDef WIRELESS_TX;
