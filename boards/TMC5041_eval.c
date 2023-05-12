@@ -123,7 +123,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
 	uint32_t errors = TMC_ERROR_NONE;
-	int tempValue;
+	int32_t tempValue;
 
 	if(motor >= TMC5041_MOTORS)
 		return TMC_ERROR_MOTOR;

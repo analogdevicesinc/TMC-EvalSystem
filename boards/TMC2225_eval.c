@@ -537,7 +537,7 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
-	for(int motor = 0; motor < MOTORS; motor++)
+	for(uint8_t motor = 0; motor < MOTORS; motor++)
 	{
 		tmc2225_periodicJob(&TMC2225, tick);
 		StepDir_periodicJob(motor);

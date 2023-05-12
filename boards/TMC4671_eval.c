@@ -229,7 +229,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 21: // Linear maximum speed [µm/s]
 		if (readWrite == READ)
 		{
-			int velocity = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
+			uint32_t velocity = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
 
 			// update also ramp generator value
 			rampGenerator[motor].maxVelocity = velocity;
@@ -279,7 +279,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if (readWrite == READ)
 		{
 			// Internal -> linear
-			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			int32_t polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
 			*value = internalPositionToLinearPosition(rampGenerator[motor].rampPosition, motorConfig[motor].linearScaler, polePairs);
 		}
 		break;
@@ -287,13 +287,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if (readWrite == READ)
 		{
 			// Internal -> linear
-			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			int32_t polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
 			*value = internalPositionToLinearPosition(tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET), motorConfig[motor].linearScaler, polePairs);
 		}
 		else
 		{
-			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
-			int position = linearPositionToInternalPosition(*value, motorConfig[motor].linearScaler, polePairs);
+			int32_t polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			int32_t position = linearPositionToInternalPosition(*value, motorConfig[motor].linearScaler, polePairs);
 
 			// Switch to position motion mode
 			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
@@ -308,7 +308,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 26: // Linear actual velocity [µm/s]
 		if (readWrite == READ)
 		{
-			int velocity = motorConfig[motor].actualVelocityPT1;
+			int32_t velocity = motorConfig[motor].actualVelocityPT1;
 
 			// Internal -> linear
 			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
@@ -317,10 +317,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 27: // Linear actual position [µm]
 		if (readWrite == READ)
 		{
-			int position = tmc4671_getActualPosition(motor);
+			int32_t position = tmc4671_getActualPosition(motor);
 
 			// Internal -> linear
-			int polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			int32_t polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
 			*value = internalPositionToLinearPosition(position, motorConfig[motor].linearScaler, polePairs);
 		}
 		break;
@@ -328,7 +328,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if (readWrite == READ)
 		{
 			tmc4671_writeInt(motor, TMC4671_INTERIM_ADDR, 2);
-			int velocity = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
+			int32_t velocity = tmc4671_readInt(motor, TMC4671_INTERIM_DATA);
 
 			// Internal -> linear
 			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
@@ -505,7 +505,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = (int32_t) ((float)tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET) * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX));
 		} else if(readWrite == WRITE) {
 			// scale target position
-			int position = (float)*value * (float)POSITION_SCALE_MAX / (float)motorConfig[motor].positionScaler;
+			int32_t position = (float)*value * (float)POSITION_SCALE_MAX / (float)motorConfig[motor].positionScaler;
 
 			// switch to position motion mode
 			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);

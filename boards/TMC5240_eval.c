@@ -858,8 +858,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 211:
 		//ADC Scaling Resitors
 		if(readWrite == READ) {
-			int val2 = (HAL.IOs->config->isHigh(Pins.IREF_R2));
-			int val3 = (HAL.IOs->config->isHigh(Pins.IREF_R3));
+			uint8_t val2 = (HAL.IOs->config->isHigh(Pins.IREF_R2));
+			uint8_t val3 = (HAL.IOs->config->isHigh(Pins.IREF_R3));
 			if (val2 == 0 && val3 == 0){ //48k
 				*value = 0;
 			}
@@ -953,8 +953,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		// ADCTemperatur Converted
 		if(readWrite == READ) {
 
-			int adc = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_ADC_TEMP, TMC5240_ADC_TEMP_MASK, TMC5240_ADC_TEMP_SHIFT);
-			*value = (int)10*(adc-2038)/77;
+			int32_t adc = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_ADC_TEMP, TMC5240_ADC_TEMP_MASK, TMC5240_ADC_TEMP_SHIFT);
+			*value = (int32_t)10*(adc-2038)/77;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -962,8 +962,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 219:
 		// ADCIN converted
 		if(readWrite == READ) {
-			int adc = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_ADC_VSUPPLY_AIN, TMC5240_ADC_AIN_MASK, TMC5240_ADC_AIN_SHIFT);
-			*value = (int)3052*adc/10000;
+			int32_t adc = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_ADC_VSUPPLY_AIN, TMC5240_ADC_AIN_MASK, TMC5240_ADC_AIN_SHIFT);
+			*value = (int32_t)3052*adc/10000;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -971,8 +971,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 220:
 		// ADCSupply
 		if(readWrite == READ) {
-			int adc = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_ADC_VSUPPLY_AIN, TMC5240_ADC_VSUPPLY_MASK, TMC5240_ADC_VSUPPLY_SHIFT);
-			*value = (int)32*3052*adc/10000;
+			int32_t adc = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_ADC_VSUPPLY_AIN, TMC5240_ADC_VSUPPLY_MASK, TMC5240_ADC_VSUPPLY_SHIFT);
+			*value = (int32_t)32*3052*adc/10000;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -980,21 +980,21 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 221:
 		// Overvoltage Limit converted
 		if(readWrite == READ) {
-			int val = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_OTW_OV_VTH, TMC5240_OVERVOLTAGE_VTH_MASK, TMC5240_OVERVOLTAGE_VTH_SHIFT);
-			*value = (int)32*3052*val/10000;
+			int32_t val = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_OTW_OV_VTH, TMC5240_OVERVOLTAGE_VTH_MASK, TMC5240_OVERVOLTAGE_VTH_SHIFT);
+			*value = (int32_t)32*3052*val/10000;
 		} else if(readWrite == WRITE) {
-			int val = (int)(*value*10000/(3052*32));
+			int32_t val = (int32_t)(*value*10000/(3052*32));
 			TMC5240_FIELD_WRITE(motorToIC(motor), TMC5240_OTW_OV_VTH, TMC5240_OVERVOLTAGE_VTH_MASK, TMC5240_OVERVOLTAGE_VTH_SHIFT, val);
 		}
 		break;
 	case 222:
 		// Overtemperature Warning Limit
 		if(readWrite == READ) {
-			int temp = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_OTW_OV_VTH, TMC5240_OVERTEMPPREWARNING_VTH_MASK, TMC5240_OVERTEMPPREWARNING_VTH_SHIFT);
-			*value = (int)(temp-2038)/7.7;
+			int32_t temp = TMC5240_FIELD_READ(motorToIC(motor), TMC5240_OTW_OV_VTH, TMC5240_OVERTEMPPREWARNING_VTH_MASK, TMC5240_OVERTEMPPREWARNING_VTH_SHIFT);
+			*value = (int32_t)(temp-2038)/7.7;
 		} else if(readWrite == WRITE) {
 			float valf  = *value*7.7;
-			int val = (int)valf;
+			int32_t val = (int32_t)valf;
 			val = val+2038;
 			TMC5240_FIELD_WRITE(motorToIC(motor), TMC5240_OTW_OV_VTH, TMC5240_OVERTEMPPREWARNING_VTH_MASK, TMC5240_OVERTEMPPREWARNING_VTH_SHIFT, val);
 		}
@@ -1062,7 +1062,7 @@ static void periodicJob(uint32_t tick)
 	//check if reset after nSLEEP to HIGH was performed
 	if(!noRegResetnSLEEP)
 	{
-		for(int motor = 0; motor < TMC5240_MOTORS; motor++)
+		for(uint8_t motor = 0; motor < TMC5240_MOTORS; motor++)
 			{
 				tmc5240_periodicJob(&TMC5240, tick);
 			}

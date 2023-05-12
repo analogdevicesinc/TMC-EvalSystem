@@ -188,7 +188,7 @@ static void get_hwid(void)
 	hwid = hwid_map[tmp];
 }
 
-void _exit(int i)	// function has the attribute noreturn per default
+void _exit(int32_t i)	// function has the attribute noreturn per default
 {
 	UNUSED(i);
 	while(1) {};

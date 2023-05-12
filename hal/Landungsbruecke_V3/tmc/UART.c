@@ -255,7 +255,7 @@ void UART3_IRQHandler(void)
 	}
 }
 
-int UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t readLength)
+int32_t UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t readLength)
 {
 	uart->rxtx.clearBuffers();
 	uart->rxtx.txN(data, writeLength);

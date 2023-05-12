@@ -64,7 +64,7 @@ typedef struct
 
 
 
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	IOPinTypeDef WIRELESS_TX;
 	IOPinTypeDef WIRELESS_RX;
 	IOPinTypeDef WIRELESS_NRST;

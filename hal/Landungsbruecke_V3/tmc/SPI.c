@@ -149,7 +149,7 @@ uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequen
 	else if(prescaler>1)
 	{
 		// Find the highest frequency that is lower or equal to the desired frequency
-		for(int i=0; i<ARRAY_SIZE(SPI_PSC_Factor); i++){
+		for(int32_t i=0; i<ARRAY_SIZE(SPI_PSC_Factor); i++){
 
 			if(prescaler <= SPI_PSC_Factor[i]){
 				prescaler = SPI_PSC_Factor[i];
@@ -169,7 +169,7 @@ int32_t spi_readInt(SPIChannelTypeDef *SPIChannel, uint8_t address)
 	address &= 0x7F;
 
 	SPIChannel->readWrite(address, false);
-	int value = SPIChannel->readWrite(0, false);
+	int32_t value = SPIChannel->readWrite(0, false);
 	value <<= 8;
 	value |= SPIChannel->readWrite(0, false);
 	value <<= 8;
@@ -190,7 +190,7 @@ int32_t spi_ch2_readInt(uint8_t address)
 	return spi_readInt(SPIChannel_2_default, address);
 }
 
-void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int value)
+void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int32_t value)
 {
 	SPIChannel->readWrite(address | 0x80, false);
 	SPIChannel->readWrite(0xFF & (value>>24), false);
@@ -199,12 +199,12 @@ void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int value)
 	SPIChannel->readWrite(0xFF & (value>>0), true);
 }
 
-void spi_ch1_writeInt(uint8_t address, int value)
+void spi_ch1_writeInt(uint8_t address, int32_t value)
 {
 	spi_writeInt(SPIChannel_1_default, address, value);
 }
 
-void spi_ch2_writeInt(uint8_t address, int value)
+void spi_ch2_writeInt(uint8_t address, int32_t value)
 {
 	spi_writeInt(SPIChannel_2_default, address, value);
 }

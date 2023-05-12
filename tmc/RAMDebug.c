@@ -145,7 +145,7 @@ void handleTriggering()
 // This function only gets called by the interrupt handler.
 void handleDebugging()
 {
-	int i;
+	int32_t i;
 
 	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
 	{
@@ -288,7 +288,7 @@ static inline uint32_t readChannel(Channel channel)
 // === Interfacing with the debugger ===========================================
 void debug_init()
 {
-	int i;
+	int32_t i;
 
 	// Disable data capture before changing the configuration
 	captureEnabled = false;
@@ -346,7 +346,7 @@ bool debug_setTriggerChannel(uint8_t type, uint32_t channel_value)
 
 bool debug_setType(uint8_t type)
 {
-	int i;
+	int32_t i;
 
 	if (type >= CAPTURE_END)
 		return false;
@@ -372,7 +372,7 @@ bool debug_setType(uint8_t type)
 
 bool debug_setEvalChannel(uint8_t eval_channel)
 {
-	int i;
+	int32_t i;
 
 	if (state != RAMDEBUG_IDLE)
 		return false;
@@ -395,7 +395,7 @@ bool debug_setEvalChannel(uint8_t eval_channel)
 
 bool debug_setAddress(uint32_t address)
 {
-	int i;
+	int32_t i;
 
 	if (state != RAMDEBUG_IDLE)
 		return false;
@@ -416,7 +416,7 @@ bool debug_setAddress(uint32_t address)
 	return false;
 }
 
-int debug_getChannelType(uint8_t index, uint8_t *type)
+int32_t debug_getChannelType(uint8_t index, uint8_t *type)
 {
 	if (index == 0xFF)
 	{
@@ -432,7 +432,7 @@ int debug_getChannelType(uint8_t index, uint8_t *type)
 	return 1;
 }
 
-int debug_getChannelAddress(uint8_t index, uint32_t *address)
+int32_t debug_getChannelAddress(uint8_t index, uint32_t *address)
 {
 	if (index == 0xFF)
 	{
@@ -496,7 +496,7 @@ void debug_setTriggerMaskShift(uint32_t mask, uint8_t shift)
 	trigger.shift = shift;
 }
 
-int debug_enableTrigger(uint8_t type, uint32_t threshold)
+int32_t debug_enableTrigger(uint8_t type, uint32_t threshold)
 {
 	// Parameter validation
 	if (type >= TRIGGER_END)
@@ -560,7 +560,7 @@ uint32_t debug_getPretriggerSampleCount()
     return sampleCountPre;
 }
 
-int debug_getSample(uint32_t index, uint32_t *value)
+int32_t debug_getSample(uint32_t index, uint32_t *value)
 {
 	if (index >= debug_write_index)
 		return 0;
@@ -582,12 +582,12 @@ void debug_updateFrequency(uint32_t freq)
 	frequency = freq;
 }
 
-int debug_getState(void)
+int32_t debug_getState(void)
 {
 	return state;
 }
 
-int debug_getInfo(uint32_t type)
+int32_t debug_getInfo(uint32_t type)
 {
 	switch(type)
 	{

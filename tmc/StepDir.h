@@ -46,7 +46,7 @@
 		uint8_t       haltingCondition;
 		// StallGuard
 		bool          stallGuardActive;
-		int           stallGuardThreshold;
+		int32_t           stallGuardThreshold;
 		IOPinTypeDef  *stallGuardPin;
 		// StepDir Pins
 		IOPinTypeDef  *stepPin;
@@ -66,8 +66,8 @@
 		TMC_LinearRamp ramp;
 	} StepDirectionTypedef;
 
-	void StepDir_rotate(uint8_t channel, int velocity);
-	void StepDir_moveTo(uint8_t channel, int position);
+	void StepDir_rotate(uint8_t channel, int32_t velocity);
+	void StepDir_moveTo(uint8_t channel, int32_t position);
 	void StepDir_periodicJob(uint8_t channel);
 	void StepDir_stop(uint8_t channel, StepDirStop stopType);
 	uint8_t StepDir_getStatus(uint8_t channel);
@@ -75,21 +75,21 @@
 	void StepDir_stallGuard(uint8_t channel, bool stall);
 
 	// ===== Setters =====
-	void StepDir_setActualPosition(uint8_t channel, int actualPosition);
+	void StepDir_setActualPosition(uint8_t channel, int32_t actualPosition);
 	void StepDir_setAcceleration(uint8_t channel, uint32_t actualAcceleration);
-	void StepDir_setVelocityMax(uint8_t channel, int velocityMax);
-	void StepDir_setStallGuardThreshold(uint8_t channel, int stallGuardThreshold);
+	void StepDir_setVelocityMax(uint8_t channel, int32_t velocityMax);
+	void StepDir_setStallGuardThreshold(uint8_t channel, int32_t stallGuardThreshold);
 	void StepDir_setMode(uint8_t channel, StepDirMode mode);
 	void StepDir_setFrequency(uint8_t channel, uint32_t frequency);
 	void StepDir_setPrecision(uint8_t channel, uint32_t precision);
 	// ===== Getters =====
-	int StepDir_getActualPosition(uint8_t channel);
-	int StepDir_getTargetPosition(uint8_t channel);
-	int StepDir_getActualVelocity(uint8_t channel);
-	int StepDir_getTargetVelocity(uint8_t channel);
+	int32_t StepDir_getActualPosition(uint8_t channel);
+	int32_t StepDir_getTargetPosition(uint8_t channel);
+	int32_t StepDir_getActualVelocity(uint8_t channel);
+	int32_t StepDir_getTargetVelocity(uint8_t channel);
 	uint32_t StepDir_getAcceleration(uint8_t channel);
-	int StepDir_getVelocityMax(uint8_t channel);
-	int StepDir_getStallGuardThreshold(uint8_t channel);
+	int32_t StepDir_getVelocityMax(uint8_t channel);
+	int32_t StepDir_getStallGuardThreshold(uint8_t channel);
 	StepDirMode StepDir_getMode(uint8_t channel);
 	uint32_t StepDir_getFrequency(uint8_t channel);
 	uint32_t StepDir_getPrecision(uint8_t channel);

@@ -55,14 +55,14 @@ bool debug_setTriggerChannel(uint8_t type, uint32_t channel_value);
 bool debug_setType(uint8_t type);
 bool debug_setEvalChannel(uint8_t eval_channel);
 bool debug_setAddress(uint32_t address);
-int debug_getChannelType(uint8_t index, uint8_t *type);
-int debug_getChannelAddress(uint8_t index, uint32_t *address);
+int32_t debug_getChannelType(uint8_t index, uint8_t *type);
+int32_t debug_getChannelAddress(uint8_t index, uint32_t *address);
 
 bool debug_setTriggerType(uint8_t type);
 bool debug_setTriggerEvalChannel(uint8_t eval_channel);
 bool debug_setTriggerAddress(uint32_t address);
 void debug_setTriggerMaskShift(uint32_t mask, uint8_t shift);
-int debug_enableTrigger(uint8_t type, uint32_t threshold);
+int32_t debug_enableTrigger(uint8_t type, uint32_t threshold);
 
 void debug_setPrescaler(uint32_t divider);
 void debug_setSampleCount(uint32_t count);
@@ -70,10 +70,10 @@ uint32_t debug_getSampleCount();
 void debug_setPretriggerSampleCount(uint32_t count);
 uint32_t debug_getPretriggerSampleCount();
 
-int debug_getSample(uint32_t index, uint32_t *value);
+int32_t debug_getSample(uint32_t index, uint32_t *value);
 void debug_updateFrequency(uint32_t freq);
-int debug_getState(void);
-int debug_getInfo(uint32_t type);
+int32_t debug_getState(void);
+int32_t debug_getInfo(uint32_t type);
 
 void debug_useNextProcess(bool enable);
 void debug_nextProcess(void);

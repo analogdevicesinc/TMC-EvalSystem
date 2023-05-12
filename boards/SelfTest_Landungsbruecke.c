@@ -98,11 +98,11 @@ static uint32_t selfTest(uint8_t type, uint8_t motor, int32_t *value)  // Aufruf
 
 			HAL.IOs->config->setHigh(outGroup[i]);
 			if(!HAL.IOs->config->isHigh(inGroup[i]))
-				result &= (unsigned int) (~(1<<i));
+				result &= (uint32_t) (~(1<<i));
 
 			HAL.IOs->config->setLow(outGroup[i]);
 			if(HAL.IOs->config->isHigh(inGroup[i]))
-				result &= (unsigned int) (~(1<<i));
+				result &= (uint32_t) (~(1<<i));
 		}
 		result &= ((1<<SELF_TEST_PINS_PER_GROUP) - 1);
 		*value	= result;
@@ -113,13 +113,13 @@ static uint32_t selfTest(uint8_t type, uint8_t motor, int32_t *value)  // Aufruf
 		switch(motor)
 		{
 		case 0:
-			*value = (unsigned int) (((*HAL.ADCs->AIN0)*50)>>16);  // fullscale @ 5V, 16Bit [V/10]
+			*value = (uint32_t) (((*HAL.ADCs->AIN0)*50)>>16);  // fullscale @ 5V, 16Bit [V/10]
 			break;
 		case 1:
-			*value = (unsigned int) (((*HAL.ADCs->AIN1)*50)>>16);  // fullscale @ 5V, 16Bit [V/10]
+			*value = (uint32_t) (((*HAL.ADCs->AIN1)*50)>>16);  // fullscale @ 5V, 16Bit [V/10]
 			break;
 		case 2:
-			*value = (unsigned int) (((*HAL.ADCs->AIN2)*50)>>16);  // fullscale @ 5V, 16Bit [V/10]
+			*value = (uint32_t) (((*HAL.ADCs->AIN2)*50)>>16);  // fullscale @ 5V, 16Bit [V/10]
 			break;
 		case 3:
 			*value = VitalSignsMonitor.VM;

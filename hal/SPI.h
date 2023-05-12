@@ -33,15 +33,15 @@
 
 	// read/write 32 bit value at address
 	int32_t spi_readInt(SPIChannelTypeDef *SPIChannel, uint8_t address);
-	void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int value);
+	void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int32_t value);
 
 	// for default channels
 	uint8_t spi_ch1_readWriteByte(uint8_t data, uint8_t lastTransfer);
 
 	int32_t spi_ch1_readInt(uint8_t address);
-	void spi_ch1_writeInt(uint8_t address, int value);
+	void spi_ch1_writeInt(uint8_t address, int32_t value);
 
 	int32_t spi_ch2_readInt(uint8_t address);
-	void spi_ch2_writeInt(uint8_t address, int value);
+	void spi_ch2_writeInt(uint8_t address, int32_t value);
 
 #endif /* SPI_H */
