@@ -816,7 +816,7 @@ static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	for(int motor = 0; motor < TMC5160_MOTORS; motor++)
+	for(uint8_t motor = 0; motor < TMC5160_MOTORS; motor++)
 	{
 		tmc5160_periodicJob(&TMC5160, tick);
 	}

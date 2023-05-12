@@ -116,7 +116,7 @@ void checkVM()
 /* Routine to frequently check system for errors */
 void vitalsignsmonitor_checkVitalSigns()
 {
-	int errors = 0;
+	int32_t errors = 0;
 	static uint32_t lastTick = 0;
 	uint32_t tick;
 

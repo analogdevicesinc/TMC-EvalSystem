@@ -62,7 +62,7 @@ typedef struct
 	IOPinTypeDef EEPROM_SO;
 	IOPinTypeDef EEPROM_NCS;
 
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	IOPinTypeDef WIRELESS_TX;
 	IOPinTypeDef WIRELESS_RX;
 	IOPinTypeDef WIRELESS_NRST;

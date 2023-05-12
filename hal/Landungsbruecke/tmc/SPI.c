@@ -285,7 +285,7 @@ int32_t spi_ch2_readInt(uint8_t address)
 	return spi_readInt(SPIChannel_2_default, address);
 }
 
-void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int value)
+void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int32_t value)
 {
 	SPIChannel->readWrite(address|0x80, false);
 	SPIChannel->readWrite(0xFF & (value>>24), false);
@@ -294,12 +294,12 @@ void spi_writeInt(SPIChannelTypeDef *SPIChannel, uint8_t address, int value)
 	SPIChannel->readWrite(0xFF & (value>>0), true);
 }
 
-void spi_ch1_writeInt(uint8_t address, int value)
+void spi_ch1_writeInt(uint8_t address, int32_t value)
 {
 	spi_writeInt(SPIChannel_1_default, address, value);
 }
 
-void spi_ch2_writeInt(uint8_t address, int value)
+void spi_ch2_writeInt(uint8_t address, int32_t value)
 {
 	spi_writeInt(SPIChannel_2_default, address, value);
 }

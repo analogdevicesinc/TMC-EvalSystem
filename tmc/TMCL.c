@@ -456,7 +456,7 @@ void tmcl_init()
 
 void tmcl_process()
 {
-	static int currentInterface = 0;
+	static int32_t currentInterface = 0;
 
 	if(ActualCommand.Error != TMCL_RX_ERROR_NODATA)
 		tx(&interfaces[currentInterface]);
@@ -486,7 +486,7 @@ void tx(RXTXTypeDef *RXTX)
 
 	if(ActualReply.IsSpecial)
 	{
-		for(int i = 0; i < 9; i++)
+		for(uint8_t i = 0; i < 9; i++)
 			reply[i] = ActualReply.Special[i];
 	}
 	else
@@ -527,7 +527,7 @@ void rx(RXTXTypeDef *RXTX)
 
 	// todo ADD CHECK 2: check for SERIAL_MODULE_ADDRESS byte ( cmd[0] ) ? (LH)
 
-	for(int i = 0; i < 8; i++)
+	for(uint8_t i = 0; i < 8; i++)
 		checkSum += cmd[i];
 
 	if(checkSum != cmd[8])
@@ -888,7 +888,7 @@ static void GetVersion(void)
 		ActualReply.IsSpecial   = 1;
 		ActualReply.Special[0]  = SERIAL_HOST_ADDRESS;
 
-		for(int i = 0; i < 8; i++)
+		for(uint8_t i = 0; i < 8; i++)
 			ActualReply.Special[i+1] = VersionString[i];
 	}
 	else if(ActualCommand.Type == VERSION_FORMAT_BINARY)

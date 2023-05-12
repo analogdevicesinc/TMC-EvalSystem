@@ -10,7 +10,7 @@
 
 #define MOTORS 2
 
-static int vMax[MOTORS] = {0, 0};
+static int32_t vMax[MOTORS] = {0, 0};
 static uint8_t vMaxModified[MOTORS] = {true, true};
 
 static uint32_t right(uint8_t motor, int32_t velocity);
@@ -57,7 +57,7 @@ static PinsTypeDef Pins;
 void tmc5031_writeDatagram(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4)
 {
 	UNUSED(motor);
-	int value;
+	int32_t value;
 
 	TMC5031_SPIChannel->readWrite(address | TMC5031_WRITE_BIT, false);
 	TMC5031_SPIChannel->readWrite(x1, false);
@@ -75,7 +75,7 @@ void tmc5031_writeDatagram(uint8_t motor, uint8_t address, uint8_t x1, uint8_t x
 	TMC5031_config->shadowRegister[address & 0x7F] = value;
 }
 
-void tmc5031_writeInt(uint8_t motor, uint8_t Address, int Value)
+void tmc5031_writeInt(uint8_t motor, uint8_t Address, int32_t Value)
 {
 	tmc5031_writeDatagram(motor, Address, 0xFF & (Value>>24), 0xFF & (Value>>16), 0xFF & (Value>>8), 0xFF & (Value>>0));
 }
@@ -83,7 +83,7 @@ void tmc5031_writeInt(uint8_t motor, uint8_t Address, int Value)
 int tmc5031_readInt(uint8_t motor, uint8_t address)
 {
 	UNUSED(motor);
-	int value;
+	int32_t value;
 
 	address &= 0x7F;
 
@@ -169,7 +169,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
 	uint32_t errors = TMC_ERROR_NONE;
-	int tempValue;
+	int32_t tempValue;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -718,7 +718,7 @@ static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	for(int motor = 0; motor < MOTORS; motor++)
+	for(uint8_t motor = 0; motor < MOTORS; motor++)
 	{
 		tmc5031_periodicJob(motor, tick, &TMC5031, TMC5031_config);
 	}

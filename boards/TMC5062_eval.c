@@ -77,7 +77,7 @@ uint8_t tmc5062_readWrite(uint8_t motor, uint8_t data, uint8_t lastTransfer)
 // <= SPI Wrapper
 
 // => Motor -> IC/channel translation
-inline static int readInt(uint8_t motor, uint8_t address)
+inline static int32_t readInt(uint8_t motor, uint8_t address)
 {
 	TMC5062TypeDef *IC = MOTOR_TO_IC(motor);
 	uint8_t channel = MOTOR_TO_CHANNEL(motor);
@@ -85,7 +85,7 @@ inline static int readInt(uint8_t motor, uint8_t address)
 	return tmc5062_readInt(IC, channel, address);
 }
 
-inline static void writeInt(uint8_t motor, uint8_t address, int value)
+inline static void writeInt(uint8_t motor, uint8_t address, int32_t value)
 {
 	TMC5062TypeDef *IC = MOTOR_TO_IC(motor);
 	uint8_t channel = MOTOR_TO_CHANNEL(motor);
@@ -93,7 +93,7 @@ inline static void writeInt(uint8_t motor, uint8_t address, int value)
 	tmc5062_writeInt(IC, channel, address, value);
 }
 
-inline static int readField(uint8_t motor, uint8_t address, uint32_t mask, uint8_t shift)
+inline static int32_t readField(uint8_t motor, uint8_t address, uint32_t mask, uint8_t shift)
 {
 	TMC5062TypeDef *IC = MOTOR_TO_IC(motor);
 	uint8_t channel = MOTOR_TO_CHANNEL(motor);
@@ -169,7 +169,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
 	uint32_t errors = TMC_ERROR_NONE;
-	int tempValue;
+	int32_t tempValue;
 
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;

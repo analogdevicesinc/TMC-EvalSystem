@@ -24,8 +24,8 @@
 #include "TMCL.h"
 
 // Helper functions
-static int detectID_Monoflop(IdAssignmentTypeDef *ids);
-static int detectID_EEPROM(IdAssignmentTypeDef *ids);
+static int32_t detectID_Monoflop(IdAssignmentTypeDef *ids);
+static int32_t detectID_EEPROM(IdAssignmentTypeDef *ids);
 
 // Helper macros
 #define ID_CLK_LOW()   HAL.IOs->config->setLow(&HAL.IOs->pins->ID_CLK);   // set id clk signal to low
@@ -263,7 +263,7 @@ void IDDetection_initialScan(IdAssignmentTypeDef *ids)
 
 
 // Helper functions
-static int detectID_Monoflop(IdAssignmentTypeDef *ids)
+static int32_t detectID_Monoflop(IdAssignmentTypeDef *ids)
 {
 	switch (monoflopState)
 	{
@@ -362,7 +362,7 @@ static int detectID_Monoflop(IdAssignmentTypeDef *ids)
 	return false;
 }
 
-static int detectID_EEPROM(IdAssignmentTypeDef *ids)
+static int32_t detectID_EEPROM(IdAssignmentTypeDef *ids)
 {
 	// ====== EEPROM Check ======
 	// EEPROM spec reserves 2 bytes for the ID buffer.

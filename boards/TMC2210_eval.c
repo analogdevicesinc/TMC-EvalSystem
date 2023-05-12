@@ -265,8 +265,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
-			int val0 = (HAL.IOs->config->isHigh(Pins.CFG0));
-			int val1 = (HAL.IOs->config->isHigh(Pins.CFG1));
+			uint8_t val0 = (HAL.IOs->config->isHigh(Pins.CFG0));
+			uint8_t val1 = (HAL.IOs->config->isHigh(Pins.CFG1));
 			if (val0 == 0 && val1 == 0){ //8
 				*value = 0;
 			}
@@ -303,8 +303,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 211:
 			//ADC Scaling Resitors
 			if(readWrite == READ) {
-				int val2 = (HAL.IOs->config->isHigh(Pins.IREF_R2));
-				int val3 = (HAL.IOs->config->isHigh(Pins.IREF_R3));
+				uint8_t val2 = (HAL.IOs->config->isHigh(Pins.IREF_R2));
+				uint8_t val3 = (HAL.IOs->config->isHigh(Pins.IREF_R3));
 				if (val2 == 0 && val3 == 0){ //48k
 					*value = 0;
 				}
@@ -348,8 +348,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 212:
 			// Current range
 			if(readWrite == READ) {
-				int val2 = (HAL.IOs->config->isHigh(Pins.CFG2));
-				int val3 = (HAL.IOs->config->isHigh(Pins.CFG3));
+				uint8_t val2 = (HAL.IOs->config->isHigh(Pins.CFG2));
+				uint8_t val3 = (HAL.IOs->config->isHigh(Pins.CFG3));
 				if (val2 == 0 && val3 == 0){ //1
 					*value = 0;
 				}
@@ -448,7 +448,7 @@ static void periodicJob(uint32_t tick)
 {
 	UNUSED(tick);
 
-	for(int motor = 0; motor < MOTORS; motor++)
+	for(uint8_t motor = 0; motor < MOTORS; motor++)
 	{
 		StepDir_periodicJob(motor);
 	}

@@ -164,7 +164,7 @@ static void unassign(IdAssignmentTypeDef *ids)
 	UNUSED(ids);
 }
 
-void periodicJob(unsigned int tick)
+void periodicJob(uint32_t tick)
 {
 	UNUSED(tick);
 }

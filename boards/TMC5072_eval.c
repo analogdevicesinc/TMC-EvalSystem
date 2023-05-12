@@ -124,7 +124,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
 	uint32_t errors = TMC_ERROR_NONE;
-	int tempValue;
+	int32_t tempValue;
 
 	if(motor >= TMC5072_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -655,7 +655,7 @@ static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	for(int motor = 0; motor < TMC5072_MOTORS; motor++)
+	for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
 	{
 		tmc5072_periodicJob(motorToIC(motor), tick);
 	}

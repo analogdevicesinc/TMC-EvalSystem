@@ -26,8 +26,8 @@ typedef struct
 
 typedef struct
 {
-	unsigned int read;
-	unsigned int wrote;
+	uint32_t read;
+	uint32_t wrote;
 	volatile uint8_t *buffer;
 } BufferingTypeDef;
 

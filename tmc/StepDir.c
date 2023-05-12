@@ -213,7 +213,7 @@ skipStep:
 	}
 }
 
-void StepDir_rotate(uint8_t channel, int velocity)
+void StepDir_rotate(uint8_t channel, int32_t velocity)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
@@ -231,7 +231,7 @@ void StepDir_rotate(uint8_t channel, int velocity)
 	}
 }
 
-void StepDir_moveTo(uint8_t channel, int position)
+void StepDir_moveTo(uint8_t channel, int32_t position)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
@@ -332,7 +332,7 @@ void StepDir_stallGuard(uint8_t channel, bool stall)
 // The setters are responsible to access their respective variables while keeping the ramp generation stable
 
 // Set actual and target position (Not during an active position ramp)
-void StepDir_setActualPosition(uint8_t channel, int actualPosition)
+void StepDir_setActualPosition(uint8_t channel, int32_t actualPosition)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
@@ -419,7 +419,7 @@ void StepDir_setAcceleration(uint8_t channel, uint32_t acceleration)
 	}
 }
 
-void StepDir_setVelocityMax(uint8_t channel, int velocityMax)
+void StepDir_setVelocityMax(uint8_t channel, int32_t velocityMax)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
@@ -428,7 +428,7 @@ void StepDir_setVelocityMax(uint8_t channel, int velocityMax)
 }
 
 // Set the velocity threshold for active StallGuard. Also reset the stall flag
-void StepDir_setStallGuardThreshold(uint8_t channel, int stallGuardThreshold)
+void StepDir_setStallGuardThreshold(uint8_t channel, int32_t stallGuardThreshold)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return;
@@ -467,7 +467,7 @@ void StepDir_setPrecision(uint8_t channel, uint32_t precision)
 }
 
 // ===== Getters =====
-int StepDir_getActualPosition(uint8_t channel)
+int32_t StepDir_getActualPosition(uint8_t channel)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -475,7 +475,7 @@ int StepDir_getActualPosition(uint8_t channel)
 	return tmc_ramp_linear_get_rampPosition(&StepDir[channel].ramp);
 }
 
-int StepDir_getTargetPosition(uint8_t channel)
+int32_t StepDir_getTargetPosition(uint8_t channel)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -483,7 +483,7 @@ int StepDir_getTargetPosition(uint8_t channel)
 	return tmc_ramp_linear_get_targetPosition(&StepDir[channel].ramp);
 }
 
-int StepDir_getActualVelocity(uint8_t channel)
+int32_t StepDir_getActualVelocity(uint8_t channel)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -491,7 +491,7 @@ int StepDir_getActualVelocity(uint8_t channel)
 	return tmc_ramp_linear_get_rampVelocity(&StepDir[channel].ramp);
 }
 
-int StepDir_getTargetVelocity(uint8_t channel)
+int32_t StepDir_getTargetVelocity(uint8_t channel)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -507,7 +507,7 @@ uint32_t StepDir_getAcceleration(uint8_t channel)
 	return tmc_ramp_linear_get_acceleration(&StepDir[channel].ramp);
 }
 
-int StepDir_getVelocityMax(uint8_t channel)
+int32_t StepDir_getVelocityMax(uint8_t channel)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -515,7 +515,7 @@ int StepDir_getVelocityMax(uint8_t channel)
 	return tmc_ramp_linear_get_maxVelocity(&StepDir[channel].ramp);
 }
 
-int StepDir_getStallGuardThreshold(uint8_t channel)
+int32_t StepDir_getStallGuardThreshold(uint8_t channel)
 {
 	if (channel >= STEP_DIR_CHANNELS)
 		return -1;
@@ -570,7 +570,7 @@ void StepDir_init(uint32_t precision)
 	}
 
 	// StepDir Channel initialisation
-	for (int i = 0; i < STEP_DIR_CHANNELS; i++)
+	for (uint8_t i = 0; i < STEP_DIR_CHANNELS; i++)
 	{
 		StepDir[i].oldVelAccu           = 0;
 		StepDir[i].oldVelocity          = 0;

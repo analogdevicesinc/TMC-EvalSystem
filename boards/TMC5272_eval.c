@@ -919,8 +919,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 211:
 		//ADC Scaling Resitors
 		if(readWrite == READ) {
-			int val2 = (HAL.IOs->config->isHigh(Pins.IREF_R2));
-			int val3 = (HAL.IOs->config->isHigh(Pins.IREF_R3));
+			uint8_t val2 = (HAL.IOs->config->isHigh(Pins.IREF_R2));
+			uint8_t val3 = (HAL.IOs->config->isHigh(Pins.IREF_R3));
 			if (val2 == 0 && val3 == 0){ //48k
 				*value = 0;
 			}
@@ -986,8 +986,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 214:
 		// ADCTemperatur Converted
 		if(readWrite == READ) {
-			int adc = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_IOIN, TMC5272_IOIN_ADC_TEMPERATURE_MASK, TMC5272_IOIN_ADC_TEMPERATURE_SHIFT);
-			*value = (int)((2.03*adc)-259);
+			int32_t adc = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_IOIN, TMC5272_IOIN_ADC_TEMPERATURE_MASK, TMC5272_IOIN_ADC_TEMPERATURE_SHIFT);
+			*value = (int32_t)((2.03*adc)-259);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -1390,7 +1390,7 @@ static void periodicJob(uint32_t tick)
 	if(!noRegResetnSLEEP)
 		{
 	//check if reset after nSLEEP to HIGH was performed
-	for(int motor = 0; motor < TMC5272_MOTORS; motor++)
+	for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
 		{
 			tmc5272_periodicJob(&TMC5272, tick);
 		}

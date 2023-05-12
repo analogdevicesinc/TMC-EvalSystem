@@ -350,7 +350,7 @@ uint32_t getCMDReply()
 	uint8_t cmdReply;
 	uint32_t result = 0;
 
-	for(int i = 0; i < 4; i++)
+	for(uint8_t i = 0; i < 4; i++)
 	{
 		if(rawRx(&cmdReply) == 0)
 			cmdReply = 0;

@@ -28,7 +28,7 @@ uint8_t BLDC_isPWMenabled();
 void BLDC_setTargetPWM(int16_t pwm);
 int16_t BLDC_getTargetPWM();
 
-int BLDC_getMeasuredCurrent();
+int32_t BLDC_getMeasuredCurrent();
 
 typedef enum {
 	BLDC_OPENLOOP,
@@ -44,13 +44,13 @@ uint8_t BLDC_getPolePairs();
 void BLDC_setOpenloopStepTime(uint16_t stepTime);
 uint16_t BLDC_getOpenloopStepTime();
 
-int BLDC_getTargetAngle();
-int BLDC_getHallAngle();
+int32_t BLDC_getTargetAngle();
+int32_t BLDC_getHallAngle();
 
 void BLDC_setTargetOpenloopVelocity(uint32_t velocity);
 uint32_t BLDC_getTargetOpenloopVelocity();
 int32_t BLDC_getActualOpenloopVelocity();
-int BLDC_getActualHallVelocity();
+int32_t BLDC_getActualHallVelocity();
 
 void BLDC_setHallOrder(uint8_t order);
 uint8_t BLDC_getHallOrder();

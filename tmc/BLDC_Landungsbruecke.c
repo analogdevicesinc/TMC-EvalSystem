@@ -39,10 +39,10 @@ uint8_t  pwmEnabled       = 0;
 uint8_t  bbmTime          = 50;
 uint8_t  motorPolePairs   = 1;
 
-int targetAngle         = 0;
-int hallAngle           = 0;
+int32_t targetAngle         = 0;
+int32_t hallAngle           = 0;
 
-int actualHallVelocity = 0; // electrical RPM
+int32_t actualHallVelocity = 0; // electrical RPM
 
 volatile int32_t adcSamples[8] = { 0 };
 uint8_t adcSampleIndex = 0;
@@ -325,7 +325,7 @@ void BLDC_calibrateADCs()
 	// the adc phase selection
 	disable_irq(INT_FTM0-16);
 
-	for (int myadc = 0; myadc < adcCount; myadc++)
+	for (uint8_t myadc = 0; myadc < adcCount; myadc++)
 	{
 		adc = myadc % 3;
 		// Select the ADC phase for offset compensation
@@ -354,7 +354,7 @@ void PDB0_IRQHandler()
 
 void ADC1_IRQHandler()
 {
-	int tmp = ADC1_RA;
+	int32_t tmp = ADC1_RA;
 	static ADC_Channel lastChannel = ADC_PHASE_U;
 
 	switch(adcState[lastChannel])
@@ -397,18 +397,18 @@ void timer_callback(void)
 	// clear timer overflow flag
 	//FTM0_SC &= ~FTM_SC_TOF_MASK;
 
-	static int commutationCounter = 0;
-	static int velocityCounter = 0;
+	static int32_t commutationCounter = 0;
+	static int32_t velocityCounter = 0;
 
-	static int lastHallAngle = 0;
-	static int hallAngleDiffAccu = 0;
+	static int32_t lastHallAngle = 0;
+	static int32_t hallAngleDiffAccu = 0;
 
 	// Measure the hall sensor
 	HallStates actualHallState = inputToHallState(HAL.IOs->config->isHigh(Pins.HALL_U), HAL.IOs->config->isHigh(Pins.HALL_V), HAL.IOs->config->isHigh(Pins.HALL_W));
 	hallAngle = hallStateToAngle(actualHallState);
 
 	// Calculate the hall angle difference
-	int hallAngleDiff = (hallAngle - lastHallAngle);         // [-300 ; +360)
+	int32_t hallAngleDiff = (hallAngle - lastHallAngle);         // [-300 ; +360)
 	hallAngleDiff     = (hallAngleDiff + 360) % 360;         // [   0 ; +360)
 	hallAngleDiff     = ((hallAngleDiff + 180) % 360) - 180; // [-180 ; +180)
 	lastHallAngle = hallAngle;
@@ -613,7 +613,7 @@ int16_t BLDC_getTargetPWM()
 	return targetPWM;
 }
 
-int BLDC_getMeasuredCurrent()
+int32_t BLDC_getMeasuredCurrent()
 {
 	int32_t sum = 0;
 	for (uint8_t i = 0; i < ARRAY_SIZE(adcSamples); i++)
@@ -657,12 +657,12 @@ uint16_t BLDC_getOpenloopStepTime()
 	return openloopStepTime;
 }
 
-int BLDC_getTargetAngle()
+int32_t BLDC_getTargetAngle()
 {
 	return targetAngle;
 }
 
-int BLDC_getHallAngle()
+int32_t BLDC_getHallAngle()
 {
 	return hallAngle;
 }
@@ -701,7 +701,7 @@ int32_t BLDC_getActualOpenloopVelocity()
 }
 
 // Velocity measured by hall in RPM
-int BLDC_getActualHallVelocity()
+int32_t BLDC_getActualHallVelocity()
 {
 	return actualHallVelocity / motorPolePairs;
 }
