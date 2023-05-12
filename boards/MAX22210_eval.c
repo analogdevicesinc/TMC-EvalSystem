@@ -491,10 +491,7 @@ void MAX22210_init(void)
 
 	Evalboards.driverEnable             = DRIVER_DISABLE;
 
-#if defined(Startrampe)
-	Pins.REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_PinAFConfig(Pins.REF_PWM->port, Pins.REF_PWM->bit, GPIO_AF_TIM1);
-#elif defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.REF_PWM);
 	Pins.REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #elif defined(LandungsbrueckeV3)
@@ -505,7 +502,7 @@ void MAX22210_init(void)
 	HAL.IOs->config->set(Pins.REF_PWM);
 	Timer.overflow_callback = debug_nextProcess;
 	Timer.init();
-#if defined(Landungsbruecke)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	Timer.setPeriodMin(TIMER_CHANNEL_1, 1000);
 	Timer.setFrequencyMin(TIMER_CHANNEL_1, 1000);
 	Timer.setDuty(TIMER_CHANNEL_1, 0.5);
