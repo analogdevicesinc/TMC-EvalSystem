@@ -14,9 +14,7 @@ static IOPinTypeDef *PIN_DRV_ENN;
 static ConfigurationTypeDef *TMC4671_config;
 static SPIChannelTypeDef *TMC4671_SPIChannel;
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 static void timer_overflow(void);
-#endif
 
 typedef struct
 {
@@ -844,13 +842,11 @@ static void periodicJob(uint32_t actualSystick)
 	}
 }
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 static void timer_overflow(void)
 {
 	// RAMDebug
 	debug_nextProcess();
 }
-#endif
 
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
@@ -1020,10 +1016,8 @@ void TMC4671_init(void)
 		rampGenerator[motor].acceleration = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
 	}
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 	Timer.overflow_callback = timer_overflow;
 	Timer.init();
 	Timer.setFrequency(TIMER_CHANNEL_2, 10000);
 	debug_updateFrequency(10000);
-#endif
 }

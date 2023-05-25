@@ -66,7 +66,6 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC6100        19
 #define ID_TMC6100_BOB    25 // For the TMC4671+TMC6100-BOB
 #define ID_TMC2210		  29
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 #define ID_TMC2209        8
 #define ID_TMC2225        18
 #define ID_TMC2300        14
@@ -76,7 +75,6 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_MAX22204_EVAL 	32
 #define ID_MAX22210_EVAL 	33
 #define ID_TMC6300        21
-#endif
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 #define ID_TMC6140        23
@@ -160,7 +158,6 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC7300,       .init = TMC7300_init     },
 	{ .id = ID_TMC2160,       .init = TMC2160_init     },
 	{ .id = ID_TMC2210,       .init = TMC2210_init     },
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 	{ .id = ID_MAX22216_EVAL, .init = MAX22216_init    },
 	{ .id = ID_MAX22216_BOB,  .init = MAX22216_init    },
 	{ .id = ID_MAX22204_EVAL, .init = MAX22204_init    },
@@ -170,7 +167,6 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC2226,     .init = TMC2226_init     },
 	{ .id = ID_TMC2300,     .init = TMC2300_init     },
 	{ .id = ID_TMC6300,     .init = TMC6300_init     },
-#endif
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	{ .id = ID_TMC6140,     .init = TMC6140_init     },
 #endif

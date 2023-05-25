@@ -11,7 +11,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" description="" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146" name="Release" optionalBuildProperties="" parent="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146">
+				<configuration artifactName="${ProjName}" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" description="" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146" name="Release" optionalBuildProperties="">
 					<folderInfo id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146." name="/" resourcePath="">
 						<toolChain id="org.eclipse.cdt.cross.arm.gnu.windows.toolchain.base.921470886" name="ARM Windows GCC (GNUARM, WinARM)" resourceTypeBasedDiscovery="true">
 							<option id="org.eclipse.cdt.cross.arm.gnu.windows.option.target.processor.1617960696" name="Processor" superClass="org.eclipse.cdt.cross.arm.gnu.windows.option.target.processor"/>
@@ -2672,6 +2672,14 @@
 				<buildCommand>cs-make</buildCommand>
 				<buildArguments>-s</buildArguments>
 				<buildTarget>all LINK=NOBL DEVICE=LandungsbrueckeV3</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>true</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="LandungsbrueckeV3_BL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>cs-make</buildCommand>
+				<buildArguments>-s</buildArguments>
+				<buildTarget>all LINK=BL DEVICE=LandungsbrueckeV3</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
