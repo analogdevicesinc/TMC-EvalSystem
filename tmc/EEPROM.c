@@ -67,7 +67,7 @@ uint8_t eeprom_check(SPIChannelTypeDef *SPIChannel)
 	// select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
 	if(SPIChannel == &SPI.ch1)
-		SPIChannel->CSN = &HAL.IOs->pins->ID_CH0;
+		SPIChannel->CSN = &HAL.IOs->pins->EEPROM_NCS;
 	else
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH1;
 
@@ -119,7 +119,7 @@ void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t 
 	// select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
 	if(SPIChannel == &SPI.ch1) {
-		SPIChannel->CSN = &HAL.IOs->pins->ID_CH0;
+		SPIChannel->CSN = &HAL.IOs->pins->EEPROM_NCS;
 		EEPROM.ch1.init = false;
 	} else {
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH1;
@@ -180,7 +180,7 @@ void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t
 	//select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
 	if(SPIChannel == &SPI.ch1) {
-		SPIChannel->CSN = &HAL.IOs->pins->ID_CH0;
+		SPIChannel->CSN = &HAL.IOs->pins->EEPROM_NCS;
 		EEPROM.ch1.init = false;
 	} else {
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH1;
@@ -265,7 +265,7 @@ uint8_t eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16_t address)
 	//select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
 	if(SPIChannel == &SPI.ch1)
-		SPIChannel->CSN = &HAL.IOs->pins->ID_CH0;
+		SPIChannel->CSN = &HAL.IOs->pins->EEPROM_NCS;
 	else
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH1;
 
@@ -304,7 +304,7 @@ void eeprom_read_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t 
 	// select CSN of eeprom
 	IOPinTypeDef* io = SPIChannel->CSN;
 	if(SPIChannel == &SPI.ch1)
-		SPIChannel->CSN = &HAL.IOs->pins->ID_CH0;
+		SPIChannel->CSN = &HAL.IOs->pins->EEPROM_NCS;
 	else
 		SPIChannel->CSN = &HAL.IOs->pins->ID_CH1;
 

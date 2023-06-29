@@ -22,7 +22,7 @@ SPITypeDef SPI=
 {
 	.ch1 =
 	{
-		.periphery       = SPI1,
+		.periphery       = SPI2,
 		.CSN             = &IODummy,
 		.readWrite       = spi_ch1_readWrite,
 		.readWriteArray  = spi_ch1_readWriteArray,
@@ -44,6 +44,7 @@ SPITypeDef SPI=
 static void init(void)
 {
 	rcu_periph_clock_enable(RCU_SPI1);
+    rcu_periph_clock_enable(RCU_SPI2);
 	rcu_periph_clock_enable(RCU_SPI0);
 
 	// Config
@@ -73,6 +74,10 @@ static void init(void)
 	gpio_af_set(GPIOB, GPIO_AF_5, GPIO_PIN_14);
 	gpio_af_set(GPIOB, GPIO_AF_5, GPIO_PIN_13);
 
+    gpio_af_set(GPIOC, GPIO_AF_6, GPIO_PIN_10);
+    gpio_af_set(GPIOC, GPIO_AF_6, GPIO_PIN_11);
+    gpio_af_set(GPIOC, GPIO_AF_6, GPIO_PIN_12);
+
 	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_7);
 	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_6);
 	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_5);
@@ -82,7 +87,7 @@ static void init(void)
 
 	// configure default SPI channel_1
 	SPIChannel_1_default = &HAL.SPI->ch1;
-	SPIChannel_1_default->CSN = &HAL.IOs->pins->SPI1_CSN;
+	SPIChannel_1_default->CSN = &HAL.IOs->pins->EEPROM_NCS;
 	// configure default SPI channel_2
 	SPIChannel_2_default = &HAL.SPI->ch2;
 	SPIChannel_2_default->CSN = &HAL.IOs->pins->SPI2_CSN0;
@@ -92,7 +97,7 @@ static void init(void)
 static void reset_ch1()
 {
 	SPI.ch1.CSN        = &IODummy;
-	SPI.ch1.periphery  = SPI1;
+	SPI.ch1.periphery  = SPI2;
 	SPI.ch1.readWrite  = spi_ch1_readWrite;
 }
 
