@@ -75,6 +75,8 @@
 #define SEL_IRC16M      0x00U
 #define SEL_HXTAL       0x01U
 #define SEL_PLLP        0x02U
+
+extern uint32_t g_pfnVectors;
                         
 /* set the system clock frequency and declare the system clock configuration function */
 #ifdef __SYSTEM_CLOCK_IRC16M
@@ -145,6 +147,8 @@ static void system_clock_config(void);
 */
 void SystemInit (void)
 {
+    SCB->VTOR=(uint32_t) &g_pfnVectors;
+
     /* FPU settings */
 #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
     SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
