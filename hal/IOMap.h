@@ -101,6 +101,7 @@ typedef struct
 	IOPinTypeDef AIN0;
 	IOPinTypeDef AIN1;
 	IOPinTypeDef AIN2;
+	IOPinTypeDef AIN_EXT;
 	IOPinTypeDef WIFI_EN;
 	IOPinTypeDef WIFI_RST;
 	IOPinTypeDef WIFI_TX;

@@ -1013,6 +1013,22 @@ IOPinMapTypeDef IOMap =
 		}
 	},
 
+	.AIN_EXT =  // IOPinTypeDef AIN_EXT
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOA)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOA)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOA,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_2,       // uint32_t pinBitWeight
+		.bit                 = 0,                // unsigned char bit
+		.resetConfiguration  =
+		{
+			.GPIO_Mode   = GPIO_MODE_ANALOG,         // GPIOMode_TypeDef GPIO_Mode
+			.GPIO_OType  = GPIO_OTYPE_PP,        // GPIOSpeed_TypeDef GPIO_Speed
+			.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+			.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd
+		}
+	},
+
 	.WIFI_EN =  // IOPinTypeDef WIFI_EN
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
@@ -1173,6 +1189,7 @@ static void init()
 	HAL.IOs->config->reset(&HAL.IOs->pins->AIN0);
 	HAL.IOs->config->reset(&HAL.IOs->pins->AIN1);
 	HAL.IOs->config->reset(&HAL.IOs->pins->AIN2);
+	HAL.IOs->config->reset(&HAL.IOs->pins->AIN_EXT);
 	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_EN);
 	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_RST);
 	HAL.IOs->config->reset(&HAL.IOs->pins->WIFI_TX);

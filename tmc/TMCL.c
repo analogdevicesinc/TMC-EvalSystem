@@ -964,6 +964,9 @@ static void GetInput(void)
 	case 6:	// Raw VM ADC value, no scaling calculation done // todo QOL 2: Switch this case with case 5? That way we have the raw Values from 0-5, then 6 for scaled VM value. Requires IDE changes (LH)
 		ActualReply.Value.Int32 = *HAL.ADCs->VM;
 		break;
+	case 7:
+		ActualReply.Value.Int32 = *HAL.ADCs->AIN_EXT;
+		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
 		break;
