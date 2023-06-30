@@ -5,70 +5,71 @@ static void init();
 
 static IOPinTypeDef *_pins[] =
 {
-	&IOMap.ID_CLK,
-	&IOMap.ID_CH0,
-	&IOMap.ID_CH1,
-	&IOMap.DIO0,
-	&IOMap.DIO1,
-	&IOMap.DIO2,
-	&IOMap.DIO3,
-	&IOMap.DIO4,
-	&IOMap.DIO5,
-	&IOMap.DIO6,
-	&IOMap.DIO7,
-	&IOMap.DIO8,
-	&IOMap.DIO9,
-	&IOMap.DIO10,
-	&IOMap.DIO10_PWM_WL,
-	&IOMap.DIO10_UART_TX,
-	&IOMap.DIO11,
-	&IOMap.DIO11_PWM_WH,
-	&IOMap.DIO11_UART_RX,
-	&IOMap.SW_UART_PWM,
-	&IOMap.CLK16,
-	&IOMap.SPI2_CSN0,
-	&IOMap.SPI2_CSN1,
-	&IOMap.SPI2_CSN2,
-	&IOMap.SPI2_SCK,
-	&IOMap.SPI2_SDO,
-	&IOMap.SPI2_SDI,
-	&IOMap.SPI1_CSN,
-	&IOMap.SPI1_SCK,
-	&IOMap.SPI1_SDI,
-	&IOMap.SPI1_SDO,
-	&IOMap.DIO12,
-	&IOMap.DIO13,
-	&IOMap.DIO14,
-	&IOMap.DIO15,
-	&IOMap.DIO16,
-	&IOMap.DIO17,
-	&IOMap.DIO18,
-	&IOMap.DIO19,
-	&IOMap.RS232_TX,
-	&IOMap.RS232_RX,
-	&IOMap.USB_V_BUS,
-	&IOMap.USB_V_DM,
-	&IOMap.USB_V_DP,
-	&IOMap.LED_STAT,
-	&IOMap.LED_ERROR,
-	&IOMap.EXT0,
-	&IOMap.EXT1,
-	&IOMap.EXT2,
-	&IOMap.EXT3,
-	&IOMap.EXT4,
-	&IOMap.EEPROM_SCK,
-	&IOMap.EEPROM_SI,
-	&IOMap.EEPROM_SO,
-	&IOMap.EEPROM_NCS,
-	&IOMap.ADC_VM,
-	&IOMap.AIN0,
-	&IOMap.AIN1,
-	&IOMap.AIN2,
-	&IOMap.WIFI_EN,
-	&IOMap.WIFI_RST,
-	&IOMap.WIFI_TX,
-	&IOMap.WIFI_RX,
-	&IOMap.DUMMY
+	&IOMap.ID_CLK,			// 0
+	&IOMap.ID_CH0,			// 1
+	&IOMap.ID_CH1,			// 2
+	&IOMap.DIO0,			// 3
+	&IOMap.DIO1,			// 4
+	&IOMap.DIO2,			// 5
+	&IOMap.DIO3,			// 6
+	&IOMap.DIO4,			// 7
+	&IOMap.DIO5,			// 8
+	&IOMap.DIO6,			// 9
+	&IOMap.DIO7,			// 10
+	&IOMap.DIO8,			// 11
+	&IOMap.DIO9,			// 12
+	&IOMap.DIO10,			// 13
+	&IOMap.DIO10_PWM_WL,	// 14
+	&IOMap.DIO10_UART_TX,	// 15
+	&IOMap.DIO11,			// 16
+	&IOMap.DIO11_PWM_WH,	// 17
+	&IOMap.DIO11_UART_RX,	// 18
+	&IOMap.SW_UART_PWM,		// 19
+	&IOMap.CLK16,			// 20
+	&IOMap.SPI2_CSN0,		// 21
+	&IOMap.SPI2_CSN1,		// 22
+	&IOMap.SPI2_CSN2,		// 23
+	&IOMap.SPI2_SCK,		// 24
+	&IOMap.SPI2_SDO,		// 25
+	&IOMap.SPI2_SDI,		// 26
+	&IOMap.SPI1_CSN,		// 27
+	&IOMap.SPI1_SCK,		// 28
+	&IOMap.SPI1_SDI,		// 29
+	&IOMap.SPI1_SDO,		// 30
+	&IOMap.DIO12,			// 31
+	&IOMap.DIO13,			// 32
+	&IOMap.DIO14,			// 33
+	&IOMap.DIO15,			// 34
+	&IOMap.DIO16,			// 35
+	&IOMap.DIO17,			// 36
+	&IOMap.DIO18,			// 37
+	&IOMap.DIO19,			// 38
+	&IOMap.RS232_TX,		// 39
+	&IOMap.RS232_RX,		// 40
+	&IOMap.USB_V_BUS,		// 41
+	&IOMap.USB_V_DM,		// 42
+	&IOMap.USB_V_DP,		// 43
+	&IOMap.LED_STAT,		// 44
+	&IOMap.LED_ERROR,		// 45
+	&IOMap.EXT0,			// 46
+	&IOMap.EXT1,			// 47
+	&IOMap.EXT2,			// 48
+	&IOMap.EXT3,			// 49
+	&IOMap.EXT4,			// 50
+	&IOMap.EEPROM_SCK,		// 51
+	&IOMap.EEPROM_SI,		// 52
+	&IOMap.EEPROM_SO,		// 53
+	&IOMap.EEPROM_NCS,		// 54
+	&IOMap.ADC_VM,			// 56
+	&IOMap.AIN0,			// 57
+	&IOMap.AIN1,			// 58
+	&IOMap.AIN2,			// 59
+	&IOMap.WIFI_EN,			// 60
+	&IOMap.WIFI_RST,		// 61
+	&IOMap.WIFI_TX,			// 62
+	&IOMap.WIFI_RX,			// 63
+	&IOMap.BUTTON,			// 64
+	&IOMap.DUMMY			// 65
 };
 IOPinMapTypeDef IOMap =
 {
