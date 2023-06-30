@@ -1076,6 +1076,22 @@ IOPinMapTypeDef IOMap =
 		}
 	},
 
+	.BUTTON =  // IOPinTypeDef BUTTON
+	{
+		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
+		.resetBitRegister    = &(GPIO_BC(GPIOD)),  // __IO uint16_t *resetBitRegister
+		.port                = GPIOD,            // GPIO_TypeDef *port
+		.bitWeight           = GPIO_PIN_3,       // uint32_t pinBitWeight
+		.bit                 = 3,                // unsigned char bit
+		.resetConfiguration  =
+		{
+				.GPIO_Mode   = GPIO_MODE_INPUT,         // GPIOMode_TypeDef GPIO_Mode
+				.GPIO_OType  = GPIO_OTYPE_PP,    	// GPIOSpeed_TypeDef GPIO_Speed
+				.GPIO_Speed  = GPIO_OSPEED_50MHZ,     // GPIOOType_TypeDef GPIO_OType
+				.GPIO_PuPd   = GPIO_PUPD_NONE      // GPIOPuPd_TypeDef GPIO_PuPd - There is an external pull-down connected.
+		}
+	},
+
 	.DUMMY =  // IOPinTypeDef
 	{
 		.setBitRegister      = &(GPIO_BOP(GPIOD)),  // __IO uint16_t *setBitRegister
