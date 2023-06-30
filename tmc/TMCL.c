@@ -223,13 +223,20 @@ uint32_t numberOfInterfaces;
 uint32_t resetRequest = 0;
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	// ToDo: Remove the duplicate declaration of the struct here and in main.c
-	struct BootloaderConfig {
-		uint32_t BLMagic;
-		uint32_t drvEnableResetValue;
-	};
+    // ToDo: Remove the duplicate declaration of the struct here and in main.c
+    struct BootloaderConfig {
+        uint32_t BLMagic;
+        uint32_t drvEnableResetValue;
+    };
 
-	extern struct BootloaderConfig BLConfig;
+    extern struct BootloaderConfig BLConfig;
+#elif defined(LandungsbrueckeV3)
+    // ToDo: Remove the duplicate declaration of the struct here and in main.c
+    struct BootloaderConfig {
+        uint32_t BLMagic;
+    };
+
+    extern struct BootloaderConfig BLConfig;
 #endif
 
 // Sets TMCL status from Evalboard error. Returns the parameter given to allow for compact error handling
@@ -583,7 +590,7 @@ void tmcl_boot()
 
 	HAL.NVIC_DeInit();
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 	BLConfig.BLMagic = 0x12345678;
 	HAL.reset(true);
 #endif
