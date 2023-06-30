@@ -9,14 +9,15 @@ static void deInit(void);
 
 ADCTypeDef ADCs =
 {
-	.AIN0   = &ADCValue[0],
-	.AIN1   = &ADCValue[1],
-	.AIN2   = &ADCValue[2],
-	.DIO4   = &ADCValue[3],
-	.DIO5   = &ADCValue[4],
-	.VM     = &ADCValue[5],
-	.init   = init,
-	.deInit  = deInit
+	.AIN0    = &ADCValue[0],
+	.AIN1    = &ADCValue[1],
+	.AIN2    = &ADCValue[2],
+	.DIO4    = &ADCValue[3],
+	.DIO5    = &ADCValue[4],
+	.VM      = &ADCValue[5],
+	.AIN_EXT = &ADCValue[6],
+	.init    = init,
+	.deInit  = deInit,
 };
 
 void init(void)
@@ -69,6 +70,7 @@ void init(void)
 	adc_routine_channel_config(ADC0, 3, ADC_CHANNEL_0, ADC_SAMPLETIME_15);
 	adc_routine_channel_config(ADC0, 4, ADC_CHANNEL_1, ADC_SAMPLETIME_15);
 	adc_routine_channel_config(ADC0, 5, ADC_CHANNEL_3, ADC_SAMPLETIME_15);
+	adc_routine_channel_config(ADC0, 6, ADC_CHANNEL_2, ADC_SAMPLETIME_15);
 
 	adc_dma_request_after_last_enable(ADC0);
 
