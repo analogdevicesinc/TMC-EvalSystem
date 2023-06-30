@@ -23,7 +23,9 @@ EvalboardsTypeDef Evalboards;
 		0xFF,                                            //reserved
 		0xFF                                             //reserved
 	};
+#endif
 
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	struct BootloaderConfig {
 		uint32_t BLMagic;
 		uint32_t drvEnableResetValue;
@@ -31,6 +33,13 @@ EvalboardsTypeDef Evalboards;
 
 	// This struct gets placed at a specific address by the linker
 	struct BootloaderConfig __attribute__ ((section(".bldata"))) BLConfig;
+#elif defined(LandungsbrueckeV3)
+    struct BootloaderConfig {
+        uint32_t BLMagic;
+    };
+
+    // This struct gets placed at a specific address by the linker
+    struct BootloaderConfig __attribute__ ((section(".bldata"))) BLConfig;
 #endif
 
 

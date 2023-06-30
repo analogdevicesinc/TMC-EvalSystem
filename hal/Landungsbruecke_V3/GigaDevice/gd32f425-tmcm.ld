@@ -100,6 +100,15 @@ SECTIONS
   /* used by the startup to initialize data */
   _sidata = .;
 
+  /* special area for data exchange between boot loader and application
+     at the beginning of the RAM*/
+  .bldata (NOLOAD) :
+  {
+    . = ALIGN(4);
+    KEEP(*(.bldata))
+    . = ALIGN(4);
+  } > RAM
+
   /* Initialized data sections goes into RAM, load LMA copy after code */
   .data : AT ( _sidata )
   {
