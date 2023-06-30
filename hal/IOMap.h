@@ -105,6 +105,7 @@ typedef struct
 	IOPinTypeDef WIFI_RST;
 	IOPinTypeDef WIFI_TX;
 	IOPinTypeDef WIFI_RX;
+	IOPinTypeDef BUTTON;
 #endif
 
 	IOPinTypeDef DUMMY;
