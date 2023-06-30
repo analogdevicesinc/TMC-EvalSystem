@@ -29,13 +29,13 @@ static IOPinTypeDef *_pins[] =
 	&IOMap.SPI2_CSN0,       // 21
 	&IOMap.SPI2_CSN1,       // 22
 	&IOMap.SPI2_CSN2,       // 23
-	&IOMap.SPI2_SCK         // 24
-	&IOMap.SPI2_SDO         // 25
-	&IOMap.SPI2_SDI         // 26
-	&IOMap.SPI1_CSN         // 27
-	&IOMap.SPI1_SCK         // 28
-	&IOMap.SPI1_SDI         // 29
-	&IOMap.SPI1_SDO         // 30
+	&IOMap.SPI2_SCK,        // 24
+	&IOMap.SPI2_SDO,        // 25
+	&IOMap.SPI2_SDI,        // 26
+	&IOMap.SPI1_CSN,        // 27
+	&IOMap.SPI1_SCK,        // 28
+	&IOMap.SPI1_SDI,        // 29
+	&IOMap.SPI1_SDO,        // 30
 	&IOMap.DIO12,           // 31
 	&IOMap.DIO13,           // 32
 	&IOMap.DIO14,           // 33
