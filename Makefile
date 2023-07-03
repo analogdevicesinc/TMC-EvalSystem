@@ -17,6 +17,13 @@ ID_CH1_OVERRIDE	?= false
 ID_CH2_DEFAULT	?= 0
 ID_CH2_OVERRIDE	?= false
 
+# Select whether USB should report a unique serial number or not
+# Legacy behaviour for the Landungsbruecke <= v2 is to not have a serial string.
+# For when this option is enabled for compatibility, on Landungsbruecke v3 the
+# serial string will always have the value "TMCEVAL", giving the same behaviour.
+# Note: This behaviour will eventually be changed to proper serial number strings.
+USB_USE_UNIQUE_SERIAL_NUMBER ?= false
+
 ### Source File Selection ###
 # Evalboards
 SRC 			+= boards/Board.c
@@ -293,6 +300,8 @@ SRC 			+= $(TMC_HAL_SRC)/tmc/RXTX.c
 
 CDEFS += -DID_CH1_DEFAULT=$(ID_CH1_DEFAULT) -DID_CH1_OVERRIDE=$(ID_CH1_OVERRIDE)
 CDEFS += -DID_CH2_DEFAULT=$(ID_CH2_DEFAULT) -DID_CH2_OVERRIDE=$(ID_CH2_OVERRIDE)
+
+CDEFS += -DUSB_USE_UNIQUE_SERIAL_NUMBER=$(USB_USE_UNIQUE_SERIAL_NUMBER)
 
 CDEFS += -DBUILD_VERSION=$(subst .,,$(VERSION))
 

@@ -8,6 +8,11 @@
 #include "hal/Landungsbruecke/freescale/USB_CDC/CDC1.h"
 #include "hal/Landungsbruecke/freescale/USB_CDC/CS1.h"
 
+#if USB_USE_UNIQUE_SERIAL_NUMBER
+#error "Landungsbruecke and LandungsbrueckeSmall do not yet support unique serial numbers"
+#endif
+
+
 extern uint8_t USB_DCI_DeInit(void);
 extern uint8_t USB_Class_CDC_DeInit(uint8_t controller_ID);
 extern uint8_t USB_Class_DeInit(uint8_t controller_ID);
