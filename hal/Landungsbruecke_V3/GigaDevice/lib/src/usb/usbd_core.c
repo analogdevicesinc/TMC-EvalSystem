@@ -62,8 +62,10 @@ void usbd_init (usb_core_driver *udev, usb_core_enum core, usb_desc *desc, usb_c
     /* class callbacks */
     udev->dev.class_core = class_core;
 
+#if USB_USE_UNIQUE_SERIAL_NUMBER
     /* create serial string */
     serial_string_get(udev->dev.desc->strings[STR_IDX_SERIAL]);
+#endif
 
     /* configure USB capabilities */
     (void)usb_basic_init (&udev->bp, &udev->regs, core);
