@@ -8,14 +8,25 @@ volatile uint32_t systick = 0;
 
 void systick_init(void)
 {
-  SysTick_Config(SystemCoreClock/1000);
+  SysTick_Config(SystemCoreClock/(1000));
   NVIC_SetPriority(SysTick_IRQn, SYSTICK_PRE_EMPTION_PRIORITY);
+
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+	DWT->CYCCNT = 0;
+	// Enable the DWT CYCCNT for the µs counter
+	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 }
 
 
 void SysTick_Handler(void)
 {
 	systick++;
+}
+
+uint32_t systick_getMicrosecondTick()
+{
+	// 240 MHz CYCCNT / 240 -> µs counter
+	return DWT->CYCCNT / 240;
 }
 
 uint32_t systick_getTick(void)

@@ -55,7 +55,7 @@ State_MonoflopDetection monoflopState = MONOFLOP_INIT;
 IdAssignmentTypeDef IdState = { 0 };
 
 /* pin changed interrupt to detect edges of ID pulse for both channels */
-void __attribute__ ((interrupt)) EXTI5_9_IRQHandler(void)
+void PC7_8_IRQHandler(void)
 {
 	// Abort if the EXTI line isn't set
 	if((exti_flag_get(EXTI_8) != SET) && (exti_flag_get(EXTI_7) != SET)){
@@ -105,7 +105,16 @@ void __attribute__ ((interrupt)) EXTI5_9_IRQHandler(void)
 
 }
 
+void __attribute__ ((interrupt)) EXTI5_9_IRQHandler(void)
+{
 
+	if(GET_BITS(SYSCFG_EXTISS2,0,3) == 3){
+		PD8_IRQHandler(); // For TMC6140-eval diagnostics
+	}
+	else if(GET_BITS(SYSCFG_EXTISS2,0,3) == 2 || GET_BITS(SYSCFG_EXTISS1,12,15) == 2){
+		PC7_8_IRQHandler(); // For idDetection
+	}
+}
 
 /* timer interrupt to determine timeout on ID detection (missing boards, errors) */
 void TIMER1_IRQHandler(void)
@@ -259,6 +268,9 @@ static uint8_t assign(uint32_t pulse)
 // Detect IDs of attached boards - returns true when done
 uint8_t IDDetection_detect(IdAssignmentTypeDef *ids)
 {
+	// Change the exti source back to PC8 (It could be changed by TMC6140-eval to PD8)
+//	syscfg_exti_line_config(EXTI_SOURCE_GPIOC, EXTI_SOURCE_PIN8);
+
 	// Try to identify the IDs via monoflop pulse duration
 	if (!detectID_Monoflop(ids))
 		return false;

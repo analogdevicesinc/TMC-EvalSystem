@@ -75,10 +75,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_MAX22204_EVAL 	32
 #define ID_MAX22210_EVAL 	33
 #define ID_TMC6300        21
-
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 #define ID_TMC6140        23
-#endif
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
 extern void MAX22216_init();
@@ -119,6 +116,10 @@ extern void TMC8461_init_ch2();
 extern void TMC8462_init_ch1();
 extern void TMC8462_init_ch2();
 extern void SelfTest_init();
+
+#if defined(LandungsbrueckeV3)
+	extern void PD8_IRQHandler();
+#endif
 
 typedef struct {
 	uint16_t id;
@@ -167,9 +168,7 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC2226,     .init = TMC2226_init     },
 	{ .id = ID_TMC2300,     .init = TMC2300_init     },
 	{ .id = ID_TMC6300,     .init = TMC6300_init     },
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	{ .id = ID_TMC6140,     .init = TMC6140_init     },
-#endif
 };
 
 #endif /* BOARD_ASSIGNMENT_H */

@@ -65,8 +65,6 @@ SRC				+= boards/TMC2225_eval.c
 SRC             += boards/TMC2226_eval.c
 SRC				+= boards/TMC2300_eval.c
 SRC             += boards/TMC6300_eval.c
-endif
-ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall))
 SRC             += boards/TMC6140_eval.c
 endif
 
