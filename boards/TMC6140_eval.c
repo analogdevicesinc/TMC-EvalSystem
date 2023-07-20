@@ -482,6 +482,136 @@ static void periodicJob(uint32_t tick)
 	}
 }
 
+#if defined(LandungsbrueckeV3)
+void PD8_IRQHandler(void)
+{
+	static uint32_t bitTime = 0;
+	static uint32_t timestamp_sync_start = 0;
+	static uint32_t timestamp_data_start = 0;
+	static uint32_t data_time = 0;
+	static uint8_t statusBits = 0;
+	static uint8_t statusBitCount = 0;
+
+	static uint32_t lastTime = 0;
+	exti_flag_clear(EXTI_8);
+	// Store the edge type
+	uint8_t isRisingEdge = HAL.IOs->config->isHigh(Pins.DIAG);
+
+	// Calculate the time since the last edge
+	uint32_t time = systick_getMicrosecondTick();
+	uint32_t timeDiff = time - lastTime;
+	lastTime = time;
+
+	uint32_t timeSinceStart = time - timestamp_data_start;
+
+	switch (uartState)
+	{
+	case SEARCHING_STOP_SEQUENCE: // Falling edge
+		// We need to find 44 high bits
+		// At 9600 Hz this is ~4583µs
+		// At 14kHz this is ~3143µs
+		// If we have a falling edge, the previous bits were high
+		if ((timeDiff > 3000) && (!isRisingEdge))
+		{
+			uartState = SYNC_START_BIT;
+			timestamp_sync_start = time;
+		}
+		break;
+	case SYNC_START_BIT: // Rising edge
+		// Verify edge type
+		if (!isRisingEdge)
+		{
+			uartState = SEQUENCE_ERROR;
+			break;
+		}
+
+		uartState = SYNC_DATA_0_6;
+		break;
+	case SYNC_DATA_0_6: // Falling edge
+		// Verify edge type
+		if (isRisingEdge)
+		{
+			uartState = SEQUENCE_ERROR;
+			break;
+		}
+
+		// Calculate the time for each bit by averaging over the last 8 bits
+		bitTime = (time - timestamp_sync_start)/8;
+		uartState = SYNC_DATA_7;
+		break;
+	case SYNC_DATA_7: // Rising edge
+		// Verify edge type
+		if (!isRisingEdge)
+		{
+			uartState = SEQUENCE_ERROR;
+			break;
+		}
+
+		// Check that the bit time roughly matches
+		if ((timeDiff - bitTime) < bitTime/2)
+		{
+			uartState = SYNC_STOP_BIT;
+		}
+		else
+		{
+			uartState = SEQUENCE_ERROR;
+		}
+		break;
+	case SYNC_STOP_BIT: // Falling edge
+		// Verify edge type
+		if (isRisingEdge)
+		{
+			uartState = SEQUENCE_ERROR;
+			break;
+		}
+
+		// Check that the bit time roughly matches
+		if ((timeDiff - bitTime) < bitTime/2)
+		{
+			timestamp_data_start = time;
+			data_time = bitTime * 3 / 2;
+			uartState = ERROR_DATA_BITS;
+			statusBits = 0;
+			statusBitCount = 0;
+		}
+		else
+		{
+			uartState = SEQUENCE_ERROR;
+		}
+		break;
+	case ERROR_DATA_BITS: // Rising/Falling edges
+		for (; data_time < timeSinceStart; data_time+=bitTime)
+		{
+			// Append a bit of error data
+			statusBits <<=1;
+			statusBits |= isRisingEdge? 0:1;
+			statusBitCount++;
+			if (statusBitCount >= 8)
+			{
+				// Once we collected 8 bits, we're done reading the error data
+				// Update the software status flags with the received error data
+				uartStatus = decodeUARTErrorFlags(statusBits);
+
+				// Note that if the final bit of the datagram is a 1,
+				// we will reach this part once the sync start bit of the next
+				// datagram occurs - after the stop bit sequence.
+				// As a result we will only observe every other datagram in this case.
+				// This is fine as the datagram repeats anyways.
+				uartState = SEARCHING_STOP_SEQUENCE;
+
+				break;
+			}
+		}
+		break;
+	case SEQUENCE_ERROR:
+		// Reset back to the initial state
+		uartState = SEARCHING_STOP_SEQUENCE;
+		break;
+	}
+
+}
+
+#else
 // Interrupt: Edge on GPIO Port C
 void PORTC_IRQHandler(void)
 {
@@ -612,6 +742,7 @@ void PORTC_IRQHandler(void)
 		break;
 	}
 }
+#endif
 
 static uint32_t decodeUARTErrorFlags(uint32_t errorBits)
 {
@@ -704,6 +835,16 @@ void TMC6140_init(void)
 	// Configure DIAG Pin
 	HAL.IOs->config->toInput(Pins.DIAG);
 
+#if defined(LandungsbrueckeV3)
+	nvic_irq_disable(EXTI5_9_IRQn);
+	exti_deinit();
+
+//	syscfg_deinit();
+	syscfg_exti_line_config(EXTI_SOURCE_GPIOD, EXTI_SOURCE_PIN8);
+	exti_init(EXTI_8, EXTI_INTERRUPT, EXTI_TRIG_BOTH);
+	exti_interrupt_flag_clear(EXTI_8);
+	nvic_irq_enable(EXTI5_9_IRQn, 0, 1);
+#else
 	// Enable GPIO, edge-triggered interrupt, and PullUp resistor
 	PORT_PCR_REG(Pins.DIAG->portBase, Pins.DIAG->bit)  = PORT_PCR_MUX(1) | PORT_PCR_IRQC(0x0B) | PORT_PCR_PE_MASK | PORT_PCR_PS_MASK;
 
@@ -712,6 +853,7 @@ void TMC6140_init(void)
 
 	// Enable interrupt
 	enable_irq(INT_PORTC - 16);
+#endif
 
 	enableDriver(DRIVER_ENABLE);
 };

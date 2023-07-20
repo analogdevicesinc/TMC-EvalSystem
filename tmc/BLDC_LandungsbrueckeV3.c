@@ -11,8 +11,18 @@
 #include "hal/ADCs.h"
 
 #define VELOCITY_CALC_FREQ  10                     // in Hz
-#define PWM_FREQ 		    10000                  // in Hz
-#define PWM_PERIOD 		    (40000000 / PWM_FREQ)  // 48MHz/2*20kHz = 2500
+#define PWM_FREQ 		    20000                  // in Hz
+
+	/* Timer0 Frequency:
+	 *
+	 * CK_TIMER0 = 2 x CK_APB2 = 240MHz (APB1PSC/APB2PSC in RCU_CFG0 register is 0b101)
+	 *
+	 *   CLK_TIMER      240MHz
+	 *  -----------  =  ----- = 80MHz
+	 *   Prescaler        3
+	 *
+	 */
+#define PWM_PERIOD 		    (80000000 / PWM_FREQ)-1
 
 typedef enum {
 	PWM_PHASE_U = TIMER_CH_0,
@@ -236,24 +246,20 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 	timer_deinit(TIMER0);
 
 	timer_struct_para_init(&params);
-	params.prescaler = 2;
-	params.alignedmode = TIMER_COUNTER_CENTER_BOTH;
+	params.prescaler = 2; // Divides the timer freq by (prescaler + 1) => 3
+	params.alignedmode = TIMER_COUNTER_EDGE;
 	params.counterdirection = TIMER_COUNTER_UP;
-	params.period = PWM_PERIOD - 1;
+	params.period = PWM_PERIOD;
 	params.clockdivision = TIMER_CKDIV_DIV1;
-	params.repetitioncounter = 0;
+	params.repetitioncounter = 1;
 	timer_init(TIMER0, &params);
 
-	timer_break_struct_para_init(&break_params);
-	break_params.deadtime = bbmTime;
-	break_params.outputautostate = TIMER_OUTAUTO_ENABLE;
-	break_params.breakstate = TIMER_BREAK_ENABLE;
-//	timer_break_config(TIMER0, &break_params);
+
 
 	timer_channel_output_struct_para_init(&oc_params);
 	oc_params.ocpolarity = TIMER_OC_POLARITY_HIGH;
-	oc_params.outputstate = TIMER_CCX_ENABLE;
 	oc_params.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
+	oc_params.outputstate = TIMER_CCX_ENABLE;
 	oc_params.outputnstate = TIMER_CCXN_ENABLE;
 	oc_params.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
 	oc_params.ocnidlestate = TIMER_OCN_IDLE_STATE_HIGH;
@@ -262,17 +268,30 @@ void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *
 	timer_channel_output_config(TIMER0, TIMER_CH_2, &oc_params);
 
 	timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, PWM_PERIOD >> 1);
-	timer_channel_output_mode_config(TIMER0, TIMER_CH_0, TIMER_OC_MODE_PWM1);
+	timer_channel_output_mode_config(TIMER0, TIMER_CH_0, TIMER_OC_MODE_PWM0);
+
 	timer_channel_output_shadow_config(TIMER0, TIMER_CH_0, TIMER_OC_SHADOW_DISABLE);
 
 	timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, PWM_PERIOD >> 1);
-	timer_channel_output_mode_config(TIMER0, TIMER_CH_1, TIMER_OC_MODE_PWM1);
+	timer_channel_output_mode_config(TIMER0, TIMER_CH_1, TIMER_OC_MODE_PWM0);
+
 	timer_channel_output_shadow_config(TIMER0, TIMER_CH_1, TIMER_OC_SHADOW_DISABLE);
 
 	timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, PWM_PERIOD >> 1);
-	timer_channel_output_mode_config(TIMER0, TIMER_CH_2, TIMER_OC_MODE_PWM1);
+	timer_channel_output_mode_config(TIMER0, TIMER_CH_2, TIMER_OC_MODE_PWM0);
+
 	timer_channel_output_shadow_config(TIMER0, TIMER_CH_2, TIMER_OC_SHADOW_DISABLE);
 	
+	timer_break_struct_para_init(&break_params);
+	break_params.runoffstate     = TIMER_ROS_STATE_ENABLE;
+	break_params.ideloffstate    = TIMER_IOS_STATE_ENABLE;
+	break_params.deadtime = bbmTime;
+	break_params.breakpolarity   = TIMER_BREAK_POLARITY_HIGH;
+	break_params.outputautostate = TIMER_OUTAUTO_ENABLE;
+	break_params.breakstate = TIMER_BREAK_DISABLE;
+	timer_break_config(TIMER0, &break_params);
+
+
 	timer_primary_output_config(TIMER0, ENABLE);
 
 	timer_auto_reload_shadow_enable(TIMER0);
@@ -426,7 +445,7 @@ void TIMER0_UP_TIMER9_IRQHandler(void)
 		}
 
 		// update commutation step
-		int16_t duty = ((int32_t)targetPWM * ((int32_t)PWM_PERIOD-1))/(int32_t)s16_MAX;
+		int16_t duty = ((int32_t)targetPWM * ((int32_t)PWM_PERIOD))/(int32_t)s16_MAX;
 
 		if (duty < 0)
 			duty = -duty;
