@@ -45,6 +45,7 @@ static ConfigurationTypeDef *TMC2226_config;
 
 static int32_t thigh;
 static uint16_t vref; // mV
+static timer_channel timerChannel;
 
 extern IOPinTypeDef DummyPin;
 
@@ -607,10 +608,10 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		*value = StepDir_getStatus(motor);
 		break;
 	case 3:
-		*value = Timer.getDuty(TIMER_CHANNEL_3) * 100 / TIMER_MAX;
+		*value = Timer.getDuty(timerChannel) * 100 / TIMER_MAX;
 		break;
 	case 4:
-		Timer.setDuty(TIMER_CHANNEL_3, ((float)*value) / 100);
+		Timer.setDuty(timerChannel, ((float)*value) / 100);
 		break;
 	case 5: // Set pin state
 		state = (*value) & 0x03;
@@ -719,7 +720,7 @@ static void setVREF(uint16_t value)
 	// Calculating VREF from the timer duty cycle introduces rounding errors
 	vref = value;
 
-	Timer.setDuty(TIMER_CHANNEL_3, ((float)vref) / VREF_FULLSCALE);
+	Timer.setDuty(timerChannel, ((float)vref) / VREF_FULLSCALE);
 }
 
 static void periodicJob(uint32_t tick)
@@ -730,6 +731,12 @@ static void periodicJob(uint32_t tick)
 
 void TMC2226_init(void)
 {
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+	timerChannel = TIMER_CHANNEL_3;
+
+#elif defined(LandungsbrueckeV3)
+	timerChannel = TIMER_CHANNEL_4;
+#endif
 	tmc_fillCRC8Table(0x07, true, 1);
 	thigh = 0;
 
@@ -790,9 +797,13 @@ void TMC2226_init(void)
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.UC_PWM);
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#elif defined(LandungsbrueckeV3)
+	Pins.UC_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;
+	gpio_af_set(Pins.UC_PWM->port, GPIO_AF_1, Pins.UC_PWM->bitWeight);
 #endif
 
 	HAL.IOs->config->set(Pins.UC_PWM);

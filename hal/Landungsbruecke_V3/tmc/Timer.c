@@ -81,7 +81,7 @@ static void init(void)
 
 	// TIMER_CHANNEL_4
 	timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, TIMER_MAX >> 1);
-	timer_channel_output_mode_config(TIMER0, TIMER_CH_1, TIMER_OC_MODE_PWM1);
+	timer_channel_output_mode_config(TIMER0, TIMER_CH_1, TIMER_OC_MODE_PWM0);
 	timer_channel_output_shadow_config(TIMER0, TIMER_CH_1, TIMER_OC_SHADOW_DISABLE);
 
 	timer_primary_output_config(TIMER0, ENABLE);

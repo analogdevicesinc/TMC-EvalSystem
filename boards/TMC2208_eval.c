@@ -17,7 +17,7 @@
 
 #define MOTORS 1
 
-#define VREF_FULLSCALE 2714 // mV
+#define VREF_FULLSCALE 2100 // mV
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -38,6 +38,7 @@ static void enableDriver(DriverState state);
 
 static UART_Config *TMC2208_UARTChannel;
 static ConfigurationTypeDef *TMC2208_config;
+static timer_channel timerChannel;
 
 // Helper macro - Access the chip object in the driver boards union
 #define TMC2208 (driverBoards.tmc2208)
@@ -223,7 +224,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else {
 			if ((uint32_t) *value < VREF_FULLSCALE) {
 				vref = *value;
-				Timer.setDuty(TIMER_CHANNEL_3, ((float)vref) / VREF_FULLSCALE);
+				Timer.setDuty(timerChannel, ((float)vref) / VREF_FULLSCALE);
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -320,6 +321,12 @@ static void periodicJob(uint32_t tick)
 
 void TMC2208_init(void)
 {
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+	timerChannel = TIMER_CHANNEL_3;
+
+#elif defined(LandungsbrueckeV3)
+	timerChannel = TIMER_CHANNEL_4;
+#endif
 	tmc_fillCRC8Table(0x07, true, 1);
 
 	Pins.DRV_ENN  = &HAL.IOs->pins->DIO0;
@@ -376,15 +383,19 @@ void TMC2208_init(void)
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.UC_PWM);
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#elif defined(LandungsbrueckeV3)
+	Pins.UC_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;
+	gpio_af_set(Pins.UC_PWM->port, GPIO_AF_1, Pins.UC_PWM->bitWeight);
 #endif
 
 	vref = 2000;
 	HAL.IOs->config->set(Pins.UC_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_3, ((float)vref) / VREF_FULLSCALE);
+	Timer.setDuty(timerChannel, ((float)vref) / VREF_FULLSCALE);
 
 	enableDriver(DRIVER_ENABLE);
 };
