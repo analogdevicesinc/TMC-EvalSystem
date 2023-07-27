@@ -17,7 +17,9 @@
 
 #define MOTORS 1
 
-#define VREF_FULLSCALE 2714 // mV
+#define VREF_FULLSCALE 2100 // mV // with R308 achievable Vref_max is ~2100mV
+//#define VREF_FULLSCALE 3300 // mV // without R308 achievable Vref_max is ~2500mV
+
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -43,6 +45,7 @@ static ConfigurationTypeDef *TMC2209_config;
 static uint16_t vref; // mV
 static int32_t thigh;
 
+static timer_channel timerChannel;
 // Helper macro - Access the chip object in the driver boards union
 #define TMC2209 (driverBoards.tmc2209)
 
@@ -243,7 +246,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else {
 			if ((uint32_t) *value < VREF_FULLSCALE) {
 				vref = *value;
-				Timer.setDuty(TIMER_CHANNEL_3, ((float)vref) / VREF_FULLSCALE);
+				Timer.setDuty(timerChannel, ((float)vref) / VREF_FULLSCALE);
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -579,10 +582,10 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		*value = tmc2209_get_slave(motorToIC(motor));
 		break;
 	case 3:
-		*value = Timer.getDuty(TIMER_CHANNEL_3) * 100 / TIMER_MAX;
+		*value = Timer.getDuty(timerChannel) * 100 / TIMER_MAX;
 		break;
 	case 4:
-		Timer.setDuty(TIMER_CHANNEL_3, ((float)*value) / 100);
+		Timer.setDuty(timerChannel, ((float)*value) / 100);
 		break;
 	case 5: // Set pin state
 		state = (*value) & 0x03;
@@ -691,6 +694,13 @@ static void periodicJob(uint32_t tick)
 
 void TMC2209_init(void)
 {
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+	timerChannel = TIMER_CHANNEL_3;
+
+#elif defined(LandungsbrueckeV3)
+	timerChannel = TIMER_CHANNEL_4;
+#endif
 	tmc_fillCRC8Table(0x07, true, 1);
 	thigh = 0;
 
@@ -752,16 +762,20 @@ void TMC2209_init(void)
 	StepDir_setVelocityMax(0, 51200);
 	StepDir_setAcceleration(0, 51200);
 
+	HAL.IOs->config->toOutput(Pins.UC_PWM);
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	HAL.IOs->config->toOutput(Pins.UC_PWM);
 	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#elif defined(LandungsbrueckeV3)
+	Pins.UC_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;
+	gpio_af_set(Pins.UC_PWM->port, GPIO_AF_1, Pins.UC_PWM->bitWeight);
+
 #endif
 
 	vref = 2000;
 	HAL.IOs->config->set(Pins.UC_PWM);
 	Timer.init();
-	Timer.setDuty(TIMER_CHANNEL_3, ((float)vref) / VREF_FULLSCALE);
+	Timer.setDuty(timerChannel, ((float)vref) / VREF_FULLSCALE);
 
 	enableDriver(DRIVER_ENABLE);
 };
