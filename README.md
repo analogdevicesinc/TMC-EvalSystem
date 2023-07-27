@@ -12,6 +12,12 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
+### Version 3.09: (Pre-release)
+ * Added support for Landungsbruecke with GigaDevice MCU
+ * Added MAX22210-Eval and MAX22204-Eval boards
+ * Removed TMC4331-Eval, TMC4361-Eval, TMC4330-Eval, TMC5241-Eval and Startrampe boards
+ * Various bugfixes & cleanups
+
 ### Version 3.08: (Released)
  * Added TMC2210, TMC2226, TMC2240, TMC2300, TMC6100-BOB, TMC6140, TMC6300 and TMC7300
  * Added support for Landungsbruecke Small (same PCB, different µC with less memory)
