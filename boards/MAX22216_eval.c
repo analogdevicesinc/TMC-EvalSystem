@@ -37,6 +37,7 @@ static void OTP_address(uint32_t address);
 static void OTP_value(uint32_t value);
 static void OTP_program(void);
 static OTP_Status OTP_status(void);
+static void OTP_lock(void);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
 static void timer_overflow(timer_channel channel);
@@ -334,6 +335,14 @@ static OTP_Status OTP_status(void)
 	return otp_status;
 }
 
+static void OTP_lock(void)
+{
+	MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_ADDR, MAX22216_OTP_ADDR_MASK, MAX22216_OTP_ADDR_SHIFT, 0x41);
+	MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_DATA0, MAX22216_OTP_DATA0_MASK, MAX22216_OTP_DATA0_SHIFT, 0xA5);
+	MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_DATA1, MAX22216_OTP_DATA1_MASK, MAX22216_OTP_DATA1_SHIFT, 0xA5);
+	OTP_program();
+}
+
 static void timer_overflow(timer_channel channel)
 {
 	UNUSED(channel);
@@ -445,6 +454,7 @@ void MAX22216_init(void)
 	Evalboards.ch2.OTP_value            = OTP_value;
 	Evalboards.ch2.OTP_program          = OTP_program;
 	Evalboards.ch2.OTP_status           = OTP_status;
+	Evalboards.ch2.OTP_lock             = OTP_lock;
 
 	max22216_init(&MAX22216, 0);
 

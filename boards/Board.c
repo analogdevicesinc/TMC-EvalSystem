@@ -93,6 +93,11 @@ static void dummy_OTP_program(void)
 	return;
 }
 
+static void dummy_OTP_lock(void)
+{
+	return;
+}
+
 static OTP_Status dummy_OTP_status(void)
 {
 	return OTP_STATUS_IDLE;
@@ -149,6 +154,7 @@ void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel)
 	channel->OTP_value         = dummy_OTP_value;
 	channel->OTP_program       = dummy_OTP_program;
 	channel->OTP_status        = dummy_OTP_status;
+	channel->OTP_lock          = dummy_OTP_lock;
 }
 
 void periodicJobDummy(uint32_t tick)
