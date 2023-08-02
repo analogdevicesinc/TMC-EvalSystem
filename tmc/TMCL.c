@@ -365,17 +365,17 @@ void ExecuteActualCommand()
 		Evalboards.ch1.readRegister(ActualCommand.Motor, ActualCommand.Type, &ActualReply.Value.Int32);
 		break;
 	case TMCL_UF8:
-		// user function for reading x0_actual and x1_actual
+		// user function for reading Motor0_XActual and Motor1_XActual
 		Evalboards.ch1.userFunction(ActualCommand.Type, 0, &ActualCommand.Value.Int32);
-		int32_t x0 = ActualCommand.Value.Int32;
+		int32_t m0XActual = ActualCommand.Value.Int32;
 		Evalboards.ch1.userFunction(ActualCommand.Type, 1, &ActualCommand.Value.Int32);
-		int32_t x1 = ActualCommand.Value.Int32;
-		ActualReply.Value.Byte[0]= x1 & 0xFF;
-		ActualReply.Value.Byte[1]= (x1 & 0xFF00)>>8;
-		ActualReply.Value.Byte[2]= (x1 & 0xFF0000)>>16;
-		ActualReply.Value.Byte[3]= x0 & 0xFF;
-		ActualReply.Opcode= (x1 & 0xFF00)>>8;
-		ActualReply.Opcode= (x1 & 0xFF0000)>>16;
+		int32_t m1XActual = ActualCommand.Value.Int32;
+		ActualReply.Value.Byte[0]= m1XActual & 0xFF;
+		ActualReply.Value.Byte[1]= (m1XActual & 0xFF00)>>8;
+		ActualReply.Value.Byte[2]= (m1XActual & 0xFF0000)>>16;
+		ActualReply.Value.Byte[3]= m0XActual & 0xFF;
+		ActualReply.Opcode= (m0XActual & 0xFF00)>>8;
+		ActualReply.Status= (m0XActual & 0xFF0000)>>16;
 		break;
 	case TMCL_GetVersion:
 		GetVersion();
