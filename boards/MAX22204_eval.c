@@ -34,6 +34,7 @@ static void deInit(void);
 static uint8_t reset();
 static uint8_t restore();
 static void enableDriver(DriverState state);
+static void timer_overflow(void);
 
 //static int32_t measured_velocity = 0;
 
@@ -173,18 +174,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 9:
 		// VREF
 		if (readWrite == READ) {
-			#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 			*value = (uint32_t) ((1.0 - Timer.getDuty(TIMER_CHANNEL_3)) * 100);
-			#elif defined(LandungsbrueckeV3)
-			*value = (uint32_t) ((1.0 - Timer.getDuty(TIMER_CHANNEL_4)) * 100);
-			#endif
 		} else {
 			if ((uint32_t) *value <= 100) {
-				#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 				Timer.setDuty(TIMER_CHANNEL_3, 1.0 - ((float)(*value) / 100));
-				#elif defined(LandungsbrueckeV3)
-				Timer.setDuty(TIMER_CHANNEL_4, 1.0 - ((float)(*value) / 100));
-				#endif
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -406,6 +399,12 @@ static void enableDriver(DriverState state)
 		HAL.IOs->config->setHigh(Pins.EN_N);
 }
 
+static void timer_overflow(void)
+{
+	// RAMDebug
+	debug_nextProcess();
+}
+
 void MAX22204_init(void)
 {
 	// Initialize the hardware pins
@@ -484,28 +483,20 @@ void MAX22204_init(void)
 
 	Evalboards.driverEnable             = DRIVER_DISABLE;
 
-
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#if defined(Startrampe)
+	Pins.REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_PinAFConfig(Pins.REF_PWM->port, Pins.REF_PWM->bit, GPIO_AF_TIM1);
+#elif defined(Landungsbruecke)
 	HAL.IOs->config->toOutput(Pins.REF_PWM);
 	Pins.REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
-#elif defined(LandungsbrueckeV3)
-	Pins.REF_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;
-	gpio_af_set(Pins.REF_PWM->port, GPIO_AF_1, Pins.REF_PWM->bitWeight);
 #endif
 
 	HAL.IOs->config->set(Pins.REF_PWM);
-	Timer.overflow_callback = debug_nextProcess;
+	Timer.overflow_callback = timer_overflow;
 	Timer.init();
-#if defined(Landungsbruecke)|| defined(LandungsbrueckeSmall)
-	Timer.setPeriodMin(TIMER_CHANNEL_1, 1000);
-	Timer.setFrequencyMin(TIMER_CHANNEL_1, 1000);
-	Timer.setDuty(TIMER_CHANNEL_1, 0.5);
-
-#else
-	Timer.setPeriodMin(TIMER_CHANNEL_2, 1000);
-	Timer.setFrequencyMin(TIMER_CHANNEL_2, 1000);
-	Timer.setDuty(TIMER_CHANNEL_2, 0.5);
-#endif
+	Timer.setModuloMin(1000);
+	Timer.setFrequencyMin(1000);
+	Timer.setDuty(TIMER_CHANNEL_3, 0.5);
 
 	//enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 }
