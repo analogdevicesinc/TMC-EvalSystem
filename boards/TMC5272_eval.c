@@ -1502,6 +1502,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 			HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
 		}
 		break;
+	case 253:
+		*value = tmc5272_readInt(motorToIC(motor), TMC5272_XACTUAL(motor));
+		break;
 	default:
 		errors |= TMC_ERROR_TYPE;
 		break;
