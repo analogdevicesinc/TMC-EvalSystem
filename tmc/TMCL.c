@@ -81,6 +81,7 @@
 #define TMCL_UF5                     69
 #define TMCL_UF6                     70
 #define TMCL_UF7                     71
+#define TMCL_UF8                     72
 
 #define TMCL_ApplStop                128
 #define TMCL_ApplRun                 129
@@ -362,6 +363,19 @@ void ExecuteActualCommand()
 	case TMCL_UF6:
 		// if function doesn't exist for ch1 try ch2 // todo CHECK REM 2: We have TMCL_readRegisterChannel_1, we dont need this. Make sure it isnt used in IDE (LH) #2
 		Evalboards.ch1.readRegister(ActualCommand.Motor, ActualCommand.Type, &ActualReply.Value.Int32);
+		break;
+	case TMCL_UF8:
+		// user function for reading x0_actual and x1_actual
+		Evalboards.ch1.userFunction(ActualCommand.Type, 0, &ActualCommand.Value.Int32);
+		int32_t x0 = ActualCommand.Value.Int32;
+		Evalboards.ch1.userFunction(ActualCommand.Type, 1, &ActualCommand.Value.Int32);
+		int32_t x1 = ActualCommand.Value.Int32;
+		ActualReply.Value.Byte[0]= x1 & 0xFF;
+		ActualReply.Value.Byte[1]= (x1 & 0xFF00)>>8;
+		ActualReply.Value.Byte[2]= (x1 & 0xFF0000)>>16;
+		ActualReply.Value.Byte[3]= x0 & 0xFF;
+		ActualReply.Opcode= (x1 & 0xFF00)>>8;
+		ActualReply.Opcode= (x1 & 0xFF0000)>>16;
 		break;
 	case TMCL_GetVersion:
 		GetVersion();
