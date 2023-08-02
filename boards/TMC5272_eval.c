@@ -688,9 +688,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 172:
 		// smartEnergy hysteresis start
 		if(readWrite == READ) {
-			*value = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_COOLCONF(motor), TMC5272_COOLCONF_SEIMIN_MASK, TMC5272_COOLCONF_SEIMIN_SHIFT);
+			*value = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_COOLCONF(motor), TMC5272_COOLCONF_SEMIN_MASK, TMC5272_COOLCONF_SEMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_COOLCONF(motor), TMC5272_COOLCONF_SEIMIN_MASK, TMC5272_COOLCONF_SEIMIN_SHIFT, *value);
+			TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_COOLCONF(motor), TMC5272_COOLCONF_SEMIN_MASK, TMC5272_COOLCONF_SEMIN_SHIFT, *value);
 		}
 		break;
 	case 173:
