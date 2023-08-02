@@ -1165,17 +1165,6 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
-	//catch hardware bug
-	if (address == 0x31 && value == 2) {
-		tmc5271_writeInt(motorToIC(motor), address, 3);
-		return;
-	}
-	if (address == 0x66 && value == 2) {
-		tmc5271_writeInt(motorToIC(motor), address, 3);
-		return;
-	}
-
-
 	tmc5271_writeInt(motorToIC(motor), address, value);
 }
 
