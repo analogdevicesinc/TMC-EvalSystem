@@ -1102,7 +1102,10 @@ static void handleOTP(void)
 	case 3: // OTP_PROGRAM
 		((ActualCommand.Motor == 1) ? &Evalboards.ch2 : &Evalboards.ch1)->OTP_program();
 		break;
-	case 4: // OTP_STATUS
+	case 4: // OTP_LOCK
+		((ActualCommand.Motor == 1) ? &Evalboards.ch2 : &Evalboards.ch1)->OTP_lock();
+		break;
+	case 5: // OTP_STATUS
 		ActualReply.Value.UInt32 = ((ActualCommand.Motor == 1) ? &Evalboards.ch2 : &Evalboards.ch1)->OTP_status();
 		break;
 	default:
