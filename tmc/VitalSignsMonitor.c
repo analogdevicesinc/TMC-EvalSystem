@@ -7,7 +7,9 @@
 
 #define VM_MIN_INTERFACE_BOARD  70   // minimum motor supply voltage for system in [100mV]
 #define VM_MAX_INTERFACE_BOARD  700  // maximum motor supply voltage for system in [100mV]
-#define VM_FACTOR               713  // ADC reaches limit at VM = 71.3V => VM Factor (in 100mV) = 713
+#define VM_FACTOR               744  // 713 was incorrect
+//#define VM_FACTOR               713  // ADC reaches limit at VM = 71.3V => VM Factor (in 100mV) = 713
+
 
 // Status LED frequencies
 // Values are time in ms between LED toggles
