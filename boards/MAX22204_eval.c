@@ -494,8 +494,8 @@ void MAX22204_init(void)
 	HAL.IOs->config->set(Pins.REF_PWM);
 	Timer.overflow_callback = timer_overflow;
 	Timer.init();
-	Timer.setModuloMin(1000);
-	Timer.setFrequencyMin(1000);
+	Timer.setPeriodMin(TIMER_CHANNEL_3, 1000);
+	Timer.setFrequencyMin(TIMER_CHANNEL_3, 1000);
 	Timer.setDuty(TIMER_CHANNEL_3, 0.5);
 
 	//enableDriver(DRIVER_USE_GLOBAL_ENABLE);
