@@ -101,6 +101,7 @@ typedef struct
 	void (*OTP_address)(uint32_t address);
 	void (*OTP_value)(uint32_t value);
 	void (*OTP_program)(void);
+	void (*OTP_lock)(void);
 	OTP_Status (*OTP_status)(void);
 } EvalboardFunctionsTypeDef;
 
