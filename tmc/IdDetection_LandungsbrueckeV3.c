@@ -142,7 +142,8 @@ void IDDetection_init(void)
 	HAL.IOs->config->toOutput(&HAL.IOs->pins->ID_CLK);
 
 	// Pin ID_CH0
-	HAL.IOs->config->toInput(&HAL.IOs->pins->ID_CH0);
+	gpio_mode_set(HAL.IOs->pins->ID_CH0.port, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, HAL.IOs->pins->ID_CH0.bitWeight);
+
 
 	syscfg_exti_line_config(EXTI_SOURCE_GPIOC, EXTI_SOURCE_PIN8);
 
@@ -151,8 +152,7 @@ void IDDetection_init(void)
 	exti_interrupt_flag_clear(EXTI_8);
 
 	// Pin ID_CH1
-	HAL.IOs->config->toInput(&HAL.IOs->pins->ID_CH1);
-
+	gpio_mode_set(HAL.IOs->pins->ID_CH1.port, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, HAL.IOs->pins->ID_CH1.bitWeight);
 	syscfg_exti_line_config(EXTI_SOURCE_GPIOC, EXTI_SOURCE_PIN7);
 
 	exti_init(EXTI_7, EXTI_INTERRUPT, EXTI_TRIG_BOTH);
