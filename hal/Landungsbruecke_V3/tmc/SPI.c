@@ -76,6 +76,9 @@ static void init(void)
 	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_7);
 	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_6);
 	gpio_af_set(GPIOA, GPIO_AF_5, GPIO_PIN_5);
+	HAL.IOs->config->setHigh(&HAL.IOs->pins->SPI2_CSN0);
+	HAL.IOs->config->setHigh(&HAL.IOs->pins->SPI2_CSN1);
+	HAL.IOs->config->setHigh(&HAL.IOs->pins->SPI2_CSN2);
 
 	reset_ch1();
 	reset_ch2();
