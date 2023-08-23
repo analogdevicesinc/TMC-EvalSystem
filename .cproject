@@ -2597,38 +2597,6 @@
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
 		<buildTargets>
-			<target name="Startrampe_BL_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
-				<buildTarget>clean DEVICE=Startrampe LINK=BL</buildTarget>
-				<stopOnError>false</stopOnError>
-				<useDefaultCommand>true</useDefaultCommand>
-				<runAllBuilders>true</runAllBuilders>
-			</target>
-			<target name="Startrampe_BL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
-				<buildTarget>all LINK=BL DEVICE=Startrampe</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>true</useDefaultCommand>
-				<runAllBuilders>true</runAllBuilders>
-			</target>
-			<target name="Startrampe_NOBL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
-				<buildTarget>all LINK=NOBL DEVICE=Startrampe</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>true</useDefaultCommand>
-				<runAllBuilders>true</runAllBuilders>
-			</target>
-			<target name="Startrampe_NOBL_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
-				<buildTarget>clean DEVICE=Startrampe LINK=NOBL</buildTarget>
-				<stopOnError>false</stopOnError>
-				<useDefaultCommand>true</useDefaultCommand>
-				<runAllBuilders>true</runAllBuilders>
-			</target>
 			<target name="Landungsbruecke_BL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>cs-make</buildCommand>
 				<buildArguments>-j8</buildArguments>
