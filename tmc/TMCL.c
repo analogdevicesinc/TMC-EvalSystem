@@ -1065,9 +1065,12 @@ static void handleRamDebug(void)
 		if (!debug_getChannelAddress(ActualCommand.Motor, (uint32_t *) &ActualReply.Value.Int32))
 			ActualReply.Status = REPLY_MAX_EXCEEDED;
 		break;
-    case 13:
-        debug_setPretriggerSampleCount(ActualCommand.Value.UInt32);
-        break;
+	case 13:
+		debug_setPretriggerSampleCount(ActualCommand.Value.UInt32);
+		break;
+	case 14:
+		ActualReply.Value.UInt32 = debug_getPretriggerSampleCount();
+		break;
 	case 15:
 		if(Timer.initialized) {
 			Timer.setFrequency(TIMER_CHANNEL_2, ActualCommand.Value.UInt32);
