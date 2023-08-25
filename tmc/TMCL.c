@@ -1027,7 +1027,10 @@ static void handleRamDebug(void)
 			ActualReply.Status = REPLY_INVALID_VALUE;
 		break;
 	case 3:
-		debug_setPrescaler(ActualCommand.Value.Int32);
+		// RAMDebug expects a divisor value where 1 is original capture frequency,
+		// 2 is halved capture frequency etc.
+		// The TMCL-IDE sends prescaling values that are one lower than that.
+		debug_setPrescaler(ActualCommand.Value.Int32 + 1);
 		break;
 	case 4:
 		if (!debug_setChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
