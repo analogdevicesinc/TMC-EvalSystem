@@ -186,6 +186,8 @@ void debug_process()
 	if(use_next_process && (!next_process))
 		return;
 
+	next_process = false;
+
 	if (captureEnabled == false)
 		return;
 
@@ -201,7 +203,6 @@ void debug_process()
 	prescalerCount = 0;
 
 	handleDebugging();
-	next_process = false;
 	processing = false;
 }
 
