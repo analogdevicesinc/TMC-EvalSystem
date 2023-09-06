@@ -15,6 +15,14 @@
 
 #define MAX22204_DEFAULT_MOTOR 0
 
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#define MAX22204_VREF_TIMER TIMER_CHANNEL_3
+#define MAX22204_RAMDEBUG_TIMER TIMER_CHANNEL_1
+#elif defined(LandungsbrueckeV3)
+#define MAX22204_VREF_TIMER	TIMER_CHANNEL_4
+#define MAX22204_RAMDEBUG_TIMER TIMER_CHANNEL_2
+#endif
+
 static uint32_t rotate(uint8_t motor, int32_t velocity);
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -173,18 +181,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 9:
 		// VREF
 		if (readWrite == READ) {
-			#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-			*value = (uint32_t) ((1.0 - Timer.getDuty(TIMER_CHANNEL_3)) * 100);
-			#elif defined(LandungsbrueckeV3)
-			*value = (uint32_t) ((1.0 - Timer.getDuty(TIMER_CHANNEL_4)) * 100);
-			#endif
+			*value = (uint32_t) ((1.0 - Timer.getDuty(MAX22204_VREF_TIMER)) * 100);
 		} else {
 			if ((uint32_t) *value <= 100) {
-				#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-				Timer.setDuty(TIMER_CHANNEL_3, 1.0 - ((float)(*value) / 100));
-				#elif defined(LandungsbrueckeV3)
-				Timer.setDuty(TIMER_CHANNEL_4, 1.0 - ((float)(*value) / 100));
-				#endif
+				Timer.setDuty(MAX22204_VREF_TIMER, 1.0 - ((float)(*value) / 100));
 			} else {
 				errors |= TMC_ERROR_VALUE;
 			}
@@ -495,16 +495,9 @@ void MAX22204_init(void)
 	HAL.IOs->config->set(Pins.REF_PWM);
 	Timer.overflow_callback = debug_nextProcess;
 	Timer.init();
-#if defined(Landungsbruecke)|| defined(LandungsbrueckeSmall)
-	Timer.setPeriodMin(TIMER_CHANNEL_1, 1000);
-	Timer.setFrequencyMin(TIMER_CHANNEL_1, 1000);
-	Timer.setDuty(TIMER_CHANNEL_1, 0.5);
-
-#else
-	Timer.setPeriodMin(TIMER_CHANNEL_2, 1000);
-	Timer.setFrequencyMin(TIMER_CHANNEL_2, 1000);
-	Timer.setDuty(TIMER_CHANNEL_2, 0.5);
-#endif
+	Timer.setPeriodMin(MAX22204_RAMDEBUG_TIMER, 1000);
+	Timer.setFrequencyMin(MAX22204_RAMDEBUG_TIMER, 1000);
+	Timer.setDuty(MAX22204_RAMDEBUG_TIMER, 0.5);
 
 	//enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 }
