@@ -66,6 +66,7 @@ SRC             += boards/TMC2226_eval.c
 SRC				+= boards/TMC2300_eval.c
 SRC             += boards/TMC6300_eval.c
 SRC             += boards/TMC6140_eval.c
+SRC             += boards/TMC8100_eval.c
 endif
 
 # Control

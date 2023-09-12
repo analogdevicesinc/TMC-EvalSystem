@@ -36,6 +36,9 @@
 
 	// for default channels
 	uint8_t spi_ch1_readWriteByte(uint8_t data, uint8_t lastTransfer);
+	// for TM02
+	uint8_t spi_ch2_readWriteByte(SPIChannelTypeDef *SPIChannel, uint8_t data, uint8_t lastTransfer);
+
 
 	int32_t spi_ch1_readInt(uint8_t address);
 	void spi_ch1_writeInt(uint8_t address, int32_t value);

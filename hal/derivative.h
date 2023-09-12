@@ -9,8 +9,8 @@
  */
 #if !defined(Landungsbruecke) && !defined(LandungsbrueckeV3) && !defined(LandungsbrueckeSmall)
 #warning "No Board selected by makefile, defining one for debug purposes"
-#define Landungsbruecke
-//#define LandungsbrueckeV3
+//#define Landungsbruecke
+#define LandungsbrueckeV3
 //#define LandungsbrueckeSmall
 #endif
 
