@@ -17,6 +17,7 @@ typedef struct
 	IOPinTypeDef  *SDO;
 	IOPinTypeDef  *SCK;
 	IOPinTypeDef  *CS;
+	IOPinTypeDef  *RESETN;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -32,22 +33,70 @@ void tmc8100_writeInt(int32_t value){
 
 }
 
+void tmc8100_startProg(int32_t value){
+
+	spi_ch2_readWriteByte(TMC8100_SPIChannel, (value>>24), false);
+	spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>16), false);
+	spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>8), false);
+	spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>0), true);
+
+}
+
+int32_t tmc8100_getChipID(int32_t value){
+
+	spi_ch2_readWriteByte(TMC8100_SPIChannel, 0XB0, false);
+	spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
+	spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
+	spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, true);
+
+	while(HAL.IOs->config->getState(Pins.SPI_DATA_AVAILABLE) == 0);
+
+	int32_t output = spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xB0, false);
+	output <<= 8;
+	output |= spi_ch2_readWriteByte(TMC8100_SPIChannel,0, false);
+	output <<= 8;
+	output |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
+	output <<= 8;
+	output |= spi_ch2_readWriteByte(TMC8100_SPIChannel,0, true);
+	return output;
+}
+
 int32_t tmc8100_readInt(int32_t address){
 
-		spi_ch2_readWriteByte(TMC8100_SPIChannel, (0x07 & (address>>24)) | 0x88, false);
+		spi_ch2_readWriteByte(TMC8100_SPIChannel, (0x07 & (address>>8)) | 0x88, false);
+		spi_ch2_readWriteByte(TMC8100_SPIChannel, (0xFF & address), false);
+		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
+		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, true);
+
+		while(HAL.IOs->config->getState(Pins.SPI_DATA_AVAILABLE) == 0);
+
+		spi_ch2_readWriteByte(TMC8100_SPIChannel, (0x07 & (address>>8)) | 0x88, false);
+		spi_ch2_readWriteByte(TMC8100_SPIChannel, (0xFF & address), false);
+		int32_t value = spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
+		value <<= 8;
+		value |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, true);
+	    return value;
+}
+
+int32_t tmc8100_readEncoder(int32_t address){
+
+		spi_ch2_readWriteByte(TMC8100_SPIChannel, (address>>24) | 0x80, false);
 		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (address>>16), false);
 		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
 		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, true);
 
 		while(HAL.IOs->config->getState(Pins.SPI_DATA_AVAILABLE) == 0);
 
-		spi_ch2_readWriteByte(TMC8100_SPIChannel, (0x07 & (address>>24)) | 0x88, false);
-		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (address>>16), false);
-		int32_t value = spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
+	    int32_t value = spi_ch2_readWriteByte(TMC8100_SPIChannel, (address>>24) | 0x80, false);
+		value <<= 8;
+		value |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (address>>16), false);
+		value <<= 8;
+		value |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
 		value <<= 8;
 		value |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, true);
 	    return value;
 }
+
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
@@ -63,12 +112,29 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		tmc8100_writeInt(*value);
 		}
 		break;
-//	case 1:
-//		break;
+	case 1:
+		if(readWrite == READ) {
+			*value = tmc8100_readEncoder(*value);
+		}
+		break;
 	case 2:
 		if(readWrite == READ) {
 		*value = 	HAL.IOs->config->getState(Pins.SPI_DATA_AVAILABLE);
 		}
+		break;
+	case 3:
+		if(readWrite == WRITE) {
+			tmc8100_startProg(*value);
+		}else if(readWrite == READ) {
+			*value = tmc8100_getChipID(*value);
+		}
+		break;
+	case 4:
+		if(readWrite == READ) {
+			HAL.IOs->config->setToState(Pins.RESETN, IOS_HIGH);
+		} else if(readWrite == WRITE) {
+			HAL.IOs->config->setToState(Pins.RESETN, IOS_LOW);
+				}
 		break;
 	default:
 		errors |= TMC_ERROR_TYPE;
@@ -94,11 +160,13 @@ void TMC8100_init(void)
 	Pins.SDI             = &HAL.IOs->pins->SPI2_SDI; //Pin29
 	Pins.SDO             = &HAL.IOs->pins->SPI2_SDO; //Pin28
 	Pins.CS              = &HAL.IOs->pins->SPI2_CSN2; //Pin26
+	Pins.RESETN              = &HAL.IOs->pins->DIO8; //Pin19
 
 	HAL.IOs->config->reset(Pins.SCK);
 	HAL.IOs->config->reset(Pins.SDI);
 	HAL.IOs->config->reset(Pins.SDO);
 	HAL.IOs->config->reset(Pins.CS);
+	HAL.IOs->config->reset(Pins.RESETN);
 	HAL.IOs->config->reset(Pins.SPI_DATA_AVAILABLE);
 
 	SPI.init();
