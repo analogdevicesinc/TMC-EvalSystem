@@ -335,6 +335,11 @@ uint8_t spi_ch1_readWriteByte(uint8_t data, uint8_t lastTransfer)
 	return readWrite(SPIChannel_1_default, data, lastTransfer);
 }
 
+uint8_t spi_ch2_readWriteByte(SPIChannelTypeDef *SPIChannel, uint8_t data, uint8_t lastTransfer)
+{
+	return SPIChannel->readWrite(data, lastTransfer);
+}
+
 uint8_t readWrite(SPIChannelTypeDef *SPIChannel, uint8_t writeData, uint8_t lastTransfer)
 {
 	uint8_t readData = 0;
