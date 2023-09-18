@@ -12,6 +12,10 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
+### Version 3.09.6: (Pre-release)
+ * Added TMC6140-Eval
+ * Various bugfixes & cleanups
+
 ### Version 3.09: (Pre-release)
  * Added support for Landungsbruecke with GigaDevice MCU
  * Added MAX22210-Eval and MAX22204-Eval boards
