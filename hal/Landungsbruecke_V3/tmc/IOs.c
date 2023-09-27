@@ -52,12 +52,12 @@ static void init()
 {
 
 	rcu_periph_clock_enable(RCU_SYSCFG);
-	rcu_ckout0_config(RCU_CKOUT0SRC_HXTAL, RCU_CKOUT0_DIV1);
 	rcu_periph_clock_enable(RCU_GPIOA);
 	rcu_periph_clock_enable(RCU_GPIOB);
 	rcu_periph_clock_enable(RCU_GPIOC);
 	rcu_periph_clock_enable(RCU_GPIOD);
 	rcu_periph_clock_enable(RCU_GPIOE);
+	rcu_ckout0_config(RCU_CKOUT0SRC_HXTAL, RCU_CKOUT0_DIV1);
 
 }
 
