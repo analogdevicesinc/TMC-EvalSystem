@@ -1,15 +1,12 @@
 /*******************************************************************************
-* Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
+* Copyright © 2023 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
 * Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
+
 /*
- *
- *  Created on:  07.02.2023
- *  Author:      ASU
- *
  *  Calling IDDetection_detect(IdAssignmentTypeDef *result) will start the ID detection process.
  *  The function returns the ID Results through the IdAssignmentTypeDef struct result points to.
  *  The detection will be done by monoflop pulse duration measurement or via EEPROM readout.

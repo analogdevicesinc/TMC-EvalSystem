@@ -1,16 +1,11 @@
 /*******************************************************************************
-* Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
+* Copyright © 2020 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
 * Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
-/*
- * BLDC.c
- *
- *  Created on: 14 Apr 2020
- *      Author: LH
- */
+
 
 #include "BLDC.h"
 #include "hal/HAL.h"

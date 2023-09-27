@@ -1,19 +1,12 @@
 /*******************************************************************************
-* Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
+* Copyright © 2023 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
 * Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
-/*
- * WLAN.c
- *
- *  Created on: 09.05.2023
- *  Author: AS based on LH
- *
- *  Note: This file needs to be tested.
- *
- */
+
+
 #include "hal/HAL.h"
 #include "hal/RS232.h"
 #include "hal/WLAN.h"

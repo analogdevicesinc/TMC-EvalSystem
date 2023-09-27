@@ -5,6 +5,7 @@
 * Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
+
 /*
  * WARNING: Currently the TMC2300-Eval will send current through the motor for
  * approximately 23ms when the Landungsbruecke is powered on and the TMC2300 has

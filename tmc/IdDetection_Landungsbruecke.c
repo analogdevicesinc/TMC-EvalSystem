@@ -1,16 +1,12 @@
 /*******************************************************************************
-* Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
+* Copyright © 2013 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
 * Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
+
 /*
- * IdDetection_Landungsbruecke.c
- *
- *  Created on:  24.10.2013
- *  Author:      ernst
- *
  *  Calling IDDetection_detect(IdAssignmentTypeDef *result) will start the ID detection process.
  *  The function returns the ID Results through the IdAssignmentTypeDef struct result points to.
  *  The detection will be done by monoflop pulse duration measurement or via EEPROM readout.

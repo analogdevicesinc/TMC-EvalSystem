@@ -1,16 +1,11 @@
 /*******************************************************************************
-* Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
+* Copyright © 2023 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
 * Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
-/*
- * TMC8462_eval.c
- *
- *  Created on: 07.09.2023
- *      Author: ASU
- */
+
 
 #include "Board.h"
 

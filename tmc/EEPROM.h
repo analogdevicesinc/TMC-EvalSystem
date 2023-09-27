@@ -1,18 +1,11 @@
 /*******************************************************************************
-* Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
+* Copyright © 2017 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
 * Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
-/*
- * EEPROM.h
- *
- *  Created on: 13.04.2017
- *      Author: je
- *  Modified on: 26.02.2019
- *      Author: LK
- */
+
 
 #ifndef TMC_EEPROM_H_
 #define TMC_EEPROM_H_
