@@ -53,26 +53,6 @@ int32_t tmc8100_readInt(int32_t address){
 	    return value;
 }
 
-int32_t tmc8100_readEncVals(int32_t address){
-
-		UNUSED(address);
-
-		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0x80, false);
-		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
-		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
-		spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, true);
-
-		while(HAL.IOs->config->getState(Pins.SPI_DATA_AVAILABLE) == 0);
-
-	    int32_t value = spi_ch2_readWriteByte(TMC8100_SPIChannel, 0x80, false);
-		value <<= 8;
-		value |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
-		value <<= 8;
-		value |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, false);
-		value <<= 8;
-		value |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0, true);
-	    return value;
-}
 
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value){
@@ -100,10 +80,6 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value){
 	case 4:
 		// Set to High
 			HAL.IOs->config->setToState(Pins.RESETN, IOS_HIGH);
-		break;
-	case 5:
-		//reading
-		*value = tmc8100_readEncVals(*value);
 		break;
 	default:
 		errors |= TMC_ERROR_TYPE;
