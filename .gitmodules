@@ -1,4 +1,4 @@
 [submodule "TMC-API"]
 	path = TMC-API
-	url = git@github.com:analogdevicesinc/TMC-API.git
+	url = ../TMC-API.git
 	branch = master
