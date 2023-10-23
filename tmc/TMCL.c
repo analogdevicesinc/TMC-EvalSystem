@@ -717,6 +717,20 @@ static void SetGlobalParameter()
 	case 8:
 		ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch2, ActualCommand.Value.UInt32);
 		break;
+	case 9:
+		if (!spi_setMode(&HAL.SPI->ch1, ActualCommand.Value.UInt32))
+		{
+			ActualReply.Status = REPLY_INVALID_VALUE;
+			break;
+		}
+		break;
+	case 10:
+		if (!spi_setMode(&HAL.SPI->ch2, ActualCommand.Value.UInt32))
+		{
+			ActualReply.Status = REPLY_INVALID_VALUE;
+			break;
+		}
+		break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
 		break;
@@ -755,6 +769,12 @@ static void GetGlobalParameter()
 			break;
 		case 8:
 			ActualReply.Value.UInt32 = spi_getFrequency(&HAL.SPI->ch2);
+			break;
+		case 9:
+			ActualReply.Value.UInt32 = spi_getMode(&HAL.SPI->ch1);
+			break;
+		case 10:
+			ActualReply.Value.UInt32 = spi_getMode(&HAL.SPI->ch2);
 			break;
 		default:
 			ActualReply.Status = REPLY_INVALID_TYPE;

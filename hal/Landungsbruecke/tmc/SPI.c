@@ -267,6 +267,38 @@ uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequen
 	return bestFrequency;
 }
 
+uint8_t spi_getMode(SPIChannelTypeDef *SPIChannel)
+{
+	if (!SPIChannel)
+		return 0;
+
+	uint32_t tmp = SPI_CTAR_REG(SPIChannel->periphery, 0);
+	uint8_t cpol = FIELD_GET(tmp, SPI_CTAR_CPOL_MASK, SPI_CTAR_CPOL_SHIFT);
+	uint8_t cpha = FIELD_GET(tmp, SPI_CTAR_CPHA_MASK, SPI_CTAR_CPHA_SHIFT);
+
+	return (cpol << 1) | cpha;
+}
+
+bool spi_setMode(SPIChannelTypeDef *SPIChannel, uint8_t mode)
+{
+	if (!SPIChannel)
+		return false;
+
+	if (mode > 3)
+		return false;
+
+	uint8_t cpol = (mode>>1) & 1;
+	uint8_t cpha = mode & 1;
+
+	uint32_t tmp = SPI_CTAR_REG(SPIChannel->periphery, 0);
+	tmp &= ~(SPI_CTAR_CPOL_MASK | SPI_CTAR_CPHA_MASK);
+	tmp |= cpol ? SPI_CTAR_CPOL_MASK : 0;
+	tmp |= cpha ? SPI_CTAR_CPHA_MASK : 0;
+	SPI_CTAR_REG(SPIChannel->periphery, 0) = tmp;
+
+	return true;
+}
+
 int32_t spi_readInt(SPIChannelTypeDef *SPIChannel, uint8_t address)
 {
 	// clear write bit
