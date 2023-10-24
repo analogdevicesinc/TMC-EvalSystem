@@ -274,9 +274,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 15:
 		// Velocity VSTART
 		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VSTART);
+			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VSTART) * 256;
 		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VSTART, *value);
+			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VSTART, (*value) / 256);
 		}
 		break;
 	case 16:
@@ -312,9 +312,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 18:
 		// Velocity VBreak
 		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VBREAK);
+			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VBREAK) * 256;
 		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VBREAK, *value);
+			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VBREAK, (*value) / 256);
 		}
 		break;
 	case 19:
@@ -335,15 +335,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 20:
 		// Velocity VSTOP
 		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VSTOP);
+			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VSTOP) * 256;
 		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VSTOP, *value);
+			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VSTOP, (*value) / 256);
 		}
 		break;
 	case 21:
 		// Deceleration DStop
 		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_DSTOP);
+			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_DSTOP) * 4;
 		} else if(readWrite == WRITE) {
 			if(*value & ~0x3FFFFF)
 			{
@@ -351,7 +351,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 			else
 			{
-				tmc4361A_writeInt(motorToIC(motor), TMC4361A_DSTOP, *value);
+				tmc4361A_writeInt(motorToIC(motor), TMC4361A_DSTOP, (*value) / 4);
 			}
 		}
 		break;
