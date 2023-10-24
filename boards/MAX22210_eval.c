@@ -500,8 +500,9 @@ void MAX22210_init(void)
 
 	Evalboards.driverEnable             = DRIVER_DISABLE;
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.REF_PWM);
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	Pins.REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #elif defined(LandungsbrueckeV3)
 	Pins.REF_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;

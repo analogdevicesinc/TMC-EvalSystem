@@ -270,6 +270,16 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			StepDir_setStallGuardThreshold(motor, *value);
 		}
 		break;
+	case 184:
+		// Random TOff mode
+		if(readWrite == READ) {
+			*value = HAL.IOs->config->getState(Pins.ROFF_CTRL);
+
+		} else if(readWrite == WRITE) {
+			HAL.IOs->config->setToState(Pins.ROFF_CTRL, *value);
+
+		}
+		break;
 	default:
 		errors |= TMC_ERROR_TYPE;
 		break;
@@ -493,8 +503,9 @@ void MAX22204_init(void)
 
 	Evalboards.driverEnable             = DRIVER_DISABLE;
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.REF_PWM);
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	Pins.REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #elif defined(LandungsbrueckeV3)
 	Pins.REF_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;
