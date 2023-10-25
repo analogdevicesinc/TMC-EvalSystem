@@ -76,7 +76,7 @@ static void init()
 	case UART_PINS_2:
 		HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
 		HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
-		HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+		HAL.IOs->pins->DIO10.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
 		HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
 		HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
 		HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
@@ -107,10 +107,11 @@ static void init()
 			UART_C3_REG(UART2_BASE_PTR) |= UART_C3_TXDIR_MASK;
 			break;
 		case UART_MODE_DUAL_WIRE:
+		case UART_MODE_DUAL_WIRE_PushPull:
 		default:
 			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
 			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-			HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
 			HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
 			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
 			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
@@ -348,7 +349,7 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 		{
 			HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
 			HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
-			HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+			HAL.IOs->pins->DIO10.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
 			HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
 			HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
 			HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
@@ -372,7 +373,7 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 			}
 			else
 			{
-				HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_OD;  // TxD as open drain output
+				HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
 				HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
 			}
 
