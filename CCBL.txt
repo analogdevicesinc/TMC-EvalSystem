@@ -1,3 +1,5 @@
 hal\Landungsbruecke\makeFor
 hal\Landungsbruecke\freescale
 hal\Landungsbruecke_V3\GigaDevice
+hal\Landungsbruecke_V3\tmc\usb_conf.h
+hal\Landungsbruecke_V3\tmc\usbd_conf.h
