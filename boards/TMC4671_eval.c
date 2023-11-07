@@ -148,6 +148,15 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 	return TMC_ERROR_NONE;
 }
 
+static uint8_t positionReached(int32_t targetPosition, int32_t actualPosition, int32_t actualVelocity, int32_t maxPosDiff, int32_t maxVel)
+{
+	if ((labs((long)targetPosition-(long)actualPosition) <= maxPosDiff) & (labs((long)actualVelocity) <= maxVel))
+	{
+		return 1;
+	}
+	return 0;
+}
+
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
 	uint32_t errors = TMC_ERROR_NONE;
@@ -189,6 +198,16 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 			else
 				errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 8:
+		// Position reached flag
+		if(readWrite == READ) {
+			int32_t maxDiff = 100;
+			int32_t maxVel = 20;
+			*value = positionReached(tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET), tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL), tmc4671_readInt(motor, TMC4671_PID_VELOCITY_ACTUAL), maxDiff, maxVel);
+		} else if(readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
 		}
 		break;
 	case 11: // acceleration
