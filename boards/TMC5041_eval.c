@@ -26,8 +26,8 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
 static void periodicJob(uint32_t tick);
@@ -648,16 +648,16 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
-	tmc5041_writeInt(&TMC5041, address, value);
+	tmc5041_writeInt(&TMC5041, (uint8_t) address, value);
 }
 
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
-	*value = tmc5041_readInt(&TMC5041, address);
+	*value = tmc5041_readInt(&TMC5041, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)

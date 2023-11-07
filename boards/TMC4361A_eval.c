@@ -23,8 +23,8 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 
 static void periodicJob(uint32_t tick);
 static void checkErrors(uint32_t tick);
@@ -688,11 +688,11 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 	return handleParameter(READ, motor, type, value);
 }
 
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	// Notify driver shadows about register changes made via cover
 	static int32_t high;
-	switch(address) {
+	switch((uint8_t) address) {
 	case TMC4361A_COVER_HIGH_WR:
 		high = value;
 		break;
@@ -716,12 +716,12 @@ static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 		}
 		break;
 	}
-	tmc4361A_writeInt(motorToIC(motor), address, value);
+	tmc4361A_writeInt(motorToIC(motor), (uint8_t) address, value);
 }
 
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value	= tmc4361A_readInt(motorToIC(motor), address);
+	*value	= tmc4361A_readInt(motorToIC(motor), (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)

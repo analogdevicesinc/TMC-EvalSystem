@@ -114,14 +114,14 @@ uint8_t max22216_CRC8(uint8_t *data, size_t length)
 }
 // <= CRC wrapper
 
-void max22216_writeRegister(uint8_t motor, uint8_t address, int32_t value)
+void max22216_writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	max22216_writeInt(motorToIC(motor), address, value);
+	max22216_writeInt(motorToIC(motor), (uint8_t) address, value);
 }
 
-void max22216_readRegister(uint8_t motor, uint8_t address, int32_t *value)
+void max22216_readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = max22216_readInt(motorToIC(motor), address);
+	*value = max22216_readInt(motorToIC(motor), (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)

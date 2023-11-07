@@ -23,8 +23,8 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
 static void periodicJob(uint32_t tick);
@@ -143,16 +143,16 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
-	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, address, value);
+	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, (uint8_t) address, value);
 }
 
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
-	*value = tmc6200_readInt(TMC6200_DEFAULT_MOTOR, address);
+	*value = tmc6200_readInt(TMC6200_DEFAULT_MOTOR, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)

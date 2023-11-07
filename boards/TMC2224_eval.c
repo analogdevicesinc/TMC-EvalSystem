@@ -67,23 +67,23 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-void tmc2224_writeRegister(uint8_t motor, uint8_t address, int32_t value)
+void tmc2224_writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
-	UART_writeInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), address, value);
-	TMC2224_config->shadowRegister[address] = value;
-	TMC2224.registerAccess[address] |= TMC_ACCESS_DIRTY;
+	UART_writeInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), (uint8_t) address, value);
+	TMC2224_config->shadowRegister[(uint8_t) address] = value;
+	TMC2224.registerAccess[(uint8_t) address] |= TMC_ACCESS_DIRTY;
 }
 
-void tmc2224_readRegister(uint8_t motor, uint8_t address, int32_t *value)
+void tmc2224_readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
-	if (!TMC_IS_READABLE(TMC2224.registerAccess[address])){
+	if (!TMC_IS_READABLE(TMC2224.registerAccess[(uint8_t) address])){
 
-		*value= TMC2224_config->shadowRegister[address];
+		*value= TMC2224_config->shadowRegister[(uint8_t) address];
 		return;
 	}
-	UART_readInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), address, value);
+	UART_readInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), (uint8_t) address, value);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)

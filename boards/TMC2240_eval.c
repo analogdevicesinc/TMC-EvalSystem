@@ -38,8 +38,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type,
 		int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 
 static int32_t tmc2240_UARTreadInt(UART_Config *channel, uint8_t address);
 static void tmc2240_UARTwriteInt(UART_Config *channel, uint8_t address, int32_t value);
@@ -952,12 +952,12 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value) {
 }
 
 
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value) {
-	tmc2240_writeInt(motorToIC(motor), address, value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value) {
+	tmc2240_writeInt(motorToIC(motor), (uint8_t) address, value);
 }
 
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value) {
-	*value = tmc2240_readInt(motorToIC(motor), address);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value) {
+	*value = tmc2240_readInt(motorToIC(motor), (uint8_t) address);
 }
 static void checkErrors(uint32_t tick)
 {

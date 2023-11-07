@@ -30,8 +30,8 @@ typedef enum {
 void TMC8462_init_ch1(void);
 void TMC8462_init_ch2(void);
 static void periodicJob(uint32_t actualSystick);
-static void register_write(uint8_t motor, uint8_t address, int32_t value);
-static void register_read(uint8_t motor, uint8_t address, int32_t *value);
+static void register_write(uint8_t motor, uint16_t address, int32_t value);
+static void register_read(uint8_t motor, uint16_t address, int32_t *value);
 static void memory_read(uint8_t motor, uint8_t address, int32_t *value);
 static void memory_write(uint8_t motor, uint8_t address, int32_t value);
 static void pdi_reset(void);
@@ -86,7 +86,7 @@ static void periodicJob(uint32_t actualSystick)
  * 32-bit access on: TMC8462_MFC_SPI_RX_DATA, TMC8462_MFC_SPI_TX_DATA, TMC8462_MFC_PWM4
  */
 
-static void register_write(uint8_t motor, uint8_t address, int32_t value)
+static void register_write(uint8_t motor, uint16_t address, int32_t value)
 {
 	static uint8_t write_buffer[8];
 
@@ -114,16 +114,16 @@ static void register_write(uint8_t motor, uint8_t address, int32_t value)
 		break;
 	}
 
-	tmc8462_mfc_write_auto(&TMC8462, address, write_buffer);
+	tmc8462_mfc_write_auto(&TMC8462, (uint8_t) address, write_buffer);
 }
 
-static void register_read(uint8_t motor, uint8_t address, int32_t *value)
+static void register_read(uint8_t motor, uint16_t address, int32_t *value)
 {
 	static uint8_t readBuffer[8];
 
 	address = TMC8462_MFC(address);
 
-	tmc8462_mfc_read_auto(&TMC8462, address, readBuffer);
+	tmc8462_mfc_read_auto(&TMC8462, (uint8_t) address, readBuffer);
 
 	switch (motor)
 	{

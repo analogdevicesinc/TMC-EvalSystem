@@ -205,6 +205,11 @@ uint8_t setTMCLStatus(uint8_t evalError);
 void rx(RXTXTypeDef *RXTX);
 void tx(RXTXTypeDef *RXTX);
 
+static uint16_t getExtendedAddress(TMCLCommandTypeDef *tmclCommand)
+{
+    return (((uint16_t) tmclCommand->Motor >> 4) << 8) | tmclCommand->Type;
+}
+
 // Helper functions - used to prevent ExecuteActualCommand() from getting too big.
 // No parameters or return value are used.
 static void readIdEeprom(void);
@@ -365,11 +370,11 @@ void ExecuteActualCommand()
 		break;
 	case TMCL_UF5:
 		// if function doesn't exist for ch1 try ch2 // todo CHECK REM 2: We have TMCL_writeRegisterChannel_1, we dont need this. Make sure it isnt used in IDE (LH) #1
-		Evalboards.ch1.writeRegister(ActualCommand.Motor, ActualCommand.Type, ActualCommand.Value.Int32);
+		Evalboards.ch1.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
 		break;
 	case TMCL_UF6:
 		// if function doesn't exist for ch1 try ch2 // todo CHECK REM 2: We have TMCL_readRegisterChannel_1, we dont need this. Make sure it isnt used in IDE (LH) #2
-		Evalboards.ch1.readRegister(ActualCommand.Motor, ActualCommand.Type, &ActualReply.Value.Int32);
+		Evalboards.ch1.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
 		break;
 	case TMCL_UF8:
 		// user function for reading Motor0_XActual and Motor1_XActual
@@ -401,18 +406,23 @@ void ExecuteActualCommand()
 		ActualReply.Value.Int32 = ActualCommand.Value.Int32;
 		break;
 	case TMCL_writeRegisterChannel_1:
-		Evalboards.ch1.writeRegister(ActualCommand.Motor, ActualCommand.Type, ActualCommand.Value.Int32);
+		Evalboards.ch1.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
 		break;
 	case TMCL_writeRegisterChannel_2:
-		Evalboards.ch2.writeRegister(ActualCommand.Motor, ActualCommand.Type, ActualCommand.Value.Int32);
+		Evalboards.ch2.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
 		break;
 	case TMCL_readRegisterChannel_1:
 		// Do not allow reads during brownout to prevent garbage data being used
 		// in read-modify-write operations. Bypass this safety with motor = 255
 		if ((VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH1) && ActualCommand.Motor != 255)
+		{
 			ActualReply.Status = REPLY_CHIP_READ_FAILED;
+		}
 		else
-			Evalboards.ch1.readRegister(ActualCommand.Motor, ActualCommand.Type, &ActualReply.Value.Int32);
+		{
+            uint16_t extendedAddress = (((uint16_t) ActualCommand.Motor >> 4) << 8) | ActualCommand.Type;
+			Evalboards.ch1.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
+		}
 		break;
 	case TMCL_readRegisterChannel_2:
 		// Do not allow reads during brownout to prevent garbage data being used
@@ -420,7 +430,7 @@ void ExecuteActualCommand()
 		if ((VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH2) && ActualCommand.Motor != 255)
 			ActualReply.Status = REPLY_CHIP_READ_FAILED;
 		else
-			Evalboards.ch2.readRegister(ActualCommand.Motor, ActualCommand.Type, &ActualReply.Value.Int32);
+			Evalboards.ch2.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
 		break;
 	case TMCL_BoardMeasuredSpeed:
 		// measured speed from motionController board or driver board depending on type

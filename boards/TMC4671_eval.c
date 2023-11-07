@@ -876,16 +876,16 @@ static void timer_overflow(void)
 	debug_nextProcess();
 }
 
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
-	tmc4671_writeInt(DEFAULT_MOTOR, address, value);
+	tmc4671_writeInt(DEFAULT_MOTOR, (uint8_t) address, value);
 }
 
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
-	*value = tmc4671_readInt(DEFAULT_MOTOR, address);
+	*value = tmc4671_readInt(DEFAULT_MOTOR, (uint8_t) address);
 }
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)

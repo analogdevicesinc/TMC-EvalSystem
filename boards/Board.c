@@ -28,14 +28,14 @@ static uint32_t dummy_MotorValue(uint8_t motor, int32_t value)
 	return TMC_ERROR_FUNCTION;
 }
 
-static void dummy_AddressRef(uint8_t motor, uint8_t address, int32_t *value)
+static void dummy_AddressRef(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
 	UNUSED(address);
 	UNUSED(value);
 }
 
-static void dummy_AddressValue(uint8_t motor, uint8_t address, int32_t value)
+static void dummy_AddressValue(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
 	UNUSED(address);

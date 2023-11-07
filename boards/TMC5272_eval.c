@@ -35,8 +35,8 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
 static int32_t tmc5272_UARTreadInt(UART_Config *channel, uint8_t address);
@@ -1373,25 +1373,25 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	//catch hardware bug
-	if (address == 0x31 && value == 2) {
-		tmc5272_writeInt(motorToIC(motor), address, 3);
+	if ((uint8_t) address == 0x31 && value == 2) {
+		tmc5272_writeInt(motorToIC(motor), (uint8_t) address, 3);
 		return;
 	}
-	if (address == 0x66 && value == 2) {
-		tmc5272_writeInt(motorToIC(motor), address, 3);
+	if ((uint8_t) address == 0x66 && value == 2) {
+		tmc5272_writeInt(motorToIC(motor), (uint8_t) address, 3);
 		return;
 	}
 
 
-	tmc5272_writeInt(motorToIC(motor), address, value);
+	tmc5272_writeInt(motorToIC(motor), (uint8_t) address, value);
 }
 
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = tmc5272_readInt(motorToIC(motor), address);
+	*value = tmc5272_readInt(motorToIC(motor), (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)

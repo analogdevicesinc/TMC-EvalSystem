@@ -111,15 +111,15 @@ uint8_t tmc2226_CRC8(uint8_t *data, size_t length)
 }
 // <= CRC wrapper
 
-void tmc2226_writeRegister(uint8_t motor, uint8_t address, int32_t value)
+void tmc2226_writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	tmc2226_writeInt(motorToIC(motor), address, value);
+	tmc2226_writeInt(motorToIC(motor), (uint8_t) address, value);
 
 }
 
-void tmc2226_readRegister(uint8_t motor, uint8_t address, int32_t *value)
+void tmc2226_readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = tmc2226_readInt(motorToIC(motor), address);
+	*value = tmc2226_readInt(motorToIC(motor), (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
