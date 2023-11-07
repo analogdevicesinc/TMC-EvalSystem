@@ -420,7 +420,6 @@ void ExecuteActualCommand()
 		}
 		else
 		{
-            uint16_t extendedAddress = (((uint16_t) ActualCommand.Motor >> 4) << 8) | ActualCommand.Type;
 			Evalboards.ch1.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
 		}
 		break;
