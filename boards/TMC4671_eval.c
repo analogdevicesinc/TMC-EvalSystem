@@ -23,6 +23,9 @@ static IOPinTypeDef *PIN_DRV_ENN;
 static ConfigurationTypeDef *TMC4671_config;
 static SPIChannelTypeDef *TMC4671_SPIChannel;
 
+static int32_t MAX_POS_DEVIATION = 0;
+static int32_t MAX_VEL_DEVIATION = 0;
+
 static void timer_overflow(void);
 
 typedef struct
@@ -203,9 +206,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 8:
 		// Position reached flag
 		if(readWrite == READ) {
-			int32_t maxDiff = 100;
-			int32_t maxVel = 20;
-			*value = positionReached(tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET), tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL), tmc4671_readInt(motor, TMC4671_PID_VELOCITY_ACTUAL), maxDiff, maxVel);
+			*value = positionReached(tmc4671_readInt(motor, TMC4671_PID_POSITION_TARGET), tmc4671_readInt(motor, TMC4671_PID_POSITION_ACTUAL), tmc4671_readInt(motor, TMC4671_PID_VELOCITY_ACTUAL), MAX_POS_DEVIATION, MAX_VEL_DEVIATION);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -241,7 +242,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
-
+	case 14: //max velocity deviation
+		if(readWrite == READ) {
+			*value = MAX_VEL_DEVIATION;
+		} else if(readWrite == WRITE) {
+			MAX_VEL_DEVIATION = *value;
+		}
+		break;
+	case 15: //max position deviation
+		if(readWrite == READ) {
+			*value = MAX_POS_DEVIATION;
+		} else if(readWrite == WRITE) {
+			MAX_POS_DEVIATION = *value;
+		}
+		break;
 	case 20: // Linear scaler [µm/rotation]
 		if (readWrite == READ)
 		{
