@@ -54,6 +54,7 @@ static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static uint8_t reset();
+static void configCallback(TMC5160TypeDef *tmc5160, ConfigState state);
 static void enableDriver(DriverState state);
 
 static UART_Config *TMC5160_UARTChannel;
@@ -1015,6 +1016,15 @@ static uint8_t restore()
 	return tmc5160_restore(&TMC5160);
 }
 
+static void configCallback(TMC5160TypeDef *tmc5160, ConfigState completedState)
+{
+	if(completedState == CONFIG_RESET)
+	{
+		// Fill missing shadow registers (hardware preset registers)
+		tmc5160_fillShadowRegisters(tmc5160);
+	}
+}
+
 static void enableDriver(DriverState state)
 {
 	if(state == DRIVER_USE_GLOBAL_ENABLE)
@@ -1092,6 +1102,8 @@ void TMC5160_init(void)
 	Evalboards.ch1.config->state        = CONFIG_RESET;
 
 	tmc5160_init(&TMC5160, 0, Evalboards.ch1.config, tmc5160_defaultRegisterResetState);
+	tmc5160_setCallback(&TMC5160, configCallback);
+
 
 	vmax_position = 0;
 
