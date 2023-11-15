@@ -262,14 +262,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			HAL.IOs->config->setToState(Pins.SLEEP_N, (*value == 0) ? IOS_HIGH : IOS_LOW);
 		}
 		break;
-	case 181:
-		// smartEnergy stall velocity
-		if(readWrite == READ) {
-			*value = StepDir_getStallGuardThreshold(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setStallGuardThreshold(motor, *value);
-		}
-		break;
 	case 184:
 		// Random TOff mode
 		if(readWrite == READ) {
