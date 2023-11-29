@@ -975,6 +975,11 @@ void TMC4671_init(void)
 	// configure ENABLE-PIN for TMC4671
 	PIN_DRV_ENN = &HAL.IOs->pins->DIO0;
 	HAL.IOs->config->toOutput(PIN_DRV_ENN);
+
+	// Setting SD_STP (DIO6) and SD_DIR (DIO7) to High-Z
+	gpio_mode_set(HAL.IOs->pins->DIO6.port, GPIO_MODE_INPUT, GPIO_PUPD_NONE, HAL.IOs->pins->DIO6.bitWeight);
+	gpio_mode_set(HAL.IOs->pins->DIO7.port, GPIO_MODE_INPUT, GPIO_PUPD_NONE, HAL.IOs->pins->DIO7.bitWeight);
+
 	enableDriver(DRIVER_ENABLE);
 
 	TMC4671_SPIChannel = &HAL.SPI->ch1;
