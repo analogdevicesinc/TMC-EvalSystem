@@ -977,8 +977,8 @@ void TMC4671_init(void)
 	HAL.IOs->config->toOutput(PIN_DRV_ENN);
 
 	// Setting SD_STP (DIO6) and SD_DIR (DIO7) to High-Z
-	gpio_mode_set(HAL.IOs->pins->DIO6.port, GPIO_MODE_INPUT, GPIO_PUPD_NONE, HAL.IOs->pins->DIO6.bitWeight);
-	gpio_mode_set(HAL.IOs->pins->DIO7.port, GPIO_MODE_INPUT, GPIO_PUPD_NONE, HAL.IOs->pins->DIO7.bitWeight);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO6);
+	HAL.IOs->config->reset(&HAL.IOs->pins->DIO7);
 
 	enableDriver(DRIVER_ENABLE);
 
