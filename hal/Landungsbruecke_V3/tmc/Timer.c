@@ -14,6 +14,7 @@ TIMER_CHANNEL_1 = TIMER 0 Channel 2, PWM output DIO11
 TIMER_CHANNEL_2 = TIMER 3 Channel 0, RAMDebug
 TIMER_CHANNEL_3 = TIMER 4 Channel 0
 TIMER_CHANNEL_4 = TIMER 0 Channel 1, PWM output DIO9
+TIMER_CHANNEL_5 = TIMER 0 Channel 0, PWM output DIO7
 */
 
 #define TIMER_BASE_CLK 240000000
@@ -79,7 +80,8 @@ static void init(void)
 	timer_channel_output_config(TIMER0, TIMER_CH_2, &oc_params);
 	// TIMER_CHANNEL_4
 	timer_channel_output_config(TIMER0, TIMER_CH_1, &oc_params);
-
+	// TIMER_CHANNEL_5
+	timer_channel_output_config(TIMER0, TIMER_CH_0, &oc_params);
 
 	timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, TIMER_MAX >> 1);
 	timer_channel_output_mode_config(TIMER0, TIMER_CH_2, TIMER_OC_MODE_PWM1);
@@ -90,6 +92,10 @@ static void init(void)
 	timer_channel_output_mode_config(TIMER0, TIMER_CH_1, TIMER_OC_MODE_PWM0);
 	timer_channel_output_shadow_config(TIMER0, TIMER_CH_1, TIMER_OC_SHADOW_DISABLE);
 
+	// TIMER_CHANNEL_5
+	timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, TIMER_MAX >> 1);
+	timer_channel_output_mode_config(TIMER0, TIMER_CH_0, TIMER_OC_MODE_PWM0);
+	timer_channel_output_shadow_config(TIMER0, TIMER_CH_0, TIMER_OC_SHADOW_DISABLE);
 	timer_primary_output_config(TIMER0, ENABLE);
 
 	timer_auto_reload_shadow_enable(TIMER0);
@@ -157,6 +163,9 @@ static void setDuty(timer_channel channel, float duty)
 	case TIMER_CHANNEL_4:
 		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, duty * TIMER_CAR(TIMER0));
 		break;
+	case TIMER_CHANNEL_5:
+		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, duty * TIMER_CAR(TIMER0));
+		break;
 	}
 }
 
@@ -171,6 +180,8 @@ static float getDuty(timer_channel channel)
 		return (((float) timer_channel_capture_value_register_read(TIMER4, TIMER_CH_0)) / TIMER_CAR(TIMER4));
 	case TIMER_CHANNEL_4:
 		return (((float) timer_channel_capture_value_register_read(TIMER0, TIMER_CH_1)) / TIMER_CAR(TIMER0));
+	case TIMER_CHANNEL_5:
+		return (((float) timer_channel_capture_value_register_read(TIMER0, TIMER_CH_0)) / TIMER_CAR(TIMER0));
 	}
 }
 
@@ -179,6 +190,7 @@ static void setPeriod(timer_channel channel, uint16_t period)
 	switch(channel) {
 	case TIMER_CHANNEL_1:
 	case TIMER_CHANNEL_4:
+	case TIMER_CHANNEL_5:
 		timer_autoreload_value_config(TIMER0, period);
 		break;
 	case TIMER_CHANNEL_2:
@@ -195,6 +207,7 @@ static uint16_t getPeriod(timer_channel channel)
 	switch(channel) {
 	case TIMER_CHANNEL_1:
 	case TIMER_CHANNEL_4:
+	case TIMER_CHANNEL_5:
 		return TIMER_CAR(TIMER0);
 	case TIMER_CHANNEL_2:
 		return TIMER_CAR(TIMER3);
@@ -208,6 +221,7 @@ static void setPeriodMin(timer_channel channel, uint16_t period_min)
 	switch(channel) {
 	case TIMER_CHANNEL_1:
 	case TIMER_CHANNEL_4:
+	case TIMER_CHANNEL_5:
 		period_min_buf[0] = period_min;
 		break;
 	case TIMER_CHANNEL_2:
@@ -224,6 +238,7 @@ static void setFrequencyMin(timer_channel channel, float freq_min)
 	switch(channel) {
 	case TIMER_CHANNEL_1:
 	case TIMER_CHANNEL_4:
+	case TIMER_CHANNEL_5:
 		freq_min_buf[0] = freq_min;
 		break;
 	case TIMER_CHANNEL_2:
@@ -270,6 +285,13 @@ static void setFrequency(timer_channel channel, float freq)
 		period_min = period_min_buf[0];
 		timer = TIMER0;
 		timer_ch = TIMER_CH_1;
+		irq = TIMER0_Channel_IRQn;
+		break;
+	case TIMER_CHANNEL_5:
+		freq_min = freq_min_buf[0];
+		period_min = period_min_buf[0];
+		timer = TIMER0;
+		timer_ch = TIMER_CH_0;
 		irq = TIMER0_Channel_IRQn;
 		break;
 	}
