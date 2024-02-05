@@ -266,7 +266,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			motorConfig[motor].linearScaler = *value;
 		}
 		break;
-	case 21: // Linear maximum speed [µm/s]
+	case 21: // Linear maximum velocity [µm/s]
 		if (readWrite == READ)
 		{
 			uint32_t velocity = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
@@ -280,10 +280,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		else
 		{
 			// Linear -> Internal
-			tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_LIMIT, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
+			uint32_t velocity = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
+			tmc4671_writeInt(motor, TMC4671_PID_VELOCITY_LIMIT, velocity);
 
 			// Also update ramp generator value
-			rampGenerator[motor].maxVelocity = *value;
+			rampGenerator[motor].maxVelocity = velocity;
 		}
 		break;
 	case 22: // Linear acceleration [µm/s/s]
@@ -300,10 +301,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		else
 		{
 			// Linear -> internal
-			tmc4671_writeInt(motor, TMC4671_PID_ACCELERATION_LIMIT, linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler));
+			uint32_t acceleration = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
+			tmc4671_writeInt(motor, TMC4671_PID_ACCELERATION_LIMIT, acceleration);
 
 			// update also ramp generator value
-			rampGenerator[motor].acceleration = *value;
+			rampGenerator[motor].acceleration = acceleration;
 		}
 		break;
 	case 23: // Linear ramp velocity [µm/s]
@@ -667,7 +669,36 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
 		}
 		break;
-
+	case 240:
+		if(readWrite == READ) {
+			*value = rampGenerator[motor].maxVelocity;
+		}
+		break;
+	case 241:
+		if(readWrite == READ) {
+			*value = rampGenerator[motor].acceleration;
+		}
+		break;
+	case 242:
+		if(readWrite == READ) {
+			*value = rampGenerator[motor].targetVelocity;
+		}
+		break;
+	case 243:
+		if(readWrite == READ) {
+			*value = rampGenerator[motor].rampVelocity;
+		}
+		break;
+	case 244:
+		if(readWrite == READ) {
+			*value = rampGenerator[motor].targetPosition;
+		}
+		break;
+	case 245:
+		if(readWrite == READ) {
+			*value = rampGenerator[motor].rampPosition;
+		}
+		break;
 	case 250:
 		// encoder init voltage
 		if(readWrite == READ) {
