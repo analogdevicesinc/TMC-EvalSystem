@@ -82,6 +82,11 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	out |= (ids->ch1.state  << 8)  & 0xFF;
 	out |= (ids->ch1.id     << 0)  & 0xFF;
 
+	if(Evalboards.ch1.id == ID_TMC4361A && Evalboards.ch2.id == ID_TMC2160)
+	{
+		Evalboards.ch1.writeRegister(0, TMC4361A_STP_LENGTH_ADD, 0x60004);
+	}
+
 	return out;
 }
 
