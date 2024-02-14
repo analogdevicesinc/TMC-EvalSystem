@@ -483,30 +483,26 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 117:
 		// CL correction velocity I clipping
-		// todo AP 3: same register as in AP 116 and 115? (BS) #1
-		// (JE) : probably register TMC4361_PID_I_CLIP_WR ?
 		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_PID_I_WR] >> 0;
+			*value = TMC4361A.config->shadowRegister[TMC4361A_PID_I_CLIP_WR] >> 0;
 			*value &= 0x7FFF;
 		} else if(readWrite == WRITE) {
-			uvalue = TMC4361A.config->shadowRegister[TMC4361A_PID_I_WR];
+			uvalue = TMC4361A.config->shadowRegister[TMC4361A_PID_I_CLIP_WR];
 			uvalue &= ~(0x7FFF << 0);
 			uvalue |= (*value & 0x7FFF) << 0;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_PID_I_WR, uvalue);
+			tmc4361A_writeInt(motorToIC(motor), TMC4361A_PID_I_CLIP_WR, uvalue);
 		}
 		break;
 	case 118:
 		// CL correction velocity DV clock
-		// todo AP 3: same register as in AP 116 and 115? (BS) #2
-		// (JE) probably register TMC4361_PID_I_CLIP_WR?
 		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_PID_I_WR] >> 16;
+			*value = TMC4361A.config->shadowRegister[TMC4361A_PID_D_CLKDIV_WR] >> 16;
 			*value &= 0xFF;
 		} else if(readWrite == WRITE) {
-			uvalue = TMC4361A.config->shadowRegister[TMC4361A_PID_I_WR];
+			uvalue = TMC4361A.config->shadowRegister[TMC4361A_PID_D_CLKDIV_WR];
 			uvalue &= ~(0xFF << 16);
 			uvalue |= (*value & 0xFF) << 16;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_PID_I_WR, uvalue);
+			tmc4361A_writeInt(motorToIC(motor), TMC4361A_PID_D_CLKDIV_WR, uvalue);
 		}
 		break;
 	case 119:
@@ -596,10 +592,18 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 	case 134:
-		// todo AP XML 2: Split this into read-only Encoder deviation and write-only CL_TR_TOLERANCE? Having this as one axis parameter is not that intuitive (LH) #1
 		// Encoder deviation
 		if(readWrite == READ) {
+			// Read-only encoder deviation
 			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_ENC_POS_DEV_RD);
+		} else if(readWrite == WRITE) {
+            errors |= TMC_ERROR_TYPE;
+		}
+		break;
+	case 135:
+		// Closed loop target reached tolerance
+		if(readWrite == READ) {
+			*value = TMC4361A.config->shadowRegister[TMC4361A_CL_TR_TOLERANCE_WR];
 		} else if(readWrite == WRITE) {
 			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_TR_TOLERANCE_WR, *value);
 		}
@@ -655,20 +659,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_POS, *value);
 		}
 		break;
-	case 212:
-		// Maximum encoder deviation
-		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_SCALE_VALUES]; // todo CHECK 3: shouldn't this register be TMC4361A_ENC_POS_DEV_TOL_WR like below? (BS) #1
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_POS_DEV_TOL_WR, *value);
-		}
-		break;
 	case 214:
 		// Power Down Delay
 		if(readWrite == READ) {
 			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_STDBY_DELAY);
 		} else if(readWrite == WRITE) {
 			tmc4361A_writeInt(motorToIC(motor), TMC4361A_STDBY_DELAY, *value*160000);
+		}
+		break;
+	case 225:
+		// Maximum encoder deviation
+		if(readWrite == READ) {
+			*value = TMC4361A.config->shadowRegister[TMC4361A_ENC_POS_DEV_TOL_WR];
+		} else if(readWrite == WRITE) {
+			tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_POS_DEV_TOL_WR, *value);
 		}
 		break;
 	default:
@@ -892,6 +896,7 @@ static void configCallback(TMC4361ATypeDef *tmc4361A, ConfigState state)
 	}
 	else
 		Evalboards.ch2.config->restore();
+
 }
 
 void TMC4361A_init(void)
