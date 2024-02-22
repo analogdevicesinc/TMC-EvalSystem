@@ -6,7 +6,7 @@ Trinamic Evaluation System ([home page](https://www.trinamic.com/support/eval-ki
 
 ## Setup
 To clone this repository, simply use the following command in order to clone submodules recursively:  
-`git clone --recurse-submodules git@github.com:trinamic/TMC-EvalSystem.git`
+`git clone --recurse-submodules git@github.com:analogdevicesinc/TMC-EvalSystem.git`
 
 ## Changelog
 
