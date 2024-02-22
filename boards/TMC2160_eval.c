@@ -807,7 +807,6 @@ static void deInit(void)
 	HAL.IOs->config->reset(Pins.DCO);
 	HAL.IOs->config->reset(Pins.DIAG0);
 	HAL.IOs->config->reset(Pins.DIAG1);
-	//HAL.IOs->config->reset(Pins.DRV_ENN);
 
 	StepDir_deInit();
 	Timer.deInit();
@@ -871,8 +870,8 @@ void TMC2160_init(void)
 	Pins.DCIN = &HAL.IOs->pins->DIO12;
 	Pins.DCEN = &HAL.IOs->pins->DIO13;
 	Pins.DCO = &HAL.IOs->pins->DIO14;
-	Pins.DIAG0 = &HAL.IOs->pins->DIO15;
-	Pins.DIAG1 = &HAL.IOs->pins->DIO16;
+	Pins.DIAG0 = &HAL.IOs->pins->DIO16;
+	Pins.DIAG1 = &HAL.IOs->pins->DIO15;
 
 	//HAL.IOs->config->toInput(Pins.DIAG0);
 	//HAL.IOs->config->toInput(Pins.DIAG1);
@@ -889,9 +888,6 @@ void TMC2160_init(void)
 
 	HAL.IOs->config->setLow(Pins.DCO);
 	HAL.IOs->config->setLow(Pins.DCIN);
-
-//	HAL.IOs->config->toOutput(&HAL.IOs->pins->CLK16);
-//	HAL.IOs->config->setLow(&HAL.IOs->pins->CLK16);
 
 	TMC2160_SPIChannel       = &HAL.SPI->ch2;
 	TMC2160_SPIChannel->CSN  = &HAL.IOs->pins->SPI2_CSN0;
