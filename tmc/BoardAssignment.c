@@ -82,11 +82,6 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	out |= (ids->ch1.state  << 8)  & 0xFF;
 	out |= (ids->ch1.id     << 0)  & 0xFF;
 
-	if(Evalboards.ch1.id == ID_TMC4361A && Evalboards.ch2.id == ID_TMC2160)
-	{
-		Evalboards.ch1.writeRegister(0, TMC4361A_STP_LENGTH_ADD, 0x60004);
-	}
-
 	return out;
 }
 
@@ -154,21 +149,20 @@ static void hookDriverSPI(IdAssignmentTypeDef *ids)
 	{
 		// Redirect ch2 SPI to the SPI cover function of the TMC43XX Board
 		HAL.SPI->ch2.readWrite = Evalboards.ch1.cover;
-
+//		Evalboards.ch1.config->state        = CONFIG_RESET;
 		if(ids->ch2.id == ID_TMC2660)
 		{
 			// TMC2660: Disable the continuous mode via userFunction
 			int32_t value = 1;
 			Evalboards.ch2.userFunction(0, 0, &value);
 		}
-	}
-
-
-	if (ids->ch1.id == ID_TMC4361A)
-	{
-		if (ids->ch2.id == ID_TMC2130)
+		else if(ids->ch2.id == ID_TMC2130)
 		{
 			Evalboards.ch2.userFunction(6, 0, NULL);
+		}
+		else if(ids->ch2.id == ID_TMC2160)
+		{
+			Evalboards.ch1.config->reset();
 		}
 	}
 }
