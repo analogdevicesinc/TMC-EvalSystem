@@ -529,6 +529,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_DOWNSCALE_DELAY, *value);
 		}
 		break;
+	case 123:
+		// Actual Scalar Value
+		if(readWrite == READ) {
+			// Read-only
+			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_PARAM_RD);
+		} else if(readWrite == WRITE) {
+            errors |= TMC_ERROR_TYPE;
+		}
+		break;
 	case 124:
 		// CL Correction Position P
 		if(readWrite == READ) {
@@ -871,6 +880,7 @@ static void configCallback(TMC4361ATypeDef *tmc4361A, ConfigState state)
 	switch(Evalboards.ch2.id)
 	{
 	case ID_TMC2130:
+	case ID_TMC2160:
 		driver = 0x0C;
 		dataLength = 0;
 		break;
@@ -885,6 +895,11 @@ static void configCallback(TMC4361ATypeDef *tmc4361A, ConfigState state)
 	}
 	value = 0x44400040 | (dataLength << 13) | (driver << 0);
 	tmc4361A_writeInt(tmc4361A, TMC4361A_SPIOUT_CONF, value);
+
+	if(Evalboards.ch2.id == ID_TMC2160)
+	{
+		Evalboards.ch1.writeRegister(0, TMC4361A_STP_LENGTH_ADD, 0x60002);
+	}
 
 	// Reset/Restore driver
 	if(state == CONFIG_RESET)
