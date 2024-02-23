@@ -67,6 +67,7 @@ SRC				+= boards/TMC2300_eval.c
 SRC             += boards/TMC6300_eval.c
 SRC             += boards/TMC6140_eval.c
 SRC             += boards/TMC8100_eval.c
+SRC				+= boards/TMC5262_eval.c
 endif
 
 # Control
@@ -118,6 +119,7 @@ SRC				+= TMC-API/tmc/ic/TMC6200/TMC6200.c
 SRC				+= TMC-API/tmc/ic/TMC7300/TMC7300.c
 SRC				+= TMC-API/tmc/ic/TMC8461/TMC8461.c
 SRC				+= TMC-API/tmc/ic/TMC8462/TMC8462.c
+SRC 			+= TMC-API/tmc/ic/TMC5262/TMC5262.c
 
 EXTRAINCDIRS 	+= $(TMC_HAL_SRC)
 
