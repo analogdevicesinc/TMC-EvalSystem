@@ -1,10 +1,10 @@
 /*******************************************************************************
-* Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
-* (now owned by Analog Devices Inc.),
-*
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
-* proprietary & confidential to Analog Devices, Inc. and its licensors.
-*******************************************************************************/
+ * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
+ * (now owned by Analog Devices Inc.),
+ *
+ * Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
+ * proprietary & confidential to Analog Devices, Inc. and its licensors.
+ *******************************************************************************/
 
 
 #include "Board.h"
@@ -37,6 +37,7 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
 static int32_t tmc5272_UARTreadInt(UART_Config *channel, uint8_t address);
@@ -77,13 +78,13 @@ uint8_t tmc5272_CRC8(uint8_t *data, size_t length)
 int32_t tmc5272_readInt(TMC5272TypeDef *tmc5272, uint8_t address){
 	UNUSED(tmc5272);
 	if(commMode == TMC_BOARD_COMM_SPI)
-		{
+	{
 		spi_readInt(TMC5272_SPIChannel, address);
 		return spi_readInt(TMC5272_SPIChannel, address);
-		}
+	}
 	else if (commMode == TMC_BOARD_COMM_UART){
 		return tmc5272_UARTreadInt(TMC5272_UARTChannel,  address);
-		}
+	}
 	return -1;
 }
 
@@ -492,14 +493,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 
-//	case 34:
-//		// Internal RSense
-//		if(readWrite == READ) {
-//			*value = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_GCONF, TMC5272_REFR_DIR_MASK, TMC5272_REFR_DIR_SHIFT);
-//		} else if(readWrite == WRITE) {
-//			TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GCONF, TMC5272_REFR_DIR_MASK, TMC5272_REFR_DIR_SHIFT, *value);
-//		}
-//		break;
+		//	case 34:
+		//		// Internal RSense
+		//		if(readWrite == READ) {
+		//			*value = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_GCONF, TMC5272_REFR_DIR_MASK, TMC5272_REFR_DIR_SHIFT);
+		//		} else if(readWrite == WRITE) {
+		//			TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GCONF, TMC5272_REFR_DIR_MASK, TMC5272_REFR_DIR_SHIFT, *value);
+		//		}
+		//		break;
 	case 35:
 		// Global current scaler A
 		if(readWrite == READ) {
@@ -511,17 +512,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(motor ==  0)
 			{
-			if(*value > 31)
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_A_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_A_SHIFT, *value);
-			else
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_A_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_A_SHIFT, 0);
+				if(*value > 31)
+					TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_A_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_A_SHIFT, *value);
+				else
+					TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_A_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_A_SHIFT, 0);
 			}
 			else if(motor ==  1)
 			{
-			if(*value > 31)
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_A_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_A_SHIFT, *value);
-			else
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_A_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_A_SHIFT, 0);
+				if(*value > 31)
+					TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_A_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_A_SHIFT, *value);
+				else
+					TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_A_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_A_SHIFT, 0);
 			}
 		}
 		break;
@@ -536,17 +537,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(motor ==  0)
 			{
-			if(*value > 31)
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_B_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_B_SHIFT, *value);
-			else
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_B_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_B_SHIFT, 0);
+				if(*value > 31)
+					TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_B_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_B_SHIFT, *value);
+				else
+					TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_B_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M0_B_SHIFT, 0);
 			}
 			else if(motor ==  1)
 			{
-			if(*value > 31)
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_B_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_B_SHIFT, *value);
-			else
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_B_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_B_SHIFT, 0);
+				if(*value > 31)
+					TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_B_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_B_SHIFT, *value);
+				else
+					TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GLOBAL_SCALER, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_B_MASK, TMC5272_GLOBAL_SCALER_GLOBALSCALER_M1_B_SHIFT, 0);
 			}
 		}
 		break;
@@ -557,16 +558,16 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			switch(*value)
 			{
-				case 1:    *value = 8;   break;
-				case 2:    *value = 7;   break;
-				case 4:    *value = 6;   break;
-				case 8:    *value = 5;   break;
-				case 16:   *value = 4;   break;
-				case 32:   *value = 3;   break;
-				case 64:   *value = 2;   break;
-				case 128:  *value = 1;   break;
-				case 256:  *value = 0;   break;
-				default:   *value = -1;  break;
+			case 1:    *value = 8;   break;
+			case 2:    *value = 7;   break;
+			case 4:    *value = 6;   break;
+			case 8:    *value = 5;   break;
+			case 16:   *value = 4;   break;
+			case 32:   *value = 3;   break;
+			case 64:   *value = 2;   break;
+			case 128:  *value = 1;   break;
+			case 256:  *value = 0;   break;
+			default:   *value = -1;  break;
 			}
 
 			if(*value != -1)
@@ -775,13 +776,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 	case 184:
-			// SG_ANGLE_OFFSET
-			if(readWrite == READ) {
-				*value = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_SG4_THRS(motor), TMC5272_SG4_THRS_SG_ANGLE_OFFSET_MASK, TMC5272_SG4_THRS_SG_ANGLE_OFFSET_SHIFT);
-			} else if(readWrite == WRITE) {
-				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_SG4_THRS(motor), TMC5272_SG4_THRS_SG_ANGLE_OFFSET_MASK, TMC5272_SG4_THRS_SG_ANGLE_OFFSET_SHIFT, *value);
-			}
-			break;
+		// SG_ANGLE_OFFSET
+		if(readWrite == READ) {
+			*value = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_SG4_THRS(motor), TMC5272_SG4_THRS_SG_ANGLE_OFFSET_MASK, TMC5272_SG4_THRS_SG_ANGLE_OFFSET_SHIFT);
+		} else if(readWrite == WRITE) {
+			TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_SG4_THRS(motor), TMC5272_SG4_THRS_SG_ANGLE_OFFSET_MASK, TMC5272_SG4_THRS_SG_ANGLE_OFFSET_SHIFT, *value);
+		}
+		break;
 	case 185:
 		// Chopper synchronization
 		if(readWrite == READ) {
@@ -812,9 +813,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_PWMCONF(motor), TMC5272_PWMCONF_PWM_GRAD_MASK, TMC5272_PWMCONF_PWM_GRAD_SHIFT, *value);
 			// Enable/disable stealthChop accordingly
 			if(motor == 0)
-			TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GCONF, TMC5272_GCONF_M0_EN_PWM_MODE_MASK, TMC5272_GCONF_M0_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
+				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GCONF, TMC5272_GCONF_M0_EN_PWM_MODE_MASK, TMC5272_GCONF_M0_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
 			else if(motor == 1)
-			TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GCONF, TMC5272_GCONF_M1_EN_PWM_MODE_MASK, TMC5272_GCONF_M1_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
+				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_GCONF, TMC5272_GCONF_M1_EN_PWM_MODE_MASK, TMC5272_GCONF_M1_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
 		}
 		break;
 	case 188:
@@ -949,25 +950,25 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				HAL.IOs->config->toOutput(Pins.IREF_R3);
 				HAL.IOs->config->setLow(Pins.IREF_R2);
 				HAL.IOs->config->setLow(Pins.IREF_R3);
-				}
+			}
 			else if(*value == 1) {//24k
 				HAL.IOs->config->toOutput(Pins.IREF_R2);
 				HAL.IOs->config->toOutput(Pins.IREF_R3);
 				HAL.IOs->config->setHigh(Pins.IREF_R2);
 				HAL.IOs->config->setLow(Pins.IREF_R3);
-				}
+			}
 			else if(*value == 2) {//16k
 				HAL.IOs->config->toOutput(Pins.IREF_R2);
 				HAL.IOs->config->toOutput(Pins.IREF_R3);
 				HAL.IOs->config->setLow(Pins.IREF_R2);
 				HAL.IOs->config->setHigh(Pins.IREF_R3);
-				}
+			}
 			else if(*value == 3) {//12k
 				HAL.IOs->config->toOutput(Pins.IREF_R2);
 				HAL.IOs->config->toOutput(Pins.IREF_R3);
 				HAL.IOs->config->setHigh(Pins.IREF_R2);
 				HAL.IOs->config->setHigh(Pins.IREF_R3);
-				}
+			}
 		}
 		break;
 	case 212:
@@ -985,13 +986,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 	case 213:
-			// ADCTemperatur
-			if(readWrite == READ) {
-				*value = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_IOIN, TMC5272_IOIN_ADC_TEMPERATURE_MASK, TMC5272_IOIN_ADC_TEMPERATURE_SHIFT);
-			} else if(readWrite == WRITE) {
-				errors |= TMC_ERROR_TYPE;
-			}
-			break;
+		// ADCTemperatur
+		if(readWrite == READ) {
+			*value = TMC5272_FIELD_READ(motorToIC(motor), TMC5272_IOIN, TMC5272_IOIN_ADC_TEMPERATURE_MASK, TMC5272_IOIN_ADC_TEMPERATURE_SHIFT);
+		} else if(readWrite == WRITE) {
+			errors |= TMC_ERROR_TYPE;
+		}
+		break;
 	case 214:
 		// ADCTemperatur Converted
 		if(readWrite == READ) {
@@ -1053,8 +1054,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x10);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 	case 221:
 		// MSLUT1
@@ -1075,8 +1076,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x11);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 
 	case 222:
@@ -1098,8 +1099,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x12);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 
 	case 223:
@@ -1121,8 +1122,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x13);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 
 	case 224:
@@ -1144,8 +1145,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x14);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 
 	case 225:
@@ -1167,8 +1168,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x15);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 	case 226:
 		// MSLUT6
@@ -1189,8 +1190,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x16);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 	case 227:
 		// MSLUT7
@@ -1211,8 +1212,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x17);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 	case 228:
 		// MSLUT_START
@@ -1233,8 +1234,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x18);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 	case 229:
 		// MSLUT_SEL
@@ -1255,8 +1256,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x19);
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_SEL_START, *value);
-		}
 			}
+		}
 		break;
 	case 230:
 		// START_SIN90
@@ -1277,8 +1278,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x18);
 				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_MSLUT_SEL_START, 0xFF0000, 16, *value);
-		}
 			}
+		}
 		break;
 	case 231:
 		// OFFSET_SIN90
@@ -1299,8 +1300,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else{
 				tmc5272_writeInt(motorToIC(motor), TMC5272_MSLUT_ADDR, 0x18);
 				TMC5272_FIELD_WRITE(motorToIC(motor), TMC5272_MSLUT_SEL_START, 0xFF000000, 24, *value);
-		}
 			}
+		}
 		break;
 	case 232:
 		// SG4_IND_0
@@ -1309,7 +1310,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
-	}
+		}
 		break;
 	case 233:
 		// SG4_IND_1
@@ -1318,7 +1319,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
-	}
+		}
 		break;
 	case 234:
 		// SG4_IND_2
@@ -1327,7 +1328,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
-	}
+		}
 		break;
 	case 235:
 		// SG4_IND_3
@@ -1336,7 +1337,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
-	}
+		}
 		break;
 	case 255:
 		// DEBUG: SPI-FREQ
@@ -1373,6 +1374,7 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 	return TMC_ERROR_NONE;
 }
 
+
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
 	//catch hardware bug
@@ -1397,9 +1399,9 @@ static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 static void periodicJob(uint32_t tick)
 {
 	if(!noRegResetnSLEEP)
-		{
-	//check if reset after nSLEEP to HIGH was performed
-	for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
+	{
+		//check if reset after nSLEEP to HIGH was performed
+		for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
 		{
 			tmc5272_periodicJob(&TMC5272, tick);
 		}
@@ -1485,38 +1487,38 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		}
 		*value = buffer;
 		break;
-	case 5:  // read interrupt pin SWN_DIAG0
-		*value = (HAL.IOs->config->isHigh(Pins.SWN_DIAG0))? 1:0;
-		break;
-	case 6:  // read interrupt pin SWP_DIAG1
-		*value = (HAL.IOs->config->isHigh(Pins.SWP_DIAG1))? 1:0;
-		break;
+		case 5:  // read interrupt pin SWN_DIAG0
+			*value = (HAL.IOs->config->isHigh(Pins.SWN_DIAG0))? 1:0;
+			break;
+		case 6:  // read interrupt pin SWP_DIAG1
+			*value = (HAL.IOs->config->isHigh(Pins.SWP_DIAG1))? 1:0;
+			break;
 
-	case 8: // Enable UART mode
-		if(*value == 1)
-			commMode = TMC_BOARD_COMM_UART;
-		else if(*value == 0)
-			commMode = TMC_BOARD_COMM_SPI;
-		init_comm(commMode);
-		break;
+		case 8: // Enable UART mode
+			if(*value == 1)
+				commMode = TMC_BOARD_COMM_UART;
+			else if(*value == 0)
+				commMode = TMC_BOARD_COMM_SPI;
+			init_comm(commMode);
+			break;
 
-	case 252:
-		if(*value)
-		{
-			HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
-			HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
-		}
-		else
-		{
-			HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
-		}
-		break;
-	case 253:
-		*value = tmc5272_readInt(motorToIC(motor), TMC5272_XACTUAL(motor));
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
+		case 252:
+			if(*value)
+			{
+				HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
+				HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
+			}
+			else
+			{
+				HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
+			}
+			break;
+		case 253:
+			*value = tmc5272_readInt(motorToIC(motor), TMC5272_XACTUAL(motor));
+			break;
+		default:
+			errors |= TMC_ERROR_TYPE;
+			break;
 	}
 	return errors;
 }
@@ -1654,7 +1656,7 @@ void TMC5272_init(void)
 	Pins.SDO             = &HAL.IOs->pins->SPI1_SDO; //Pin33
 	Pins.CS              = &HAL.IOs->pins->SPI1_CSN; //Pin33
 
-	
+
 	HAL.IOs->config->toOutput(Pins.DRV_ENN_CFG6);
 	HAL.IOs->config->toOutput(Pins.UART_MODE);
 	HAL.IOs->config->toOutput(Pins.IREF_R2);
