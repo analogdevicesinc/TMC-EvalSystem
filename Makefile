@@ -454,6 +454,7 @@ CFLAGS += -O$(OPT)
 CFLAGS += -mcpu=$(MCU) $(THUMB_IW)
 CFLAGS += $(CDEFS)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
+CFLAGS += -DTMC_API_EXTERNAL_CRC_TABLE=1
 # when using ".ramfunc"s without longcall:
 ##CFLAGS += -mlong-calls
 # -mapcs-frame is important if gcc's interrupt attributes are used
