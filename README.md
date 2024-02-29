@@ -12,6 +12,10 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
+### Version 3.10: (Released)
+ * Added TMC5262-Eval, TMC2262-Eval and TMC8100-Eval.
+ * Various bugfixes & cleanups
+
 ### Version 3.09.6: (Pre-release)
  * Added TMC6140-Eval
  * Various bugfixes & cleanups
