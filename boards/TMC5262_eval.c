@@ -21,6 +21,12 @@
 
 #define DEFAULT_MOTOR  0
 
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#define TMC5262_RAMDEBUG_TIMER TIMER_CHANNEL_1
+#elif defined(LandungsbrueckeV3)
+#define TMC5262_RAMDEBUG_TIMER TIMER_CHANNEL_2
+#endif
+
 static bool vMaxModified = false;
 static uint32_t vmax_position;
 //static uint32_t vMax		   = 1;
@@ -1051,5 +1057,7 @@ void TMC5262_init(void)
 
 	Timer.overflow_callback = timer_overflow;
 	Timer.init();
+	Timer.setFrequency(TMC5262_RAMDEBUG_TIMER, 10000);
+	debug_updateFrequency(10000);
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 };

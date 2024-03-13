@@ -19,6 +19,12 @@
 #define TORQUE_FLUX_MAX 	(int32_t)10000
 #define POSITION_SCALE_MAX  (int32_t)65536
 
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#define TMC4671_RAMDEBUG_TIMER TIMER_CHANNEL_1
+#elif defined(LandungsbrueckeV3)
+#define TMC4671_RAMDEBUG_TIMER TIMER_CHANNEL_2
+#endif
+
 static IOPinTypeDef *PIN_DRV_ENN;
 static ConfigurationTypeDef *TMC4671_config;
 static SPIChannelTypeDef *TMC4671_SPIChannel;
@@ -1096,6 +1102,6 @@ void TMC4671_init(void)
 
 	Timer.overflow_callback = timer_overflow;
 	Timer.init();
-	Timer.setFrequency(TIMER_CHANNEL_2, 10000);
+	Timer.setFrequency(TMC4671_RAMDEBUG_TIMER, 10000);
 	debug_updateFrequency(10000);
 }
