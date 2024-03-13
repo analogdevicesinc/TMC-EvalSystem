@@ -12,6 +12,16 @@
 
 #include "tmc/helpers/API_Header.h"
 
+#define	BL_MAGIC_VALUE_BL_NEW		0x43215678
+#define BL_MAGIC_VALUE_APP_NEW		0x12348765
+#define BL_MAGIC_VALUE_OLD			0x12345678
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
+    struct BootloaderConfig {
+        uint32_t BLMagic;
+        uint32_t drvEnableResetValue;
+    };
+#endif
 void tmcl_init();
 void tmcl_process();
 void tmcl_boot();

@@ -33,21 +33,9 @@ EvalboardsTypeDef Evalboards;
 	};
 #endif
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	struct BootloaderConfig {
-		uint32_t BLMagic;
-		uint32_t drvEnableResetValue;
-	};
-
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 	// This struct gets placed at a specific address by the linker
 	struct BootloaderConfig __attribute__ ((section(".bldata"))) BLConfig;
-#elif defined(LandungsbrueckeV3)
-    struct BootloaderConfig {
-        uint32_t BLMagic;
-    };
-
-    // This struct gets placed at a specific address by the linker
-    struct BootloaderConfig __attribute__ ((section(".bldata"))) BLConfig;
 #endif
 
 
@@ -89,11 +77,6 @@ void shallForceBoot()
 /* Call all standard initialization routines. */
 static void init()
 {
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	// Default value: Driver enable gets set high by the bootloader
-	BLConfig.drvEnableResetValue = 1;
-#endif
-
 	HAL.init();                  // Initialize Hardware Abstraction Layer
 	IDDetection_init();          // Initialize board detection
 	tmcl_init();                 // Initialize TMCL communication

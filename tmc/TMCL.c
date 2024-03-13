@@ -235,20 +235,7 @@ RXTXTypeDef interfaces[4];
 uint32_t numberOfInterfaces;
 uint32_t resetRequest = 0;
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-    // ToDo: Remove the duplicate declaration of the struct here and in main.c
-    struct BootloaderConfig {
-        uint32_t BLMagic;
-        uint32_t drvEnableResetValue;
-    };
-
-    extern struct BootloaderConfig BLConfig;
-#elif defined(LandungsbrueckeV3)
-    // ToDo: Remove the duplicate declaration of the struct here and in main.c
-    struct BootloaderConfig {
-        uint32_t BLMagic;
-    };
-
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
     extern struct BootloaderConfig BLConfig;
 #endif
 
@@ -585,7 +572,7 @@ void rx(RXTXTypeDef *RXTX)
 
 void tmcl_boot()
 {
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
 	if(Evalboards.ch1.id == ID_TMC4671)
 	{
 		// Driver Enable has to be set low by the bootloader for these ICs
@@ -621,7 +608,8 @@ void tmcl_boot()
 	HAL.NVIC_DeInit();
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
-	BLConfig.BLMagic = 0x12345678;
+	bool isBLNew = (BLConfig.BLMagic == BL_MAGIC_VALUE_BL_NEW);
+	BLConfig.BLMagic = isBLNew ? BL_MAGIC_VALUE_APP_NEW : BL_MAGIC_VALUE_OLD;
 	HAL.reset(true);
 #endif
 }
