@@ -523,8 +523,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 			else
 			{
-			    readRegister(motor, TMC5271_CHOPCONF>> TMC5271_HSTRT_TFD210_SHIFT, value);
-			    *value = *value & TMC5271_HSTRT_TFD210_MASK;
+			    *value = (buffer >> TMC5271_HSTRT_TFD210_SHIFT) & TMC5271_HSTRT_TFD210_MASK;
 				if(buffer & TMC5271_HSTRT_TFD210_SHIFT)
 					*value |= 1<<3; // MSB wird zu value dazugefügt
 			}
