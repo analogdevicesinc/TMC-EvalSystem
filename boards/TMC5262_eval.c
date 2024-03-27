@@ -911,7 +911,6 @@ static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32_t buffer;
 	uint32_t errors = 0;
 
 	UNUSED(motor);

@@ -45,8 +45,6 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void periodicJob(uint32_t tick);
 static void checkErrors(uint32_t tick);
 static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
