@@ -16,8 +16,7 @@ TIMER_CHANNEL_3 = TIMER 4 Channel 0
 TIMER_CHANNEL_4 = TIMER 0 Channel 1, PWM output DIO9
 TIMER_CHANNEL_5 = TIMER 0 Channel 0, PWM output DIO7
 */
-
-#define TIMER_BASE_CLK 240000000
+static uint32_t timerBaseClk;
 
 static void init(void);
 static void deInit(void);
@@ -265,6 +264,7 @@ static void setFrequency(timer_channel channel, float freq)
 		timer = TIMER0;
 		timer_ch = TIMER_CH_2;
 		irq = TIMER0_Channel_IRQn;
+		timerBaseClk = 240000000;
 		break;
 	case TIMER_CHANNEL_2:
 		freq_min = freq_min_buf[1];
@@ -272,6 +272,7 @@ static void setFrequency(timer_channel channel, float freq)
 		timer = TIMER3;
 		timer_ch = TIMER_CH_0;
 		irq = TIMER3_IRQn;
+		timerBaseClk = 120000000;
 		break;
 	case TIMER_CHANNEL_3:
 		freq_min = freq_min_buf[2];
@@ -279,6 +280,7 @@ static void setFrequency(timer_channel channel, float freq)
 		timer = TIMER4;
 		timer_ch = TIMER_CH_0;
 		irq = TIMER4_IRQn;
+		timerBaseClk = 120000000;
 		break;
 	case TIMER_CHANNEL_4:
 		freq_min = freq_min_buf[0];
@@ -286,6 +288,7 @@ static void setFrequency(timer_channel channel, float freq)
 		timer = TIMER0;
 		timer_ch = TIMER_CH_1;
 		irq = TIMER0_Channel_IRQn;
+		timerBaseClk = 240000000;
 		break;
 	case TIMER_CHANNEL_5:
 		freq_min = freq_min_buf[0];
@@ -293,29 +296,28 @@ static void setFrequency(timer_channel channel, float freq)
 		timer = TIMER0;
 		timer_ch = TIMER_CH_0;
 		irq = TIMER0_Channel_IRQn;
+		timerBaseClk = 240000000;
 		break;
 	}
 
 	uint16_t prescaler = 0;
 	uint16_t period = 0xFFFF;
-
-	if(freq < ((float)TIMER_BASE_CLK / (0x0000FFFF * 0x0000FFFF)))
+	if(freq < ((float)timerBaseClk / (0x0000FFFF * 0x0000FFFF)))
 		return;
 
-	if(freq > (float)TIMER_BASE_CLK)
+	if(freq > (float)timerBaseClk)
 		return;
 
 	for(; prescaler < 0xFFFF; prescaler++)
 	{
-		if(freq > ((float)TIMER_BASE_CLK / ((prescaler + 1) * period)))
+		if(freq > ((float)timerBaseClk / ((prescaler + 1) * period)))
 		{
-			period = (float)TIMER_BASE_CLK / ((prescaler + 1) * freq);
+			period = (float)timerBaseClk / ((prescaler + 1) * freq);
 			if(period < period_min)
-			    period = (float)TIMER_BASE_CLK / (prescaler * freq);
+			    period = (float)timerBaseClk / (prescaler * freq);
 			break;
 		}
 	}
-
 	timer_prescaler_config(timer, prescaler, TIMER_PSC_RELOAD_NOW);
 	timer_autoreload_value_config(timer, period);
 }
