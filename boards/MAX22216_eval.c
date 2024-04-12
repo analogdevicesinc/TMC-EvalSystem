@@ -20,7 +20,7 @@
 #define STEPDIR_PRECISION (1 << 17)
 
 #define VM_MIN  51   // VM[V/10] min
-#define VM_MAX  241  // VM[V/10] max
+#define VM_MAX  360  // VM[V/10] max
 
 #define MOTORS 1
 
@@ -197,8 +197,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 			rapid_fire_enabled[motor] = *value;
 			for(size_t channel = 0; channel < ARRAY_SIZE(rapid_fire_enabled); channel++)
-				if(rapid_fire_enabled[channel])
+				if(rapid_fire_enabled[channel]){
+					#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+					Timer.setFrequency(TIMER_CHANNEL_1, 6000);
+					#elif defined(LandungsbrueckeV3)
 					Timer.setFrequency(TIMER_CHANNEL_2, 6000);
+					#endif
+				}
 		}
 		break;
 	case 51: // Rapid fire on-time
@@ -355,7 +360,6 @@ static void OTP_lock(void)
 static void timer_overflow(timer_channel channel)
 {
 	UNUSED(channel);
-	
 	// RAMDebug
 	debug_nextProcess();
 
@@ -469,6 +473,5 @@ void MAX22216_init(void)
 
 	Timer.overflow_callback = timer_overflow;
 	Timer.init();
-
 	wait(100);
 }
