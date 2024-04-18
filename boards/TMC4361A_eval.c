@@ -452,6 +452,35 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<0);
 			uvalue |= (*value & 0xFF) << 0;
+
+			uint32_t spiOutFormat = tmc4361A_readInt(motorToIC(motor), TMC4361A_SPIOUT_CONF) & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
+			uint32_t minLimit, maxLimit;
+			switch(spiOutFormat)
+			{//S/D Mode:
+			case 0x0B:
+			case 0x0C:
+			case 0x0F:
+				minLimit = 0;
+				maxLimit = 31;
+				break;
+			//SPI Mode:
+			case 0x08:
+			case 0x09:
+			case 0x0A:
+			case 0x0D:
+				minLimit = 0;
+				maxLimit = 255;
+				break;
+			default:
+				break;
+			}
+
+			if (uvalue < minLimit){
+				uvalue = minLimit;
+			}
+			else if (uvalue > maxLimit){
+				uvalue = maxLimit;
+			}
 			tmc4361A_writeInt(motorToIC(motor), TMC4361A_SCALE_VALUES, uvalue);
 		}
 		break;
@@ -462,6 +491,35 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<8);
 			uvalue |= (*value & 0xFF) << 8;
+
+			uint32_t spiOutFormat = tmc4361A_readInt(motorToIC(motor), TMC4361A_SPIOUT_CONF) & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
+			uint32_t minLimit, maxLimit;
+			switch(spiOutFormat)
+			{//S/D Mode:
+			case 0x0B:
+			case 0x0C:
+			case 0x0F:
+				minLimit = 0;
+				maxLimit = 31;
+				break;
+			//SPI Mode:
+			case 0x08:
+			case 0x09:
+			case 0x0A:
+			case 0x0D:
+				minLimit = 0;
+				maxLimit = 255;
+				break;
+			default:
+				break;
+			}
+
+			if (uvalue < minLimit){
+				uvalue = minLimit;
+			}
+			else if (uvalue > maxLimit){
+				uvalue = maxLimit;
+			}
 			tmc4361A_writeInt(motorToIC(motor), TMC4361A_SCALE_VALUES, uvalue);
 		}
 		break;
