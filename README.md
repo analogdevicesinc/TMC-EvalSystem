@@ -1,6 +1,6 @@
-# TMC-EvalSystem-GD
+# TMC-EvalSystem
 
-Trinamic Evaluation System ([home page](https://www.trinamic.com/support/eval-kits/))
+Trinamic Evaluation System ([home page](https://www.analog.com/en/resources/evaluation-hardware-and-software/motor-motion-control-software/landungsbrucke-eval-system.html))
 
 [AN038: Using TRINAMIC’s IC Software API and Examples](https://www.analog.com/media/en/technical-documentation/app-notes/an-038.pdf)
 
