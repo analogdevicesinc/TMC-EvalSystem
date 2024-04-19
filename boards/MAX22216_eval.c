@@ -22,7 +22,7 @@
 #define VM_MIN  51   // VM[V/10] min
 #define VM_MAX  360  // VM[V/10] max
 
-#define MOTORS 1
+#define MOTORS 4
 
 #define TIMEOUT_VALUE 10 // 10 ms
 
