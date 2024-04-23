@@ -12,8 +12,11 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
+### Version 3.10.2: (Released)
+ * Various bugfixes for MAX22216-Eval.
+ 
 ### Version 3.10.1: (Released)
- * Various bugfixes & cleanups
+ * Various bugfixes for TMC4671-Eval, TMC4361A-Eval and TMC2130-Eval.
  
 ### Version 3.10: (Released)
  * Added TMC5262-Eval, TMC2262-Eval and TMC8100-Eval.
