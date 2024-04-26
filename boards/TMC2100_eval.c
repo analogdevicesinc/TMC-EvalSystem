@@ -572,6 +572,13 @@ void TMC2100_init(void)
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.AIN_REF_PWM);
 	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#elif defined(LandungsbrueckeV3)
+	//Set MUX_1 and MUX_2 to one to connect DIO10 and DIO11 to PWM pins DIO10_A and DIO11_A respectively.
+	HAL.IOs->config->toOutput(&HAL.IOs->pins->SW_UART_PWM);
+	HAL.IOs->config->setHigh(&HAL.IOs->pins->SW_UART_PWM);
+
+	Pins.AIN_REF_PWM->configuration.GPIO_Mode = GPIO_MODE_AF;
+	gpio_af_set(Pins.AIN_REF_PWM->port, GPIO_AF_1, Pins.AIN_REF_PWM->bitWeight);
 #endif
 
 	vref = 2000;
