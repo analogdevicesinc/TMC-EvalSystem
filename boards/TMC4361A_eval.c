@@ -450,8 +450,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = (tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) >> 0) & 0xFF;
 		} else if(readWrite == WRITE) {
-			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<0);
-			uvalue |= (*value & 0xFF) << 0;
 
 			uint32_t spiOutFormat = tmc4361A_readInt(motorToIC(motor), TMC4361A_SPIOUT_CONF) & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
 			uint32_t minLimit, maxLimit;
@@ -475,12 +473,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				break;
 			}
 
-			if (uvalue < minLimit){
-				uvalue = minLimit;
+			if (*value < minLimit){
+				*value = minLimit;
 			}
-			else if (uvalue > maxLimit){
-				uvalue = maxLimit;
+			else if (*value > maxLimit){
+				*value = maxLimit;
 			}
+			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<0);
+			uvalue |= (*value & 0xFF) << 0;
 			tmc4361A_writeInt(motorToIC(motor), TMC4361A_SCALE_VALUES, uvalue);
 		}
 		break;
@@ -489,8 +489,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = (tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) >> 8) & 0xFF;
 		} else if(readWrite == WRITE) {
-			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<8);
-			uvalue |= (*value & 0xFF) << 8;
 
 			uint32_t spiOutFormat = tmc4361A_readInt(motorToIC(motor), TMC4361A_SPIOUT_CONF) & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
 			uint32_t minLimit, maxLimit;
@@ -514,12 +512,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				break;
 			}
 
-			if (uvalue < minLimit){
-				uvalue = minLimit;
+			if (*value < minLimit){
+				*value = minLimit;
 			}
-			else if (uvalue > maxLimit){
-				uvalue = maxLimit;
+			else if (*value > maxLimit){
+				*value = maxLimit;
 			}
+			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<8);
+			uvalue |= (*value & 0xFF) << 8;
 			tmc4361A_writeInt(motorToIC(motor), TMC4361A_SCALE_VALUES, uvalue);
 		}
 		break;
