@@ -581,10 +581,10 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         *value = StepDir_getStatus(motor);
         break;
     case 1:
-        tmc2209_set_slave(motorToIC(motor), (*value) & 0xFF);
+        nodeAddress = (*value) & 0xFF;
         break;
     case 2:
-        *value = tmc2209_get_slave(motorToIC(motor));
+        *value = tmc2209_getNodeAddress(motor);
         break;
     case 3:
         *value = Timer.getDuty(timerChannel) * 100 / TIMER_MAX;
