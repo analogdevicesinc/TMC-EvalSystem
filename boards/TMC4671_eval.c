@@ -220,16 +220,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 11: // acceleration
 		if(readWrite == READ)
 		{
-			*value = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
-
-			// update also ramp generator value
-			rampGenerator[motor].acceleration = *value;
+			*value = rampGenerator[motor].acceleration;
 		}
 		else if(readWrite == WRITE)
 		{
-			tmc4671_writeInt(motor, TMC4671_PID_ACCELERATION_LIMIT, *value);
-
-			// update also ramp generator value
 			rampGenerator[motor].acceleration = *value;
 		}
 		break;
@@ -296,10 +290,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 22: // Linear acceleration [µm/s/s]
 		if (readWrite == READ)
 		{
-			*value = (uint32_t) tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
-
-			// update also ramp generator value
-			rampGenerator[motor].acceleration = *value;
+			*value = rampGenerator[motor].acceleration;
 
 			// Internal -> linear
 			*value = internalVelocityToLinearVelocity(*value, motorConfig[motor].linearScaler);
@@ -308,9 +299,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		{
 			// Linear -> internal
 			uint32_t acceleration = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
-			tmc4671_writeInt(motor, TMC4671_PID_ACCELERATION_LIMIT, acceleration);
-
-			// update also ramp generator value
 			rampGenerator[motor].acceleration = acceleration;
 		}
 		break;
@@ -1081,7 +1069,6 @@ void TMC4671_init(void)
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_dsADC_MCLK_B, 0x0);
 
 	// set default acceleration and max velocity
-	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PID_ACCELERATION_LIMIT, 2000);
 	tmc4671_writeInt(DEFAULT_MOTOR, TMC4671_PID_VELOCITY_LIMIT, 4000);
 
 	// set default max torque/flux
@@ -1097,7 +1084,7 @@ void TMC4671_init(void)
 
 		// update ramp generator default values
 		rampGenerator[motor].maxVelocity = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_VELOCITY_LIMIT);
-		rampGenerator[motor].acceleration = (uint32_t)tmc4671_readInt(motor, TMC4671_PID_ACCELERATION_LIMIT);
+		rampGenerator[motor].acceleration = 2000;
 	}
 
 	Timer.overflow_callback = timer_overflow;
