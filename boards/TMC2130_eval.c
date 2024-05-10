@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -39,7 +39,7 @@ TMC2130BusType tmc2130_getBusType(uint16_t icID)
 // Stepdir precision: 2^17 -> 17 digits of precision
 #define STEPDIR_PRECISION (1 << 17)
 
-#define TMC2130_DEFAULT_MOTOR 0
+
 
 #define VREF_FULLSCALE 2714 // mV
 
@@ -90,15 +90,6 @@ static PinsTypeDef Pins;
 
 static uint16_t vref; // mV
 
-// Translate motor number to TMC2130TypeDef
-// When using multiple ICs you can map them here
-static inline TMC2130TypeDef *motorToIC(uint8_t motor)
-{
-	UNUSED(motor);
-
-	return &TMC2130;
-}
-
 // Translate channel number to SPI channel
 // When using multiple ICs you can map them here
 static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
@@ -123,6 +114,7 @@ void tmc2130_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
 	}
 }
 // <= SPI wrapper
+
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -214,7 +206,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				break;
 			case STEPDIR_EXTERNAL:
 			default:
-				tempValue = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2130_FIELD_READ(motorToIC(motor), TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
+				tempValue = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2130_FIELD_READ(&TMC2130, TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
 				*value = (abs(tempValue) < 20) ? 0 : tempValue;
 				break;
 			}
@@ -241,17 +233,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 6:
 		// Maximum current
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_IHOLD_IRUN, TMC2130_IRUN_MASK, TMC2130_IRUN_SHIFT);
-		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_IHOLD_IRUN, TMC2130_IRUN_MASK, TMC2130_IRUN_SHIFT, *value);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_IHOLD_IRUN, TMC2130_IRUN_MASK, TMC2130_IRUN_SHIFT);
+		} 		else if(readWrite == WRITE) {
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_IHOLD_IRUN, TMC2130_IRUN_MASK, TMC2130_IRUN_SHIFT, *value);
 		}
 		break;
 	case 7:
 		// Standby current
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_IHOLD_IRUN, TMC2130_IHOLD_MASK, TMC2130_IHOLD_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_IHOLD_IRUN, TMC2130_IHOLD_MASK, TMC2130_IHOLD_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_IHOLD_IRUN, TMC2130_IHOLD_MASK, TMC2130_IHOLD_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_IHOLD_IRUN, TMC2130_IHOLD_MASK, TMC2130_IHOLD_SHIFT, *value);
 		}
 		break;
 	case 8:
@@ -281,55 +273,55 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			errors |= TMC_ERROR_TYPE;
 		} else if(readWrite == WRITE) {
-			tmc2130_writeInt(motorToIC(motor), TMC2130_TPOWERDOWN, *value);
+			tmc2130_writeRegister(motor, TMC2130_TPOWERDOWN, *value);
 		}
 		break;
 	case 23:
 		// Speed threshold for high speed mode
 		if(readWrite == READ) {
-			tempValue = tmc2130_readInt(motorToIC(motor), TMC2130_THIGH);
+			tempValue = tmc2130_readRegister(motor, TMC2130_THIGH);
 			*value = MIN(0xFFFFF, (1<<24) / ((tempValue)? tempValue:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			tmc2130_writeInt(motorToIC(motor), TMC2130_THIGH, *value);
+			tmc2130_writeRegister(motor, TMC2130_THIGH, *value);
 		}
 		break;
 	case 24:
 		// Minimum speed for switching to dcStep
 		if(readWrite == READ) {
-			*value = tmc2130_readInt(motorToIC(motor), TMC2130_VDCMIN);
+			*value = tmc2130_readRegister(motor, TMC2130_VDCMIN);
 		} else if(readWrite == WRITE) {
-			tmc2130_writeInt(motorToIC(motor), TMC2130_VDCMIN, *value);
+			tmc2130_writeRegister(motor, TMC2130_VDCMIN, *value);
 		}
 		break;
 	case 26:
 		// High speed fullstep mode
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_VHIGHFS_MASK, TMC2130_VHIGHFS_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_VHIGHFS_MASK, TMC2130_VHIGHFS_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_VHIGHFS_MASK, TMC2130_VHIGHFS_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_VHIGHFS_MASK, TMC2130_VHIGHFS_SHIFT, *value);
 		}
 		break;
 	case 27:
 		// High speed chopper mode
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_VHIGHCHM_MASK, TMC2130_VHIGHCHM_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_VHIGHCHM_MASK, TMC2130_VHIGHCHM_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_VHIGHCHM_MASK, TMC2130_VHIGHCHM_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_VHIGHCHM_MASK, TMC2130_VHIGHCHM_SHIFT, *value);
 		}
 		break;
 	case 28:
 		// Internal RSense
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_GCONF, TMC2130_INTERNAL_RSENSE_MASK, TMC2130_INTERNAL_RSENSE_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_GCONF, TMC2130_INTERNAL_RSENSE_MASK, TMC2130_INTERNAL_RSENSE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_GCONF, TMC2130_INTERNAL_RSENSE_MASK, TMC2130_INTERNAL_RSENSE_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_GCONF, TMC2130_INTERNAL_RSENSE_MASK, TMC2130_INTERNAL_RSENSE_SHIFT, *value);
 		}
 		break;
 	case 29:
 		// Measured Speed
 		if(readWrite == READ) {
-			tempValue = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2130_FIELD_READ(motorToIC(motor), TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
+			tempValue = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2130_FIELD_READ(&TMC2130, TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
 			*value = (abs(tempValue) < 20) ? 0 : tempValue;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
@@ -352,7 +344,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
-			*value = 256 >> TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_MRES_MASK, TMC2130_MRES_SHIFT);
+			*value = 256 >> TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_MRES_MASK, TMC2130_MRES_SHIFT);
 		} else if(readWrite == WRITE) {
 			switch(*value)
 			{
@@ -370,7 +362,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_MRES_MASK, TMC2130_MRES_SHIFT, *value);
+				TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_MRES_MASK, TMC2130_MRES_SHIFT, *value);
 			}
 			else
 			{
@@ -381,157 +373,157 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 162:
 		// Chopper blank time
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TBL_MASK, TMC2130_TBL_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_TBL_MASK, TMC2130_TBL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TBL_MASK, TMC2130_TBL_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_TBL_MASK, TMC2130_TBL_SHIFT, *value);
 		}
 		break;
 	case 163:
 		// Constant TOff Mode
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_CHM_MASK, TMC2130_CHM_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_CHM_MASK, TMC2130_CHM_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_CHM_MASK, TMC2130_CHM_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_CHM_MASK, TMC2130_CHM_SHIFT, *value);
 		}
 		break;
 	case 164:
 		// Disable fast decay comparator
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_DISFDCC_MASK, TMC2130_DISFDCC_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_DISFDCC_MASK, TMC2130_DISFDCC_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_DISFDCC_MASK, TMC2130_DISFDCC_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_DISFDCC_MASK, TMC2130_DISFDCC_SHIFT, *value);
 		}
 		break;
 	case 165:
 		// Chopper hysteresis end / fast decay time
 		if(readWrite == READ) {
-			if(tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF) & (1<<14))
+			if(tmc2130_readRegister(motor, TMC2130_CHOPCONF) & (1<<14))
 			{
-				*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_HEND_MASK, TMC2130_HEND_SHIFT);
+				*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_HEND_MASK, TMC2130_HEND_SHIFT);
 			}
 			else
 			{
-				tempValue = tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF);
-				*value = (tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF) >> 4) & 0x07;
+				tempValue = tmc2130_readRegister(motor, TMC2130_CHOPCONF);
+				*value = (tmc2130_readRegister(motor, TMC2130_CHOPCONF) >> 4) & 0x07;
 				if(tempValue & (1<<11))
 					*value |= 1<<3;
 			}
 		} else if(readWrite == WRITE) {
-			if(tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF) & (1<<14))
+			if(tmc2130_readRegister(motor, TMC2130_CHOPCONF) & (1<<14))
 			{
-				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_HEND_MASK, TMC2130_HEND_SHIFT, *value);
+				TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_HEND_MASK, TMC2130_HEND_SHIFT, *value);
 			}
 			else
 			{
-				tempValue = tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF);
+				tempValue = tmc2130_readRegister(motor, TMC2130_CHOPCONF);
 
-				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TFD_3_MASK, TMC2130_TFD_3_SHIFT, (*value & (1<<3))? 1:0);
-				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TFD_ALL_MASK, TMC2130_TFD_ALL_SHIFT, *value);
+				TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_TFD_3_MASK, TMC2130_TFD_3_SHIFT, (*value & (1<<3))? 1:0);
+				TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_TFD_ALL_MASK, TMC2130_TFD_ALL_SHIFT, *value);
 			}
 		}
 		break;
 	case 166:
 		// Chopper hysteresis start / sine wave offset
 		if(readWrite == READ) {
-			if(tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF) & (1<<14))
+			if(tmc2130_readRegister(motor, TMC2130_CHOPCONF) & (1<<14))
 			{
-				*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_HSTRT_MASK, TMC2130_HSTRT_SHIFT);
+				*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_HSTRT_MASK, TMC2130_HSTRT_SHIFT);
 			}
 			else
 			{
-				tempValue = tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF);
-				*value = (tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF) >> 7) & 0x0F;
+				tempValue = tmc2130_readRegister(motor, TMC2130_CHOPCONF);
+				*value = (tmc2130_readRegister(motor, TMC2130_CHOPCONF) >> 7) & 0x0F;
 				if(tempValue & (1<<11))
 					*value |= 1<<3;
 			}
 		} else if(readWrite == WRITE) {
-			if(tmc2130_readInt(motorToIC(motor), TMC2130_CHOPCONF) & (1<<14))
+			if(tmc2130_readRegister(motor, TMC2130_CHOPCONF) & (1<<14))
 			{
-				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_HSTRT_MASK, TMC2130_HSTRT_SHIFT, *value);
+				TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_HSTRT_MASK, TMC2130_HSTRT_SHIFT, *value);
 			}
 			else
 			{
-				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_OFFSET_MASK, TMC2130_OFFSET_SHIFT, *value);
+				TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_OFFSET_MASK, TMC2130_OFFSET_SHIFT, *value);
 			}
 		}
 		break;
 	case 167:
 		// Chopper off time
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TOFF_MASK, TMC2130_TOFF_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_TOFF_MASK, TMC2130_TOFF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_TOFF_MASK, TMC2130_TOFF_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_TOFF_MASK, TMC2130_TOFF_SHIFT, *value);
 		}
 		break;
 	case 168:
 		// smartEnergy current minimum (SEIMIN)
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEIMIN_MASK, TMC2130_SEIMIN_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_COOLCONF, TMC2130_SEIMIN_MASK, TMC2130_SEIMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEIMIN_MASK, TMC2130_SEIMIN_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_COOLCONF, TMC2130_SEIMIN_MASK, TMC2130_SEIMIN_SHIFT, *value);
 		}
 		break;
 	case 169:
 		// smartEnergy current down step
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEDN_MASK, TMC2130_SEDN_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_COOLCONF, TMC2130_SEDN_MASK, TMC2130_SEDN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEDN_MASK, TMC2130_SEDN_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_COOLCONF, TMC2130_SEDN_MASK, TMC2130_SEDN_SHIFT, *value);
 		}
 		break;
 	case 170:
 		// smartEnergy hysteresis
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEMAX_MASK, TMC2130_SEMAX_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_COOLCONF, TMC2130_SEMAX_MASK, TMC2130_SEMAX_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEMAX_MASK, TMC2130_SEMAX_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_COOLCONF, TMC2130_SEMAX_MASK, TMC2130_SEMAX_SHIFT, *value);
 		}
 		break;
 	case 171:
 		// smartEnergy current up step
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEUP_MASK, TMC2130_SEUP_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_COOLCONF, TMC2130_SEUP_MASK, TMC2130_SEUP_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEUP_MASK, TMC2130_SEUP_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_COOLCONF, TMC2130_SEUP_MASK, TMC2130_SEUP_SHIFT, *value);
 		}
 		break;
 	case 172:
 		// smartEnergy hysteresis start
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEMIN_MASK, TMC2130_SEMIN_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_COOLCONF, TMC2130_SEMIN_MASK, TMC2130_SEMIN_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SEMIN_MASK, TMC2130_SEMIN_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_COOLCONF, TMC2130_SEMIN_MASK, TMC2130_SEMIN_SHIFT, *value);
 		}
 		break;
 	case 173:
 		// stallGuard2 filter enable
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SFILT_MASK, TMC2130_SFILT_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_COOLCONF, TMC2130_SFILT_MASK, TMC2130_SFILT_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SFILT_MASK, TMC2130_SFILT_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_COOLCONF, TMC2130_SFILT_MASK, TMC2130_SFILT_SHIFT, *value);
 		}
 		break;
 	case 174:
 		// stallGuard2 threshold
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SGT_MASK, TMC2130_SGT_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_COOLCONF, TMC2130_SGT_MASK, TMC2130_SGT_SHIFT);
 			*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_COOLCONF, TMC2130_SGT_MASK, TMC2130_SGT_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_COOLCONF, TMC2130_SGT_MASK, TMC2130_SGT_SHIFT, *value);
 		}
 		break;
 	case 179:
 		// VSense
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_VSENSE_MASK, TMC2130_VSENSE_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_VSENSE_MASK, TMC2130_VSENSE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_VSENSE_MASK, TMC2130_VSENSE_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_VSENSE_MASK, TMC2130_VSENSE_SHIFT, *value);
 		}
 		break;
 	case 180:
 		// smartEnergy actual current
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_DRV_STATUS, TMC2130_CS_ACTUAL_MASK, TMC2130_CS_ACTUAL_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_DRV_STATUS, TMC2130_CS_ACTUAL_MASK, TMC2130_CS_ACTUAL_SHIFT);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -547,67 +539,67 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			tempValue = tmc2130_readInt(motorToIC(motor), TMC2130_TCOOLTHRS);
+			tempValue = tmc2130_readRegister(motor, TMC2130_TCOOLTHRS);
 			*value = MIN(0xFFFFF, (1<<24) / ((tempValue)? tempValue:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			tmc2130_writeInt(motorToIC(motor), TMC2130_TCOOLTHRS, *value);
+			tmc2130_writeRegister(motor, TMC2130_TCOOLTHRS, *value);
 		}
 		break;
 	case 184:
 		// Random TOff mode
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_RNDTF_MASK, TMC2130_RNDTF_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_RNDTF_MASK, TMC2130_RNDTF_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_RNDTF_MASK, TMC2130_RNDTF_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_RNDTF_MASK, TMC2130_RNDTF_SHIFT, *value);
 		}
 		break;
 	case 185:
 		// Chopper synchronization
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_SYNC_MASK, TMC2130_SYNC_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_CHOPCONF, TMC2130_SYNC_MASK, TMC2130_SYNC_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_CHOPCONF, TMC2130_SYNC_MASK, TMC2130_SYNC_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_CHOPCONF, TMC2130_SYNC_MASK, TMC2130_SYNC_SHIFT, *value);
 		}
 		break;
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
-			tempValue = tmc2130_readInt(motorToIC(motor), TMC2130_TPWMTHRS);
+			tempValue = tmc2130_readRegister(motor, TMC2130_TPWMTHRS);
 			*value = MIN(0xFFFFF, (1<<24) / ((tempValue)? tempValue:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			tmc2130_writeInt(motorToIC(motor), TMC2130_TPWMTHRS, *value);
+			tmc2130_writeRegister(motor, TMC2130_TPWMTHRS, *value);
 		}
 		break;
 	case 187:
 		// PWM gradient
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_GRAD_MASK, TMC2130_PWM_GRAD_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_PWMCONF, TMC2130_PWM_GRAD_MASK, TMC2130_PWM_GRAD_SHIFT);
 		} else if(readWrite == WRITE) {
 			// Set gradient
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_GRAD_MASK, TMC2130_PWM_GRAD_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_PWMCONF, TMC2130_PWM_GRAD_MASK, TMC2130_PWM_GRAD_SHIFT, *value);
 
 			// Enable/disable stealthChop accordingly
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_GCONF, TMC2130_EN_PWM_MODE_MASK, TMC2130_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_GCONF, TMC2130_EN_PWM_MODE_MASK, TMC2130_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
 		}
 		break;
 	case 188:
 		// PWM amplitude
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_AMPL_MASK, TMC2130_PWM_AMPL_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_PWMCONF, TMC2130_PWM_AMPL_MASK, TMC2130_PWM_AMPL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_AMPL_MASK, TMC2130_PWM_AMPL_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_PWMCONF, TMC2130_PWM_AMPL_MASK, TMC2130_PWM_AMPL_SHIFT, *value);
 		}
 		break;
 	case 191:
 		// PWM frequency
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_FREQ_MASK, TMC2130_PWM_FREQ_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_PWMCONF, TMC2130_PWM_FREQ_MASK, TMC2130_PWM_FREQ_SHIFT);
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 4)
 			{
-				TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_FREQ_MASK, TMC2130_PWM_FREQ_SHIFT, *value);
+				TMC2130_FIELD_WRITE(&TMC2130, TMC2130_PWMCONF, TMC2130_PWM_FREQ_MASK, TMC2130_PWM_FREQ_SHIFT, *value);
 			}
 			else
 			{
@@ -618,23 +610,23 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 192:
 		// PWM autoscale
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_AUTOSCALE_MASK, TMC2130_PWM_AUTOSCALE_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_PWMCONF, TMC2130_PWM_AUTOSCALE_MASK, TMC2130_PWM_AUTOSCALE_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_PWMCONF, TMC2130_PWM_AUTOSCALE_MASK, TMC2130_PWM_AUTOSCALE_SHIFT, (*value)? 1:0);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_PWMCONF, TMC2130_PWM_AUTOSCALE_MASK, TMC2130_PWM_AUTOSCALE_SHIFT, (*value)? 1:0);
 		}
 		break;
 	case 204:
 		// Freewheeling mode
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_PWMCONF, TMC2130_FREEWHEEL_MASK, TMC2130_FREEWHEEL_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_PWMCONF, TMC2130_FREEWHEEL_MASK, TMC2130_FREEWHEEL_SHIFT);
 		} else if(readWrite == WRITE) {
-			TMC2130_FIELD_WRITE(motorToIC(motor), TMC2130_PWMCONF, TMC2130_FREEWHEEL_MASK, TMC2130_FREEWHEEL_SHIFT, *value);
+			TMC2130_FIELD_WRITE(&TMC2130, TMC2130_PWMCONF, TMC2130_FREEWHEEL_MASK, TMC2130_FREEWHEEL_SHIFT, *value);
 		}
 		break;
 	case 206:
 		// Load value
 		if(readWrite == READ) {
-			*value = TMC2130_FIELD_READ(motorToIC(motor), TMC2130_DRV_STATUS, TMC2130_SG_RESULT_MASK, TMC2130_SG_RESULT_SHIFT);
+			*value = TMC2130_FIELD_READ(&TMC2130, TMC2130_DRV_STATUS, TMC2130_SG_RESULT_MASK, TMC2130_SG_RESULT_SHIFT);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -697,12 +689,12 @@ static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	tmc2130_writeInt(motorToIC(motor), (uint8_t) address, value);
+	tmc2130_writeRegister(motor, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = tmc2130_readInt(motorToIC(motor), (uint8_t) address);
+	*value = tmc2130_readRegister(motor, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -721,9 +713,9 @@ static void periodicJob(uint32_t tick)
 
 	tmc2130_periodicJob(&TMC2130, tick);
 
-	StepDir_periodicJob(TMC2130_DEFAULT_MOTOR);
+	StepDir_periodicJob(DEFAULT_MOTOR);
 
-	StepDir_stallGuard(TMC2130_DEFAULT_MOTOR, TMC2130_FIELD_READ(motorToIC(TMC2130_DEFAULT_MOTOR), TMC2130_DRV_STATUS, TMC2130_STALLGUARD_MASK, TMC2130_STALLGUARD_SHIFT) == 1);
+	StepDir_stallGuard(DEFAULT_MOTOR, TMC2130_FIELD_READ(&TMC2130, TMC2130_DRV_STATUS, TMC2130_STALLGUARD_MASK, TMC2130_STALLGUARD_SHIFT) == 1);
 
 //	uint8_t status = StepDir_getStatus(0);
 //	// Already stalled -> skip stallGuard check
@@ -735,7 +727,7 @@ static void periodicJob(uint32_t tick)
 //		return;
 //
 //	// Check stallGuard
-//	if(tmc2130_readInt(&TMC2130, TMC2130_DRV_STATUS) & TMC2130_STALLGUARD_MASK)
+//	if(tmc2130_readRegister(motor, TMC2130_DRV_STATUS) & TMC2130_STALLGUARD_MASK)
 //		StepDir_stop(0, STOP_STALL);
 }
 
@@ -780,8 +772,8 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		// todo BUG 3: using the motor for both address and motor value can lead to trying to get struct pointer from an array outside its bounds
 		//             and then loading a function pointer from that. That is pretty a much guaranteed crash and/or hard fault!!! (LH) #1
 
-		//tmc2130_writeInt(motorToIC(motor), motor, *value);
-		//*value = tmc2130_readInt(motorToIC(motor), motor);
+		//tmc2130_writeRegister(motor, motor, *value);
+		//*value = tmc2130_readRegister(motor, motor);
 		break;
 	case 3:	 // set DC_EN
 		HAL.IOs->config->setToState(Pins.ENCB_DCEN_CFG4, (*value) ? IOS_HIGH : IOS_LOW);
@@ -867,7 +859,7 @@ static void configCallback(TMC2130TypeDef *tmc2130, ConfigState completedState)
 	{
 		// Configuration reset completed
 		// Change hardware preset registers here
-		tmc2130_writeInt(tmc2130, TMC2130_PWMCONF, 0x000504C8);
+		tmc2130_writeRegister(tmc2130, TMC2130_PWMCONF, 0x000504C8);
 
 		// Fill missing shadow registers (hardware preset registers)
 		tmc2130_fillShadowRegisters(tmc2130);
