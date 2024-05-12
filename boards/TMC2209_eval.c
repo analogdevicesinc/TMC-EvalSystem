@@ -11,29 +11,6 @@
 #include "tmc/ic/TMC2209/TMC2209.h"
 #include "tmc/StepDir.h"
 
-static uint8_t nodeAddress = 0;
-static UART_Config *TMC2209_UARTChannel;
-
-#define DEFAULT_MOTOR  0
-
-
-bool tmc2209_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
-{
-    UNUSED(icID);
-    int32_t status = UART_readWrite(TMC2209_UARTChannel, data, writeLength, readLength);
-    if(status == -1)
-        return false;
-    return true;
-}
-
-uint8_t tmc2209_getNodeAddress(uint16_t icID)
-{
-    UNUSED(icID);
-
-    return nodeAddress;
-}
-
-
 #undef  TMC2209_MAX_VELOCITY
 #define TMC2209_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
@@ -47,7 +24,7 @@ uint8_t tmc2209_getNodeAddress(uint16_t icID)
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  390  // VM[V/10] max
 
-#define MOTORS 1
+#define DEFAULT_MOTOR  0
 
 #define VREF_FULLSCALE 2100 // mV // with R308 achievable Vref_max is ~2100mV
 //#define VREF_FULLSCALE 3300 // mV // without R308 achievable Vref_max is ~2500mV
@@ -56,31 +33,6 @@ typedef struct {
     ConfigurationTypeDef *config;
 } TMC2209TypeDef;
 static TMC2209TypeDef TMC2209;
-
-static uint32_t right(uint8_t motor, int32_t velocity);
-static uint32_t left(uint8_t motor, int32_t velocity);
-static uint32_t rotate(uint8_t motor, int32_t velocity);
-static uint32_t stop(uint8_t motor);
-static uint32_t moveTo(uint8_t motor, int32_t position);
-static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
-
-static void checkErrors (uint32_t tick);
-static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
-static void periodicJob(uint32_t tick);
-static uint8_t reset(void);
-static uint8_t restore(void);
-static void enableDriver(DriverState state);
-
-static uint16_t vref; // mV
-static int32_t thigh;
-
-static timer_channel timerChannel;
 
 typedef struct
 {
@@ -98,8 +50,44 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-{
+static uint8_t nodeAddress = 0;
+static UART_Config *TMC2209_UARTChannel;
+static uint16_t vref; // mV
+static int32_t thigh;
+static timer_channel timerChannel;
 
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint8_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint8_t address, int32_t value);
+static void checkErrors (uint32_t tick);
+static void deInit(void);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+static void periodicJob(uint32_t tick);
+static uint8_t reset(void);
+static uint8_t restore(void);
+static void enableDriver(DriverState state);
+
+bool tmc2209_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+    UNUSED(icID);
+    int32_t status = UART_readWrite(TMC2209_UARTChannel, data, writeLength, readLength);
+    if(status == -1)
+        return false;
+    return true;
+}
+
+uint8_t tmc2209_getNodeAddress(uint16_t icID)
+{
+    UNUSED(icID);
+
+    return nodeAddress;
 }
 
 static void writeConfiguration(void)
