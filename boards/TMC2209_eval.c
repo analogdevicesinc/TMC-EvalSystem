@@ -52,6 +52,11 @@ uint8_t tmc2209_getNodeAddress(uint16_t icID)
 #define VREF_FULLSCALE 2100 // mV // with R308 achievable Vref_max is ~2100mV
 //#define VREF_FULLSCALE 3300 // mV // without R308 achievable Vref_max is ~2500mV
 
+typedef struct {
+    ConfigurationTypeDef *config;
+} TMC2209TypeDef;
+static TMC2209TypeDef TMC2209;
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -746,7 +751,7 @@ void TMC2209_init(void)
     TMC2209_UARTChannel->pinout = UART_PINS_2;
     TMC2209_UARTChannel->rxtx.init();
 
-    TMC2209_config = Evalboards.ch2.config;
+    TMC2209.config = Evalboards.ch2.config;
 
     Evalboards.ch2.config->reset        = reset;
     Evalboards.ch2.config->restore      = restore;
