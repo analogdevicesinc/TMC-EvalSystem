@@ -77,15 +77,10 @@ static uint8_t reset(void);
 static uint8_t restore(void);
 static void enableDriver(DriverState state);
 
-static ConfigurationTypeDef *TMC2209_config;
-
 static uint16_t vref; // mV
 static int32_t thigh;
 
 static timer_channel timerChannel;
-
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC2209_CRC(data, length) tmc_CRC8(data, length, 1)
 
 typedef struct
 {
@@ -103,17 +98,11 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-static inline TMC2209TypeDef *motorToIC(uint8_t motor)
 {
-    UNUSED(motor);
 
-    return &TMC2209;
 }
 
 static void writeConfiguration(void)
-// => CRC wrapper
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc2209_CRC8(uint8_t *data, size_t length)
 {
     uint8_t *ptr = &TMC2209.config->configIndex;
     const int32_t *settings;
@@ -146,9 +135,7 @@ uint8_t tmc2209_CRC8(uint8_t *data, size_t length)
     {
     	TMC2209.config->state = CONFIG_READY;
     }
-    return TMC2209_CRC(data, length);
 }
-// <= CRC wrapper
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
