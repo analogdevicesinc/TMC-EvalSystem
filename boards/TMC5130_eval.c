@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -10,9 +10,8 @@
 #include "Board.h"
 #include "tmc/ic/TMC5130/TMC5130.h"
 
-//////////////////////new code //////////////////
 
-static TMC5130BusType activeBus = IC_BUS_UART;
+static TMC5130BusType activeBus = IC_BUS_SPI;	//Checkout README for if you want to use UART
 static uint8_t nodeAddress = 0;
 static SPIChannelTypeDef *TMC5130_SPIChannel;
 static UART_Config *TMC5130_UARTChannel;
@@ -48,8 +47,6 @@ uint8_t tmc5130_getNodeAddress(uint16_t icID)
 	return nodeAddress;
 }
 
-////////////////////////// old code ////////////////////////////
-
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  480  // VM[V/10] max
 
@@ -84,28 +81,6 @@ static void enableDriver(DriverState state);
 
 static uint32_t vmax_position1;
 static uint16_t vref; // mV
-
-// Helper macro - Access the chip object in the motion controller boards union
-//#define TMC5130 (motionControllerBoards.tmc5130)
-
-// Translate motor number to TMC5130TypeDef
-// When using multiple ICs you can map them here
-//static inline TMC5130TypeDef *motorToIC(uint8_t motor)
-//{
-//	UNUSED(motor);
-//
-//	return &TMC5130;
-//}
-
-//// Translate channel number to SPI channel
-//// When using multiple ICs you can map them here
-//static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
-//{
-//	UNUSED(channel);
-//
-//	return TMC5130_SPIChannel;
-//}
-
 
 typedef struct
 {
