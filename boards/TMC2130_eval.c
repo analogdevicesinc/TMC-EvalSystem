@@ -11,6 +11,25 @@
 #include "Board.h"
 #include "tmc/ic/TMC2130/TMC2130.h"
 
+// new code //
+static TMC2130BusType activeBus = IC_BUS_SPI;
+static SPIChannelTypeDef *TMC2130_SPIChannel;
+
+#define DEFAULT_MOTOR  0
+
+void tmc2130_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+	UNUSED(icID);
+	TMC2130_SPIChannel->readWriteArray(data, dataLength);
+}
+TMC2130BusType tmc2130_getBusType(uint16_t icID)
+{
+	UNUSED(icID);
+
+	return activeBus;
+}
+//old code //
+
 #define TMC2130_EVAL_VM_MIN  50   // VM[V/10] min
 #define TMC2130_EVAL_VM_MAX  480  // VM[V/10] max +5%
 
@@ -65,10 +84,9 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-SPIChannelTypeDef *TMC2130_SPIChannel;
-
 // Helper macro - Access the chip object in the driver boards union
-#define TMC2130 (driverBoards.tmc2130)
+//#define TMC2130 (driverBoards.tmc2130)
+
 
 static uint16_t vref; // mV
 
