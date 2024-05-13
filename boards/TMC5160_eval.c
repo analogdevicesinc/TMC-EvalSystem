@@ -84,10 +84,7 @@ static void configCallback(TMC5160TypeDef *tmc5160, ConfigState state);
 static void enableDriver(DriverState state);
 
 
-// Helper macro - Access the chip object in the motion controller boards union
-//#define TMC5160 (motionControllerBoards.tmc5160)
-
-// Translate motor number to TMC5130TypeDef
+// Translate motor number to TMC5160TypeDef
 // When using multiple ICs you can map them here
 static inline TMC5160TypeDef *motorToIC(uint8_t motor)
 {
