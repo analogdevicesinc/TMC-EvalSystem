@@ -10,6 +10,44 @@
 #include "Board.h"
 #include "tmc/ic/TMC5072/TMC5072.h"
 
+static TMC5072BusType activeBus = IC_BUS_SPI;
+static uint8_t nodeAddress = 0;
+static SPIChannelTypeDef *TMC5072_SPIChannel;
+static UART_Config *TMC5072_UARTChannel;
+
+#define DEFAULT_MOTOR  0
+
+
+void tmc5072_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+	UNUSED(icID);
+	TMC5072_SPIChannel->readWriteArray(data, dataLength);
+}
+
+bool tmc5072_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	UNUSED(icID);
+	int32_t status = UART_readWrite(TMC5072_UARTChannel, data, writeLength, readLength);
+	if(status == -1)
+		return false;
+	return true;
+}
+
+TMC5072BusType tmc5072_getBusType(uint16_t icID)
+{
+	UNUSED(icID);
+
+	return activeBus;
+}
+
+uint8_t tmc5072_getNodeAddress(uint16_t icID)
+{
+	UNUSED(icID);
+
+	return nodeAddress;
+}
+//old //
+
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
@@ -41,13 +79,9 @@ static uint8_t reset();
 static void configCallback(TMC5072TypeDef *tmc5072, ConfigState state);
 static void enableDriver(DriverState state);
 
-static SPIChannelTypeDef *TMC5072_SPIChannel;
 static uint32_t vmax_position[TMC5072_MOTORS];
 
-// Helper macro - Access the chip object in the motion controller boards union
-#define TMC5072 (motionControllerBoards.tmc5072)
-
-// Translate motor number to TMC5130TypeDef
+// Translate motor number to TMC5072TypeDef
 // When using multiple ICs you can map them here
 static inline TMC5072TypeDef *motorToIC(uint8_t motor)
 {
