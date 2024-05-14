@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -779,7 +779,7 @@ static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 		 */
 		switch(Evalboards.ch2.id) {
 		case ID_TMC2130:
-			TMC2130_FIELD_WRITE((TMC2130TypeDef *)Evalboards.ch2.type, TMC2130_IHOLD_IRUN, TMC2130_IHOLD_MASK, TMC2130_IHOLD_SHIFT, FIELD_GET(value, TMC4361A_HOLD_SCALE_VAL_MASK, TMC4361A_HOLD_SCALE_VAL_SHIFT));
+			field_write(DEFAULT_MOTOR, TMC2130_IHOLD_FIELD, FIELD_GET(value, TMC4361A_HOLD_SCALE_VAL_MASK, TMC4361A_HOLD_SCALE_VAL_SHIFT));
 			break;
 		case ID_TMC2160:
 			TMC2160_FIELD_WRITE((TMC2160TypeDef *)Evalboards.ch2.type, TMC2160_IHOLD_IRUN, TMC2160_IHOLD_MASK, TMC2160_IHOLD_SHIFT, FIELD_GET(value, TMC4361A_HOLD_SCALE_VAL_MASK, TMC4361A_HOLD_SCALE_VAL_SHIFT));
