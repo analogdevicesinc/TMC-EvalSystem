@@ -42,7 +42,6 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void deInit(void);
 static uint8_t reset();
 static uint8_t restore();
-static void enableDriver(DriverState state);
 static void timer_overflow(void);
 
 //static int32_t measured_velocity = 0;
@@ -405,17 +404,6 @@ static uint8_t restore()
 	return 1;
 }
 
-static void enableDriver(DriverState state)
-{
-	if(state == DRIVER_USE_GLOBAL_ENABLE)
-		state = Evalboards.driverEnable;
-
-	if(state == DRIVER_DISABLE)
-		HAL.IOs->config->setLow(Pins.EN_N);
-	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE))
-		HAL.IOs->config->setHigh(Pins.EN_N);
-}
-
 static void timer_overflow(void)
 {
 	// RAMDebug
@@ -490,7 +478,6 @@ void MAX22210_init(void)
  	Evalboards.ch2.moveBy               = moveBy;
 	Evalboards.ch2.periodicJob          = periodicJob;
 	Evalboards.ch2.getMeasuredSpeed     = getMeasuredSpeed;
-	Evalboards.ch2.enableDriver         = enableDriver;
 	Evalboards.ch2.numberOfMotors       = MAX22210_MOTORS;
 	Evalboards.ch2.VMMin                = MAX22210_EVAL_VM_MIN;
 	Evalboards.ch2.VMMax                = MAX22210_EVAL_VM_MAX;
@@ -522,5 +509,4 @@ void MAX22210_init(void)
 	Timer.setFrequencyMin(TIMER_CHANNEL_2, 1000);
 	Timer.setDuty(TIMER_CHANNEL_2, 0.5);
 #endif
-	//enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 }
