@@ -11,8 +11,8 @@
 #include "boards/Board.h"
 #include "tmc/RAMDebug.h"
 
-#define MAX22210_EVAL_VM_MIN  44   // VM[V/10] min 4,5V real
-#define MAX22210_EVAL_VM_MAX  680  // VM[V/10] max +5%; 65V real
+#define MAX22210_EVAL_VM_MIN  45   // VM[V/10] min 4,5V real
+#define MAX22210_EVAL_VM_MAX  360  // VM[V/10] max +5%; 65V real
 
 #define MAX22210_MOTORS 1
 
