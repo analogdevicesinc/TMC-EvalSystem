@@ -52,7 +52,6 @@ typedef struct
 	IOPinTypeDef *MODE0;
 	IOPinTypeDef *MODE1;
 	IOPinTypeDef *MODE2;
-	IOPinTypeDef *DECAY0;
 	IOPinTypeDef *DECAY1;
 	IOPinTypeDef *DECAY2;
 	IOPinTypeDef *EN_N;
@@ -60,8 +59,8 @@ typedef struct
 	IOPinTypeDef *DIR;
 	IOPinTypeDef *REF_PWM;
 	IOPinTypeDef *SLEEP_N;
-	IOPinTypeDef *TRQ;
 	IOPinTypeDef *FAULT_N;
+	IOPinTypeDef *HFS;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -199,14 +198,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 10:
-		// TRQ
-		if (readWrite == READ) {
-			*value = (HAL.IOs->config->getState(Pins.TRQ) == IOS_HIGH) ? 1 : 0;
-		} else {
-			HAL.IOs->config->setToState(Pins.TRQ, (*value) ? IOS_HIGH : IOS_LOW);
-		}
-		break;
 	case 50: // StepDir internal(0)/external(1)
 		if(readWrite == READ) {
 			*value = StepDir_getMode(motor);
@@ -238,10 +229,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		// Decay Mode
 		if(readWrite == READ) {
 			*value = (((HAL.IOs->config->getState(Pins.DECAY2) == IOS_HIGH) ? 1 : 0) << 2)
-				| (((HAL.IOs->config->getState(Pins.DECAY1) == IOS_HIGH) ? 1 : 0) << 1)
-				| (((HAL.IOs->config->getState(Pins.DECAY0) == IOS_HIGH) ? 1 : 0) << 0);
+				| (((HAL.IOs->config->getState(Pins.DECAY1) == IOS_HIGH) ? 1 : 0) << 1);
 		} else if(readWrite == WRITE) {
-			HAL.IOs->config->setToState(Pins.DECAY0, (*value & 0b001) ? IOS_HIGH : IOS_LOW);
 			HAL.IOs->config->setToState(Pins.DECAY1, (*value & 0b010) ? IOS_HIGH : IOS_LOW);
 			HAL.IOs->config->setToState(Pins.DECAY2, (*value & 0b100) ? IOS_HIGH : IOS_LOW);
 		}
@@ -251,7 +240,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			*value = (HAL.IOs->config->getState(Pins.EN_N) == IOS_HIGH) ? 1 : 0;
 		} else if(readWrite == WRITE) {
-			HAL.IOs->config->setToState(Pins.EN_N, (*value == 0) ? IOS_LOW : IOS_HIGH);
+			HAL.IOs->config->setToState(Pins.EN_N, (*value == 0) ? IOS_LOW : IOS_HIGH); // Active-High
 		}
 		break;
 	case 143:
@@ -376,13 +365,12 @@ static void deInit(void)
 	HAL.IOs->config->reset(Pins.MODE0);
 	HAL.IOs->config->reset(Pins.MODE1);
 	HAL.IOs->config->reset(Pins.MODE2);
-	HAL.IOs->config->reset(Pins.DECAY0);
 	HAL.IOs->config->reset(Pins.DECAY1);
 	HAL.IOs->config->reset(Pins.DECAY2);
 	HAL.IOs->config->reset(Pins.STEP);
 	HAL.IOs->config->reset(Pins.DIR);
 	HAL.IOs->config->reset(Pins.REF_PWM);
-	HAL.IOs->config->reset(Pins.TRQ);
+	HAL.IOs->config->reset(Pins.HFS);
 
 	StepDir_deInit();
 	Timer.deInit();
@@ -414,25 +402,23 @@ void MAX22210_init(void)
 {
 	// Initialize the hardware pins
 	Pins.ROFF_CTRL = &HAL.IOs->pins->DIO19;
-	Pins.MODE0 = &HAL.IOs->pins->DIO18;
-	Pins.MODE1 = &HAL.IOs->pins->DIO17;
-	Pins.MODE2 = &HAL.IOs->pins->DIO16;
-	Pins.DECAY0 = &HAL.IOs->pins->DIO15;
-	Pins.DECAY1 = &HAL.IOs->pins->DIO14;
-	Pins.DECAY2 = &HAL.IOs->pins->DIO13;
+	Pins.MODE0 = &HAL.IOs->pins->DIO16;
+	Pins.MODE1 = &HAL.IOs->pins->DIO15;
+	Pins.MODE2 = &HAL.IOs->pins->DIO14;
+	Pins.DECAY1 = &HAL.IOs->pins->DIO17;
+	Pins.DECAY2 = &HAL.IOs->pins->DIO18;
 	Pins.EN_N = &HAL.IOs->pins->DIO0;
 	Pins.STEP = &HAL.IOs->pins->DIO6;
 	Pins.DIR = &HAL.IOs->pins->DIO7;
 	Pins.REF_PWM = &HAL.IOs->pins->DIO9;
 	Pins.SLEEP_N = &HAL.IOs->pins->DIO2;
-	Pins.TRQ = &HAL.IOs->pins->DIO12;
-	Pins.FAULT_N = &HAL.IOs->pins->DIO4;
+	Pins.FAULT_N = &HAL.IOs->pins->DIO1;
+	Pins.HFS = &HAL.IOs->pins->DIO13;
 
  	HAL.IOs->config->toOutput(Pins.ROFF_CTRL);
  	HAL.IOs->config->toOutput(Pins.MODE0);
  	HAL.IOs->config->toOutput(Pins.MODE1);
  	HAL.IOs->config->toOutput(Pins.MODE2);
- 	HAL.IOs->config->toOutput(Pins.DECAY0);
  	HAL.IOs->config->toOutput(Pins.DECAY1);
  	HAL.IOs->config->toOutput(Pins.DECAY2);
  	HAL.IOs->config->toOutput(Pins.EN_N);
@@ -440,21 +426,20 @@ void MAX22210_init(void)
  	HAL.IOs->config->toOutput(Pins.DIR);
  	HAL.IOs->config->toOutput(Pins.REF_PWM);
 	HAL.IOs->config->toOutput(Pins.SLEEP_N);
-	HAL.IOs->config->toOutput(Pins.TRQ);
+	HAL.IOs->config->toOutput(Pins.HFS);
 	HAL.IOs->config->toInput(Pins.FAULT_N);
 
  	HAL.IOs->config->setLow(Pins.ROFF_CTRL);
  	HAL.IOs->config->setLow(Pins.MODE0);
  	HAL.IOs->config->setLow(Pins.MODE1);
  	HAL.IOs->config->setLow(Pins.MODE2);
- 	HAL.IOs->config->setLow(Pins.DECAY0);
  	HAL.IOs->config->setLow(Pins.DECAY1);
  	HAL.IOs->config->setLow(Pins.DECAY2);
  	HAL.IOs->config->setLow(Pins.EN_N);
  	HAL.IOs->config->setLow(Pins.STEP);
  	HAL.IOs->config->setLow(Pins.DIR);
+ 	HAL.IOs->config->setLow(Pins.HFS);
 	HAL.IOs->config->setHigh(Pins.SLEEP_N);
-	HAL.IOs->config->setLow(Pins.TRQ);
 
  	// Initialize the software StepDir generator
  	StepDir_init(STEPDIR_PRECISION);
