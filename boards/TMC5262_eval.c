@@ -23,14 +23,6 @@ void tmc5262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 	TMC5262_SPIChannel->readWriteArray(data, dataLength);
 }
 
-uint8_t tmc5262_getNodeAddress(uint16_t icID)
-{
-	UNUSED(icID);
-
-	return nodeAddress;
-}
-
-
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
