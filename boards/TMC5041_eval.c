@@ -2,13 +2,26 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved. This software is
 * proprietary & confidential to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
 
 #include "Board.h"
 #include "tmc/ic/TMC5041/TMC5041.h"
+
+static uint8_t nodeAddress = 0;
+static SPIChannelTypeDef *TMC5041_SPIChannel;
+
+
+#define DEFAULT_MOTOR  0
+
+
+void tmc5041_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+	UNUSED(icID);
+	TMC5041_SPIChannel->readWriteArray(data, dataLength);
+}
 
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
