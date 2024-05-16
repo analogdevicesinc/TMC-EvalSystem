@@ -89,21 +89,8 @@ static inline TMC5072TypeDef *motorToIC(uint8_t motor)
 	return &TMC5072;
 }
 
-// Translate channel number to SPI channel
-// When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
-{
-	UNUSED(channel);
 
-	return TMC5072_SPIChannel;
-}
 
-// SPI Wrapper for API
-void tmc5072_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
-{
-	// Map the channel to the corresponding SPI channel
-	channelToSPI(channel)->readWriteArray(data, length);
-}
 
 typedef struct
 {
@@ -228,23 +215,23 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 6:
 		// Maximum current
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_IHOLD_IRUN(motor), TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT);
+			*value = field_read(motor, TMC5072_IRUN_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_IHOLD_IRUN(motor), TMC5072_IRUN_MASK, TMC5072_IRUN_SHIFT, *value);
+			field_write(motor, TMC5072_IRUN_FIELD(motor), *value);
 		}
 		break;
 	case 7:
 		// Standby current
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_IHOLD_IRUN(motor), TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT);
+			*value = field_read(motor,  TMC5072_IHOLD_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_IHOLD_IRUN(motor), TMC5072_IHOLD_MASK, TMC5072_IHOLD_SHIFT, *value);
+			field_write(motor, TMC5072_IHOLD_FIELD(motor), *value);
 		}
 		break;
 	case 8:
 		// Position reached flag
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_RAMPSTAT(motor), TMC5072_POSITION_REACHED_MASK, TMC5072_POSITION_REACHED_SHIFT);
+			*value = field_read(motor, TMC5072_POSITION_REACHED_FIELD(motor));
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -252,7 +239,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 10:
 		// Right endstop
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_RAMPSTAT(motor), TMC5072_STATUS_STOP_R_MASK, TMC5072_STATUS_STOP_R_SHIFT);
+			*value = field_read(motor, TMC5072_STATUS_STOP_R_FIELD(motor));
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -260,7 +247,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 11:
 		// Left endstop
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_RAMPSTAT(motor), TMC5072_STATUS_STOP_L_MASK, TMC5072_STATUS_STOP_L_SHIFT);
+			*value = field_read(motor, TMC5072_STATUS_STOP_L_FIELD(motor));
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -268,21 +255,21 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 12:
 		// Automatic right stop
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_SWMODE(motor), TMC5072_STOP_R_ENABLE_MASK, TMC5072_STOP_R_ENABLE_SHIFT);
+			*value = field_read(motor, TMC5072_STOP_R_ENABLE_FIELD(motor));
 		} else if(readWrite == WRITE) {
 			// configure right stop bits
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_SWMODE(motor), TMC5072_STOP_R_ENABLE_MASK, TMC5072_STOP_R_ENABLE_SHIFT, (*value > 0)? 1:0);
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_SWMODE(motor), TMC5072_POL_STOP_R_MASK, TMC5072_POL_STOP_R_SHIFT, (*value == 2)? 1:0);
+			field_write(motor, TMC5072_STOP_R_ENABLE_FIELD(motor), (*value > 0)? 1:0);
+			field_write(motor, TMC5072_POL_STOP_R_FIELD(motor), (*value == 2)? 1:0);
 		}
 		break;
 	case 13:
 		// Automatic left stop
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_SWMODE(motor), TMC5072_STOP_L_ENABLE_MASK, TMC5072_STOP_L_ENABLE_SHIFT);
+			*value = field_read(motor, TMC5072_STOP_L_ENABLE_FIELD(motor));
 		} else if(readWrite == WRITE) {
 			// configure left stop bits
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_SWMODE(motor), TMC5072_STOP_L_ENABLE_MASK, TMC5072_STOP_L_ENABLE_SHIFT, (*value > 0)? 1:0);
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_SWMODE(motor), TMC5072_POL_STOP_L_MASK, TMC5072_POL_STOP_L_SHIFT, (*value == 2)? 1:0);
+			field_write(motor, TMC5072_STOP_L_ENABLE_FIELD(motor), (*value > 0)? 1:0);
+			field_write(motor, TMC5072_POL_STOP_L_FIELD(motor), (*value == 2)? 1:0);
 		}
 		break;
 	case 14:
@@ -376,9 +363,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 28:
 		// High speed fullstep mode
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_VHIGHFS_MASK, TMC5072_VHIGHFS_SHIFT);
+			*value = field_read(motor, TMC5072_VHIGHFS_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_VHIGHFS_MASK, TMC5072_VHIGHFS_SHIFT, *value);
+			field_write(motor, TMC5072_VHIGHFS_FIELD(motor), *value);
 		}
 		break;
 	case 29:
@@ -391,7 +378,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
-			*value = 256 >> TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT);
+			*value = 256 >> field_read(motor, TMC5072_TOFF_FIELD(motor));
 		} else if(readWrite == WRITE) {
 			switch(*value)
 			{
@@ -409,7 +396,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_MRES_MASK, TMC5072_MRES_SHIFT, *value);
+				field_write(motor, TMC5072_MRES_FIELD(motor), *value);
 			}
 			//else TMCL.reply->Status = REPLY_INVALID_VALUE;
 		}
@@ -417,154 +404,154 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 162:
 		// Chopper blank time
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TBL_MASK, TMC5072_TBL_SHIFT);
+			*value = field_read(motor, TMC5072_TBL_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TBL_MASK, TMC5072_TBL_SHIFT, *value);
+			field_write(motor, TMC5072_TBL_FIELD(motor), *value);
 		}
 		break;
 	case 163:
 		// Constant TOff Mode
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_RNDTF_MASK, TMC5072_RNDTF_SHIFT);
+			*value = field_read(motor, TMC5072_RNDTF_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_RNDTF_MASK, TMC5072_RNDTF_SHIFT, *value);
+			field_write(motor, TMC5072_RNDTF_FIELD(motor), *value);
 		}
 		break;
 	case 164:
 		// Disable fast decay comparator
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_DISFDCC_MASK, TMC5072_DISFDCC_SHIFT);
+			*value = field_read(motor, TMC5072_DISFDCC_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_DISFDCC_MASK, TMC5072_DISFDCC_SHIFT, *value);
+			field_write(motor, TMC5072_DISFDCC_FIELD(motor), *value);
 		}
 		break;
 	case 165:
 		// Chopper hysteresis end / fast decay time
-		tempValue = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_CHM_MASK, TMC5072_CHM_SHIFT);
+		tempValue = field_read(motor, TMC5072_CHM_FIELD(motor));
 		if(readWrite == READ) {
 			if(tempValue)
 			{
-				*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_HEND_MASK, TMC5072_HEND_SHIFT);
+				*value = field_read(motor, TMC5072_HEND_FIELD(motor));
 			}
 			else
 			{
-				*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TFD_ALL_MASK, TMC5072_TFD_ALL_SHIFT);
+				*value = field_read(motor, TMC5072_TFD_2__0__FIELD(motor));
 				*value |= (*value & (1<<11)) << 3;
 			}
 		} else if(readWrite == WRITE) {
 			if(tempValue)
 			{
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_HEND_MASK, TMC5072_HEND_SHIFT, *value);
+				field_write(motor, TMC5072_HEND_FIELD(motor), *value);
 			}
 			else
 			{
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TFD_3_MASK, TMC5072_TFD_3_SHIFT, (*value & (1<<3))? 1:0);
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TFD_ALL_MASK, TMC5072_TFD_ALL_SHIFT, *value);
+				field_write(motor, TMC5072_TFD___FIELD(motor), (*value & (1<<3))? 1:0);
+				field_write(motor, TMC5072_TFD_2__0__FIELD(motor), *value);
 			}
 		}
 		break;
 	case 166:
 		// Chopper hysteresis start / sine wave offset
-		tempValue = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_CHM_MASK, TMC5072_CHM_SHIFT);
+		tempValue = field_read(motor, TMC5072_CHM_FIELD(motor));
 		if(readWrite == READ) {
 			if(tempValue)
 			{
-				*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT);
+				*value = field_read(motor, TMC5072_HSTRT_FIELD(motor));
 			}
 			else
 			{
-				*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_OFFSET_MASK, TMC5072_OFFSET_SHIFT);
-				tempValue = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TFD_3_MASK, TMC5072_TFD_3_SHIFT);
+				*value = field_read(motor, TMC5072_OFFSET_FIELD(motor));
+				tempValue = field_read(motor, TMC5072_TFD___FIELD(motor));
 				*value |= tempValue << 3;
 			}
 		} else if(readWrite == WRITE) {
 			if(tempValue)
 			{
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_HSTRT_MASK, TMC5072_HSTRT_SHIFT, *value);
+				field_write(motor, TMC5072_HSTRT_FIELD(motor), *value);
 			}
 			else
 			{
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_OFFSET_MASK, TMC5072_OFFSET_SHIFT, *value);
+				field_write(motor, TMC5072_OFFSET_FIELD(motor), *value);
 			}
 		}
 		break;
 	case 167:
 		// Chopper off time
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT);
+			*value = field_read(motor, TMC5072_TOFF_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_TOFF_MASK, TMC5072_TOFF_SHIFT, *value);
+			field_write(motor, TMC5072_TOFF_FIELD(motor), *value);
 		}
 		break;
 	case 168:
 		// smartEnergy current minimum (SEIMIN)
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEIMIN_MASK, TMC5072_SEIMIN_SHIFT);
+			*value = field_read(motor, TMC5072_SEIMIN_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEIMIN_MASK, TMC5072_SEIMIN_SHIFT, *value);
+			field_write(motor, TMC5072_SEIMIN_FIELD(motor), *value);
 		}
 		break;
 	case 169:
 		// smartEnergy current down step
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEDN_MASK, TMC5072_SEDN_SHIFT);
+			*value = field_read(motor, TMC5072_SEDN_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEDN_MASK, TMC5072_SEDN_SHIFT, *value);
+			field_write(motor, TMC5072_SEDN_FIELD(motor), *value);
 		}
 		break;
 	case 170:
 		// smartEnergy hysteresis
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEMAX_MASK, TMC5072_SEMAX_SHIFT);
+			*value = field_read(motor, TMC5072_SEMAX_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEMAX_MASK, TMC5072_SEMAX_SHIFT, *value);
+			field_write(motor, TMC5072_SEMAX_FIELD(motor), *value);
 		}
 		break;
 	case 171:
 		// smartEnergy current up step
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEUP_MASK, TMC5072_SEUP_SHIFT);
+			*value = field_read(motor, TMC5072_SEUP_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEUP_MASK, TMC5072_SEUP_SHIFT, *value);
+			field_write(motor, TMC5072_SEUP_FIELD(motor), *value);
 		}
 		break;
 	case 172:
 		// smartEnergy hysteresis start
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEMIN_MASK, TMC5072_SEMIN_SHIFT);
+			*value = field_read(motor, TMC5072_SEMIN_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SEMIN_MASK, TMC5072_SEMIN_SHIFT, *value);
+			field_write(motor, TMC5072_SEMIN_FIELD(motor), *value);
 		}
 		break;
 	case 173:
 		// stallGuard2 filter enable
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SFILT_MASK, TMC5072_SFILT_SHIFT);
+			*value = field_read(motor, TMC5072_SFILT_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SFILT_MASK, TMC5072_SFILT_SHIFT, *value);
+			field_write(motor, TMC5072_SFILT_FIELD(motor), *value);
 		}
 		break;
 	case 174:
 		// stallGuard2 threshold
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SGT_MASK, TMC5072_SGT_SHIFT);
+			*value = field_read(motor, TMC5072_SGT_FIELD(motor));
 			*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_COOLCONF(motor), TMC5072_SGT_MASK, TMC5072_SGT_SHIFT, *value);
+			field_write(motor, TMC5072_SGT_FIELD(motor), *value);
 		}
 		break;
 	case 179:
 		// VSense
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_VSENSE_MASK, TMC5072_VSENSE_SHIFT);
+			*value = field_read(motor, TMC5072_VSENSE_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_VSENSE_MASK, TMC5072_VSENSE_SHIFT, *value);
+			field_write(motor, TMC5072_VSENSE_FIELD(motor), *value);
 		}
 		break;
 	case 180:
 		// smartEnergy actual current
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_DRVSTATUS(motor), TMC5072_CS_ACTUAL_MASK, TMC5072_CS_ACTUAL_SHIFT);
+			*value = field_read(motor, TMC5072_CS_ACTUAL_FIELD(motor));
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -572,7 +559,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 181:
 		// smartEnergy stall velocity
 		if(readWrite == READ) {
-			if(TMC5072_FIELD_READ(motorToIC(motor), TMC5072_SWMODE(motor), TMC5072_SG_STOP_MASK, TMC5072_SG_STOP_SHIFT))
+			if(field_read(motor, TMC5072_SG_STOP_FIELD(motor)))
 			{
 				*value = tmc5072_readRegister(motor, TMC5072_VCOOLTHRS(motor));
 			}
@@ -582,7 +569,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		} else if(readWrite == WRITE) {
 			tmc5072_writeRegister(motor, TMC5072_VCOOLTHRS(motor),*value);
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_SWMODE(motor), TMC5072_SG_STOP_MASK, TMC5072_SG_STOP_SHIFT, (*value)? 1:0);
+			field_write(motor, TMC5072_SG_STOP_FIELD(motor), (*value)? 1:0);
 		}
 		break;
 	case 182:
@@ -596,15 +583,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 184:
 		// Random TOff mode
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_RNDTF_MASK, TMC5072_RNDTF_SHIFT);
+			*value = field_read(motor, TMC5072_RNDTF_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_CHOPCONF(motor), TMC5072_RNDTF_MASK, TMC5072_RNDTF_SHIFT, *value);
+			field_write(motor, TMC5072_RNDTF_FIELD(motor), *value);
 		}
 		break;
 	case 206:
 		// Load value
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_DRVSTATUS(motor), TMC5072_SG_RESULT_MASK, TMC5072_SG_RESULT_SHIFT);
+			*value = field_read(motor, TMC5072_SG_RESULT_FIELD(motor));
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -612,9 +599,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 209:
 		// Encoder position
 		if(readWrite == READ) {
-			*value = TMC5072_FIELD_READ(motorToIC(motor), TMC5072_XENC(motor), TMC5072_X_ENC_MASK, TMC5072_X_ENC_SHIFT);
+			*value = field_read(motor, TMC5072_XENC_FIELD(motor));
 		} else if(readWrite == WRITE) {
-			TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_XENC(motor), TMC5072_X_ENC_MASK, TMC5072_X_ENC_SHIFT, *value);
+			field_write(motor, TMC5072_XENC_FIELD(motor), *value);
 		}
 		break;
 	case 210:
@@ -646,12 +633,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			switch(motor)
 			{
 			case 0:
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_GCONF, TMC5072_POSCMP_ENABLE_MASK, TMC5072_POSCMP_ENABLE_SHIFT, (*value) ? 0 : 1);
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_GCONF, TMC5072_ENC1_REFSEL_MASK, TMC5072_ENC1_REFSEL_SHIFT, (*value) ? 1 : 0);
+				field_write(motor, TMC5072_POSCMP_ENABLE_FIELD(motor), (*value) ? 0 : 1);
+				field_write(motor, TMC5072_ENC1_REFSEL_FIELD(motor), (*value) ? 1 : 0);
 				break;
 			case 1:		// enable ENCODER2 - disable REF
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_GCONF, TMC5072_ENC2_ENABLE_MASK, TMC5072_ENC2_ENABLE_SHIFT, (*value) ? 1 : 0);
-				TMC5072_FIELD_WRITE(motorToIC(motor), TMC5072_GCONF, TMC5072_ENC2_REFSEL_MASK, TMC5072_ENC2_REFSEL_SHIFT, (*value) ? 0 : 1);
+				field_write(motor, TMC5072_ENC2_ENABLE_FIELD(motor), (*value) ? 1 : 0);
+				field_write(motor, TMC5072_ENC2_REFSEL_FIELD(motor), (*value) ? 0 : 1);
 				break;
 			}
 		}
@@ -777,7 +764,7 @@ static void configCallback(TMC5072TypeDef *tmc5072, ConfigState state)
 	if(state == CONFIG_RESET)
 	{	// Change hardware-preset registers here
 		for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
-			tmc5072_writeInt(tmc5072, TMC5072_PWMCONF(motor), 0x000504C8);
+			tmc5072_writeRegister(tmc5072, TMC5072_PWMCONF(motor), 0x000504C8);
 
 		// Fill missing shadow registers (hardware preset registers)
 		tmc5072_fillShadowRegisters(&TMC5072);
