@@ -15,8 +15,6 @@
 static uint8_t nodeAddress = 0;
 static UART_Config *TMC2225_UARTChannel;
 
-#define DEFAULT_MOTOR  0
-
 bool tmc2225_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
 	UNUSED(icID);
@@ -105,24 +103,6 @@ static inline UART_Config *channelToUART(uint8_t channel)
 
 	return TMC2225_UARTChannel;
 }
-
-// => UART wrapper
-// Write [writeLength] bytes from the [data] array.
-// If [readLength] is greater than zero, read [readLength] bytes from the
-// [data] array.
-void tmc2225_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
-{
-	UART_readWrite(channelToUART(channel), data, writeLength, readLength);
-}
-// <= UART wrapper
-
-// => CRC wrapper
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc2225_CRC8(uint8_t *data, size_t length)
-{
-	return TMC2225_CRC(data, length);
-}
-// <= CRC wrapper
 
 void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
@@ -241,17 +221,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 6:
 		// Maximum current
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_IHOLD_IRUN, TMC2225_IRUN_MASK, TMC2225_IRUN_SHIFT);
+			*value = field_read(motor, TMC2225_IRUN_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_IHOLD_IRUN, TMC2225_IRUN_MASK, TMC2225_IRUN_SHIFT, *value);
+			field_write(motor, TMC2225_IRUN_FIELD, *value);
 		}
 		break;
 	case 7:
 		// Standby current
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_IHOLD_IRUN, TMC2225_IHOLD_MASK, TMC2225_IHOLD_SHIFT);
+			*value = field_read(motor, TMC2225_IHOLD_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_IHOLD_IRUN, TMC2225_IHOLD_MASK, TMC2225_IHOLD_SHIFT, *value);
+			field_write(motor, TMC2225_IHOLD_FIELD, *value);
 		}
 		break;
 	case 8:
@@ -278,15 +258,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 28:
 		// Internal RSense
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_GCONF, TMC2225_INTERNAL_RSENSE_MASK, TMC2225_INTERNAL_RSENSE_SHIFT);
+			*value = field_read(motor, TMC2225_INTERNAL_RSENSE_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_GCONF, TMC2225_INTERNAL_RSENSE_MASK, TMC2225_INTERNAL_RSENSE_SHIFT, *value);
+			field_write(motor, TMC2225_INTERNAL_RSENSE_FIELD, *value);
 		}
 		break;
 	case 29:
 		// Measured Speed
 		if(readWrite == READ) {
-			buffer = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2225_FIELD_READ(motorToIC(motor), TMC2225_TSTEP, TMC2225_TSTEP_MASK, TMC2225_TSTEP_SHIFT));
+			buffer = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)field_read(motor, TMC2225_TSTEP_FIELD));
 			*value = (abs(buffer) < 20) ? 0 : buffer;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
@@ -309,7 +289,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
-			*value = 256 >> TMC2225_FIELD_READ(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_MRES_MASK, TMC2225_MRES_SHIFT);
+			*value = 256 >> field_read(motor, TMC2225_MRES_FIELD);
 		} else if(readWrite == WRITE) {
 			switch(*value)
 			{
@@ -327,7 +307,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_MRES_MASK, TMC2225_MRES_SHIFT, *value);
+				field_write(motor, TMC2225_MRES_FIELD, *value);
 			}
 			else
 			{
@@ -338,9 +318,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 162:
 		// Chopper blank time
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_TBL_MASK, TMC2225_TBL_SHIFT);
+			*value = field_read(motor, TMC2225_TBL_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_TBL_MASK, TMC2225_TBL_SHIFT, *value);
+			field_write(motor, TMC2225_TBL_FIELD, *value);
 		}
 		break;
 	case 165:
@@ -348,7 +328,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
 			{
-				*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_HEND_MASK, TMC2225_HEND_SHIFT);
+				*value = field_read(motor, TMC2225_HEND_FIELD);
 			}
 			else
 			{
@@ -366,7 +346,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
 			{
-				*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_HSTRT_MASK, TMC2225_HSTRT_SHIFT);
+				*value = field_read(motor, TMC2225_HSTRT_FIELD);
 			}
 			else
 			{
@@ -378,34 +358,34 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
 			{
-				TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_HSTRT_MASK, TMC2225_HSTRT_SHIFT, *value);
+				field_write(motor, TMC2225_HSTRT_FIELD, *value);
 			}
 			else
 			{
-				TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_HEND_MASK, TMC2225_HEND_SHIFT, *value);
+				field_write(motor, TMC2225_HEND_FIELD, *value);
 			}
 		}
 		break;
 	case 167:
 		// Chopper off time
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_TOFF_MASK, TMC2225_TOFF_SHIFT);
+			*value = field_read(motor, TMC2225_TOFF_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_TOFF_MASK, TMC2225_TOFF_SHIFT, *value);
+			field_write(motor, TMC2225_TOFF_FIELD, *value);
 		}
 		break;
 	case 179:
 		// VSense
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_VSENSE_MASK, TMC2225_VSENSE_SHIFT);
+			*value = field_read(motor, TMC2225_VSENSE_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_VSENSE_MASK, TMC2225_VSENSE_SHIFT, *value);
+			field_write(motor, TMC2225_VSENSE_FIELD, *value);
 		}
 		break;
 	case 180:
 		// smartEnergy actual current
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_DRVSTATUS, TMC2225_CS_ACTUAL_MASK, TMC2225_CS_ACTUAL_SHIFT);
+			*value = field_read(motor, TMC2225_CS_ACTUAL_FIELD);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -432,23 +412,23 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 187:
 		// PWM gradient
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_PWMCONF, TMC2225_PWM_GRAD_MASK, TMC2225_PWM_GRAD_SHIFT);
+			*value = field_read(motor, TMC2225_PWM_GRAD_FIELD);
 		} else if(readWrite == WRITE) {
 			// Set gradient
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_PWMCONF, TMC2225_PWM_GRAD_MASK, TMC2225_PWM_GRAD_SHIFT, *value);
+			field_write(motor, TMC2225_PWM_GRAD_FIELD, *value);
 
 			// Enable/disable stealthChop accordingly
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_GCONF, TMC2225_EN_SPREADCYCLE_MASK, TMC2225_EN_SPREADCYCLE_SHIFT, (*value > 0) ? 0 : 1);
+			field_write(motor, TMC2225_EN_SPREADCYCLE_FIELD, (*value > 0) ? 0 : 1);
 		}
 		break;
 	case 191:
 		// PWM frequency
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_PWMCONF, TMC2225_PWM_FREQ_MASK, TMC2225_PWM_FREQ_SHIFT);
+			*value = field_read(motor, TMC2225_PWM_FREQ_FIELD);
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 4)
 			{
-				TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_PWMCONF, TMC2225_PWM_FREQ_MASK, TMC2225_PWM_FREQ_SHIFT, *value);
+				field_write(motor, TMC2225_PWM_FREQ_FIELD, *value);
 			}
 			else
 			{
@@ -459,17 +439,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 192:
 		// PWM autoscale
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_PWMCONF, TMC2225_PWM_AUTOSCALE_MASK, TMC2225_PWM_AUTOSCALE_SHIFT);
+			*value = field_read(motor, TMC2225_PWM_AUTOSCALE_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_PWMCONF, TMC2225_PWM_AUTOSCALE_MASK, TMC2225_PWM_AUTOSCALE_SHIFT, (*value)? 1:0);
+			field_write(motor, TMC2225_PWM_AUTOSCALE_FIELD, (*value)? 1:0);
 		}
 		break;
 	case 204:
 		// Freewheeling mode
 		if(readWrite == READ) {
-			*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_PWMCONF, TMC2225_FREEWHEEL_MASK, TMC2225_FREEWHEEL_SHIFT);
+			*value = field_read(motor, TMC2225_FREEWHEEL_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_PWMCONF, TMC2225_FREEWHEEL_MASK, TMC2225_FREEWHEEL_SHIFT, *value);
+			field_write(motor, TMC2225_FREEWHEEL_FIELD, *value);
 		}
 		break;
 	default:
@@ -581,7 +561,6 @@ void TMC2225_init(void)
 #elif defined(LandungsbrueckeV3)
 	timerChannel = TIMER_CHANNEL_4;
 #endif
-	tmc_fillCRC8Table(0x07, true, 1);
 
 	Pins.DRV_ENN  = &HAL.IOs->pins->DIO0;
 	Pins.STEP     = &HAL.IOs->pins->DIO6;
