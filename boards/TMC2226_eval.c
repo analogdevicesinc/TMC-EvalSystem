@@ -11,6 +11,24 @@
 #include "tmc/ic/TMC2226/TMC2226.h"
 #include "tmc/StepDir.h"
 
+static uint8_t nodeAddress = 0;
+static UART_Config *TMC2226_UARTChannel;
+
+bool tmc2226_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	UNUSED(icID);
+	int32_t status = UART_readWrite(TMC2226_UARTChannel, data, writeLength, readLength);
+	if(status == -1)
+		return false;
+	return true;
+}
+
+uint8_t tmc2226_getNodeAddress(uint16_t icID)
+{
+	UNUSED(icID);
+
+	return nodeAddress;
+}
 #undef  TMC2226_MAX_VELOCITY
 #define TMC2226_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
@@ -49,7 +67,6 @@ static void enableDriver(DriverState state);
 static uint16_t getVREF();
 static void setVREF(uint16_t vref);
 
-static UART_Config *TMC2226_UARTChannel;
 static ConfigurationTypeDef *TMC2226_config;
 
 static int32_t thigh;
@@ -111,13 +128,13 @@ uint8_t tmc2226_CRC8(uint8_t *data, size_t length)
 }
 // <= CRC wrapper
 
-void tmc2226_writeRegister(uint8_t motor, uint16_t address, int32_t value)
+void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	tmc2226_writeInt(motorToIC(motor), (uint8_t) address, value);
 
 }
 
-void tmc2226_readRegister(uint8_t motor, uint16_t address, int32_t *value)
+void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	*value = tmc2226_readInt(motorToIC(motor), (uint8_t) address);
 }
@@ -788,8 +805,8 @@ void TMC2226_init(void)
 	Evalboards.ch2.SAP                  = SAP;
 	Evalboards.ch2.moveTo               = moveTo;
 	Evalboards.ch2.moveBy               = moveBy;
-	Evalboards.ch2.writeRegister        = tmc2226_writeRegister;
-	Evalboards.ch2.readRegister         = tmc2226_readRegister;
+	Evalboards.ch2.writeRegister        = writeRegister;
+	Evalboards.ch2.readRegister         = readRegister;
 	Evalboards.ch2.userFunction         = userFunction;
 	Evalboards.ch2.enableDriver         = enableDriver;
 	Evalboards.ch2.checkErrors          = checkErrors;
