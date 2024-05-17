@@ -11,6 +11,29 @@
 #include "tmc/ic/TMC2225/TMC2225.h"
 #include "tmc/StepDir.h"
 
+
+static uint8_t nodeAddress = 0;
+static UART_Config *TMC2225_UARTChannel;
+
+#define DEFAULT_MOTOR  0
+
+bool tmc2225_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	UNUSED(icID);
+	int32_t status = UART_readWrite(TMC2225_UARTChannel, data, writeLength, readLength);
+	if(status == -1)
+		return false;
+	return true;
+}
+
+uint8_t tmc2225_getNodeAddress(uint16_t icID)
+{
+	UNUSED(icID);
+
+	return nodeAddress;
+}
+
+
 #undef  TMC2225_MAX_VELOCITY
 #define TMC2225_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
