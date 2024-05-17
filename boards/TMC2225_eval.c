@@ -68,14 +68,10 @@ static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
-static UART_Config *TMC2225_UARTChannel;
 static ConfigurationTypeDef *TMC2225_config;
 
 static uint16_t vref; // mV
 static timer_channel timerChannel;
-
-// Helper macro - Access the chip object in the driver boards union
-#define TMC2225 (driverBoards.tmc2225)
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2225_CRC(data, length) tmc_CRC8(data, length, 1)
@@ -128,14 +124,14 @@ uint8_t tmc2225_CRC8(uint8_t *data, size_t length)
 }
 // <= CRC wrapper
 
-void tmc2225_writeRegister(uint8_t motor, uint16_t address, int32_t value)
+void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	tmc2225_writeInt(motorToIC(motor), (uint8_t) address, value);
+	tmc2225_writeRegister(motor, (uint8_t) address, value);
 }
 
-void tmc2225_readRegister(uint8_t motor, uint16_t address, int32_t *value)
+void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = tmc2225_readInt(motorToIC(motor), (uint8_t) address);
+	*value = tmc2225_readRegister(motor, (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -350,14 +346,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 165:
 		// Chopper hysteresis end / fast decay time
 		if(readWrite == READ) {
-			if(tmc2225_readInt(motorToIC(motor), TMC2225_CHOPCONF) & (1<<14))
+			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
 			{
 				*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_HEND_MASK, TMC2225_HEND_SHIFT);
 			}
 			else
 			{
-				buffer = tmc2225_readInt(motorToIC(motor), TMC2225_CHOPCONF);
-				*value = (tmc2225_readInt(motorToIC(motor), TMC2225_CHOPCONF) >> 4) & 0x07;
+				buffer = tmc2225_readRegister(motor, TMC2225_CHOPCONF);
+				*value = (tmc2225_readRegister(motor, TMC2225_CHOPCONF) >> 4) & 0x07;
 				if(buffer & (1<<11))
 					*value |= 1<<3;
 			}
@@ -368,19 +364,19 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 166:
 		// Chopper hysteresis start / sine wave offset
 		if(readWrite == READ) {
-			if(tmc2225_readInt(motorToIC(motor), TMC2225_CHOPCONF) & (1<<14))
+			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
 			{
 				*value = TMC2225_FIELD_READ(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_HSTRT_MASK, TMC2225_HSTRT_SHIFT);
 			}
 			else
 			{
-				buffer = tmc2225_readInt(motorToIC(motor), TMC2225_CHOPCONF);
-				*value = (tmc2225_readInt(motorToIC(motor), TMC2225_CHOPCONF) >> 7) & 0x0F;
+				buffer = tmc2225_readRegister(motor, TMC2225_CHOPCONF);
+				*value = (tmc2225_readRegister(motor, TMC2225_CHOPCONF) >> 7) & 0x0F;
 				if(buffer & (1<<11))
 					*value |= 1<<3;
 			}
 		} else if(readWrite == WRITE) {
-			if(tmc2225_readInt(motorToIC(motor), TMC2225_CHOPCONF) & (1<<14))
+			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
 			{
 				TMC2225_FIELD_UPDATE(motorToIC(motor), TMC2225_CHOPCONF, TMC2225_HSTRT_MASK, TMC2225_HSTRT_SHIFT, *value);
 			}
@@ -426,11 +422,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
-			buffer = tmc2225_readInt(motorToIC(motor), TMC2225_TPWMTHRS);
+			buffer = tmc2225_readRegister(motor, TMC2225_TPWMTHRS);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer) ? buffer : 1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value) ? *value : 1));
-			tmc2225_writeInt(motorToIC(motor), TMC2225_TPWMTHRS, *value);
+			tmc2225_writeRegister(motor, TMC2225_TPWMTHRS, *value);
 		}
 		break;
 	case 187:
@@ -623,8 +619,8 @@ void TMC2225_init(void)
 	Evalboards.ch2.SAP                  = SAP;
 	Evalboards.ch2.moveTo               = moveTo;
 	Evalboards.ch2.moveBy               = moveBy;
-	Evalboards.ch2.writeRegister        = tmc2225_writeRegister;
-	Evalboards.ch2.readRegister         = tmc2225_readRegister;
+	Evalboards.ch2.writeRegister        = writeRegister;
+	Evalboards.ch2.readRegister         = readRegister;
 	Evalboards.ch2.userFunction         = userFunction;
 	Evalboards.ch2.enableDriver         = enableDriver;
 	Evalboards.ch2.checkErrors          = checkErrors;
