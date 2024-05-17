@@ -28,7 +28,6 @@
 
 
 #include "tmc/ic/TMC2225/TMC2225.h"
-#include "tmc/ic/TMC2226/TMC2226.h"
 #include "tmc/ic/TMC2300/TMC2300.h"
 #include "tmc/ic/MAX22216/MAX22216.h"
 #include "tmc/ic/TMC4361A/TMC4361A.h"
@@ -172,7 +171,6 @@ typedef union {
     TMC2660TypeDef tmc2660;
     TMC7300TypeDef tmc7300;
     TMC2225TypeDef tmc2225;
-    TMC2226TypeDef tmc2226;
     TMC2300TypeDef tmc2300;
 	MAX22216TypeDef max22216;
 } DriverBoards;

@@ -14,6 +14,7 @@
 static uint8_t nodeAddress = 0;
 static UART_Config *TMC2226_UARTChannel;
 
+
 bool tmc2226_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
 	UNUSED(icID);
@@ -75,9 +76,6 @@ static timer_channel timerChannel;
 
 extern IOPinTypeDef DummyPin;
 
-// Helper macro - Access the chip object in the driver boards union
-#define TMC2226 (driverBoards.tmc2226)
-
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2226_CRC(data, length) tmc_CRC8(data, length, 1)
 
@@ -130,13 +128,13 @@ uint8_t tmc2226_CRC8(uint8_t *data, size_t length)
 
 void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	tmc2226_writeInt(motorToIC(motor), (uint8_t) address, value);
+	tmc2226_writeRegister(motor, (uint8_t) address, value);
 
 }
 
 void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = tmc2226_readInt(motorToIC(motor), (uint8_t) address);
+	*value =tmc2226_readRegister(motor, (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -391,14 +389,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 165:
 		// Chopper hysteresis end / fast decay time
 		if(readWrite == READ) {
-			if(tmc2226_readInt(motorToIC(motor), TMC2226_CHOPCONF) & (1<<14))
+			if(tmc2226_readRegister(motor, TMC2226_CHOPCONF) & (1<<14))
 			{
 				*value = TMC2226_FIELD_READ(motorToIC(motor), TMC2226_CHOPCONF, TMC2226_HEND_MASK, TMC2226_HEND_SHIFT);
 			}
 			else
 			{
-				buffer = tmc2226_readInt(motorToIC(motor), TMC2226_CHOPCONF);
-				*value = (tmc2226_readInt(motorToIC(motor), TMC2226_CHOPCONF) >> 4) & 0x07;
+				buffer = tmc2226_readRegister(motor, TMC2226_CHOPCONF);
+				*value = (tmc2226_readRegister(motor, TMC2226_CHOPCONF) >> 4) & 0x07;
 				if(buffer & (1<<11))
 					*value |= 1<<3;
 			}
@@ -415,13 +413,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 			else
 			{
-				buffer = tmc2226_readInt(motorToIC(motor), TMC2226_CHOPCONF);
-				*value = (tmc2226_readInt(motorToIC(motor), TMC2226_CHOPCONF) >> 7) & 0x0F;
+				buffer = tmc2226_readRegister(motor, TMC2226_CHOPCONF);
+				*value = (tmc2226_readRegister(motor, TMC2226_CHOPCONF) >> 7) & 0x0F;
 				if(buffer & (1<<11))
 					*value |= 1<<3;
 			}
 		} else if(readWrite == WRITE) {
-			if(tmc2226_readInt(motorToIC(motor), TMC2226_CHOPCONF) & (1<<14))
+			if(tmc2226_readRegister(motor, TMC2226_CHOPCONF) & (1<<14))
 			{
 				TMC2226_FIELD_UPDATE(motorToIC(motor), TMC2226_CHOPCONF, TMC2226_HSTRT_MASK, TMC2226_HSTRT_SHIFT, *value);
 			}
@@ -482,9 +480,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 174:
 		// stallGuard4 threshold
 		if(readWrite == READ) {
-			*value = tmc2226_readInt(motorToIC(motor), TMC2226_SGTHRS);
+			*value = tmc2226_readRegister(motor, TMC2226_SGTHRS);
 		} else if(readWrite == WRITE) {
-			tmc2226_writeInt(motorToIC(motor), TMC2226_SGTHRS, *value);
+			tmc2226_writeRegister(motor, TMC2226_SGTHRS, *value);
 		}
 		break;
 	case 179:
@@ -524,27 +522,27 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			{
 				*value = 0x000FFFFF;
 			}
-			tmc2226_writeInt(motorToIC(motor), TMC2226_TCOOLTHRS, *value);
+			tmc2226_writeRegister(motor, TMC2226_TCOOLTHRS, *value);
 		}
 		break;
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			buffer = tmc2226_readInt(motorToIC(motor), TMC2226_TCOOLTHRS);
+			buffer = tmc2226_readRegister(motor, TMC2226_TCOOLTHRS);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer) ? buffer : 1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value) ? *value : 1));
-			tmc2226_writeInt(motorToIC(motor), TMC2226_TCOOLTHRS, *value);
+			tmc2226_writeRegister(motor, TMC2226_TCOOLTHRS, *value);
 		}
 		break;
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
-			buffer = tmc2226_readInt(motorToIC(motor), TMC2226_TPWMTHRS);
+			buffer = tmc2226_readRegister(motor, TMC2226_TPWMTHRS);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer) ? buffer : 1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value) ? *value : 1));
-			tmc2226_writeInt(motorToIC(motor), TMC2226_TPWMTHRS, *value);
+			tmc2226_writeRegister(motor, TMC2226_TPWMTHRS, *value);
 		}
 		break;
 	case 187:
@@ -593,7 +591,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 206:
 		// Load value
 		if(readWrite == READ) {
-			*value = tmc2226_readInt(motorToIC(motor), TMC2226_SG_RESULT);
+			*value = tmc2226_readRegister(motor, TMC2226_SG_RESULT);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
