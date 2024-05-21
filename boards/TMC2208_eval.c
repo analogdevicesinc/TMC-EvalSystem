@@ -12,6 +12,7 @@
 #include "tmc/StepDir.h"
 
 
+
 static uint8_t nodeAddress = 0;
 static UART_Config *TMC2208_UARTChannel;
 
@@ -73,8 +74,6 @@ static UART_Config *TMC2208_UARTChannel;
 static ConfigurationTypeDef *TMC2208_config;
 static timer_channel timerChannel;
 
-// Helper macro - Access the chip object in the driver boards union
-#define TMC2208 (driverBoards.tmc2208)
 
 static uint16_t vref; // mV
 
@@ -111,32 +110,14 @@ static inline UART_Config *channelToUART(uint8_t channel)
 	return TMC2208_UARTChannel;
 }
 
-// => UART wrapper
-// Write [writeLength] bytes from the [data] array.
-// If [readLength] is greater than zero, read [readLength] bytes from the
-// [data] array.
-void tmc2208_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
-{
-	UART_readWrite(channelToUART(channel), data, writeLength, readLength);
-}
-// <= UART wrapper
-
-// => CRC wrapper
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc2208_CRC8(uint8_t *data, size_t length)
-{
-	return TMC2208_CRC(data, length);
-}
-// <= CRC wrapper
-
 void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	tmc2208_writeInt(motorToIC(motor), (uint8_t) address, value);
+	tmc2208_writeRegister(motor, (uint8_t) address, value);
 }
 
 void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = tmc2208_readInt(motorToIC(motor), (uint8_t) address);
+	*value = tmc2208_readRegister(motor, (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -360,7 +341,6 @@ void TMC2208_init(void)
 #elif defined(LandungsbrueckeV3)
 	timerChannel = TIMER_CHANNEL_4;
 #endif
-	tmc_fillCRC8Table(0x07, true, 1);
 
 	Pins.DRV_ENN  = &HAL.IOs->pins->DIO0;
 	Pins.STEP     = &HAL.IOs->pins->DIO6;
