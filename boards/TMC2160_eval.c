@@ -11,6 +11,18 @@
 #include "Board.h"
 #include "tmc/ic/TMC2160/TMC2160.h"
 
+static SPIChannelTypeDef *TMC2160_SPIChannel;
+
+#define DEFAULT_MOTOR  0
+
+
+void tmc2160_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+	UNUSED(icID);
+	TMC2160_SPIChannel->readWriteArray(data, dataLength);
+}
+
+
 #define TMC2160_EVAL_VM_MIN  80   // VM[V/10] min
 #define TMC2160_EVAL_VM_MAX  590  // VM[V/10] max +5%
 
@@ -63,8 +75,6 @@ typedef struct
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
-
-SPIChannelTypeDef *TMC2160_SPIChannel;
 
 // Helper macro - Access the chip object in the driver boards union
 #define TMC2160 (driverBoards.tmc2160)
