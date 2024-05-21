@@ -11,6 +11,30 @@
 #include "tmc/ic/TMC2208/TMC2208.h"
 #include "tmc/StepDir.h"
 
+
+static uint8_t nodeAddress = 0;
+static UART_Config *TMC2208_UARTChannel;
+
+#define DEFAULT_MOTOR  0
+
+
+
+bool tmc2208_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	UNUSED(icID);
+	int32_t status = UART_readWrite(TMC2208_UARTChannel, data, writeLength, readLength);
+	if(status == -1)
+		return false;
+	return true;
+}
+
+uint8_t tmc2208_getNodeAddress(uint16_t icID)
+{
+	UNUSED(icID);
+
+	return nodeAddress;
+}
+
 #undef  TMC2208_MAX_VELOCITY
 #define TMC2208_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
@@ -105,12 +129,12 @@ uint8_t tmc2208_CRC8(uint8_t *data, size_t length)
 }
 // <= CRC wrapper
 
-void tmc2208_writeRegister(uint8_t motor, uint16_t address, int32_t value)
+void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	tmc2208_writeInt(motorToIC(motor), (uint8_t) address, value);
 }
 
-void tmc2208_readRegister(uint8_t motor, uint16_t address, int32_t *value)
+void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	*value = tmc2208_readInt(motorToIC(motor), (uint8_t) address);
 }
@@ -374,8 +398,8 @@ void TMC2208_init(void)
 	Evalboards.ch2.SAP                  = SAP;
 	Evalboards.ch2.moveTo               = moveTo;
 	Evalboards.ch2.moveBy               = moveBy;
-	Evalboards.ch2.writeRegister        = tmc2208_writeRegister;
-	Evalboards.ch2.readRegister         = tmc2208_readRegister;
+	Evalboards.ch2.writeRegister        = writeRegister;
+	Evalboards.ch2.readRegister         = readRegister;
 	Evalboards.ch2.userFunction         = userFunction;
 	Evalboards.ch2.enableDriver         = enableDriver;
 	Evalboards.ch2.checkErrors          = checkErrors;

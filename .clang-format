@@ -1,0 +1,167 @@
+---
+# Trinamic Software Team - C code .clang-format specification
+# Version 0.1
+# * This is a modified LLVM style.
+# * Any setting not related to C was removed.
+# * All settings are listed in alphabetic order.
+AlignAfterOpenBracket: Align
+#
+AlignArrayOfStructures: Right
+#
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveBitFields: None
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: AcrossComments
+#
+AlignEscapedNewlines: DontAlign
+#
+AlignOperands: Align
+#
+AlignTrailingComments: true
+#
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+#
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: true
+#
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+#
+AttributeMacros:
+  - __capability
+#
+BinPackArguments: true
+BinPackParameters: true
+#
+BitFieldColonSpacing: Both
+#
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Allman
+BreakBeforeConceptDeclarations: false # will be an enum in 15.0
+BreakBeforeTernaryOperators: false
+#
+BreakStringLiterals: true
+#
+ColumnLimit: 120
+#
+CommentPragmas: '^ IWYU pragma:'
+#
+ContinuationIndentWidth: 4
+#
+DeriveLineEnding: true
+DerivePointerAlignment: false
+#
+DisableFormat: false
+#
+ExperimentalAutoDetectBinPacking: false
+#
+ForEachMacros:
+  - foreach
+  - Q_FOREACH
+  - BOOST_FOREACH
+#
+IfMacros:
+  - KJ_IF_MAYBE
+#
+IncludeBlocks: Preserve
+IncludeIsMainRegex: '(Test)?$'
+IncludeIsMainSourceRegex: ''
+#
+IndentCaseBlocks: false
+IndentCaseLabels: false
+IndentExternBlock: AfterExternBlock
+IndentGotoLabels: false
+IndentPPDirectives: None
+IndentWidth: 4
+IndentWrappedFunctionNames: false
+#
+InsertTrailingCommas: None
+#
+KeepEmptyLinesAtTheStartOfBlocks: true
+#
+Language: Cpp
+#
+MacroBlockBegin: ''
+MacroBlockEnd: ''
+#
+MaxEmptyLinesToKeep: 1
+#
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakOpenParenthesis: 0
+PenaltyBreakString: 1000
+PenaltyBreakTemplateDeclaration: 10
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+PenaltyIndentedWhitespace: 0
+#
+PointerAlignment: Right
+#
+PPIndentWidth: -1
+#
+QualifierAlignment: Leave
+#
+ReflowComments: false
+#
+SeparateDefinitionBlocks: Leave
+#
+SortIncludes: Never
+#
+SpaceAfterCStyleCast: true
+SpaceAfterLogicalNot: false
+#
+SpaceAroundPointerQualifiers: Default
+#
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterForeachMacros: true
+  AfterFunctionDefinitionName: false
+  AfterFunctionDeclarationName: false
+  AfterIfMacros: true
+  BeforeNonEmptyParentheses: false
+SpaceBeforeSquareBrackets: false
+#
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+#
+SpacesBeforeTrailingComments: 1
+#
+SpacesInConditionalStatement: false
+SpacesInCStyleCastParentheses: false
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+#
+Standard: Latest
+#
+StatementAttributeLikeMacros:
+  - Q_EMIT
+StatementMacros:
+  - Q_UNUSED
+  - QT_REQUIRE_VERSION
+#
+TabWidth: 8
+#
+UseCRLF: false
+UseTab: Never
+#
+WhitespaceSensitiveMacros:
+  - STRINGIZE
+  - PP_STRINGIZE
+  - BOOST_PP_STRINGIZE
+  - NS_SWIFT_NAME
+  - CF_SWIFT_NAME
+...
+
