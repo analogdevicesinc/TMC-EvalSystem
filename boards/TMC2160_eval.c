@@ -76,9 +76,6 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-// Helper macro - Access the chip object in the driver boards union
-#define TMC2160 (driverBoards.tmc2160)
-
 // Translate motor number to TMC5130TypeDef
 // When using multiple ICs you can map them here
 static inline TMC2160TypeDef *motorToIC(uint8_t motor)
@@ -257,25 +254,25 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			errors |= TMC_ERROR_TYPE;
 		} else if(readWrite == WRITE) {
-			tmc2160_writeInt(motorToIC(motor), TMC2160_TPOWERDOWN, *value);
+			tmc2160_writeRegister(motor, TMC2160_TPOWERDOWN, *value);
 		}
 		break;
 	case 23:
 		// Speed threshold for high speed mode
 		if(readWrite == READ) {
-			tempValue = tmc2160_readInt(motorToIC(motor), TMC2160_THIGH);
+			tempValue = tmc2160_readRegister(motor, TMC2160_THIGH);
 			*value = MIN(0xFFFFF, (1<<24) / ((tempValue)? tempValue:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			tmc2160_writeInt(motorToIC(motor), TMC2160_THIGH, *value);
+			tmc2160_writeRegister(motor, TMC2160_THIGH, *value);
 		}
 		break;
 	case 24:
 		// Minimum speed for switching to dcStep
 		if(readWrite == READ) {
-			*value = tmc2160_readInt(motorToIC(motor), TMC2160_VDCMIN);
+			*value = tmc2160_readRegister(motor, TMC2160_VDCMIN);
 		} else if(readWrite == WRITE) {
-			tmc2160_writeInt(motorToIC(motor), TMC2160_VDCMIN, *value);
+			tmc2160_writeRegister(motor, TMC2160_VDCMIN, *value);
 		}
 		break;
 	case 26:
@@ -396,25 +393,25 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 165:
 		// Chopper hysteresis end / fast decay time
 		if(readWrite == READ) {
-			if(tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF) & (1<<14))
+			if(tmc2160_readRegister(motor, TMC2160_CHOPCONF) & (1<<14))
 			{
 				*value = TMC2160_FIELD_READ(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_HEND_MASK, TMC2160_HEND_SHIFT);
 			}
 			else
 			{
-				tempValue = tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF);
-				*value = (tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF) >> 4) & 0x07;
+				tempValue = tmc2160_readRegister(motor, TMC2160_CHOPCONF);
+				*value = (tmc2160_readRegister(motor, TMC2160_CHOPCONF) >> 4) & 0x07;
 				if(tempValue & (1<<11))
 					*value |= 1<<3;
 			}
 		} else if(readWrite == WRITE) {
-			if(tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF) & (1<<14))
+			if(tmc2160_readRegister(motor, TMC2160_CHOPCONF) & (1<<14))
 			{
 				TMC2160_FIELD_WRITE(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_HEND_MASK, TMC2160_HEND_SHIFT, *value);
 			}
 			else
 			{
-				tempValue = tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF);
+				tempValue = tmc2160_readRegister(motor, TMC2160_CHOPCONF);
 
 				TMC2160_FIELD_WRITE(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_TFD_3_MASK, TMC2160_TFD_3_SHIFT, (*value & (1<<3))? 1:0);
 				TMC2160_FIELD_WRITE(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_TFD_ALL_MASK, TMC2160_TFD_ALL_SHIFT, *value);
@@ -424,19 +421,19 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 166:
 		// Chopper hysteresis start / sine wave offset
 		if(readWrite == READ) {
-			if(tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF) & (1<<14))
+			if(tmc2160_readRegister(motor, TMC2160_CHOPCONF) & (1<<14))
 			{
 				*value = TMC2160_FIELD_READ(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_HSTRT_MASK, TMC2160_HSTRT_SHIFT);
 			}
 			else
 			{
-				tempValue = tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF);
-				*value = (tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF) >> 7) & 0x0F;
+				tempValue = tmc2160_readRegister(motor, TMC2160_CHOPCONF);
+				*value = (tmc2160_readRegister(motor, TMC2160_CHOPCONF) >> 7) & 0x0F;
 				if(tempValue & (1<<11))
 					*value |= 1<<3;
 			}
 		} else if(readWrite == WRITE) {
-			if(tmc2160_readInt(motorToIC(motor), TMC2160_CHOPCONF) & (1<<14))
+			if(tmc2160_readRegister(motor, TMC2160_CHOPCONF) & (1<<14))
 			{
 				TMC2160_FIELD_WRITE(motorToIC(motor), TMC2160_CHOPCONF, TMC2160_HSTRT_MASK, TMC2160_HSTRT_SHIFT, *value);
 			}
@@ -538,11 +535,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			tempValue = tmc2160_readInt(motorToIC(motor), TMC2160_TCOOLTHRS);
+			tempValue = tmc2160_readRegister(motor, TMC2160_TCOOLTHRS);
 			*value = MIN(0xFFFFF, (1<<24) / ((tempValue)? tempValue:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			tmc2160_writeInt(motorToIC(motor), TMC2160_TCOOLTHRS, *value);
+			tmc2160_writeRegister(motor, TMC2160_TCOOLTHRS, *value);
 		}
 		break;
 	case 184:
@@ -556,11 +553,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
-			tempValue = tmc2160_readInt(motorToIC(motor), TMC2160_TPWMTHRS);
+			tempValue = tmc2160_readRegister(motor, TMC2160_TPWMTHRS);
 			*value = MIN(0xFFFFF, (1<<24) / ((tempValue)? tempValue:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			tmc2160_writeInt(motorToIC(motor), TMC2160_TPWMTHRS, *value);
+			tmc2160_writeRegister(motor, TMC2160_TPWMTHRS, *value);
 		}
 		break;
 	case 187:
@@ -680,12 +677,12 @@ static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	tmc2160_writeInt(motorToIC(motor), (uint8_t) address, value);
+	tmc2160_writeRegister(motor, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = tmc2160_readInt(motorToIC(motor), (uint8_t) address);
+	*value = tmc2160_readRegister(motor, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -764,8 +761,8 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 		// todo BUG 3: using the motor for both address and motor value can lead to trying to get struct pointer from an array outside its bounds
 		//             and then loading a function pointer from that. That is pretty a much guaranteed crash and/or hard fault!!! (LH) #1
 
-		//tmc2160_writeInt(motorToIC(motor), motor, *value);
-		//*value = tmc2160_readInt(motorToIC(motor), motor);
+		//tmc2160_writeRegister(motor, motor, *value);
+		//*value = tmc2160_readRegister(motor, motor);
 		break;
 	case 3:	 // set DC_EN
 		HAL.IOs->config->setToState(Pins.DCEN, (*value) ? IOS_HIGH : IOS_LOW);
@@ -845,9 +842,9 @@ static void configCallback(TMC2160TypeDef *tmc2160, ConfigState state)
 {
 	if(state == CONFIG_RESET)
 	{	// Change hardware-preset registers here
-		tmc2160_writeInt(tmc2160, TMC2160_PWMCONF, 0xC40C001E);
-		tmc2160_writeInt(tmc2160, TMC2160_DRV_CONF, 0x00080400);
-		//tmc2160_writeInt(tmc2160, TMC2160_PWMCONF, 0x000504C8);
+		tmc2160_writeRegister(tmc2160, TMC2160_PWMCONF, 0xC40C001E);
+		tmc2160_writeRegister(tmc2160, TMC2160_DRV_CONF, 0x00080400);
+		//tmc2160_writeRegister(tmc2160, TMC2160_PWMCONF, 0x000504C8);
 
 		tmc2160_fillShadowRegisters(tmc2160);
 	}

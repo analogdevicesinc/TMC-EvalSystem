@@ -17,7 +17,6 @@
 #include "tmc/VitalSignsMonitor.h"
 
 #include "tmc/ic/TMC2130/TMC2130.h"
-#include "tmc/ic/TMC2160/TMC2160.h"
 #include "tmc/ic/TMC2208/TMC2208.h"
 #include "tmc/ic/TMC2224/TMC2224.h"
 #include "tmc/ic/TMC2590/TMC2590.h"
@@ -174,7 +173,6 @@ extern MotionControllerBoards motionControllerBoards;
 // since we will only ever use one motion controller at a time
 typedef union {
     TMC2130TypeDef tmc2130;
-    TMC2160TypeDef tmc2160;
     TMC2208TypeDef tmc2208;
     TMC2224TypeDef tmc2224;
     TMC2590TypeDef tmc2590;
