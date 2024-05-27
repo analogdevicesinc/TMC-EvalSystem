@@ -54,9 +54,6 @@ static void enableDriver(DriverState state);
 static SPIChannelTypeDef *TMC5031_SPIChannel;
 extern ConfigurationTypeDef *TMC5031_config;
 
-// Helper macro - Access the chip object in the motion controller boards union
-#define TMC5031 (motionControllerBoards.tmc5031)
-
 typedef struct
 {
 	IOPinTypeDef  *DRV_ENN;
@@ -131,7 +128,7 @@ static uint32_t rotate(uint8_t motor, int32_t velocity)
 	if(motor >= MOTORS)
 		return TMC_ERROR_MOTOR;
 
-	tmc5031_writeInt(motor, TMC5031_VMAX(motor), abs(velocity));
+	tmc5031_writeRegister(motor, TMC5031_VMAX(motor), abs(velocity));
 	vMaxModified[motor] = true;
 	if(velocity >= 0)
 	{
@@ -166,10 +163,10 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
 
 	if(vMaxModified[motor])
 	{
-		tmc5031_writeInt(motor, TMC5031_VMAX(motor), vMax[motor]);
+		tmc5031_writeRegister(motor, TMC5031_VMAX(motor), vMax[motor]);
 		vMaxModified[motor] = false;
 	}
-	tmc5031_writeInt(motor, TMC5031_XTARGET(motor), position);
+	tmc5031_writeRegister(motor, TMC5031_XTARGET(motor), position);
 	tmc5031_writeDatagram(motor, TMC5031_RAMPMODE(motor), 0, 0, 0, TMC5031_MODE_POSITION);
 
 	return TMC_ERROR_NONE;
@@ -178,7 +175,7 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
 	// determine actual position and add numbers of ticks to move
-	*ticks = tmc5031_readInt(motor, TMC5031_XACTUAL(motor)) + *ticks;
+	*ticks = tmc5031_readRegister(motor, TMC5031_XACTUAL(motor)) + *ticks;
 
 	return moveTo(motor, *ticks);
 }
@@ -196,33 +193,33 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 0:
 		// Target position
 		if(readWrite == READ) {
-			*value=tmc5031_readInt(motor, TMC5031_XTARGET(motor));
+			*value=tmc5031_readRegister(motor, TMC5031_XTARGET(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_XTARGET(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_XTARGET(motor), *value);
 		}
 		break;
 	case 1:
 		// Actual position
 		if(readWrite == READ) {
-			*value=tmc5031_readInt(motor, TMC5031_XACTUAL(motor));
+			*value=tmc5031_readRegister(motor, TMC5031_XACTUAL(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_XACTUAL(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_XACTUAL(motor), *value);
 		}
 		break;
 	case 2:
 		// Target speed
 		if(readWrite == READ) {
-			*value=tmc5031_readInt(motor, TMC5031_VMAX(motor));
+			*value=tmc5031_readRegister(motor, TMC5031_VMAX(motor));
 		} else if(readWrite == WRITE) {
 			vMaxModified[motor] = true;
-			tmc5031_writeInt(motor, TMC5031_VMAX(motor), abs(*value));
+			tmc5031_writeRegister(motor, TMC5031_VMAX(motor), abs(*value));
 		}
 		break;
 	case 3:
 		// todo CHECK 3: min max actually velocity min and velocity max? (JE) #2
 		// Actual speed
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_VACTUAL(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_VACTUAL(motor));
 			*value = CAST_Sn_TO_S32(*value, 24);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
@@ -234,16 +231,16 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value=vMax[motor];
 		} else if(readWrite == WRITE) {
 			vMax[motor] = abs(*value);
-			if(tmc5031_readInt(motor, TMC5031_RAMPMODE(motor)) == TMC5031_MODE_POSITION)
-				tmc5031_writeInt(motor, TMC5031_VMAX(motor), abs(*value));
+			if(tmc5031_readRegister(motor, TMC5031_RAMPMODE(motor)) == TMC5031_MODE_POSITION)
+				tmc5031_writeRegister(motor, TMC5031_VMAX(motor), abs(*value));
 		}
 		break;
 	case 5:
 		// Maximum acceleration
 		if(readWrite == READ) {
-			*value=tmc5031_readInt(motor, TMC5031_AMAX(motor));
+			*value=tmc5031_readRegister(motor, TMC5031_AMAX(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_AMAX(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_AMAX(motor), *value);
 		}
 		break;
 	case 6:
@@ -305,89 +302,89 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 14:
 		// SW_MODE Register
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_SWMODE(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_SWMODE(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_SWMODE(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_SWMODE(motor), *value);
 		}
 		break;
 	case 15:
 		// Acceleration A1
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_A1(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_A1(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_A1(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_A1(motor), *value);
 		}
 		break;
 	case 16:
 		// Velocity V1
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_V1(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_V1(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_V1(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_V1(motor), *value);
 		}
 		break;
 	case 17:
 		// Maximum Deceleration
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_DMAX(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_DMAX(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_DMAX(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_DMAX(motor), *value);
 		}
 		break;
 	case 18:
 		// Deceleration D1
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_D1(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_D1(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_D1(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_D1(motor), *value);
 		}
 		break;
 	case 19:
 		// Velocity VSTART
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_VSTART(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_VSTART(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_VSTART(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_VSTART(motor), *value);
 		}
 		break;
 	case 20:
 		// Velocity VSTOP
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_VSTOP(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_VSTOP(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_VSTOP(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_VSTOP(motor), *value);
 		}
 		break;
 	case 21:
 		// Waiting time after ramp down
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_TZEROWAIT(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_TZEROWAIT(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_TZEROWAIT(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_TZEROWAIT(motor), *value);
 		}
 		break;
 	case 22:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_VCOOLTHRS(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_VCOOLTHRS(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_VCOOLTHRS(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_VCOOLTHRS(motor), *value);
 		}
 		break;
 	case 23:
 		// Speed threshold for high speed mode
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_VHIGH(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_VHIGH(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_VHIGH(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_VHIGH(motor), *value);
 		}
 		break;
 	case 24:
 		// Minimum speed for switching to dcStep
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_VDCMIN(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_VDCMIN(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_VDCMIN(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_VDCMIN(motor), *value);
 		}
 		break;
 	case 28:
@@ -426,10 +423,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				tempValue = tmc5031_readInt(motor, TMC5031_CHOPCONF(motor));
+				tempValue = tmc5031_readRegister(motor, TMC5031_CHOPCONF(motor));
 				tempValue &= ~(0x0F<<24);
 				tempValue |= (*value & 0xF) << 24;
-				tmc5031_writeInt(motor, TMC5031_CHOPCONF(motor),tempValue);
+				tmc5031_writeRegister(motor, TMC5031_CHOPCONF(motor),tempValue);
 				TMC5031_FIELD_UPDATE(motor, TMC5031_CHOPCONF(motor), TMC5031_MRES_MASK, TMC5031_MRES_SHIFT, *value);
 			}
 			//else TMCL.reply->Status = REPLY_INVALID_VALUE;
@@ -461,7 +458,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 165:	// todo CHECK AP 2: Is there a particular reason why HEND and TFD are grouped to one axis parameter and sine offset and HSTART to another, even though HEND and sine offset share a bitfield, and HSTART and TFD another?
 		// Chopper hysteresis end / fast decay time
-		tempValue = tmc5031_readInt(motor, TMC5031_CHOPCONF(motor));
+		tempValue = tmc5031_readRegister(motor, TMC5031_CHOPCONF(motor));
 		if(readWrite == READ) {
 			if(tempValue & TMC5031_CHM_MASK) // Chopper Hysteresis
 			{
@@ -491,7 +488,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 166:
 		// Chopper hysteresis start / sine wave offset
-		tempValue = tmc5031_readInt(motor, TMC5031_CHOPCONF(motor));
+		tempValue = tmc5031_readRegister(motor, TMC5031_CHOPCONF(motor));
 		if(readWrite == READ) {
 			if(tempValue & TMC5031_CHM_MASK) // Chopper hysteresis start
 			{
@@ -595,17 +592,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 181:
 		// reset stall
-		tempValue = tmc5031_readInt(motor, TMC5031_SWMODE(motor));
+		tempValue = tmc5031_readRegister(motor, TMC5031_SWMODE(motor));
 		if(readWrite == READ)
 		{
 			if(tempValue & TMC5031_SG_STOP_MASK)
 			{
-				*value = tmc5031_readInt(motor, TMC5031_VCOOLTHRS(motor));
+				*value = tmc5031_readRegister(motor, TMC5031_VCOOLTHRS(motor));
 			}
 			else
 				*value = 0;
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_VCOOLTHRS(motor), *value);
+			tmc5031_writeRegister(motor, TMC5031_VCOOLTHRS(motor), *value);
 
 			TMC5031_FIELD_UPDATE(motor, TMC5031_SWMODE(motor), TMC5031_SG_STOP_MASK, TMC5031_SG_STOP_SHIFT, (*value) ? 1:0);
 		}
@@ -613,9 +610,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_VCOOLTHRS(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_VCOOLTHRS(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_VCOOLTHRS(motor),*value);
+			tmc5031_writeRegister(motor, TMC5031_VCOOLTHRS(motor),*value);
 		}
 		break;
 	case 184:
@@ -645,17 +642,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 209:
 		// Encoder position
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_XENC(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_XENC(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_XENC(motor),*value);
+			tmc5031_writeRegister(motor, TMC5031_XENC(motor),*value);
 		}
 		break;
 	case 210:
 		// Encoder Resolution
 		if(readWrite == READ) {
-			*value = tmc5031_readInt(motor, TMC5031_ENC_CONST(motor));
+			*value = tmc5031_readRegister(motor, TMC5031_ENC_CONST(motor));
 		} else if(readWrite == WRITE) {
-			tmc5031_writeInt(motor, TMC5031_ENC_CONST(motor),*value);
+			tmc5031_writeRegister(motor, TMC5031_ENC_CONST(motor),*value);
 		}
 		break;
 	case 211:
@@ -664,12 +661,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			switch(motor)
 			{
 			case 0:
-				tempValue = tmc5031_readInt(motor, TMC5031_GCONF);
+				tempValue = tmc5031_readRegister(motor, TMC5031_GCONF);
 				tempValue &= (1<<3) | (1<<4);
 				*value = (tempValue == (1<<4))? 1 : 0;
 				break;
 			case 1:
-				tempValue = tmc5031_readInt(motor, TMC5031_GCONF);
+				tempValue = tmc5031_readRegister(motor, TMC5031_GCONF);
 				tempValue &= (1<<5) | (1<<6);
 				*value = (tempValue == ((1<<5) | (0<<6)))? 1 : 0;
 				break;
@@ -679,16 +676,16 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			switch(motor)
 			{
 			case 0:
-				tempValue = tmc5031_readInt(motor, TMC5031_GCONF);
+				tempValue = tmc5031_readRegister(motor, TMC5031_GCONF);
 				tempValue = (*value)? tempValue & ~(1<<3) : tempValue | (1<<3);  // poscmp_enable -> ENCODER1 A,B
 				tempValue = (*value)? tempValue | (1<<4) : tempValue &~ (1<<4);  // enc1_refsel -> ENCODER1 N to REFL1
-				tmc5031_writeInt(motor, TMC5031_GCONF, tempValue);
+				tmc5031_writeRegister(motor, TMC5031_GCONF, tempValue);
 				break;
 			case 1:		// enable ENCODER2 - disable REF
-				tempValue = tmc5031_readInt(motor, TMC5031_GCONF);
+				tempValue = tmc5031_readRegister(motor, TMC5031_GCONF);
 				tempValue = (*value) ? tempValue | (1<<5) : tempValue &~ (1<<5);  // enc2_enable -> ENCODER2 A,B to REFR1,2
 				tempValue = (*value) ? tempValue &~ (1<<6) : tempValue | (1<<6);  // enc2_refse2 -> ENCODER1 N to REFL2
-				tmc5031_writeInt(motor, TMC5031_GCONF, tempValue);
+				tmc5031_writeRegister(motor, TMC5031_GCONF, tempValue);
 				break;
 			}
 		}
@@ -724,13 +721,13 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
-	tmc5031_writeInt(0, (uint8_t) address, value);
+	tmc5031_writeRegister(0, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
-	*value = tmc5031_readInt(0, (uint8_t) address);
+	*value = tmc5031_readRegister(0, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -791,7 +788,7 @@ static void deInit(void)
 static uint8_t reset()
 {
 	for(uint8_t motor = 0; motor < MOTORS; motor++)
-		if(tmc5031_readInt(motor, TMC5031_VACTUAL(motor)) != 0)
+		if(tmc5031_readRegister(motor, TMC5031_VACTUAL(motor)) != 0)
 			return 0;
 
 	return tmc5031_reset(TMC5031_config);
