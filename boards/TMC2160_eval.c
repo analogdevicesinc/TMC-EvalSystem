@@ -12,7 +12,7 @@
 #include "tmc/ic/TMC2160/TMC2160.h"
 
 #define TMC2160_EVAL_VM_MIN  80   // VM[V/10] min
-#define TMC2160_EVAL_VM_MAX  590  // VM[V/10] max +5%
+#define TMC2160_EVAL_VM_MAX  600  // VM[V/10] max +5%
 
 #undef  TMC2160_MAX_VELOCITY
 #define TMC2160_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
