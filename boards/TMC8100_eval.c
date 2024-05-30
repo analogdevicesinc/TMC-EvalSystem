@@ -11,11 +11,16 @@ static SPIChannelTypeDef *TMC8100_SPIChannel;
 typedef struct
 {
     IOPinTypeDef  *SPI_DATA_AVAILABLE;
-    IOPinTypeDef  *SDI;
-    IOPinTypeDef  *SDO;
-    IOPinTypeDef  *SCK;
-    IOPinTypeDef  *CS;
+    IOPinTypeDef  *SPI_MOSI;
+    IOPinTypeDef  *SPI_MISO;
+    IOPinTypeDef  *SPI_SCK;
+    IOPinTypeDef  *SPI_CSN;
     IOPinTypeDef  *RESETN;
+    IOPinTypeDef  *I2C_SDA;
+    IOPinTypeDef  *I2C_SCL;
+    IOPinTypeDef  *UART_RX;
+    IOPinTypeDef  *UART_TX;
+
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -74,6 +79,61 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         // Set to High
         HAL.IOs->config->setToState(Pins.RESETN, IOS_HIGH);
         break;
+    case 5:
+        // Pull down I2C_SDA & I2C_SCL
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+        Pins.I2C_SDA->configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
+        Pins.I2C_SCL->configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
+#elif defined(LandungsbrueckeV3)
+        Pins.I2C_SDA->configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
+        Pins.I2C_SCL->configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
+#endif
+        HAL.IOs->config->set(Pins.I2C_SDA);
+        HAL.IOs->config->set(Pins.I2C_SCL);
+        break;
+    case 6:
+        // Set I2C_SDA and I2C_SCL to high-Z
+        HAL.IOs->config->reset(Pins.I2C_SDA);
+        HAL.IOs->config->reset(Pins.I2C_SCL);
+        break;
+    case 7:
+        // Pull down UART pins
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+        Pins.UART_TX->configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
+        Pins.UART_RX->configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
+#elif defined(LandungsbrueckeV3)
+        Pins.UART_TX->configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
+        Pins.UART_RX->configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
+#endif
+        HAL.IOs->config->toInput(Pins.UART_TX);
+        HAL.IOs->config->toInput(Pins.UART_RX);
+        break;
+    case 8:
+        // Set UART pins to high-Z
+        HAL.IOs->config->reset(Pins.UART_TX);
+        HAL.IOs->config->reset(Pins.UART_RX);
+        HAL.IOs->config->toInput(Pins.UART_TX);
+        HAL.IOs->config->toInput(Pins.UART_RX);
+        break;
+    case 9:
+        // Set SPI pins to high-Z
+        HAL.IOs->config->reset(Pins.SPI_MOSI);
+        HAL.IOs->config->reset(Pins.SPI_MISO);
+        HAL.IOs->config->reset(Pins.SPI_SCK);
+        HAL.IOs->config->reset(Pins.SPI_CSN);
+        HAL.IOs->config->toInput(Pins.SPI_MOSI);
+        HAL.IOs->config->toInput(Pins.SPI_MISO);
+        HAL.IOs->config->toInput(Pins.SPI_SCK);
+        HAL.IOs->config->toInput(Pins.SPI_CSN);
+        break;
+    case 10:
+        // Enable SPI
+        HAL.IOs->config->reset(Pins.SPI_MOSI);
+        HAL.IOs->config->reset(Pins.SPI_MISO);
+        HAL.IOs->config->reset(Pins.SPI_SCK);
+        HAL.IOs->config->reset(Pins.SPI_CSN);
+        SPI.init();
+        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
@@ -84,16 +144,29 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 void TMC8100_init(void)
 {
     Pins.SPI_DATA_AVAILABLE    = &HAL.IOs->pins->DIO9;
-    Pins.SCK                   = &HAL.IOs->pins->SPI2_SCK; //Pin27
-    Pins.SDI                   = &HAL.IOs->pins->SPI2_SDI; //Pin29
-    Pins.SDO                   = &HAL.IOs->pins->SPI2_SDO; //Pin28
-    Pins.CS                    = &HAL.IOs->pins->SPI2_CSN2; //Pin26
+    Pins.SPI_SCK               = &HAL.IOs->pins->SPI2_SCK; //Pin27
+    Pins.SPI_MOSI              = &HAL.IOs->pins->SPI2_SDI; //Pin29
+    Pins.SPI_MISO              = &HAL.IOs->pins->SPI2_SDO; //Pin28
+    Pins.SPI_CSN               = &HAL.IOs->pins->SPI2_CSN2; //Pin26
     Pins.RESETN                = &HAL.IOs->pins->DIO8; //Pin19
+    Pins.I2C_SDA               = &HAL.IOs->pins->DIO3; //Pin11
+    Pins.I2C_SCL               = &HAL.IOs->pins->DIO2; //Pin10
 
-    HAL.IOs->config->reset(Pins.SCK);
-    HAL.IOs->config->reset(Pins.SDI);
-    HAL.IOs->config->reset(Pins.SDO);
-    HAL.IOs->config->reset(Pins.CS);
+#if defined(LandungsbrueckeV3)
+    Pins.UART_RX               = &HAL.IOs->pins->DIO10_UART_TX; //Pin21
+    Pins.UART_TX               = &HAL.IOs->pins->DIO11_UART_RX; //Pin22
+
+    //Set MUX_1 and MUX_2 to zero to connect DIO10 and DIO11 to UART pins DIO10_UART_TX and DIO11_UART_RX respectively.
+    *HAL.IOs->pins->SW_UART_PWM.resetBitRegister     = HAL.IOs->pins->SW_UART_PWM.bitWeight;
+#else
+    Pins.UART_RX               = &HAL.IOs->pins->DIO10; //Pin21
+    Pins.UART_TX               = &HAL.IOs->pins->DIO11; //Pin22
+#endif
+
+    HAL.IOs->config->reset(Pins.SPI_SCK);
+    HAL.IOs->config->reset(Pins.SPI_MOSI);
+    HAL.IOs->config->reset(Pins.SPI_MISO);
+    HAL.IOs->config->reset(Pins.SPI_CSN);
     HAL.IOs->config->reset(Pins.RESETN);
     HAL.IOs->config->reset(Pins.SPI_DATA_AVAILABLE);
 
