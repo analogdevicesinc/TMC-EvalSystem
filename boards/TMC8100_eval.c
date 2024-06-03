@@ -88,8 +88,8 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         Pins.I2C_SDA->configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
         Pins.I2C_SCL->configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
 #endif
-        HAL.IOs->config->set(Pins.I2C_SDA);
-        HAL.IOs->config->set(Pins.I2C_SCL);
+        HAL.IOs->config->toOutput(Pins.I2C_SDA);
+        HAL.IOs->config->toOutput(Pins.I2C_SCL);
         break;
     case 6:
         // Set I2C_SDA and I2C_SCL to high-Z
@@ -105,8 +105,8 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         Pins.UART_TX->configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
         Pins.UART_RX->configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
 #endif
-        HAL.IOs->config->toInput(Pins.UART_TX);
-        HAL.IOs->config->toInput(Pins.UART_RX);
+        HAL.IOs->config->toOutput(Pins.UART_TX);
+        HAL.IOs->config->toOutput(Pins.UART_RX);
         break;
     case 8:
         // Set UART pins to high-Z
