@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -10,7 +10,7 @@
 #include "Board.h"
 #include "tmc/ic/TMC5072/TMC5072.h"
 
-static TMC5072BusType activeBus = IC_BUS_SPI;  //SPI only at the moment
+static TMC5072BusType activeBus = IC_BUS_SPI;
 static uint8_t nodeAddress = 0;
 static SPIChannelTypeDef *TMC5072_SPIChannel;
 static UART_Config *TMC5072_UARTChannel;
@@ -771,6 +771,44 @@ static void configCallback(TMC5072TypeDef *tmc5072, ConfigState state)
 	}
 }
 
+static void init_comm(TMC5072BusType mode)
+{
+	TMC5072_UARTChannel = HAL.UART;
+	switch(mode) {
+	case IC_BUS_UART:
+
+		HAL.IOs->config->reset(Pins.SWION);
+		HAL.IOs->config->toInput(Pins.SWIOP1);
+		HAL.IOs->config->toInput(Pins.SWIOP2);
+
+
+		HAL.IOs->config->toOutput(Pins.INT_ENCA);
+		HAL.IOs->config->toOutput(Pins.PP_ENCB);
+
+
+		HAL.IOs->config->setHigh(Pins.SWSEL);
+		TMC5072_UARTChannel->mode = UART_MODE_SINGLE_WIRE;
+		TMC5072_UARTChannel = HAL.UART;
+		TMC5072_UARTChannel->rxtx.init();
+		break;
+	case IC_BUS_SPI:
+
+		HAL.IOs->config->toInput(Pins.SWION);
+		HAL.IOs->config->toInput(Pins.SWIOP1);
+		HAL.IOs->config->toInput(Pins.SWIOP2);
+
+		HAL.IOs->config->toInput(Pins.INT_ENCA);
+		HAL.IOs->config->toInput(Pins.PP_ENCB);
+
+		SPI.init();
+		HAL.IOs->config->setLow(Pins.SWSEL);
+		TMC5072_UARTChannel->rxtx.deInit();
+		TMC5072_SPIChannel = &HAL.SPI->ch1;
+		TMC5072_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+		break;
+	}
+}
+
 void TMC5072_init(void)
 {
 	tmc5072_init(&TMC5072, 0, Evalboards.ch1.config, &tmc5072_defaultRegisterResetState[0]);
@@ -780,7 +818,7 @@ void TMC5072_init(void)
 	Pins.INT_ENCA  = &HAL.IOs->pins->DIO5;
 	Pins.PP_ENCB   = &HAL.IOs->pins->DIO6;
 
-	Pins.SWSEL     = &HAL.IOs->pins->DIO16;
+	Pins.SWSEL     = &HAL.IOs->pins->DIO16;	//Single wire selection
 	Pins.SWIOP1    = &HAL.IOs->pins->DIO17;
 	Pins.SWIOP2    = &HAL.IOs->pins->DIO18;
 	Pins.SWION     = &HAL.IOs->pins->DIO19;
@@ -788,18 +826,10 @@ void TMC5072_init(void)
 	HAL.IOs->config->toOutput(Pins.DRV_ENN);
 	HAL.IOs->config->toOutput(Pins.SWSEL);
 
-	HAL.IOs->config->setLow(Pins.SWSEL);
 
-	HAL.IOs->config->toInput(Pins.INT_ENCA);
-	HAL.IOs->config->toInput(Pins.PP_ENCB);
 
-	HAL.IOs->config->toInput(Pins.SWION);
 
-	HAL.IOs->config->toInput(Pins.SWIOP1);
-	HAL.IOs->config->toInput(Pins.SWIOP2);
-
-	TMC5072_SPIChannel = &HAL.SPI->ch1;
-	TMC5072_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+	init_comm(activeBus);
 
 	Evalboards.ch1.config->reset        = reset;
 	Evalboards.ch1.config->restore      = restore;
