@@ -133,6 +133,8 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         HAL.IOs->config->reset(Pins.SPI_SCK);
         HAL.IOs->config->reset(Pins.SPI_CSN);
         SPI.init();
+        TMC8100_SPIChannel = &HAL.SPI->ch2;
+        TMC8100_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN2;
         break;
     default:
         errors |= TMC_ERROR_TYPE;
