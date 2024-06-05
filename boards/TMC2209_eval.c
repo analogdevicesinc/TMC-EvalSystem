@@ -110,17 +110,49 @@ static inline TMC2209TypeDef *motorToIC(uint8_t motor)
     return &TMC2209;
 }
 
+static void writeConfiguration(void)
 // => CRC wrapper
 // Return the CRC8 of [length] bytes of data stored in the [data] array.
 uint8_t tmc2209_CRC8(uint8_t *data, size_t length)
 {
+    uint8_t *ptr = &TMC2209.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC2209.config->state == CONFIG_RESTORE)
+    {
+        settings = tmc2209_shadowRegister;
+        // Find the next restorable register
+        while((*ptr < TMC2209_REGISTER_COUNT) && !TMC_IS_RESTORABLE(tmc2209_registerAccess[DEFAULT_MOTOR][*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc2209_sampleRegisterPreset;
+        // Find the next resettable register
+        while((*ptr < TMC2209_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2209_registerAccess[DEFAULT_MOTOR][*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+
+    if(*ptr < TMC2209_REGISTER_COUNT)
+    {
+        tmc2209_writeRegister(DEFAULT_MOTOR, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+    	TMC2209.config->state = CONFIG_READY;
+    }
     return TMC2209_CRC(data, length);
 }
 // <= CRC wrapper
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-    if(motor >= MOTORS)
+    if(motor >= TMC2209_MOTORS)
         return TMC_ERROR_MOTOR;
 
     StepDir_rotate(motor, velocity);
@@ -145,7 +177,7 @@ static uint32_t stop(uint8_t motor)
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-    if(motor >= MOTORS)
+    if(motor >= TMC2209_MOTORS)
         return TMC_ERROR_MOTOR;
 
     StepDir_moveTo(motor, position);
@@ -155,7 +187,7 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-    if(motor >= MOTORS)
+    if(motor >= TMC2209_MOTORS)
         return TMC_ERROR_MOTOR;
 
     // determine actual position and add numbers of ticks to move
@@ -169,7 +201,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     uint32_t errors = TMC_ERROR_NONE;
     int32_t buffer = 0;
 
-    if(motor >= MOTORS)
+    if(motor >= TMC2209_MOTORS)
         return TMC_ERROR_MOTOR;
 
     switch(type)
@@ -677,12 +709,31 @@ static uint8_t reset()
     StepDir_init(STEPDIR_PRECISION);
     StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
 
-    return tmc2209_reset(&TMC2209);
+    if(TMC2209.config->state != CONFIG_READY)
+        return false;
+
+    // Reset the dirty bits and wipe the shadow registers
+    for(size_t i = 0; i < TMC2209_REGISTER_COUNT; i++)
+    {
+    	tmc2209_registerAccess[DEFAULT_MOTOR][i] &= ~TMC2209_ACCESS_DIRTY;
+        tmc2209_shadowRegister[DEFAULT_MOTOR][i] = 0;
+    }
+
+    TMC2209.config->state        = CONFIG_RESET;
+    TMC2209.config->configIndex  = 0;
+
+    return true;
 }
 
 static uint8_t restore()
 {
-    return tmc2209_restore(&TMC2209);
+    if(TMC2209.config->state != CONFIG_READY)
+        return false;
+
+    TMC2209.config->state        = CONFIG_RESTORE;
+    TMC2209.config->configIndex  = 0;
+
+    return true;
 }
 
 static void enableDriver(DriverState state)
@@ -698,7 +749,14 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
-    tmc2209_periodicJob(&TMC2209, tick);
+    UNUSED(tick);
+
+    if(TMC2209.config->state != CONFIG_READY)
+    {
+        writeConfiguration();
+        return;
+    }
+
     StepDir_periodicJob(0);
 }
 
@@ -752,6 +810,10 @@ void TMC2209_init(void)
     TMC2209_UARTChannel->rxtx.init();
 
     TMC2209.config = Evalboards.ch2.config;
+    TMC2209.config->callback     = NULL;
+    TMC2209.config->channel      = 0;
+    TMC2209.config->configIndex  = 0;
+    TMC2209.config->state        = CONFIG_READY;
 
     Evalboards.ch2.config->reset        = reset;
     Evalboards.ch2.config->restore      = restore;
@@ -769,13 +831,11 @@ void TMC2209_init(void)
     Evalboards.ch2.userFunction         = userFunction;
     Evalboards.ch2.enableDriver         = enableDriver;
     Evalboards.ch2.checkErrors          = checkErrors;
-    Evalboards.ch2.numberOfMotors       = MOTORS;
+    Evalboards.ch2.numberOfMotors       = TMC2209_MOTORS;
     Evalboards.ch2.VMMin                = VM_MIN;
     Evalboards.ch2.VMMax                = VM_MAX;
     Evalboards.ch2.deInit               = deInit;
     Evalboards.ch2.periodicJob          = periodicJob;
-
-    tmc2209_init(&TMC2209, 0, 0, TMC2209_config, &tmc2209_defaultRegisterResetState[0]);
 
     StepDir_init(STEPDIR_PRECISION);
     StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
