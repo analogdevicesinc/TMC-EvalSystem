@@ -25,12 +25,16 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-void tmc8100_writeInt(int32_t value)
+int32_t tmc8100_writeInt(int32_t value)
 {
-    spi_ch2_readWriteByte(TMC8100_SPIChannel, value>>24, false);
-    spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>16), false);
-    spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>8), false);
-    spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>0), true);
+    int32_t retval = spi_ch2_readWriteByte(TMC8100_SPIChannel, value>>24, false);
+    retval <<= 8;
+    retval |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>16), false);
+    retval <<= 8;
+    retval |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>8), false);
+    retval <<= 8;
+    retval |= spi_ch2_readWriteByte(TMC8100_SPIChannel, 0xFF & (value>>0), true);
+    return retval;
 }
 
 int32_t tmc8100_readInt(int32_t address)
@@ -61,7 +65,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     {
     case 0:
         //writing
-        tmc8100_writeInt(*value);
+    	*value = tmc8100_writeInt(*value);
         break;
     case 1:
         //reading
