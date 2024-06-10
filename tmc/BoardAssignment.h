@@ -87,8 +87,8 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC6300        21
 #define ID_TMC6140        23
 #define ID_TMC8100        34
-#define ID_TMC2262          35
-
+#define ID_TMC2262        35
+#define ID_TMC9660_EVAL_BL		  37
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
 extern void MAX22216_init();
@@ -131,6 +131,7 @@ extern void TMC8461_init_ch2();
 extern void TMC8462_init_ch1();
 extern void TMC8462_init_ch2();
 extern void TMC2262_init();
+extern void TMC9660_init();
 extern void SelfTest_init();
 
 #if defined(LandungsbrueckeV3)
@@ -188,6 +189,7 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC6140,     .init = TMC6140_init     },
 	{ .id = ID_TMC8100,     .init = TMC8100_init     },
 	{ .id = ID_TMC2262,     .init = TMC2262_init     },
+    { .id = ID_TMC9660_EVAL_BL,     .init = TMC9660_init     },
 };
 
 #endif /* BOARD_ASSIGNMENT_H */
