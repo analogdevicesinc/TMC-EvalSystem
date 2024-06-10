@@ -28,6 +28,28 @@ typedef struct
 
 static PinsTypeDef Pins;
 
+static void initTunnel(void)
+{
+	//Deinit SPI
+    HAL.IOs->config->reset(Pins.SPI1_SCK);
+    HAL.IOs->config->reset(Pins.SPI1_MOSI);
+    HAL.IOs->config->reset(Pins.SPI1_MISO);
+    HAL.IOs->config->reset(Pins.SPI1_CSN);
+    HAL.IOs->config->toInput(Pins.SPI1_SCK);
+    HAL.IOs->config->toInput(Pins.SPI1_MOSI);
+    HAL.IOs->config->toInput(Pins.SPI1_MISO);
+    HAL.IOs->config->toInput(Pins.SPI1_CSN);
+
+	TMC9660_UARTChannel = HAL.UART;
+	TMC9660_UARTChannel->pinout = UART_PINS_2;
+	TMC9660_UARTChannel->rxtx.init();
+
+//    HAL.IOs->config->setHigh(Pins.SPI_EN);
+//    HAL.IOs->config->setLow(Pins.I2C_EN);
+//    HAL.IOs->config->setHigh(Pins.HOLD_FLASHN);
+//    HAL.IOs->config->setLow(Pins.RESETN);
+}
+
 void TMC9660_init(void)
 {
     Pins.SPI_EN                = &HAL.IOs->pins->DIO5;
@@ -52,4 +74,5 @@ void TMC9660_init(void)
 //    HAL.IOs->config->toOutput(Pins.HOLD_FLASHN);
 //    HAL.IOs->config->toOutput(Pins.RESETN);
 
+    initTunnel();
 }
