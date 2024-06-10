@@ -91,6 +91,28 @@ static int32_t processTunnelBL(uint8_t motor, int32_t value)
 	return ((uint32_t)data[3] << 24) | ((uint32_t)data[4] << 16) | (data[5] << 8) | data[6];
 }
 
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
+{
+    UNUSED(motor);
+    uint32_t errors = TMC_ERROR_NONE;
+
+    switch(type)
+    {
+    case 0:
+    	// Process Tunnel Commands
+    	*value = processTunnelBL(motor, *value);
+    	break;
+    case 1:
+    	// Return status byte
+    	*value = lastStatus;
+        break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
+    }
+    return errors;
+}
+
 static void initTunnel(void)
 {
 	//Deinit SPI
@@ -137,5 +159,11 @@ void TMC9660_init(void)
 //    HAL.IOs->config->toOutput(Pins.HOLD_FLASHN);
 //    HAL.IOs->config->toOutput(Pins.RESETN);
 
+//    SPI.init();
+//    TMC9660_SPIChannel = &HAL.SPI->ch2;
+//    TMC9660_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN2;
+
     initTunnel();
+
+    Evalboards.ch2.userFunction    = userFunction;
 }
