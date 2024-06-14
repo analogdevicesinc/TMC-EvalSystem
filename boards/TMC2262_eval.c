@@ -16,7 +16,15 @@ static SPIChannelTypeDef *TMC2262_SPIChannel;
 void tmc2262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
 	UNUSED(icID);
-	TMC2262_SPIChannel->readWriteArray(data, dataLength);
+	if(Evalboards.ch1.fullCover != NULL)
+	{
+		// Takes care of the cover-mode
+		Evalboards.ch1.fullCover(&data[0], dataLength);
+	}
+	else
+	{
+	    TMC2262_SPIChannel->readWriteArray(data, dataLength);
+	}
 }
 
 
