@@ -136,6 +136,10 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     	// Return status byte
     	*value = lastStatus;
         break;
+    case 2:
+        // Get Module ID of App
+        *value = processTunnelApp(157, 0, 0, 0);
+        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
