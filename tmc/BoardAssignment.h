@@ -88,8 +88,12 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC6140        23
 #define ID_TMC8100        34
 #define ID_TMC2262        35
-#define ID_TMC9660_EVAL_BL		  37
+#define ID_TMC9660_BL_EVAL	      37
+#define ID_TMC9660_REG_EVAL		  38
+#define ID_TMC9660_PARAM_EVAL     39
 
+
+#define TM01       1414332417
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
 extern void MAX22216_init();
 extern void MAX22204_init();
@@ -189,7 +193,9 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC6140,     .init = TMC6140_init     },
 	{ .id = ID_TMC8100,     .init = TMC8100_init     },
 	{ .id = ID_TMC2262,     .init = TMC2262_init     },
-    { .id = ID_TMC9660_EVAL_BL,     .init = TMC9660_init     },
+    { .id = ID_TMC9660_BL_EVAL,     .init = TMC9660_init     },
+    { .id = ID_TMC9660_REG_EVAL,    .init = TMC9660_init     },
+    { .id = ID_TMC9660_PARAM_EVAL,  .init = TMC9660_init     },
 };
 
 #endif /* BOARD_ASSIGNMENT_H */
