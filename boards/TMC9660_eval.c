@@ -91,6 +91,36 @@ static int32_t processTunnelBL(uint8_t motor, int32_t value)
 	return ((uint32_t)data[3] << 24) | ((uint32_t)data[4] << 16) | (data[5] << 8) | data[6];
 }
 
+static uint8_t calcCheckSum(uint8_t *data, uint32_t bytes)
+{
+	uint8_t checkSum = 0;
+
+	for(int i =0; i<bytes; i++)
+	{
+		checkSum += data[i];
+	}
+	return checkSum;
+}
+
+static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, int32_t value)
+{
+	uint8_t data[9] = { 0 };
+
+	data[0] = 0x01; // Module Address
+	data[1] = operation; //Operation
+	data[2] = type; //type
+	data[3] = motor; //motor
+	data[4] = (value >> 24) & 0xFF;
+	data[5] = (value >> 16) & 0xFF;
+	data[6] = (value >> 8 ) & 0xFF;
+	data[7] = (value      ) & 0xFF;
+	data[8] = calcCheckSum(data, 8);
+
+	UART_readWrite(TMC9660_UARTChannel, &data[0], 9, 9);
+
+	return ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | (data[6] << 8) | data[7];
+}
+
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
     UNUSED(motor);
