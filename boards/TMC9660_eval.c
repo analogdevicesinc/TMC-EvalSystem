@@ -8,7 +8,7 @@
 
 static SPIChannelTypeDef *TMC9660_SPIChannel;
 static UART_Config *TMC9660_UARTChannel;
-uint8_t lastStatus;
+static uint8_t lastStatus;
 
 #ifdef TMC_API_EXTERNAL_CRC_TABLE
 extern const uint8_t tmcCRCTable_Poly7Reflected[256];
@@ -102,7 +102,7 @@ static uint8_t calcCheckSum(uint8_t *data, uint32_t bytes)
 	return checkSum;
 }
 
-static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, int32_t value)
+static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, int32_t value, uint8_t *status)
 {
 	uint8_t data[9] = { 0 };
 
@@ -118,7 +118,22 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
 
 	UART_readWrite(TMC9660_UARTChannel, &data[0], 9, 9);
 
+	*status = data[2];
 	return ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | (data[6] << 8) | data[7];
+}
+
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
+{
+    uint8_t status;
+	processTunnelApp(5, type, motor, value, &status);
+    return ((uint32_t)status);
+}
+
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
+{
+    uint8_t status;
+	*value = processTunnelApp(6, type, motor, *value, &status);
+    return ((uint32_t)status);
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
@@ -138,7 +153,8 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         break;
     case 2:
         // Get Module ID of App
-        *value = processTunnelApp(157, 0, 0, 0);
+
+        *value = processTunnelApp(157, 0, 0, 0, 0);
         break;
     default:
         errors |= TMC_ERROR_TYPE;
@@ -199,5 +215,7 @@ void TMC9660_init(void)
 
     initTunnel();
 
+	Evalboards.ch2.GAP                  = GAP;
+	Evalboards.ch2.SAP                  = SAP;
     Evalboards.ch2.userFunction    = userFunction;
 }
