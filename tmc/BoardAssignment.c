@@ -74,6 +74,26 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	// This is currently done on completed motion controller reset/restore
 	hookDriverSPI(ids);
 
+	if(ids->ch2.id == ID_TMC9660_BL_EVAL)
+	{
+		int32_t val = 0;
+		Evalboards.ch2.userFunction(0,0,&val);
+		if(val != TM01)
+		{
+			val =0;
+			Evalboards.ch2.userFunction(2,0,&val);
+			if(val == 51)
+			{
+				ids->ch2.id = ID_TMC9660_PARAM_EVAL;
+			}
+			else if(val == 17)
+			{
+				ids->ch2.id = ID_TMC9660_REG_EVAL;
+			}
+			//else id = unknown??
+		}
+	}
+
 	Evalboards.ch1.id = ids->ch1.id;
 	Evalboards.ch2.id = ids->ch2.id;
 
