@@ -57,6 +57,48 @@ uint8_t tmc5160_getNodeAddress(uint16_t icID)
     return nodeAddress;
 }
 
+static void writeConfiguration()
+{
+    uint8_t *ptr = &TMC5160.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC5160.config->state == CONFIG_RESTORE)
+    {
+        settings = tmc5160_shadowRegister;
+        // Find the next restorable register
+        while((*ptr < TMC5160_REGISTER_COUNT) && !TMC_IS_RESTORABLE(tmc5160_registerAccess[DEFAULT_MOTOR][*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc5160_sampleRegisterPreset;
+        while((*ptr < TMC5160_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5160_registerAccess[DEFAULT_MOTOR][*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+
+    if(*ptr < TMC5160_REGISTER_COUNT)
+    {
+        if(*ptr == TMC5160_FACTORY_CONF){
+
+            // Reading reset default value for FCLKTRIM (otp0.0 to otp0.4)
+            int32_t otpFclkTrim = tmc5160_readRegister(DEFAULT_MOTOR, TMC5160_OTP_READ) & TMC5160_OTP_FCLKTRIM_MASK;
+            // Writing the reset default value to FCLKTRIM
+            tmc5160_writeRegister(DEFAULT_MOTOR, *ptr, otpFclkTrim);
+
+        }else{
+            tmc5160_writeRegister(DEFAULT_MOTOR, *ptr, settings[*ptr]);
+        }
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        TMC5160.config->state = CONFIG_READY;
+    }
+}
 
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
@@ -65,13 +107,12 @@ uint8_t tmc5160_getNodeAddress(uint16_t icID)
 #define VM_MIN         80   // VM[V/10] min
 #define VM_MAX         590  // VM[V/10] max
 
-#define DEFAULT_MOTOR  0
 
 #define TMC5160_TIMEOUT 50 // UART Timeout in ms
 
 static bool vMaxModified = false;
 static uint32_t vmax_position;
-//static uint32_t vMax		   = 1;
+//static uint32_t vMax           = 1;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -101,78 +142,90 @@ static void enableDriver(DriverState state);
 // When using multiple ICs you can map them here
 static inline TMC5160TypeDef *motorToIC(uint8_t motor)
 {
-	UNUSED(motor);
-	return &TMC5160;
+    UNUSED(motor);
+    return &TMC5160;
 }
 
 // Translate channel number to SPI channel
 // When using multiple ICs you can map them here
 static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
 {
-	UNUSED(channel);
-	return TMC5160_SPIChannel;
+    UNUSED(channel);
+    return TMC5160_SPIChannel;
 }
 
 typedef struct
 {
-	IOPinTypeDef  *REFL_UC;
-	IOPinTypeDef  *REFR_UC;
-	IOPinTypeDef  *DRV_ENN_CFG6;
-	IOPinTypeDef  *ENCA_DCIN_CFG5;
-	IOPinTypeDef  *ENCB_DCEN_CFG4;
-	IOPinTypeDef  *ENCN_DCO;
-	IOPinTypeDef  *SD_MODE;
-	IOPinTypeDef  *SPI_MODE;
-	IOPinTypeDef  *SWN_DIAG0;
-	IOPinTypeDef  *SWP_DIAG1;
+    IOPinTypeDef  *REFL_UC;
+    IOPinTypeDef  *REFR_UC;
+    IOPinTypeDef  *DRV_ENN_CFG6;
+    IOPinTypeDef  *ENCA_DCIN_CFG5;
+    IOPinTypeDef  *ENCB_DCEN_CFG4;
+    IOPinTypeDef  *ENCN_DCO;
+    IOPinTypeDef  *SD_MODE;
+    IOPinTypeDef  *SPI_MODE;
+    IOPinTypeDef  *SWN_DIAG0;
+    IOPinTypeDef  *SWP_DIAG1;
 
-	IOPinTypeDef  *CLK;
-	IOPinTypeDef  *SDI;
-	IOPinTypeDef  *SDO;
-	IOPinTypeDef  *SCK;
-	IOPinTypeDef  *CS;
+    IOPinTypeDef  *CLK;
+    IOPinTypeDef  *SDI;
+    IOPinTypeDef  *SDO;
+    IOPinTypeDef  *SCK;
+    IOPinTypeDef  *CS;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-    tmc5160_rotate(motorToIC(motor), motor, velocity);
+    // Set absolute velocity
+    tmc5160_writeRegister(motor, TMC5160_VMAX, abs(velocity));
+    // Set direction
+    tmc5160_writeRegister(motor, TMC5160_RAMPMODE, (velocity >= 0) ? TMC5160_MODE_VELPOS : TMC5160_MODE_VELNEG);
 
     return 0;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-    tmc5160_right(motorToIC(motor), motor, velocity);
+    rotate(motor, velocity);
 
     return 0;
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-    tmc5160_left(motorToIC(motor), motor, velocity);
+    rotate(motor, -velocity);
 
     return 0;
 }
 
 static uint32_t stop(uint8_t motor)
 {
-    tmc5160_stop(motorToIC(motor), motor);
+    rotate(motor, 0);
 
     return 0;
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-    tmc5160_moveTo(motorToIC(motor), motor ,position, vmax_position);
+    tmc5160_writeRegister(motor, TMC5160_RAMPMODE, TMC5160_MODE_POSITION);
+
+    // VMAX also holds the target velocity in velocity mode.
+    // Re-write the position mode maximum velocity here.
+    tmc5160_writeRegister(motor, TMC5160_VMAX, vmax_position);
+
+    tmc5160_writeRegister(motor, TMC5160_XTARGET, position);
 
     return 0;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-    tmc5160_moveBy(motorToIC(motor), motor ,ticks, vmax_position);
+    // determine actual position and add numbers of ticks to move
+    *ticks += tmc5160_readRegister(motor, TMC5160_XACTUAL);
+
+    moveTo(motor, vmax_position);
 
     return 0;
 }
@@ -774,29 +827,39 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-<<<<<<< HEAD
-	tmc5160_writeInt(motorToIC(motor), (uint8_t) address, value);
-=======
     UNUSED(motor);
     tmc5160_writeRegister(DEFAULT_MOTOR, address, value);
->>>>>>> 8b5b79e (TMC5160: Updated the TMC-API register access implementation.)
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-<<<<<<< HEAD
-	*value = tmc5160_readInt(motorToIC(motor), (uint8_t) address);
-=======
     UNUSED(motor);
     *value = tmc5160_readRegister(DEFAULT_MOTOR, address );
->>>>>>> 8b5b79e (TMC5160: Updated the TMC-API register access implementation.)
 }
 
 static void periodicJob(uint32_t tick, uint8_t motor)
 {
     for(uint8_t motor = 0; motor < TMC5160_MOTORS; motor++)
     {
-        tmc5160_periodicJob(&TMC5160, motor ,tick);
+        if(TMC5160.config->state != CONFIG_READY)
+            {
+                writeConfiguration();
+                return;
+            }
+
+            int32_t XActual;
+            uint32_t tickDiff;
+
+            // Calculate velocity v = dx/dt
+            if((tickDiff = tick - TMC5160.oldTick) >= 5)
+            {
+                XActual = tmc5160_readRegister(motor, TMC5160_XACTUAL);
+                // ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
+                TMC5160.velocity = (uint32_t) ((float32_t) ((XActual - TMC5160.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+
+                TMC5160.oldX     = XActual;
+                TMC5160.oldTick  = tick;
+            }
     }
 }
 
@@ -973,9 +1036,23 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-    if(!tmc5160_readRegister(DEFAULT_MOTOR, TMC5160_VACTUAL))
-        tmc5160_reset(&TMC5160);
+    if(!tmc5160_readRegister(DEFAULT_MOTOR, TMC5160_VACTUAL)){
+        if(TMC5160.config->state != CONFIG_READY)
+            return false;
 
+        // Reset the dirty bits and wipe the shadow registers
+        size_t i;
+        for(i = 0; i < TMC5160_REGISTER_COUNT; i++)
+        {
+            tmc5160_registerAccess[DEFAULT_MOTOR][i] &= ~TMC_ACCESS_DIRTY;
+            tmc5160_shadowRegister[DEFAULT_MOTOR][i] = 0;
+        }
+
+        TMC5160.config->state        = CONFIG_RESET;
+        TMC5160.config->configIndex  = 0;
+
+        return true;
+    }
     HAL.IOs->config->toInput(Pins.REFL_UC);
     HAL.IOs->config->toInput(Pins.REFR_UC);
 
@@ -984,7 +1061,13 @@ static uint8_t reset()
 
 static uint8_t restore()
 {
-    return tmc5160_restore(&TMC5160);
+    if(TMC5160.config->state != CONFIG_READY)
+        return false;
+
+    TMC5160.config->state        = CONFIG_RESTORE;
+    TMC5160.config->configIndex  = 0;
+
+    return true;
 }
 
 static void configCallback(TMC5160TypeDef *tmc5160, ConfigState completedState)
@@ -994,15 +1077,6 @@ static void configCallback(TMC5160TypeDef *tmc5160, ConfigState completedState)
         // Fill missing shadow registers (hardware preset registers)
         tmc5160_fillShadowRegisters(tmc5160);
     }
-}
-
-static void configCallback(TMC5160TypeDef *tmc5160, ConfigState completedState)
-{
-	if(completedState == CONFIG_RESET)
-	{
-		// Fill missing shadow registers (hardware preset registers)
-		tmc5160_fillShadowRegisters(tmc5160);
-	}
 }
 
 static void enableDriver(DriverState state)
@@ -1115,18 +1189,22 @@ void TMC5160_init(void)
 
     init_comm(activeBus);
 
+    TMC5160.velocity  = 0;
+    TMC5160.oldTick   = 0;
+    TMC5160.oldX      = 0;
+
+    TMC5160.config = Evalboards.ch1.config;
+    TMC5160.config->callback     = NULL;
+    TMC5160.config->channel      = 0;
+    TMC5160.config->configIndex  = 0;
+    TMC5160.config->state        = CONFIG_READY;
+
     Evalboards.ch1.config->reset        = reset;
     Evalboards.ch1.config->restore      = restore;
     Evalboards.ch1.config->state        = CONFIG_RESET;
 
-<<<<<<< HEAD
-	tmc5160_init(&TMC5160, 0, Evalboards.ch1.config, tmc5160_defaultRegisterResetState);
-	tmc5160_setCallback(&TMC5160, configCallback);
-
-=======
-    tmc5160_init(&TMC5160, 0, Evalboards.ch1.config, tmc5160_defaultRegisterResetState);
-    tmc5160_setCallback(&TMC5160, configCallback);
->>>>>>> 8b5b79e (TMC5160: Updated the TMC-API register access implementation.)
+    //tmc5160_setCallback(&TMC5160, configCallback);
+    TMC5160.config->callback = (tmc_callback_config) configCallback;
 
 
     vmax_position = 0;
