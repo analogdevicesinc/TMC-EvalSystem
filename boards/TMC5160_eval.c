@@ -15,6 +15,19 @@ static uint8_t nodeAddress = 0;
 static SPIChannelTypeDef *TMC5160_SPIChannel;
 static UART_Config *TMC5160_UARTChannel;
 
+#define DEFAULT_MOTOR  0
+
+// Typedefs
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t velocity, oldX;
+    uint32_t oldTick;
+
+} TMC5160TypeDef;
+
+static TMC5160TypeDef TMC5160;
+
 void tmc5160_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
     UNUSED(icID);
