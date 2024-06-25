@@ -80,7 +80,6 @@ static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static uint8_t reset();
-static void configCallback(TMC5160TypeDef *tmc5160, ConfigState state);
 static void enableDriver(DriverState state);
 
 
@@ -152,6 +151,11 @@ static void writeConfiguration()
     }
     else // Finished configuration
     {
+        if( TMC5160.config->state == CONFIG_RESET)
+        {
+            // Fill missing shadow registers (hardware preset registers)
+            tmc5160_initCache();
+        }
         TMC5160.config->state = CONFIG_READY;
     }
 }
@@ -1049,15 +1053,6 @@ static uint8_t restore()
 
     return true;
 }
-
-//static void configCallback(TMC5160TypeDef *tmc5160, ConfigState completedState)
-//{
-//    if(completedState == CONFIG_RESET)
-//    {
-//        // Fill missing shadow registers (hardware preset registers)
-//        tmc5160_fillShadowRegisters(tmc5160);
-//    }
-//}
 
 static void enableDriver(DriverState state)
 {
