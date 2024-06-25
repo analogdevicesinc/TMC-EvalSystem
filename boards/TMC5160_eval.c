@@ -137,23 +137,6 @@ static uint8_t reset();
 static void configCallback(TMC5160TypeDef *tmc5160, ConfigState state);
 static void enableDriver(DriverState state);
 
-
-// Translate motor number to TMC5160TypeDef
-// When using multiple ICs you can map them here
-static inline TMC5160TypeDef *motorToIC(uint8_t motor)
-{
-    UNUSED(motor);
-    return &TMC5160;
-}
-
-// Translate channel number to SPI channel
-// When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
-{
-    UNUSED(channel);
-    return TMC5160_SPIChannel;
-}
-
 typedef struct
 {
     IOPinTypeDef  *REFL_UC;
@@ -429,7 +412,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         if(readWrite == READ) {
             readRegister(motor, TMC5160_VDCMIN, value);
         } else if(readWrite == WRITE) {
-            writeRegister(motorToIC(motor), TMC5160_VDCMIN, *value);
+            writeRegister(motor, TMC5160_VDCMIN, *value);
         }
         break;
     case 27:
@@ -663,7 +646,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         if(readWrite == READ) {
             if(tmc5160_fieldRead(motor, TMC5160_SG_STOP_FIELD))
             {
-                readRegister(motorToIC(motor), TMC5160_TCOOLTHRS, &buffer);
+                readRegister(motor, TMC5160_TCOOLTHRS, &buffer);
                 *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
             }
             else
@@ -684,7 +667,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-            writeRegister(motorToIC(motor), TMC5160_TCOOLTHRS, *value);
+            writeRegister(motor, TMC5160_TCOOLTHRS, *value);
         }
         break;
     case 184:
@@ -1070,14 +1053,14 @@ static uint8_t restore()
     return true;
 }
 
-static void configCallback(TMC5160TypeDef *tmc5160, ConfigState completedState)
-{
-    if(completedState == CONFIG_RESET)
-    {
-        // Fill missing shadow registers (hardware preset registers)
-        tmc5160_fillShadowRegisters(tmc5160);
-    }
-}
+//static void configCallback(TMC5160TypeDef *tmc5160, ConfigState completedState)
+//{
+//    if(completedState == CONFIG_RESET)
+//    {
+//        // Fill missing shadow registers (hardware preset registers)
+//        tmc5160_fillShadowRegisters(tmc5160);
+//    }
+//}
 
 static void enableDriver(DriverState state)
 {
@@ -1093,7 +1076,6 @@ static void enableDriver(DriverState state)
 static void init_comm(TMC5160BusType mode)
 {
 	TMC5160_UARTChannel = HAL.UART;
-	//static TMC5160BusType old = IC_BUS_SPI;
     switch(mode) {
     case IC_BUS_UART:
 		HAL.IOs->config->reset(Pins.SCK);
@@ -1114,7 +1096,6 @@ static void init_comm(TMC5160BusType mode)
 
 		TMC5160_UARTChannel = HAL.UART;
 		TMC5160_UARTChannel->rxtx.init();
-        //old = IC_BUS_UART;
         break;
     case IC_BUS_SPI:
 		HAL.IOs->config->reset(Pins.SCK);
@@ -1202,10 +1183,6 @@ void TMC5160_init(void)
     Evalboards.ch1.config->reset        = reset;
     Evalboards.ch1.config->restore      = restore;
     Evalboards.ch1.config->state        = CONFIG_RESET;
-
-    //tmc5160_setCallback(&TMC5160, configCallback);
-    TMC5160.config->callback = (tmc_callback_config) configCallback;
-
 
     vmax_position = 0;
 
