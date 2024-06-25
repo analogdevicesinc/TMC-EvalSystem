@@ -10,12 +10,19 @@
 #include "Board.h"
 #include "tmc/ic/TMC5160/TMC5160.h"
 
-static TMC5160BusType activeBus = IC_BUS_SPI;
-static uint8_t nodeAddress = 0;
-static SPIChannelTypeDef *TMC5160_SPIChannel;
-static UART_Config *TMC5160_UARTChannel;
 
+#define ERRORS_VM        (1<<0)
+#define ERRORS_VM_UNDER  (1<<1)
+#define ERRORS_VM_OVER   (1<<2)
+
+#define VM_MIN         80   // VM[V/10] min
+#define VM_MAX         590  // VM[V/10] max
+
+#define TMC5160_TIMEOUT 50 // UART Timeout in ms
 #define DEFAULT_MOTOR  0
+
+static bool vMaxModified = false;
+static uint32_t vmax_position;
 
 // Typedefs
 typedef struct
@@ -27,6 +34,55 @@ typedef struct
 } TMC5160TypeDef;
 
 static TMC5160TypeDef TMC5160;
+
+typedef struct
+{
+    IOPinTypeDef  *REFL_UC;
+    IOPinTypeDef  *REFR_UC;
+    IOPinTypeDef  *DRV_ENN_CFG6;
+    IOPinTypeDef  *ENCA_DCIN_CFG5;
+    IOPinTypeDef  *ENCB_DCEN_CFG4;
+    IOPinTypeDef  *ENCN_DCO;
+    IOPinTypeDef  *SD_MODE;
+    IOPinTypeDef  *SPI_MODE;
+    IOPinTypeDef  *SWN_DIAG0;
+    IOPinTypeDef  *SWP_DIAG1;
+
+    IOPinTypeDef  *CLK;
+    IOPinTypeDef  *SDI;
+    IOPinTypeDef  *SDO;
+    IOPinTypeDef  *SCK;
+    IOPinTypeDef  *CS;
+} PinsTypeDef;
+
+static PinsTypeDef Pins;
+
+static TMC5160BusType activeBus = IC_BUS_SPI;
+static uint8_t nodeAddress = 0;
+static SPIChannelTypeDef *TMC5160_SPIChannel;
+static UART_Config *TMC5160_UARTChannel;
+
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
+static void init_comm(TMC5160BusType mode);
+static void periodicJob(uint32_t tick, uint8_t motor);
+static void checkErrors(uint32_t tick);
+static void deInit(void);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+
+static uint8_t reset();
+static void configCallback(TMC5160TypeDef *tmc5160, ConfigState state);
+static void enableDriver(DriverState state);
+
 
 void tmc5160_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
@@ -99,65 +155,6 @@ static void writeConfiguration()
         TMC5160.config->state = CONFIG_READY;
     }
 }
-
-#define ERRORS_VM        (1<<0)
-#define ERRORS_VM_UNDER  (1<<1)
-#define ERRORS_VM_OVER   (1<<2)
-
-#define VM_MIN         80   // VM[V/10] min
-#define VM_MAX         590  // VM[V/10] max
-
-
-#define TMC5160_TIMEOUT 50 // UART Timeout in ms
-
-static bool vMaxModified = false;
-static uint32_t vmax_position;
-//static uint32_t vMax           = 1;
-
-static uint32_t right(uint8_t motor, int32_t velocity);
-static uint32_t left(uint8_t motor, int32_t velocity);
-static uint32_t rotate(uint8_t motor, int32_t velocity);
-static uint32_t stop(uint8_t motor);
-static uint32_t moveTo(uint8_t motor, int32_t position);
-static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
-static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-
-static void init_comm(TMC5160BusType mode);
-
-static void periodicJob(uint32_t tick, uint8_t motor);
-static void checkErrors(uint32_t tick);
-static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
-static uint8_t reset();
-static void configCallback(TMC5160TypeDef *tmc5160, ConfigState state);
-static void enableDriver(DriverState state);
-
-typedef struct
-{
-    IOPinTypeDef  *REFL_UC;
-    IOPinTypeDef  *REFR_UC;
-    IOPinTypeDef  *DRV_ENN_CFG6;
-    IOPinTypeDef  *ENCA_DCIN_CFG5;
-    IOPinTypeDef  *ENCB_DCEN_CFG4;
-    IOPinTypeDef  *ENCN_DCO;
-    IOPinTypeDef  *SD_MODE;
-    IOPinTypeDef  *SPI_MODE;
-    IOPinTypeDef  *SWN_DIAG0;
-    IOPinTypeDef  *SWP_DIAG1;
-
-    IOPinTypeDef  *CLK;
-    IOPinTypeDef  *SDI;
-    IOPinTypeDef  *SDO;
-    IOPinTypeDef  *SCK;
-    IOPinTypeDef  *CS;
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
