@@ -15,6 +15,23 @@ static TMC5062BusType activeBus = IC_BUS_SPI;
 static SPIChannelTypeDef *TMC5062_SPIChannel;
 static UART_Config *TMC5062_UARTChannel;
 
+// Usage note: use one TypeDef per IC
+typedef struct {
+    ConfigurationTypeDef *config;
+    uint8_t motors[TMC5062_MOTORS];
+
+    // External frequency supplied to the IC (or 16MHz for internal frequency)
+    uint32_t chipFrequency;
+
+    // Velocity estimation (for dcStep)
+    uint32_t measurementInterval;
+    uint32_t oldTick;
+    int32_t oldXActual[TMC5062_MOTORS];
+    int32_t velocity[TMC5062_MOTORS];
+
+} TMC5062TypeDef;
+
+´static TMC5062TypeDef TMC5062;
 
 void tmc5062_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
