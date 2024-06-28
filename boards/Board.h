@@ -71,7 +71,7 @@ typedef struct
 	uint32_t errors;
 	int32_t VMMax;
 	int32_t VMMin;
-	unsigned char numberOfMotors;
+	unsigned int numberOfMotors;
 	ConfigurationTypeDef *config;
 	uint32_t (*left)                (uint8_t motor, int32_t velocity);            // move left with velocity <velocity>
 	uint32_t (*right)               (uint8_t motor, int32_t velocity);            // move right with velocity <velocity>

@@ -142,6 +142,7 @@
 #define VERSION_SIGNATURE         3 // todo CHECK 2: implemented under "Signature" in IDE. Not sure what to return for that. Not implemented in firmware (LH)
 #define VERSION_BOARD_DETECT_SRC  4 // todo CHECK 2: This doesn't really fit under GetVersion, but its implemented there in the IDE - change or leave this way? (LH)
 #define VERSION_BUILD             5
+#define NUMBER_OF_MOTORS          6 //is returning the amount of motors that could be connected to the EVAL - board
 
 //Statuscodes
 #define REPLY_OK                     100
@@ -969,6 +970,9 @@ static void GetVersion(void)
 	}
 	else if(ActualCommand.Type == VERSION_BUILD) {
 		ActualReply.Value.UInt32 = BUILD_VERSION;
+	}
+	else if(ActualCommand.Type == NUMBER_OF_MOTORS){
+		ActualReply.Value.UInt32 = Evalboards.ch1.numberOfMotors + Evalboards.ch2.numberOfMotors;
 	}
 }
 
