@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -11,13 +11,6 @@
 #include "tmc/ic/TMC5031/TMC5031.h"
 
 static SPIChannelTypeDef *TMC5031_SPIChannel;
-extern ConfigurationTypeDef *TMC5031_config;
-
-void tmc5031_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
-{
-    UNUSED(icID);
-    TMC5031_SPIChannel->readWriteArray(data, dataLength);
-}
 
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
@@ -26,8 +19,22 @@ void tmc5031_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  182  // VM[V/10] max +10%
 
+
 #define MOTORS 2
-#define DEFAULT_ICID 0
+#define DEFAULT_MOTOR  0
+#define DEFAULT_ICID  0
+
+// Usage note: use 1 TypeDef per IC
+typedef struct {
+    ConfigurationTypeDef *config;
+    int32_t oldX[MOTORS];
+    int32_t velocity[MOTORS];
+    uint32_t oldTick;
+    bool vMaxModified[2];
+} TMC5031TypeDef;
+static TMC5031TypeDef TMC5031;
+
+typedef void (*tmc5031_callback)(ConfigState);
 
 static int32_t vMax[MOTORS] = {0, 0};
 static uint8_t vMaxModified[MOTORS] = {true, true};
@@ -45,6 +52,7 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
+static void tmc5031_writeConfiguration();
 static void periodicJob(uint32_t tick);
 static void checkErrors    (uint32_t tick);
 static void deInit(void);
@@ -67,6 +75,12 @@ typedef struct
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
+
+void tmc5031_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+    UNUSED(icID);
+    TMC5031_SPIChannel->readWriteArray(data, dataLength);
+}
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -108,7 +122,7 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
 
     if(vMaxModified[motor])
     {
-        tmc5031_writeRegister(mDEFAULT_ICIDotor, TMC5031_VMAX(motor), vMax[motor]);
+        tmc5031_writeRegister(DEFAULT_ICID, TMC5031_VMAX(motor), vMax[motor]);
         vMaxModified[motor] = false;
     }
     tmc5031_writeRegister(DEFAULT_ICID, TMC5031_XTARGET(motor), position);
@@ -342,7 +356,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         break;
     case 29:
         if(readWrite == READ) {
-            *value = TMC5031_config->shadowRegister[TMC5031_VACTUAL(motor)];
+            *value = tmc5031_shadowRegister[DEFAULT_ICID][TMC5031_VACTUAL(motor)];
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -433,7 +447,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         break;
     case 166:
         // Chopper hysteresis start / sine wave offset
-        tempValue = tmc5031_readRegister(motor, TMC5031_CHOPCONF(motor));
+        tempValue = tmc5031_readRegister(DEFAULT_ICID, TMC5031_CHOPCONF(motor));
         if(readWrite == READ) {
             if(tempValue & TMC5031_CHM_MASK) // Chopper hysteresis start
             {
@@ -606,12 +620,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             switch(motor)
             {
             case 0:
-                tempValue = tmc5031_readRegister(motor, TMC5031_GCONF);
+                tempValue = tmc5031_readRegister(DEFAULT_ICID, TMC5031_GCONF);
                 tempValue &= (1<<3) | (1<<4);
                 *value = (tempValue == (1<<4))? 1 : 0;
                 break;
             case 1:
-                tempValue = tmc5031_readRegister(motor, TMC5031_GCONF);
+                tempValue = tmc5031_readRegister(DEFAULT_ICID, TMC5031_GCONF);
                 tempValue &= (1<<5) | (1<<6);
                 *value = (tempValue == ((1<<5) | (0<<6)))? 1 : 0;
                 break;
@@ -624,7 +638,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
                 tempValue = tmc5031_readRegister(DEFAULT_ICID, TMC5031_GCONF);
                 tempValue = (*value)? tempValue & ~(1<<3) : tempValue | (1<<3);  // poscmp_enable -> ENCODER1 A,B
                 tempValue = (*value)? tempValue | (1<<4) : tempValue &~ (1<<4);  // enc1_refsel -> ENCODER1 N to REFL1
-                tmc5031_writeRegister(DEFAULT_ICID, TMC5031_GCONF, tempValue);
+                tmc5031_writeRegister(motor, TMC5031_GCONF, tempValue);
                 break;
             case 1:        // enable ENCODER2 - disable REF
                 tempValue = tmc5031_readRegister(DEFAULT_ICID, TMC5031_GCONF);
@@ -643,6 +657,18 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     return errors;
 }
 
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+{
+    UNUSED(motor);
+    *value = tmc5031_readRegister(DEFAULT_ICID, (uint8_t) address);
+}
+
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+ {
+    UNUSED(motor);
+    tmc5031_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
+ }
+
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
     return handleParameter(WRITE, motor, type, &value);
@@ -658,28 +684,81 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
     if(motor >= MOTORS)
         return TMC_ERROR_MOTOR;
 
-    *value = TMC5031_config->shadowRegister[TMC5031_VACTUAL(motor)];
+    *value = tmc5031_shadowRegister[DEFAULT_ICID][TMC5031_VACTUAL(motor)];
 
     return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+static void tmc5031_writeConfiguration()
 {
-    UNUSED(motor);
-    tmc5031_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
-}
+    uint8_t *ptr = &TMC5031.config->configIndex;
+    const int32_t *settings;
 
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
-{
-    UNUSED(motor);
-    *value = tmc5031_readRegister(DEFAULT_ICID, (uint8_t) address);
+    if(TMC5031.config->state == CONFIG_RESTORE)
+       {
+           settings = *(tmc5031_shadowRegister+0);
+           // Find the next restorable register
+          while(*ptr < TMC5031_REGISTER_COUNT)
+          {
+                   // If the register is writable and has been written to, restore it
+                   if (TMC_IS_WRITABLE(tmc5031_registerAccess[*ptr]) && tmc5031_getDirtyBit(DEFAULT_ICID,*ptr))
+                   {
+                       break;
+                   }
+
+                   // Otherwise, check next register
+               (*ptr)++;
+           }
+       }
+    else
+    {
+        settings = tmc5031_sampleRegisterPreset;
+        // Find the next resettable register
+        while((*ptr < TMC5031_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5031_registerAccess[*ptr]))
+            (*ptr)++;
+
+    }
+
+    if(*ptr < TMC5031_REGISTER_COUNT)
+    {
+        tmc5031_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        if(TMC5031.config->state == CONFIG_RESET)
+        {
+            // Fill missing shadow registers (hardware preset registers)
+            tmc5031_initCache();
+        }
+
+        TMC5031.config->state = CONFIG_READY;
+    }
 }
 
 static void periodicJob(uint32_t tick)
 {
     for(uint8_t motor = 0; motor < MOTORS; motor++)
     {
-        tmc5031_periodicJob(motor, tick, &TMC5031, TMC5031_config);
+        int32_t xActual;
+        uint32_t tickDiff;
+
+        if(TMC5031.config->state != CONFIG_READY)
+        {
+            tmc5031_writeConfiguration();
+            return;
+        }
+
+        if((tickDiff = tick - TMC5031.oldTick) >= 5)
+        {
+            xActual = tmc5031_readRegister(0, TMC5031_XACTUAL(motor));
+            tmc5031_shadowRegister[motor][TMC5031_XACTUAL(motor)] = xActual;
+            TMC5031.velocity[motor] = (int32_t) ((float) ((xActual-TMC5031.oldX[motor]) / (float) tickDiff) * (float) 1048.576);
+            if(tmc5031_readRegister(0, TMC5031_VACTUAL(motor))<0) TMC5031.velocity[motor] *= -1;
+            TMC5031.oldX[motor] = xActual;
+
+            TMC5031.oldTick = tick;
+        }
     }
 }
 
@@ -736,12 +815,31 @@ static uint8_t reset()
         if(tmc5031_readRegister(DEFAULT_ICID, TMC5031_VACTUAL(motor)) != 0)
             return 0;
 
-    return tmc5031_reset(TMC5031_config);
+    if(TMC5031.config->state != CONFIG_READY)
+        return 0;
+
+    // Reset the dirty bits and wipe the shadow registers
+    for(size_t i = 0; i < TMC5031_REGISTER_COUNT; i++)
+    {
+        tmc5031_setDirtyBit(DEFAULT_ICID, i, false);
+        tmc5031_shadowRegister[DEFAULT_ICID][i] = 0;
+    }
+
+    TMC5031.config->state        = CONFIG_RESET;;
+    TMC5031.config->configIndex  = 0;
+
+    return 1;
 }
 
 static uint8_t restore()
 {
-    return tmc5031_restore(TMC5031_config);
+    if(TMC5031.config->state != CONFIG_READY)
+        return 0;
+
+    TMC5031.config->state        = CONFIG_RESTORE;
+    TMC5031.config->configIndex  = 0;
+
+    return 1;
 }
 
 static void enableDriver(DriverState state)
@@ -757,7 +855,13 @@ static void enableDriver(DriverState state)
 
 void TMC5031_init(void)
 {
-    tmc5031_initConfig(&TMC5031);
+    TMC5031.velocity[0]      = 0;
+    TMC5031.velocity[1]      = 0;
+    TMC5031.oldTick          = 0;
+    TMC5031.oldX[0]          = 0;
+    TMC5031.oldX[1]          = 0;
+    TMC5031.vMaxModified[0]  = false;
+    TMC5031.vMaxModified[1]  = false;
 
     Pins.DRV_ENN   = &HAL.IOs->pins->DIO0;
     Pins.INT_ENCA  = &HAL.IOs->pins->DIO5;
@@ -781,7 +885,7 @@ void TMC5031_init(void)
     TMC5031_SPIChannel = &HAL.SPI->ch1;
     TMC5031_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
 
-    TMC5031_config = Evalboards.ch1.config;
+    TMC5031.config = Evalboards.ch1.config;
 
     Evalboards.ch1.config->reset        = reset;
     Evalboards.ch1.config->restore      = restore;
@@ -808,5 +912,5 @@ void TMC5031_init(void)
     Evalboards.ch1.VMMax                = VM_MAX;
     Evalboards.ch1.deInit               = deInit;
 
-    enableDriver(DRIVER_ENABLE);
+enableDriver(DRIVER_ENABLE);
 };
