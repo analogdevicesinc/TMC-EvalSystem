@@ -12,6 +12,11 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
+### Version 3.10.3: (Released)
+ * .Added functionality in the userFunction (UF) of TMC8100-Eval.
+ * Completed the API rework for TMC2209 (both phase-1 & 2). For further information click [here](https://github.com/analogdevicesinc/TMC-API/blob/e58c4df79796d2d25a27583a5c59e88415263111/tmc/ic/TMC2209/README.md)
+ * Various bugfixes for TMC2262-Eval.
+ 
 ### Version 3.10.2: (Released)
  * Various bugfixes for MAX22216-Eval.
  
