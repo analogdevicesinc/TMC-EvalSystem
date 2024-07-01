@@ -474,7 +474,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 30:
 		// Measured Speed
 		if(readWrite == READ) {
-			*value = (int32_t)TMC5272.velocity;
+			*value = (int32_t)TMC5272.velocity[motor];
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
