@@ -99,8 +99,15 @@ static void writeConfiguration(void)
     {
         settings = tmc2209_shadowRegister;
         // Find the next restorable register
-        while((*ptr < TMC2209_REGISTER_COUNT) && !TMC_IS_RESTORABLE(tmc2209_registerAccess[DEFAULT_MOTOR][*ptr]))
+        while(*ptr < TMC2209_REGISTER_COUNT)
         {
+        	// If the register is writable and has been written to, restore it
+        	if (TMC_IS_WRITABLE(tmc2209_registerAccess[*ptr]) && tmc2209_getDirtyBit(*ptr))
+        	{
+        		break;
+        	}
+
+        	// Otherwise, check next register
             (*ptr)++;
         }
     }
@@ -108,7 +115,7 @@ static void writeConfiguration(void)
     {
         settings = tmc2209_sampleRegisterPreset;
         // Find the next resettable register
-        while((*ptr < TMC2209_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2209_registerAccess[DEFAULT_MOTOR][*ptr]))
+        while((*ptr < TMC2209_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2209_registerAccess[*ptr]))
         {
             (*ptr)++;
         }
@@ -690,7 +697,7 @@ static uint8_t reset()
     // Reset the dirty bits and wipe the shadow registers
     for(size_t i = 0; i < TMC2209_REGISTER_COUNT; i++)
     {
-    	tmc2209_registerAccess[DEFAULT_MOTOR][i] &= ~TMC2209_ACCESS_DIRTY;
+    	tmc2209_dirtyBits[DEFAULT_MOTOR][i] = 0;
         tmc2209_shadowRegister[DEFAULT_MOTOR][i] = 0;
     }
 
