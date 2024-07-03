@@ -1359,7 +1359,7 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 	if(motor >= TMC5272_MOTORS)
 		return TMC_ERROR_MOTOR;
 
-	*value = 0;//TMC5272.velocity;
+	*value = TMC5272.velocity[motor];
 
 	return TMC_ERROR_NONE;
 }
