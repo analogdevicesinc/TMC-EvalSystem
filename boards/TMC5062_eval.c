@@ -10,21 +10,51 @@
 #include "Board.h"
 #include "tmc/ic/TMC5062/TMC5062.h"
 
-
+// Switch between UART and SPI mode
 static TMC5062BusType activeBus = IC_BUS_SPI;
-static SPIChannelTypeDef *TMC5062_SPIChannel;
-static UART_Config *TMC5062_UARTChannel;
+
+#define ERRORS_VM        (1<<0)
+#define ERRORS_VM_UNDER  (1<<1)
+#define ERRORS_VM_OVER   (1<<2)
+
+#define VM_MIN  50   // VM[V/10] min
+#define VM_MAX  222  // VM[V/10] max +10%
 
 #define DEFAULT_ICID 0
 
-static void configCallback(ConfigState state);
-static void measureVelocity(uint32_t tick);
-static void writeConfiguration();
-// Stallguard
-// Coolstep
-// dcStep
-uint8_t dcStepActive(uint8_t motor);
-uint8_t setMicroStepTable(uint8_t motor, TMC5062_MicroStepTable *table);
+static ConfigurationTypeDef *TMC5062_config;
+
+// Position and velocity mode both use VMAX. In order to preserve VMAX of
+// position mode we store the value when switching to velocity mode and
+// reapply the stored value when entering position mode.
+// A nonzero value represents a stored value, a zero value represents
+// no value being stored (VMAX = 0 is a useless case for position mode, so
+// using 0 as special value works). No stored value results in VMAX of
+// velocity mode being kept for position mode.
+static uint32_t vMaxPosMode[TMC5062_MOTORS] = { 0 };
+
+static SPIChannelTypeDef *TMC5062_SPIChannel;
+static UART_Config *TMC5062_UARTChannel;
+
+typedef struct
+{
+    IOPinTypeDef  *DRV_ENN;
+    IOPinTypeDef  *INT_ENCA;
+    IOPinTypeDef  *PP_ENCB;
+    IOPinTypeDef  *SWSEL;
+    IOPinTypeDef  *SWIOP1;
+    IOPinTypeDef  *SWIOP2;
+    IOPinTypeDef  *SWION;
+
+    IOPinTypeDef  *CLK;
+    IOPinTypeDef  *SDI;
+    IOPinTypeDef  *SDO;
+    IOPinTypeDef  *SCK;
+    IOPinTypeDef  *CS;
+
+} PinsTypeDef;
+
+static PinsTypeDef Pins;
 
 // Usage note: use one TypeDef per IC
 typedef struct {
@@ -43,6 +73,38 @@ typedef struct {
 } TMC5062TypeDef;
 
 static TMC5062TypeDef TMC5062;
+
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
+
+static void periodicJob(uint32_t tick);
+static void checkErrors (uint32_t tick);
+static void deInit(void);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+
+static uint8_t reset();
+static void enableDriver(DriverState state);
+
+static void measureVelocity(uint32_t tick);
+static void writeConfiguration();
+// Stallguard
+// Coolstep
+// dcStep
+static uint8_t dcStepActive(uint8_t motor);
+static uint8_t setMicroStepTable(uint8_t motor, TMC5062_MicroStepTable *table);
+
+
+<<<<<<< Updated upstream
 
 
 static void writeConfiguration()
@@ -141,6 +203,8 @@ uint8_t dcStepActive(uint8_t motor)
     return vActual >= vDCMin;
 }
 
+=======
+>>>>>>> Stashed changes
 void tmc5062_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
     UNUSED(icID);
@@ -162,76 +226,6 @@ TMC5062BusType tmc5062_getBusType(uint16_t icID)
 
     return activeBus;
 }
-
-#define ERRORS_VM        (1<<0)
-#define ERRORS_VM_UNDER  (1<<1)
-#define ERRORS_VM_OVER   (1<<2)
-
-#define VM_MIN  50   // VM[V/10] min
-#define VM_MAX  222  // VM[V/10] max +10%
-
-
-static uint32_t right(uint8_t motor, int32_t velocity);
-static uint32_t left(uint8_t motor, int32_t velocity);
-static uint32_t rotate(uint8_t motor, int32_t velocity);
-static uint32_t stop(uint8_t motor);
-static uint32_t moveTo(uint8_t motor, int32_t position);
-static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
-static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-
-//static void init_comm(TMC5062BusType mode);
-
-static void periodicJob(uint32_t tick);
-static void checkErrors	(uint32_t tick);
-static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
-static uint8_t reset();
-static void enableDriver(DriverState state);
-static void configCallback(ConfigState state);
-
-static ConfigurationTypeDef *TMC5062_config;
-
-// Position and velocity mode both use VMAX. In order to preserve VMAX of
-// position mode we store the value when switching to velocity mode and
-// reapply the stored value when entering position mode.
-// A nonzero value represents a stored value, a zero value represents
-// no value being stored (VMAX = 0 is a useless case for position mode, so
-// using 0 as special value works). No stored value results in VMAX of
-// velocity mode being kept for position mode.
-static uint32_t vMaxPosMode[TMC5062_MOTORS] = { 0 };
-
-// When using multiple ICs you can map them here
-static inline TMC5062TypeDef *motorToIC(uint8_t motor)
-{
-	UNUSED(motor);
-	return &TMC5062;
-}
-
-typedef struct
-{
-	IOPinTypeDef  *DRV_ENN;
-	IOPinTypeDef  *INT_ENCA;
-	IOPinTypeDef  *PP_ENCB;
-	IOPinTypeDef  *SWSEL;
-	IOPinTypeDef  *SWIOP1;
-	IOPinTypeDef  *SWIOP2;
-	IOPinTypeDef  *SWION;
-
-	IOPinTypeDef  *CLK;
-	IOPinTypeDef  *SDI;
-	IOPinTypeDef  *SDO;
-	IOPinTypeDef  *SCK;
-	IOPinTypeDef  *CS;
-
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -816,6 +810,7 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 }
 
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
+
 {
 	if(motor >= TMC5062_MOTORS)
 		return TMC_ERROR_MOTOR;
@@ -823,6 +818,116 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 	*value = TMC5062.velocity[motor];
 
 	return TMC_ERROR_NONE;
+}
+
+static void writeConfiguration()
+{
+    uint8_t *ptr = &TMC5062.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC5062.config->state == CONFIG_RESTORE)
+    {
+        settings = tmc5062_shadowRegister;
+        // Find the next restorable register
+        while(*ptr < TMC5062_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc5062_registerAccess[*ptr]) && tmc5062_getDirtyBit(DEFAULT_ICID, *ptr))
+            {
+                break;
+            }
+            (*ptr)++;
+        }
+
+    }
+    else
+    {
+        settings = tmc5062_sampleRegisterPreset;;
+        // Find the next resettable register
+        while((*ptr < TMC5062_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5062_registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+
+    if(*ptr < TMC5062_REGISTER_COUNT)
+    {
+        tmc5062_writeRegister(0, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        if(TMC5062.config->state == CONFIG_RESET)
+        {   // Change hardware-preset registers here
+            for(uint8_t motor = 0; motor < TMC5062_MOTORS; motor++)
+                tmc5062_writeRegister(motor, TMC5062_PWMCONF(motor), 0x000504C8);
+
+            // Fill missing shadow registers (hardware preset registers)
+            tmc5062_initCache();
+        }
+
+        TMC5062.config->state = CONFIG_READY;
+    }
+}
+
+static void measureVelocity(uint32_t tick)
+{
+    int32_t xActual;
+    uint32_t tickDiff;
+
+    if((tickDiff = tick - TMC5062.oldTick) >= TMC5062.measurementInterval)
+    {
+        for(uint8_t motor = 0; motor < TMC5062_MOTORS; motor++)
+        {
+            xActual = tmc5062_readRegister(motor, TMC5062_XACTUAL(motor));
+
+            // Position difference gets multiplied by 1000 to compensate ticks being in milliseconds
+            int32_t xDiff = (xActual - TMC5062.oldXActual[motor])* 1000;
+            TMC5062.velocity[motor] = (xDiff) / ((float) tickDiff) * ((1<<24) / (float) TMC5062.chipFrequency);
+
+            TMC5062.oldXActual[motor] = xActual;
+        }
+        TMC5062.oldTick = tick;
+    }
+}
+
+uint8_t setMicroStepTable(uint8_t motor, TMC5062_MicroStepTable *table)
+{
+    if(motor >= TMC5062_MOTORS || table == 0)
+        return 0;
+
+    tmc5062_writeRegister(motor, TMC5062_MSLUT0(motor), table->LUT_0);
+    tmc5062_writeRegister(motor, TMC5062_MSLUT1(motor), table->LUT_1);
+    tmc5062_writeRegister(motor, TMC5062_MSLUT2(motor), table->LUT_2);
+    tmc5062_writeRegister(motor, TMC5062_MSLUT3(motor), table->LUT_3);
+    tmc5062_writeRegister(motor, TMC5062_MSLUT4(motor), table->LUT_4);
+    tmc5062_writeRegister(motor, TMC5062_MSLUT5(motor), table->LUT_5);
+    tmc5062_writeRegister(motor, TMC5062_MSLUT6(motor), table->LUT_6);
+    tmc5062_writeRegister(motor, TMC5062_MSLUT7(motor), table->LUT_7);
+
+    uint32_t tmp =   ((uint32_t)table->X3 << 24) | ((uint32_t)table->X2 << 16) | (table->X1 << 8)
+                 | (table->W3 <<  6) | (table->W2 <<  4) | (table->W1 << 2) | (table->W0);
+    tmc5062_writeRegister(motor, TMC5062_MSLUTSEL(motor), tmp);
+
+    tmp = ((uint32_t)table->START_SIN90 << 16) | (table->START_SIN);
+    tmc5062_writeRegister(motor, TMC5062_MSLUTSTART(motor), tmp);
+
+    return 1;
+}
+
+uint8_t dcStepActive(uint8_t motor)
+{
+
+    // vhighfs and vhighchm set?
+    int32_t chopConf = tmc5062_readRegister(motor, TMC5062_CHOPCONF(motor));
+    if((chopConf & (TMC5062_VHIGHFS_MASK | TMC5062_VHIGHCHM_MASK)) != (TMC5062_VHIGHFS_MASK | TMC5062_VHIGHCHM_MASK))
+        return 0;
+
+    // Velocity above dcStep velocity threshold?
+    int32_t vActual = tmc5062_readRegister(motor, TMC5062_VACTUAL(motor));
+    int32_t vDCMin  = tmc5062_readRegister(motor, TMC5062_VDCMIN(motor));
+
+    return vActual >= vDCMin;
 }
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
@@ -1010,6 +1115,7 @@ static void init_comm(TMC5062BusType mode)
 
 void TMC5062_init(void)
 {
+    TMC5062_config = Evalboards.ch1.config;
     TMC5062.motors[0] = 0;
     TMC5062.motors[1] = 1;
 
@@ -1028,10 +1134,7 @@ void TMC5062_init(void)
     TMC5062.config->configIndex  = 0;
     TMC5062.config->state        = CONFIG_READY;
 
-    TMC5062_config = Evalboards.ch1.config;
     TMC5062.config->callback = (tmc_callback_config) configCallback;
-	//tmc5062_setCallback(&TMC5062, configCallback);
-
 	Pins.DRV_ENN   = &HAL.IOs->pins->DIO0;
 	Pins.INT_ENCA  = &HAL.IOs->pins->DIO5;
 	Pins.PP_ENCB   = &HAL.IOs->pins->DIO6;
