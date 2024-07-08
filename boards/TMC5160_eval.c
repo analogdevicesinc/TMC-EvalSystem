@@ -121,15 +121,20 @@ static void writeConfiguration()
     {
         settings = tmc5160_shadowRegister;
         // Find the next restorable register
-        while((*ptr < TMC5160_REGISTER_COUNT) && !TMC_IS_RESTORABLE(tmc5160_registerAccess[DEFAULT_MOTOR][*ptr]))
+        while(*ptr < TMC5160_REGISTER_COUNT)
         {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc5160_registerAccess[*ptr]) && tmc5160_getDirtyBit(*ptr))
+            {
+                break;
+            }
             (*ptr)++;
         }
     }
     else
     {
         settings = tmc5160_sampleRegisterPreset;
-        while((*ptr < TMC5160_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5160_registerAccess[DEFAULT_MOTOR][*ptr]))
+        while((*ptr < TMC5160_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5160_registerAccess[*ptr]))
         {
             (*ptr)++;
         }
@@ -1028,7 +1033,7 @@ static uint8_t reset()
         size_t i;
         for(i = 0; i < TMC5160_REGISTER_COUNT; i++)
         {
-            tmc5160_registerAccess[DEFAULT_MOTOR][i] &= ~TMC_ACCESS_DIRTY;
+            tmc5160_dirtyBits[DEFAULT_MOTOR][i] = 0;
             tmc5160_shadowRegister[DEFAULT_MOTOR][i] = 0;
         }
 
