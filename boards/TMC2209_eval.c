@@ -102,7 +102,7 @@ static void writeConfiguration(void)
         while(*ptr < TMC2209_REGISTER_COUNT)
         {
         	// If the register is writable and has been written to, restore it
-        	if (TMC_IS_WRITABLE(tmc2209_registerAccess[*ptr]) && tmc2209_getDirtyBit(*ptr))
+        	if (TMC_IS_WRITABLE(tmc2209_registerAccess[*ptr]) && tmc2209_getDirtyBit(DEFAULT_MOTOR, *ptr))
         	{
         		break;
         	}
