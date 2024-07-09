@@ -97,114 +97,12 @@ static void enableDriver(DriverState state);
 
 static void measureVelocity(uint32_t tick);
 static void writeConfiguration();
-// Stallguard
-// Coolstep
-// dcStep
+// Stallguard, Coolstep, dcStep
 static uint8_t dcStepActive(uint8_t motor);
 static uint8_t setMicroStepTable(uint8_t motor, TMC5062_MicroStepTable *table);
 
 
-<<<<<<< Updated upstream
 
-
-static void writeConfiguration()
-{
-    uint8_t *ptr = &TMC5062.config->configIndex;
-    const int32_t *settings;
-
-    if(TMC5062.config->state == CONFIG_RESTORE)
-    {
-        settings = tmc5062_shadowRegister;
-        // Find the next restorable register
-        while((*ptr < TMC5062_REGISTER_COUNT) && !TMC_IS_RESTORABLE(tmc5062_registerAccess[DEFAULT_ICID][*ptr]))
-            (*ptr)++;
-    }
-    else
-    {
-        settings = tmc5062_sampleRegisterPreset;;
-        // Find the next resettable register
-        while((*ptr < TMC5062_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5062_registerAccess[DEFAULT_ICID][*ptr]))
-            (*ptr)++;
-    }
-
-    if(*ptr < TMC5062_REGISTER_COUNT)
-    {
-        tmc5062_writeRegister(0, *ptr, settings[*ptr]);
-        (*ptr)++;
-    }
-    else // Finished configuration
-    {
-        if(TMC5062.config->callback)
-        {
-            ((tmc5062_callback)TMC5062.config->callback)(TMC5062.config->state);
-        }
-
-        TMC5062.config->state = CONFIG_READY;
-    }
-}
-
-static void measureVelocity(uint32_t tick)
-{
-    int32_t xActual;
-    uint32_t tickDiff;
-
-    if((tickDiff = tick - TMC5062.oldTick) >= TMC5062.measurementInterval)
-    {
-        for(uint8_t motor = 0; motor < TMC5062_MOTORS; motor++)
-        {
-            xActual = tmc5062_readRegister(motor, TMC5062_XACTUAL(motor));
-
-            // Position difference gets multiplied by 1000 to compensate ticks being in milliseconds
-            int32_t xDiff = (xActual - TMC5062.oldXActual[motor])* 1000;
-            TMC5062.velocity[motor] = (xDiff) / ((float) tickDiff) * ((1<<24) / (float) TMC5062.chipFrequency);
-
-            TMC5062.oldXActual[motor] = xActual;
-        }
-        TMC5062.oldTick = tick;
-    }
-}
-
-uint8_t setMicroStepTable(uint8_t motor, TMC5062_MicroStepTable *table)
-{
-    if(motor >= TMC5062_MOTORS || table == 0)
-        return 0;
-
-    tmc5062_writeRegister(motor, TMC5062_MSLUT0(motor), table->LUT_0);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT1(motor), table->LUT_1);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT2(motor), table->LUT_2);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT3(motor), table->LUT_3);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT4(motor), table->LUT_4);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT5(motor), table->LUT_5);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT6(motor), table->LUT_6);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT7(motor), table->LUT_7);
-
-    uint32_t tmp =   ((uint32_t)table->X3 << 24) | ((uint32_t)table->X2 << 16) | (table->X1 << 8)
-                 | (table->W3 <<  6) | (table->W2 <<  4) | (table->W1 << 2) | (table->W0);
-    tmc5062_writeRegister(motor, TMC5062_MSLUTSEL(motor), tmp);
-
-    tmp = ((uint32_t)table->START_SIN90 << 16) | (table->START_SIN);
-    tmc5062_writeRegister(motor, TMC5062_MSLUTSTART(motor), tmp);
-
-    return 1;
-}
-
-uint8_t dcStepActive(uint8_t motor)
-{
-
-    // vhighfs and vhighchm set?
-    int32_t chopConf = tmc5062_readRegister(motor, TMC5062_CHOPCONF(motor));
-    if((chopConf & (TMC5062_VHIGHFS_MASK | TMC5062_VHIGHCHM_MASK)) != (TMC5062_VHIGHFS_MASK | TMC5062_VHIGHCHM_MASK))
-        return 0;
-
-    // Velocity above dcStep velocity threshold?
-    int32_t vActual = tmc5062_readRegister(motor, TMC5062_VACTUAL(motor));
-    int32_t vDCMin  = tmc5062_readRegister(motor, TMC5062_VDCMIN(motor));
-
-    return vActual >= vDCMin;
-}
-
-=======
->>>>>>> Stashed changes
 void tmc5062_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
     UNUSED(icID);
@@ -1016,7 +914,7 @@ static uint8_t reset()
     // Reset the dirty bits and wipe the shadow registers
     for(size_t i = 0; i < TMC5062_REGISTER_COUNT; i++)
     {
-        tmc5062_registerAccess[DEFAULT_ICID][i] &= ~TMC_ACCESS_DIRTY;
+        tmc5062_dirtyBits[DEFAULT_ICID][i] = 0;
         tmc5062_shadowRegister[DEFAULT_ICID][i]= 0;
     }
 
