@@ -124,7 +124,7 @@ static void writeConfiguration()
         while(*ptr < TMC5160_REGISTER_COUNT)
         {
             // If the register is writable and has been written to, restore it
-            if (TMC_IS_WRITABLE(tmc5160_registerAccess[*ptr]) && tmc5160_getDirtyBit(*ptr))
+            if (TMC_IS_WRITABLE(tmc5160_registerAccess[*ptr]) && tmc5160_getDirtyBit(DEFAULT_MOTOR ,*ptr))
             {
                 break;
             }
