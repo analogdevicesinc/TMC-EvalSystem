@@ -947,18 +947,6 @@ static void enableDriver(DriverState state)
 		HAL.IOs->config->setLow(Pins.DRV_ENN);
 }
 
-static void configCallback(ConfigState state)
-{
-	if(state == CONFIG_RESET)
-	{	// Change hardware-preset registers here
-		for(uint8_t motor = 0; motor < TMC5062_MOTORS; motor++)
-			tmc5062_writeRegister(motor, TMC5062_PWMCONF(motor), 0x000504C8);
-
-		// Fill missing shadow registers (hardware preset registers)
-		tmc5062_initCache();
-	}
-}
-
 static void init_comm(TMC5062BusType mode)
 {
 	TMC5062_UARTChannel = HAL.UART;
@@ -1033,7 +1021,6 @@ void TMC5062_init(void)
     TMC5062.config->configIndex  = 0;
     TMC5062.config->state        = CONFIG_READY;
 
-    TMC5062.config->callback = (tmc_callback_config) configCallback;
 	Pins.DRV_ENN   = &HAL.IOs->pins->DIO0;
 	Pins.INT_ENCA  = &HAL.IOs->pins->DIO5;
 	Pins.PP_ENCB   = &HAL.IOs->pins->DIO6;
