@@ -59,6 +59,12 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC5272		   29
 #define ID_TMC5262         30
 #define ID_TMC5271		   31
+#define ID_TMC9660_3PH_BL_EVAL              33
+#define ID_TMC9660_3PH_REG_EVAL             34
+#define ID_TMC9660_3PH_PARAM_EVAL           35
+#define ID_TMC9660_STEPPER_BL_EVAL          36
+#define ID_TMC9660_STEPPER_REG_EVAL         37
+#define ID_TMC9660_STEPPER_PARAM_EVAL       38
 #define ID_TMC2130_TQFP48  0xFE
 #define ID_SELFTEST        255
 
@@ -136,6 +142,7 @@ extern void TMC8462_init_ch1();
 extern void TMC8462_init_ch2();
 extern void TMC2262_init();
 extern void TMC9660_init();
+extern void TMC9660_3PH_init();
 extern void SelfTest_init();
 
 #if defined(LandungsbrueckeV3)
@@ -163,6 +170,9 @@ static const init_assignment init_ch1[] =
 	{ .id = ID_TMC8461,     .init = TMC8461_init_ch1 },
 	{ .id = ID_TMC8462,     .init = TMC8462_init_ch1 },
     { .id = ID_TMC5262,     .init = TMC5262_init     },
+    { .id = ID_TMC9660_3PH_BL_EVAL,     .init = TMC9660_3PH_init     },
+    { .id = ID_TMC9660_3PH_REG_EVAL,    .init = TMC9660_3PH_init     },
+    { .id = ID_TMC9660_3PH_PARAM_EVAL,  .init = TMC9660_3PH_init     },
 	{ .id = ID_SELFTEST,    .init = SelfTest_init    }
 };
 

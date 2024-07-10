@@ -395,7 +395,14 @@ void ExecuteActualCommand()
 		ActualReply.Value.Int32 = ActualCommand.Value.Int32;
 		break;
 	case TMCL_writeRegisterChannel_1:
-		Evalboards.ch1.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
+        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+        {
+            Evalboards.ch1.writeRegister(ActualCommand.Motor,(uint16_t)ActualCommand.Type, ActualCommand.Value.Int32);
+        }
+        else
+        {
+            Evalboards.ch1.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
+        }
 		break;
 	case TMCL_writeRegisterChannel_2:
 		if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
@@ -416,7 +423,14 @@ void ExecuteActualCommand()
 		}
 		else
 		{
-			Evalboards.ch1.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
+            if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+            {
+                Evalboards.ch1.readRegister(ActualCommand.Motor,(uint16_t)ActualCommand.Type, &ActualReply.Value.Int32);
+            }
+            else
+            {
+                Evalboards.ch1.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
+            }
 		}
 		break;
 	case TMCL_readRegisterChannel_2:
@@ -449,7 +463,12 @@ void ExecuteActualCommand()
 		boardsReset();
 		break;
 	case TMCL_GetInfo:
-		if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+        {
+            Evalboards.ch1.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+
+        }
+        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
 		{
 			Evalboards.ch2.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
 
@@ -705,11 +724,19 @@ static void writeIdEeprom(void)
 
 static void SetGlobalParameter()
 {
-	if((Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL) && (ActualCommand.Motor <= 3))
-	{
-		Evalboards.ch2.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
-		return;
-	}
+    if(ActualCommand.Motor <= 3)
+    {
+        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+        {
+            Evalboards.ch1.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+            return;
+        }
+        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+        {
+            Evalboards.ch2.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+            return;
+        }
+    }
 
 	switch(ActualCommand.Type)
 	{
@@ -767,11 +794,20 @@ static void SetGlobalParameter()
 
 static void GetGlobalParameter()
 {
-	if((Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL) && (ActualCommand.Motor <=3))
-	{
-		Evalboards.ch2.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-     return;
-	}
+    if(ActualCommand.Motor <=3)
+    {
+        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+        {
+            Evalboards.ch1.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+         return;
+        }
+        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+        {
+            Evalboards.ch2.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+         return;
+        }
+    }
+
 	switch(ActualCommand.Type)
 	{
 		case 1:
@@ -1076,7 +1112,13 @@ static void HandleWlanCommand(void)
 
 static void handleRamDebug(void)
 {
-	if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+    if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+    {
+        ActualReply.Status = Evalboards.ch1.ramDebug(ActualCommand.Type, ActualCommand.Motor, &ActualCommand.Value.Int32);
+        ActualReply.Value.Int32 = ActualCommand.Value.Int32;
+        return;
+    }
+    else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
 	{
 		ActualReply.Status = Evalboards.ch2.ramDebug(ActualCommand.Type, ActualCommand.Motor, &ActualCommand.Value.Int32);
 		ActualReply.Value.Int32 = ActualCommand.Value.Int32;
