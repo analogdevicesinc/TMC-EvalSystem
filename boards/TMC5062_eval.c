@@ -134,8 +134,8 @@ static uint32_t rotate(uint8_t motor, int32_t velocity)
     if(vMaxPosMode[motor] == 0)
         vMaxPosMode[motor] = tmc5062_readRegister(DEFAULT_ICID, TMC5062_VMAX(motor));
 
-    tmc5062_writeRegister(motor, TMC5062_VMAX(motor), abs(velocity));
-    tmc5062_writeRegister(motor, TMC5062_RAMPMODE(motor), (velocity >= 0) ? TMC5062_MODE_VELPOS : TMC5062_MODE_VELNEG);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_VMAX(motor), abs(velocity));
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_RAMPMODE(motor), (velocity >= 0) ? TMC5062_MODE_VELPOS : TMC5062_MODE_VELNEG);
 
     return 0;
 }
@@ -169,12 +169,12 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
     // If we have a saved VMAX, apply and then delete ( = 0) the copy
     if(vMaxPosMode[motor])
     {
-        tmc5062_writeRegister(motor, TMC5062_VMAX(motor), vMaxPosMode[motor]);
+        tmc5062_writeRegister(DEFAULT_ICID, TMC5062_VMAX(motor), vMaxPosMode[motor]);
         vMaxPosMode[motor] = 0;
     }
 
-    tmc5062_writeRegister(motor, TMC5062_XTARGET(motor), position);
-    tmc5062_writeRegister(motor, TMC5062_RAMPMODE(motor), TMC5062_MODE_POSITION);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_XTARGET(motor), position);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_RAMPMODE(motor), TMC5062_MODE_POSITION);
 	return 0;
 }
 
@@ -758,7 +758,7 @@ static void writeConfiguration()
         if(TMC5062.config->state == CONFIG_RESET)
         {   // Change hardware-preset registers here
             for(uint8_t motor = 0; motor < TMC5062_MOTORS; motor++)
-                tmc5062_writeRegister(motor, TMC5062_PWMCONF(motor), 0x000504C8);
+                tmc5062_writeRegister(DEFAULT_ICID, TMC5062_PWMCONF(motor), 0x000504C8);
 
             // Fill missing shadow registers (hardware preset registers)
             tmc5062_initCache();
@@ -794,21 +794,21 @@ uint8_t setMicroStepTable(uint8_t motor, TMC5062_MicroStepTable *table)
     if(motor >= TMC5062_MOTORS || table == 0)
         return 0;
 
-    tmc5062_writeRegister(motor, TMC5062_MSLUT0(motor), table->LUT_0);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT1(motor), table->LUT_1);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT2(motor), table->LUT_2);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT3(motor), table->LUT_3);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT4(motor), table->LUT_4);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT5(motor), table->LUT_5);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT6(motor), table->LUT_6);
-    tmc5062_writeRegister(motor, TMC5062_MSLUT7(motor), table->LUT_7);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUT0(motor), table->LUT_0);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUT1(motor), table->LUT_1);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUT2(motor), table->LUT_2);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUT3(motor), table->LUT_3);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUT4(motor), table->LUT_4);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUT5(motor), table->LUT_5);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUT6(motor), table->LUT_6);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUT7(motor), table->LUT_7);
 
     uint32_t tmp =   ((uint32_t)table->X3 << 24) | ((uint32_t)table->X2 << 16) | (table->X1 << 8)
                  | (table->W3 <<  6) | (table->W2 <<  4) | (table->W1 << 2) | (table->W0);
-    tmc5062_writeRegister(motor, TMC5062_MSLUTSEL(motor), tmp);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUTSEL(motor), tmp);
 
     tmp = ((uint32_t)table->START_SIN90 << 16) | (table->START_SIN);
-    tmc5062_writeRegister(motor, TMC5062_MSLUTSTART(motor), tmp);
+    tmc5062_writeRegister(DEFAULT_ICID, TMC5062_MSLUTSTART(motor), tmp);
 
     return 1;
 }
