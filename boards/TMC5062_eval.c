@@ -132,7 +132,7 @@ static uint32_t rotate(uint8_t motor, int32_t velocity)
 
     // Save VMAX if there is no saved value yet (restore when (re-)entering position mode)
     if(vMaxPosMode[motor] == 0)
-        vMaxPosMode[motor] = tmc5062_readRegister(motor, TMC5062_VMAX(motor));
+        vMaxPosMode[motor] = tmc5062_readRegister(DEFAULT_ICID, TMC5062_VMAX(motor));
 
     tmc5062_writeRegister(motor, TMC5062_VMAX(motor), abs(velocity));
     tmc5062_writeRegister(motor, TMC5062_RAMPMODE(motor), (velocity >= 0) ? TMC5062_MODE_VELPOS : TMC5062_MODE_VELNEG);
@@ -180,7 +180,7 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-    *ticks += tmc5062_readRegister(motor, TMC5062_XACTUAL(motor));
+    *ticks += tmc5062_readRegister(DEFAULT_ICID, TMC5062_XACTUAL(motor));
     moveTo(motor, *ticks);
 	return 0;
 }
@@ -777,7 +777,7 @@ static void measureVelocity(uint32_t tick)
     {
         for(uint8_t motor = 0; motor < TMC5062_MOTORS; motor++)
         {
-            xActual = tmc5062_readRegister(motor, TMC5062_XACTUAL(motor));
+            xActual = tmc5062_readRegister(DEFAULT_ICID, TMC5062_XACTUAL(motor));
 
             // Position difference gets multiplied by 1000 to compensate ticks being in milliseconds
             int32_t xDiff = (xActual - TMC5062.oldXActual[motor])* 1000;
@@ -817,25 +817,26 @@ uint8_t dcStepActive(uint8_t motor)
 {
 
     // vhighfs and vhighchm set?
-    int32_t chopConf = tmc5062_readRegister(motor, TMC5062_CHOPCONF(motor));
+    int32_t chopConf = tmc5062_readRegister(DEFAULT_ICID, TMC5062_CHOPCONF(motor));
     if((chopConf & (TMC5062_VHIGHFS_MASK | TMC5062_VHIGHCHM_MASK)) != (TMC5062_VHIGHFS_MASK | TMC5062_VHIGHCHM_MASK))
         return 0;
 
     // Velocity above dcStep velocity threshold?
-    int32_t vActual = tmc5062_readRegister(motor, TMC5062_VACTUAL(motor));
-    int32_t vDCMin  = tmc5062_readRegister(motor, TMC5062_VDCMIN(motor));
+    int32_t vActual = tmc5062_readRegister(DEFAULT_ICID, TMC5062_VACTUAL(motor));
+    int32_t vDCMin  = tmc5062_readRegister(DEFAULT_ICID, TMC5062_VDCMIN(motor));
 
     return vActual >= vDCMin;
 }
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
-{
-    tmc5062_writeRegister(motor, address, value);
+{   UNUSED(motor);
+    tmc5062_writeRegister(DEFAULT_ICID, address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-    *value = tmc5062_readRegister(motor, address);
+    UNUSED(motor);
+    *value = tmc5062_readRegister(DEFAULT_ICID, address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -905,7 +906,7 @@ static void deInit(void)
 static uint8_t reset()
 {
 	for(uint8_t motor = 0; motor < TMC5062_MOTORS; motor++)
-		if(tmc5062_readRegister(motor, TMC5062_VACTUAL(motor)) != 0)
+		if(tmc5062_readRegister(DEFAULT_ICID, TMC5062_VACTUAL(motor)) != 0)
 			return 0;
 
 	if(TMC5062.config->state != CONFIG_READY)
