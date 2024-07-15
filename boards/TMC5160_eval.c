@@ -19,7 +19,7 @@
 #define VM_MAX         590  // VM[V/10] max
 
 #define TMC5160_TIMEOUT 50 // UART Timeout in ms
-#define DEFAULT_MOTOR  0
+#define DEFAULT_ICID  0
 
 static bool vMaxModified = false;
 static uint32_t vmax_position;
@@ -124,7 +124,7 @@ static void writeConfiguration()
         while(*ptr < TMC5160_REGISTER_COUNT)
         {
             // If the register is writable and has been written to, restore it
-            if (TMC_IS_WRITABLE(tmc5160_registerAccess[*ptr]) && tmc5160_getDirtyBit(DEFAULT_MOTOR ,*ptr))
+            if (TMC_IS_WRITABLE(tmc5160_registerAccess[*ptr]) && tmc5160_getDirtyBit(DEFAULT_ICID ,*ptr))
             {
                 break;
             }
@@ -145,12 +145,12 @@ static void writeConfiguration()
         if(*ptr == TMC5160_FACTORY_CONF){
 
             // Reading reset default value for FCLKTRIM (otp0.0 to otp0.4)
-            int32_t otpFclkTrim = tmc5160_readRegister(DEFAULT_MOTOR, TMC5160_OTP_READ) & TMC5160_OTP_FCLKTRIM_MASK;
+            int32_t otpFclkTrim = tmc5160_readRegister(DEFAULT_ICID, TMC5160_OTP_READ) & TMC5160_OTP_FCLKTRIM_MASK;
             // Writing the reset default value to FCLKTRIM
-            tmc5160_writeRegister(DEFAULT_MOTOR, *ptr, otpFclkTrim);
+            tmc5160_writeRegister(DEFAULT_ICID, *ptr, otpFclkTrim);
 
         }else{
-            tmc5160_writeRegister(DEFAULT_MOTOR, *ptr, settings[*ptr]);
+            tmc5160_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
         }
         (*ptr)++;
     }
@@ -817,13 +817,13 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
-    tmc5160_writeRegister(DEFAULT_MOTOR, address, value);
+    tmc5160_writeRegister(DEFAULT_ICID, address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
     UNUSED(motor);
-    *value = tmc5160_readRegister(DEFAULT_MOTOR, address );
+    *value = tmc5160_readRegister(DEFAULT_ICID, address );
 }
 
 static void periodicJob(uint32_t tick, uint8_t motor)
@@ -1025,7 +1025,7 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-    if(!tmc5160_readRegister(DEFAULT_MOTOR, TMC5160_VACTUAL)){
+    if(!tmc5160_readRegister(DEFAULT_ICID, TMC5160_VACTUAL)){
         if(TMC5160.config->state != CONFIG_READY)
             return false;
 
@@ -1033,8 +1033,8 @@ static uint8_t reset()
         size_t i;
         for(i = 0; i < TMC5160_REGISTER_COUNT; i++)
         {
-            tmc5160_dirtyBits[DEFAULT_MOTOR][i] = 0;
-            tmc5160_shadowRegister[DEFAULT_MOTOR][i] = 0;
+            tmc5160_dirtyBits[DEFAULT_ICID][i] = 0;
+            tmc5160_shadowRegister[DEFAULT_ICID][i] = 0;
         }
 
         TMC5160.config->state        = CONFIG_RESET;
