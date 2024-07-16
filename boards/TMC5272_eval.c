@@ -36,6 +36,16 @@ static UART_Config *TMC5272_UARTChannel;
 
 #define DEFAULT_MOTOR  0
 
+// Typedefs
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t oldX[TMC5272_MOTORS];
+    int32_t velocity[TMC5272_MOTORS];
+    uint32_t oldTick;
+} TMC5272TypeDef;
+
+static TMC5272TypeDef TMC5272;
 
 void tmc5272_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
