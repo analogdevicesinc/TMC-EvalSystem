@@ -162,44 +162,56 @@ static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	tmc5272_rotate(motorToIC(motor),motor, velocity);
+    if(motor >= TMC5272_MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	return 0;
+    tmc5272_writeRegister(motor, TMC5272_VMAX(motor), abs(velocity));
+
+    if (motor == 0)
+        tmc5272_fieldWrite(motor, TMC5272_RAMPMODE_M0_RAMPMODE_FIELD, (velocity >= 0) ? TMC5272_MODE_VELPOS : TMC5272_MODE_VELNEG);
+    else if(motor == 1)
+        tmc5272_fieldWrite(motor, TMC5272_RAMPMODE_M1_RAMPMODE_FIELD, (velocity >= 0) ? TMC5272_MODE_VELPOS : TMC5272_MODE_VELNEG);
+
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	tmc5272_right(motorToIC(motor),motor, velocity);
-
-	return 0;
+    return rotate(motor, velocity);
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	tmc5272_left(motorToIC(motor),motor, velocity);
-
-	return 0;
+    return rotate(motor, -velocity);
 }
 
 static uint32_t stop(uint8_t motor)
 {
-	tmc5272_stop(motorToIC(motor),motor);
-
-	return 0;
+    return rotate(motor, 0);
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	tmc5272_moveTo(motorToIC(motor),motor, position, vmax_position[motor]);
+    if(motor >= TMC5272_MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	return 0;
+    if (motor == 0)
+        tmc5272_fieldWrite(motor, TMC5272_RAMPMODE_M0_RAMPMODE_FIELD, TMC5272_MODE_POSITION);
+    else if (motor == 1)
+        tmc5272_fieldWrite(motor, TMC5272_RAMPMODE_M1_RAMPMODE_FIELD, TMC5272_MODE_POSITION);
+
+    tmc5272_writeRegister(motor, TMC5272_VMAX(motor), vmax_position[motor]);
+    tmc5272_writeRegister(motor, TMC5272_XTARGET(motor), position);
+
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	tmc5272_moveBy(motorToIC(motor),motor, vmax_position[motor], ticks);
+    // determine actual position and add numbers of ticks to move
+    *ticks += tmc5272_readRegister(motor, TMC5272_XACTUAL(motor));
 
-	return 0;
+    return moveTo(motor, *ticks);
 }
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
@@ -1399,26 +1411,43 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	if(!noRegResetnSLEEP)
-	{
-		//check if reset after nSLEEP to HIGH was performed
-		for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
-		{
-			tmc5272_periodicJob(&TMC5272, tick);
-		}
-	}
-	else
-	{
-		//check if minimum time since chip activation passed. Then restore.
-		if((systick_getTick()-nSLEEPTick)>20) //
-		{
-			noRegResetnSLEEP = false;
-			enableDriver(DRIVER_ENABLE);
-			field_write(DEFAULT_MOTOR, TMC5272_CHOPCONF_TOFF_FIELD(0), 3);
-			field_write(DEFAULT_MOTOR, TMC5272_CHOPCONF_TOFF_FIELD(1), 3);
-			field_write(DEFAULT_MOTOR, TMC5272_IHOLD_IRUN_IHOLD_FIELD(1), 3);
-		}
-	}
+    if(!noRegResetnSLEEP)
+    {
+        //check if reset after nSLEEP to HIGH was performed
+        uint32_t tickDiff;
+
+        if(TMC5272.config->state != CONFIG_READY)
+        {
+            TMC5272.config->state = CONFIG_READY;
+            return;
+        }
+
+        int32_t x;
+
+        // Calculate velocity v = dx/dt
+        if((tickDiff = tick - TMC5272.oldTick) >= 5)
+        {
+            for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
+            {
+                x = tmc5272_readRegister(motor, TMC5272_XACTUAL(motor));
+                TMC5272.velocity[motor] = (uint32_t) ((float32_t) (abs(x - TMC5272.oldX[motor]) / (float32_t) tickDiff) * (float32_t) 1048.576);
+                TMC5272.oldX[motor] = x;
+            }
+            TMC5272.oldTick  = tick;
+        }
+    }
+    else
+    {
+        //check if minimum time since chip activation passed. Then restore.
+        if((systick_getTick()-nSLEEPTick)>20) //
+        {
+            noRegResetnSLEEP = false;
+            enableDriver(DRIVER_ENABLE);
+            tmc5272_fieldWrite(DEFAULT_MOTOR, TMC5272_CHOPCONF_TOFF_FIELD(0), 3);
+            tmc5272_fieldWrite(DEFAULT_MOTOR, TMC5272_CHOPCONF_TOFF_FIELD(1), 3);
+            tmc5272_fieldWrite(DEFAULT_MOTOR, TMC5272_IHOLD_IRUN_IHOLD_FIELD(1), 3);
+        }
+    }
 }
 
 static void checkErrors(uint32_t tick)
@@ -1545,22 +1574,28 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	HAL.IOs->config->toOutput(Pins.nSLEEP);
-	HAL.IOs->config->setHigh(Pins.nSLEEP);
-	wait(50);
-	HAL.IOs->config->setLow(Pins.nSLEEP);
-	noRegResetnSLEEP = true;
-	nSLEEPTick = systick_getTick();
-	int32_t value = 0;
+    HAL.IOs->config->toOutput(Pins.nSLEEP);
+    HAL.IOs->config->setHigh(Pins.nSLEEP);
+    wait(50);
+    HAL.IOs->config->setLow(Pins.nSLEEP);
+    noRegResetnSLEEP = true;
+    nSLEEPTick = systick_getTick();
+    int32_t value = 0;
 
-	for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++){
-		readRegister(motor, TMC5272_VACTUAL(motor), &value);
-		if(value != 0)
-			return 0;
-	}
+    for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++){
+        readRegister(motor, TMC5272_VACTUAL(motor), &value);
+        if(value != 0)
+            return 0;
+    }
+
+    if(TMC5272.config->state != CONFIG_READY)
+        return false;
 
 
-	return tmc5272_reset(&TMC5272);
+    TMC5272.config->state        = CONFIG_RESET;
+    TMC5272.config->configIndex  = 0;
+
+    return true;
 }
 
 static uint8_t restore()
@@ -1689,7 +1724,26 @@ void TMC5272_init(void)
 	Evalboards.ch1.config->restore      = restore;
 	Evalboards.ch1.config->state        = CONFIG_RESET;
 
-	tmc5272_init(&TMC5272, 0, Evalboards.ch1.config);
+    // Initialize a TMC5272 IC.
+    // TMC5272: TMC5272TypeDef struct, which represents one IC
+    // config: A ConfigurationTypeDef struct, which will be used by the IC
+
+    for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
+    {
+        TMC5272.velocity[motor] = 0;
+        TMC5272.oldX[motor] = 0;
+    }
+
+    TMC5272.config               = Evalboards.ch1.config;
+    TMC5272.config->callback     = NULL;
+    TMC5272.config->channel      = 0;   // channel: The channel index, which will be sent back in the SPI callback
+    TMC5272.config->configIndex  = 0;
+    TMC5272.config->state        = CONFIG_READY;
+
+    for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
+    {
+        vmax_position[motor] = 0;
+    }
 
 	for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
 	{
