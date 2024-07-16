@@ -10,6 +10,9 @@
 #include "Board.h"
 #include "tmc/ic/TMC5272/TMC5272.h"
 
+// Switch between SPI and UART here
+static TMC5272BusType activeBus = IC_BUS_SPI;
+
 const uint8_t tmcCRCTable_Poly7Reflected[256] = {
 			0x00, 0x91, 0xE3, 0x72, 0x07, 0x96, 0xE4, 0x75, 0x0E, 0x9F, 0xED, 0x7C, 0x09, 0x98, 0xEA, 0x7B,
 			0x1C, 0x8D, 0xFF, 0x6E, 0x1B, 0x8A, 0xF8, 0x69, 0x12, 0x83, 0xF1, 0x60, 0x15, 0x84, 0xF6, 0x67,
@@ -29,13 +32,6 @@ const uint8_t tmcCRCTable_Poly7Reflected[256] = {
 			0xB4, 0x25, 0x57, 0xC6, 0xB3, 0x22, 0x50, 0xC1, 0xBA, 0x2B, 0x59, 0xC8, 0xBD, 0x2C, 0x5E, 0xCF,
 };
 
-static TMC5272BusType activeBus = IC_BUS_SPI;
-static uint8_t nodeAddress = 0;
-static SPIChannelTypeDef *TMC5272_SPIChannel;
-static UART_Config *TMC5272_UARTChannel;
-
-#define DEFAULT_MOTOR  0
-
 // Typedefs
 typedef struct
 {
@@ -47,34 +43,34 @@ typedef struct
 
 static TMC5272TypeDef TMC5272;
 
-void tmc5272_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+typedef struct
 {
-	UNUSED(icID);
-	TMC5272_SPIChannel->readWriteArray(data, dataLength);
-}
+    IOPinTypeDef  *REFL_UC;
+    IOPinTypeDef  *REFR_UC;
+    IOPinTypeDef  *DRV_ENN_CFG6;
+    IOPinTypeDef  *ENCA_DCIN_CFG5;
+    IOPinTypeDef  *ENCB_DCEN_CFG4;
+    IOPinTypeDef  *ENCN_DCO;
+    IOPinTypeDef  *UART_MODE;
+    IOPinTypeDef  *CLK;
+    IOPinTypeDef  *SDI;
+    IOPinTypeDef  *SDO;
+    IOPinTypeDef  *SCK;
+    IOPinTypeDef  *CS;
 
-bool tmc5272_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
-{
-	UNUSED(icID);
-	int32_t status = UART_readWrite(TMC5272_UARTChannel, data, writeLength, readLength);
-	if(status == -1)
-		return false;
-	return true;
-}
+    IOPinTypeDef  *SWN_DIAG0;
+    IOPinTypeDef  *SWP_DIAG1;
+    IOPinTypeDef  *nSLEEP;
+    IOPinTypeDef  *IREF_R2;
+    IOPinTypeDef  *IREF_R3;
 
-TMC5272BusType tmc5272_getBusType(uint16_t icID)
-{
-	UNUSED(icID);
+} PinsTypeDef;
 
-	return activeBus;
-}
+static PinsTypeDef Pins;
 
-uint8_t tmc5272_getNodeAddress(uint16_t icID)
-{
-	UNUSED(icID);
-
-	return nodeAddress;
-}
+static uint8_t nodeAddress = 0;
+static SPIChannelTypeDef *TMC5272_SPIChannel;
+static UART_Config *TMC5272_UARTChannel;
 
 
 #define ERRORS_VM        (1<<0)
@@ -84,6 +80,7 @@ uint8_t tmc5272_getNodeAddress(uint16_t icID)
 #define VM_MIN         50   // VM[V/10] min
 #define VM_MAX         660  // VM[V/10] max
 
+#define DEFAULT_MOTOR  0
 
 static bool vMaxModified = false;
 static uint32_t vmax_position[TMC5272_MOTORS];
@@ -104,7 +101,6 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
-
 static void init_comm(TMC5272BusType mode);
 
 static void periodicJob(uint32_t tick);
@@ -115,50 +111,36 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
-static TMC5272TypeDef TMC5272;
 
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC5272_CRC(data, length) tmc_CRC8(data, length, 1)
-
-// When using multiple ICs you can map them here
-static inline TMC5272TypeDef *motorToIC(uint8_t motor)
+void tmc5272_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-	UNUSED(motor);
-	return &TMC5272;
+    UNUSED(icID);
+    TMC5272_SPIChannel->readWriteArray(data, dataLength);
 }
 
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc5272_CRC8(uint8_t *data, size_t length)
+bool tmc5272_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
-	return tmc_CRC8(data, length, 1);
-	//TMC5272_CRC(data, length);
+    UNUSED(icID);
+    int32_t status = UART_readWrite(TMC5272_UARTChannel, data, writeLength, readLength);
+    if(status == -1)
+        return false;
+    return true;
 }
 
-
-typedef struct
+TMC5272BusType tmc5272_getBusType(uint16_t icID)
 {
-	IOPinTypeDef  *REFL_UC;
-	IOPinTypeDef  *REFR_UC;
-	IOPinTypeDef  *DRV_ENN_CFG6;
-	IOPinTypeDef  *ENCA_DCIN_CFG5;
-	IOPinTypeDef  *ENCB_DCEN_CFG4;
-	IOPinTypeDef  *ENCN_DCO;
-	IOPinTypeDef  *UART_MODE;
-	IOPinTypeDef  *CLK;
-	IOPinTypeDef  *SDI;
-	IOPinTypeDef  *SDO;
-	IOPinTypeDef  *SCK;
-	IOPinTypeDef  *CS;
+    UNUSED(icID);
 
-	IOPinTypeDef  *SWN_DIAG0;
-	IOPinTypeDef  *SWP_DIAG1;
-	IOPinTypeDef  *nSLEEP;
-	IOPinTypeDef  *IREF_R2;
-	IOPinTypeDef  *IREF_R3;
+    return activeBus;
+}
 
-} PinsTypeDef;
+uint8_t tmc5272_getNodeAddress(uint16_t icID)
+{
+    UNUSED(icID);
 
-static PinsTypeDef Pins;
+    return nodeAddress;
+}
+
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -1744,11 +1726,6 @@ void TMC5272_init(void)
     {
         vmax_position[motor] = 0;
     }
-
-	for(uint8_t motor = 0; motor < TMC5272_MOTORS; motor++)
-	{
-		vmax_position[motor] = 0;
-	}
 
 	Evalboards.ch1.rotate               = rotate;
 	Evalboards.ch1.right                = right;
