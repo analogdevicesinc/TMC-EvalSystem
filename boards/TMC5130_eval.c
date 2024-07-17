@@ -10,14 +10,77 @@
 #include "Board.h"
 #include "tmc/ic/TMC5130/TMC5130.h"
 
-
-static TMC5130BusType activeBus = IC_BUS_SPI;	//Checkout README for if you want to use UART
+static TMC5130BusType activeBus = IC_BUS_SPI;	//Checkout README if you want to use UART
 static uint8_t nodeAddress = 0;
 static SPIChannelTypeDef *TMC5130_SPIChannel;
 static UART_Config *TMC5130_UARTChannel;
 
+#define VM_MIN  50   // VM[V/10] min
+#define VM_MAX  480  // VM[V/10] max
 
 #define DEFAULT_ICID  0
+
+#define VREF_FULLSCALE 2714 // mV
+
+// Typedefs
+typedef struct
+{
+	ConfigurationTypeDef *config;
+	int32_t velocity, oldX;
+	uint32_t oldTick;
+} TMC5130TypeDef;
+static TMC5130TypeDef TMC5130;
+
+typedef struct
+{
+	IOPinTypeDef  *REFL_UC;
+	IOPinTypeDef  *REFR_UC;
+	IOPinTypeDef  *DRV_ENN_CFG6;
+	IOPinTypeDef  *ENCA_DCIN_CFG5;
+	IOPinTypeDef  *ENCB_DCEN_CFG4;
+	IOPinTypeDef  *ENCN_DCO;
+
+	IOPinTypeDef  *SWSEL;
+	IOPinTypeDef  *SWN_DIAG0;
+	IOPinTypeDef  *SWP_DIAG1;
+
+	IOPinTypeDef  *AIN_REF_SW;
+	IOPinTypeDef  *AIN_REF_PWM;
+	IOPinTypeDef  *CLK;
+	IOPinTypeDef  *SDI;
+	IOPinTypeDef  *SDO;
+	IOPinTypeDef  *SCK;
+	IOPinTypeDef  *CS;
+} PinsTypeDef;
+
+static PinsTypeDef Pins;
+
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
+
+static void init_comm(TMC5130BusType mode);
+
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
+static void deInit(void);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+
+static uint8_t reset();
+static void enableDriver(DriverState state);
+
+static uint32_t vmax_position1;
+static uint16_t vref; // mV
+
 void tmc5130_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
 	UNUSED(icID);
@@ -48,104 +111,63 @@ uint8_t tmc5130_getNodeAddress(uint16_t icID)
 	return nodeAddress;
 }
 
-#define VM_MIN  50   // VM[V/10] min
-#define VM_MAX  480  // VM[V/10] max
-
-// SPI Channel selection
-#define DEFAULT_CHANNEL  0
-
-#define VREF_FULLSCALE 2714 // mV
-
-static uint32_t rotate(uint8_t motor, int32_t velocity);
-static uint32_t right(uint8_t motor, int32_t velocity);
-static uint32_t left(uint8_t motor, int32_t velocity);
-static uint32_t stop(uint8_t motor);
-static uint32_t moveTo(uint8_t motor, int32_t position);
-static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
-static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-
-static void init_comm(TMC5130BusType mode);
-
-static void periodicJob(uint32_t tick);
-static void checkErrors(uint32_t tick);
-static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
-static uint8_t reset();
-static void enableDriver(DriverState state);
-
-
-static uint32_t vmax_position1;
-static uint16_t vref; // mV
-
-typedef struct
-{
-	IOPinTypeDef  *REFL_UC;
-	IOPinTypeDef  *REFR_UC;
-	IOPinTypeDef  *DRV_ENN_CFG6;
-	IOPinTypeDef  *ENCA_DCIN_CFG5;
-	IOPinTypeDef  *ENCB_DCEN_CFG4;
-	IOPinTypeDef  *ENCN_DCO;
-
-	IOPinTypeDef  *SWSEL;
-	IOPinTypeDef  *SWN_DIAG0;
-	IOPinTypeDef  *SWP_DIAG1;
-
-	IOPinTypeDef  *AIN_REF_SW;
-	IOPinTypeDef  *AIN_REF_PWM;
-	IOPinTypeDef  *CLK;
-	IOPinTypeDef  *SDI;
-	IOPinTypeDef  *SDO;
-	IOPinTypeDef  *SCK;
-	IOPinTypeDef  *CS;
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
-
-// => Functions forwarded to API
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	tmc5130_rotate(&TMC5130,motor, velocity);
-
+	UNUSED(motor);
+	// Set absolute velocity
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VMAX, abs(velocity));
+	// Set direction
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_RAMPMODE, (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
 	return 0;
 }
 
+// Rotate to the right
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	tmc5130_right(&TMC5130,motor, velocity);
+	rotate( motor, velocity);
 
 	return 0;
 }
 
+// Rotate to the left
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	tmc5130_left(&TMC5130,motor, velocity);
+	rotate( motor, -velocity);
 
 	return 0;
 }
 
+// Stop moving
 static uint32_t stop(uint8_t motor)
 {
-	tmc5130_stop(&TMC5130,motor);
+	rotate(motor, 0);
 
 	return 0;
 }
 
+// Move to a specified position with a given velocity
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	tmc5130_moveTo(&TMC5130, motor, position, vmax_position1);
+	UNUSED(motor);
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_RAMPMODE, TMC5130_MODE_POSITION);
+
+	// VMAX also holds the target velocity in velocity mode.
+	// Re-write the position mode maximum velocity here.
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VMAX, vmax_position1);
+
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_XTARGET, position);
 
 	return 0;
 }
 
+// Move by a given amount with a given velocity
+// This function will write the absolute target position to *ticks
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	tmc5130_moveBy(&TMC5130,motor, ticks, vmax_position1);
+	// determine actual position and add numbers of ticks to move
+	*ticks += tmc5130_readRegister(DEFAULT_ICID, TMC5130_XACTUAL);
+
+	moveTo(motor, *ticks);
 
 	return 0;
 }
@@ -775,16 +797,83 @@ static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
 
 static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 {
-    tmc5130_writeRegister(motor, address, value);
+    *value = tmc5130_readRegister(icID, address);
 }
 
+static void tmc5130_writeConfiguration()
 {
-    *value = tmc5130_readRegister(motor, address);
+	uint8_t *ptr = &TMC5130.config->configIndex;
+	const int32_t *settings;
+
+	if(TMC5130.config->state == CONFIG_RESTORE)
+		{
+			settings = tmc5130_shadowRegister;
+			// Find the next restorable register
+        while(*ptr < TMC5130_REGISTER_COUNT)
+        {
+					// If the register is writable and has been written to, restore it
+					if (TMC_IS_WRITABLE(tmc5130_registerAccess[*ptr]) && tmc5130_getDirtyBit(DEFAULT_ICID,*ptr))
+					{
+						break;
+					}
+
+					// Otherwise, check next register
+				(*ptr)++;
+			}
+		}
+	else
+		{
+			settings = tmc5130_sampleRegisterPreset;
+			// Find the next resettable register
+			while((*ptr < TMC5130_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5130_registerAccess[*ptr]))
+			{
+				(*ptr)++;
+			}
+		}
+
+	if(*ptr < TMC5130_REGISTER_COUNT)
+		{
+			tmc5130_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+			(*ptr)++;
+		}
+	else // Finished configuration
+		{
+
+			// Configuration reset completed
+			// Change hardware preset registers here
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_PWMCONF, 0x000500C8);
+
+			// Fill missing shadow registers (hardware preset registers)
+			tmc5130_initCache();
+
+
+			TMC5130.config->state = CONFIG_READY;
+		}
 }
 
+// Call this periodically
 static void periodicJob(uint32_t tick)
 {
-	tmc5130_periodicJob(&TMC5130, tick);
+	// Helper function: Configure the next register.
+	if(TMC5130.config->state != CONFIG_READY)
+	{
+		tmc5130_writeConfiguration();
+		return;
+	}
+
+	int32_t XActual;
+	uint32_t tickDiff;
+
+	// Calculate velocity v = dx/dt
+	if((tickDiff = tick - TMC5130.oldTick) >= 5)
+	{
+		XActual = tmc5130_readRegister(DEFAULT_ICID, TMC5130_XACTUAL);
+		// ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
+		TMC5130.velocity = (uint32_t) ((float32_t) ((XActual - TMC5130.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+
+		TMC5130.oldX     = XActual;
+		TMC5130.oldTick  = tick;
+	}
 }
 
 static void checkErrors(uint32_t tick)
@@ -939,11 +1028,26 @@ static void deInit(void)
 	Timer.deInit();
 };
 
+// Reset the TMC5130.
 static uint8_t reset()
 {
+	if(!tmc5130_readRegister(DEFAULT_ICID, TMC5130_VACTUAL))	{
+		if(TMC5130.config->state != CONFIG_READY)
+			return false;
 
-	if(!tmc5130_readRegister(DEFAULT_MOTOR, TMC5130_VACTUAL))
-		tmc5130_reset(&TMC5130);
+		// Reset the dirty bits and wipe the shadow registers
+		size_t i;
+		for(i = 0; i < TMC5130_REGISTER_COUNT; i++)
+		{
+			tmc5130_dirtyBits[DEFAULT_ICID][i] = 0;
+			tmc5130_shadowRegister[DEFAULT_ICID][i] = 0;
+		}
+
+		TMC5130.config->state        = CONFIG_RESET;
+		TMC5130.config->configIndex  = 0;
+
+		return true;
+	}
 
 	HAL.IOs->config->setLow(Pins.AIN_REF_SW);
 	HAL.IOs->config->toInput(Pins.REFL_UC);
@@ -952,22 +1056,17 @@ static uint8_t reset()
 	return 1;
 }
 
+// Restore the TMC5130 to the state stored in the shadow registers.
+// This can be used to recover the IC configuration after a VM power loss.
 static uint8_t restore()
 {
-	return tmc5130_restore(&TMC5130);
-}
+	if(TMC5130.config->state != CONFIG_READY)
+		return false;
 
-static void configCallback(TMC5130TypeDef *tmc5130, ConfigState completedState)
-{
-	if(completedState == CONFIG_RESET)
-	{
-		// Configuration reset completed
-		// Change hardware preset registers here
-		tmc5130_writeRegister(DEFAULT_MOTOR, TMC5130_PWMCONF, 0x000500C8);
+	TMC5130.config->state        = CONFIG_RESTORE;
+	TMC5130.config->configIndex  = 0;
 
-		// Fill missing shadow registers (hardware preset registers)
-		tmc5130_fillShadowRegisters(&TMC5130);
-	}
+	return true;
 }
 
 static void enableDriver(DriverState state)
@@ -1055,9 +1154,17 @@ void TMC5130_init(void)
 
 	init_comm(activeBus);
 
+	TMC5130.config = Evalboards.ch1.config;
+	TMC5130.velocity  = 0;
+	TMC5130.oldTick   = 0;
+	TMC5130.oldX      = 0;
+
+	TMC5130.config->callback     = NULL;
+	TMC5130.config->channel      = 0;
+	TMC5130.config->state      = CONFIG_RESET;
+
 	Evalboards.ch1.config->reset        = reset;
 	Evalboards.ch1.config->restore      = restore;
-	Evalboards.ch1.config->state        = CONFIG_RESET;
 	Evalboards.ch1.config->configIndex  = 0;
 
 	Evalboards.ch1.rotate               = rotate;
@@ -1080,10 +1187,8 @@ void TMC5130_init(void)
 	Evalboards.ch1.VMMax                = VM_MAX;
 	Evalboards.ch1.deInit               = deInit;
 
-	tmc5130_init(&TMC5130, 0, Evalboards.ch1.config, &tmc5130_defaultRegisterResetState[0]);
-	tmc5130_setCallback(&TMC5130, configCallback);
+	tmc5130_cache(DEFAULT_ICID, TMC5130_CACHE_READ, TMC5130_VMAX, &vmax_position1);
 
-	vmax_position1 = TMC5130.config->shadowRegister[TMC5130_VMAX];
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.AIN_REF_PWM);
