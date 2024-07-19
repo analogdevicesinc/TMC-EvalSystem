@@ -149,6 +149,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 3:
 		// Actual speed
 		if(readWrite == READ) {
+		    if((HAL.IOs->config->getState(Pins.EN_N) == IOS_LOW) || (HAL.IOs->config->getState(Pins.SLEEP_N) == IOS_LOW))
+		    {
+		        *value = 0;
+		        break;
+		    }
 			*value = StepDir_getActualVelocity(motor);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
@@ -198,6 +203,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
+    case 10:
+        // HFS
+        if (readWrite == READ) {
+            *value = (HAL.IOs->config->getState(Pins.HFS) == IOS_HIGH) ? 1 : 0;
+        } else {
+            HAL.IOs->config->setToState(Pins.HFS, (*value) ? IOS_HIGH : IOS_LOW);
+        }
+        break;
 	case 50: // StepDir internal(0)/external(1)
 		if(readWrite == READ) {
 			*value = StepDir_getMode(motor);
@@ -231,8 +244,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = (((HAL.IOs->config->getState(Pins.DECAY2) == IOS_HIGH) ? 1 : 0) << 2)
 				| (((HAL.IOs->config->getState(Pins.DECAY1) == IOS_HIGH) ? 1 : 0) << 1);
 		} else if(readWrite == WRITE) {
-			HAL.IOs->config->setToState(Pins.DECAY1, (*value & 0b010) ? IOS_HIGH : IOS_LOW);
-			HAL.IOs->config->setToState(Pins.DECAY2, (*value & 0b100) ? IOS_HIGH : IOS_LOW);
+			HAL.IOs->config->setToState(Pins.DECAY1, (*value & 0b01) ? IOS_HIGH : IOS_LOW);
+			HAL.IOs->config->setToState(Pins.DECAY2, (*value & 0b10) ? IOS_HIGH : IOS_LOW);
 		}
 		break;
 	case 142:
