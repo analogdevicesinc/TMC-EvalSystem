@@ -17,6 +17,12 @@ static UART_Config *TMC5072_UARTChannel;
 
 #define DEFAULT_ICID  0
 
+#define ERRORS_VM        (1<<0)
+#define ERRORS_VM_UNDER  (1<<1)
+#define ERRORS_VM_OVER   (1<<2)
+
+#define VM_MIN  50   // VM[V/10] min
+#define VM_MAX  280  // VM[V/10] max +10%
 
 void tmc5072_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
@@ -47,12 +53,15 @@ uint8_t tmc5072_getNodeAddress(uint16_t icID)
 	return nodeAddress;
 }
 
-#define ERRORS_VM        (1<<0)
-#define ERRORS_VM_UNDER  (1<<1)
-#define ERRORS_VM_OVER   (1<<2)
+// Usage note: use 1 TypeDef per IC
+typedef struct {
+	ConfigurationTypeDef *config;
+	int32_t oldX[TMC5072_MOTORS];
+	uint32_t velocity[TMC5072_MOTORS];
+	uint32_t oldTick;
+} TMC5072TypeDef;
 
-#define VM_MIN  50   // VM[V/10] min
-#define VM_MAX  280  // VM[V/10] max +10%
+static TMC5072TypeDef TMC5072;
 
 #define DEFAULT_CHANNEL 0
 
@@ -65,6 +74,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void tmc5072_writeConfiguration();
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
@@ -75,21 +85,9 @@ static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static uint8_t reset();
-static void configCallback(TMC5072TypeDef *tmc5072, ConfigState state);
 static void enableDriver(DriverState state);
 
 static uint32_t vmax_position[TMC5072_MOTORS];
-
-// Translate motor number to TMC5072TypeDef
-// When using multiple ICs you can map them here
-static inline TMC5072TypeDef *motorToIC(uint8_t motor)
-{
-	UNUSED(motor);
-
-	return &TMC5072;
-}
-
-
 
 
 typedef struct
@@ -106,49 +104,59 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-// => Functions forwarded to API
+
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	tmc5072_rotate(motorToIC(motor), motor, velocity);
+	if(motor >= TMC5072_MOTORS)
+			return NULL;
+
+		tmc5072_writeRegister(DEFAULT_ICID, TMC5072_VMAX(motor), (velocity >= 0)? velocity : -velocity);
+		tmc5072_field_write(DEFAULT_ICID, TMC5072_RAMPMODE_FIELD(motor), (velocity >= 0) ? TMC5072_MODE_VELPOS : TMC5072_MODE_VELNEG);
 
 	return 0;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	tmc5072_right(motorToIC(motor), motor, velocity);
-
+	rotate( motor, velocity);
 	return 0;
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	tmc5072_left(motorToIC(motor), motor, velocity);
-
+	rotate( motor, -velocity);
 	return 0;
 }
 
 static uint32_t stop(uint8_t motor)
 {
-	tmc5072_stop(motorToIC(motor), motor);
-
+	rotate( motor, 0);
 	return 0;
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	tmc5072_moveTo(motorToIC(motor), motor, position, vmax_position[motor]);
+	if(motor >= TMC5072_MOTORS)
+		return;
+
+	tmc5072_writeRegister(DEFAULT_ICID, TMC5072_RAMPMODE(motor), TMC5072_MODE_POSITION);
+	tmc5072_writeRegister(DEFAULT_ICID, TMC5072_VMAX(motor), vmax_position[motor]);
+	tmc5072_writeRegister(DEFAULT_ICID, TMC5072_XTARGET(motor), position);
 
 	return 0;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	tmc5072_moveBy(motorToIC(motor), motor, vmax_position[motor], ticks);
+	// determine actual position and add numbers of ticks to move
+	*ticks += tmc5072_readRegister(DEFAULT_ICID, TMC5072_XACTUAL(motor));
+	tmc5072_writeRegister(DEFAULT_ICID, TMC5072_VMAX(motor), vmax_position[motor]);
+
+	moveTo( motor, *ticks);
 
 	return 0;
 }
-// <= Functions forwarded to API
+
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
@@ -163,32 +171,32 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 0:
 		// Target position
 		if(readWrite == READ) {
-			*value = tmc5072_readRegister(motor, TMC5072_XTARGET(motor));
+			*value = tmc5072_readRegister(DEFAULT_ICID, TMC5072_XTARGET(motor));
 		} else if(readWrite == WRITE) {
-			tmc5072_writeRegister(motor, TMC5072_XTARGET(motor), *value);
+			tmc5072_writeRegister(DEFAULT_ICID, TMC5072_XTARGET(motor), *value);
 		}
 		break;
 	case 1:
 		// actual position
 		if(readWrite == READ) {
-			*value = tmc5072_readRegister(motor, TMC5072_XACTUAL(motor));
+			*value = tmc5072_readRegister(DEFAULT_ICID, TMC5072_XACTUAL(motor));
 		} else if(readWrite == WRITE) {
-			tmc5072_writeRegister(motor, TMC5072_XACTUAL(motor), *value);
+			tmc5072_writeRegister(DEFAULT_ICID, TMC5072_XACTUAL(motor), *value);
 		}
 		break;
 	case 2:
 		// Target speed
 		if(readWrite == READ) {
-			*value = tmc5072_readRegister(motor, TMC5072_VMAX(motor));
+			*value = tmc5072_readRegister(DEFAULT_ICID, TMC5072_VMAX(motor));
 		} else if(readWrite == WRITE) {
-			tmc5072_writeRegister(motor, TMC5072_VMAX(motor), abs(*value));
+			tmc5072_writeRegister(DEFAULT_ICID, TMC5072_VMAX(motor), abs(*value));
 		}
 		break;
 	case 3:
 		// todo CHECK 3: min max actually velocity min and velocity max? (JE) #5
 		// Actual speed
 		if(readWrite == READ) {
-			*value = tmc5072_readRegister(motor, TMC5072_VACTUAL(motor));
+			*value = tmc5072_readRegister(DEFAULT_ICID, TMC5072_VACTUAL(motor));
 			*value = CAST_Sn_TO_S32(*value, 24);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
@@ -670,21 +678,91 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
 {
-	tmc5072_writeRegister(motor, (uint8_t) address, value);
+	tmc5072_writeRegister(icID, (uint8_t) address, value);
 }
 
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 {
-	*value = tmc5072_readRegister(motor, (uint8_t) address);
+	*value = tmc5072_readRegister(icID, (uint8_t) address);
+}
+static void tmc5072_writeConfiguration()
+{
+	uint8_t *ptr = &TMC5072.config->configIndex;
+	const int32_t *settings;
+
+	if(TMC5072.config->state == CONFIG_RESTORE)
+		{
+			settings = tmc5072_shadowRegister;
+			// Find the next restorable register
+	       while(*ptr < TMC5072_REGISTER_COUNT)
+	       {
+					// If the register is writable and has been written to, restore it
+					if (TMC_IS_WRITABLE(tmc5072_registerAccess[*ptr]) && tmc5072_getDirtyBit(DEFAULT_ICID,*ptr))
+					{
+						break;
+					}
+
+					// Otherwise, check next register
+				(*ptr)++;
+			}
+		}
+	else
+		{
+			settings = tmc5072_sampleRegisterPreset;
+			// Find the next resettable register
+			while((*ptr < TMC5072_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5072_registerAccess[*ptr]))
+			{
+				(*ptr)++;
+			}
+		}
+
+	if(*ptr < TMC5072_REGISTER_COUNT)
+		{
+			tmc5072_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+		(*ptr)++;
+		}
+	else // Finished configuration
+		{
+			for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
+			{
+				// Change hardware preset registers here
+				tmc5072_writeRegister(DEFAULT_ICID, TMC5072_PWMCONF(motor), 0x000504C8);
+
+				// Fill missing shadow registers (hardware preset registers)
+				tmc5072_initCache();
+			}
+
+			TMC5072.config->state = CONFIG_READY;
+		}
 }
 
 static void periodicJob(uint32_t tick)
 {
 	for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
 	{
-		tmc5072_periodicJob(motorToIC(motor), tick);
+		uint32_t tickDiff;
+
+			if(TMC5072.config->state != CONFIG_READY)
+			{
+				tmc5072_writeConfiguration();
+				return;
+			}
+
+			int32_t x;
+
+			// Calculate velocity v = dx/dt
+			if((tickDiff = tick - TMC5072.oldTick) >= 5)
+			{
+				for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
+				{
+					x = tmc5072_readRegister(DEFAULT_ICID, TMC5072_XACTUAL(motor));
+					TMC5072.velocity[motor] = (uint32_t) ((float32_t) (abs(x - TMC5072.oldX[motor]) / (float32_t) tickDiff) * (float32_t) 1048.576);
+					TMC5072.oldX[motor] = x;
+				}
+				TMC5072.oldTick  = tick;
+			}
 	}
 }
 
@@ -737,15 +815,34 @@ static void deInit(void)
 static uint8_t reset()
 {
 	for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
-		if(tmc5072_readRegister(motor, TMC5072_VACTUAL(motor)) != 0)
+		if(tmc5072_readRegister(DEFAULT_ICID, TMC5072_VACTUAL(motor)) != 0)
 			return 0;
 
-	return tmc5072_reset(&TMC5072);
+	if(TMC5072.config->state != CONFIG_READY)
+		return false;
+
+	// Reset the dirty bits and wipe the shadow registers
+	for(size_t i = 0; i < TMC5072_REGISTER_COUNT; i++)
+	{
+		tmc5072_dirtyBits[DEFAULT_ICID][i] = 0;
+		tmc5072_shadowRegister[DEFAULT_ICID][i] = 0;
+	}
+
+	TMC5072.config->state        = CONFIG_RESET;
+	TMC5072.config->configIndex  = 0;
+
+	return true;
 }
 
 static uint8_t restore()
 {
-	return tmc5072_restore(&TMC5072);
+	if(TMC5072.config->state != CONFIG_READY)
+		return 0;
+
+	TMC5072.config->state        = CONFIG_RESTORE;
+	TMC5072.config->configIndex  = 0;
+
+	return 1;
 }
 
 static void enableDriver(DriverState state)
@@ -757,18 +854,6 @@ static void enableDriver(DriverState state)
 		HAL.IOs->config->setHigh(Pins.DRV_ENN);
 	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE))
 		HAL.IOs->config->setLow(Pins.DRV_ENN);
-}
-
-static void configCallback(TMC5072TypeDef *tmc5072, ConfigState state)
-{
-	if(state == CONFIG_RESET)
-	{	// Change hardware-preset registers here
-		for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
-			tmc5072_writeRegister(tmc5072, TMC5072_PWMCONF(motor), 0x000504C8);
-
-		// Fill missing shadow registers (hardware preset registers)
-		tmc5072_fillShadowRegisters(&TMC5072);
-	}
 }
 
 static void init_comm(TMC5072BusType mode)
@@ -809,10 +894,17 @@ static void init_comm(TMC5072BusType mode)
 	}
 }
 
+
 void TMC5072_init(void)
 {
-	tmc5072_init(&TMC5072, 0, Evalboards.ch1.config, &tmc5072_defaultRegisterResetState[0]);
-	tmc5072_setCallback(&TMC5072, configCallback);
+	for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
+	{
+		TMC5072.velocity[motor] = 0;
+		TMC5072.oldX[motor] = 0;
+	}
+
+	TMC5072.oldTick     = 0;
+	TMC5072.config   = Evalboards.ch1.config;
 
 	Pins.DRV_ENN   = &HAL.IOs->pins->DIO0;
 	Pins.INT_ENCA  = &HAL.IOs->pins->DIO5;
@@ -826,10 +918,10 @@ void TMC5072_init(void)
 	HAL.IOs->config->toOutput(Pins.DRV_ENN);
 	HAL.IOs->config->toOutput(Pins.SWSEL);
 
-
-
-
 	init_comm(activeBus);
+
+	TMC5072.config->callback     = NULL;
+	TMC5072.config->channel      = 0;
 
 	Evalboards.ch1.config->reset        = reset;
 	Evalboards.ch1.config->restore      = restore;
@@ -856,10 +948,12 @@ void TMC5072_init(void)
 	Evalboards.ch1.VMMax                = VM_MAX;
 	Evalboards.ch1.deInit               = deInit;
 
+
 	for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
 	{
-		vmax_position[motor] = motorToIC(motor)->config->shadowRegister[TMC5072_VMAX(motor)];
+		vmax_position[motor] = tmc5072_shadowRegister[DEFAULT_ICID][TMC5072_VMAX(motor)];
 	}
+
 
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 };
