@@ -83,8 +83,8 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
 static void periodicJob(uint32_t tick);
@@ -198,32 +198,32 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 0:
 		// Target position
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_XTARGET(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_XTARGET(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_XTARGET(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_XTARGET(motor), *value);
 		}
 		break;
 	case 1:
 		// Actual position
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_XACTUAL(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_XACTUAL(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_XACTUAL(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_XACTUAL(motor), *value);
 		}
 		break;
 	case 2:
 		// Target speed
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_VMAX(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_VMAX(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_VMAX(motor), abs(*value));
+			writeRegister(DEFAULT_ICID, TMC5062_VMAX(motor), abs(*value));
 		}
 		break;
 	case 3:
 		// todo CHECK 3: min max actually velocity min and velocity max? (JE) #4
 		// Actual speed
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_VACTUAL(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_VACTUAL(motor), value);
 			*value = CAST_Sn_TO_S32(*value, 24);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
@@ -235,17 +235,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = TMC5062_config->shadowRegister[TMC5062_VMAX(motor)];
 		} else if(readWrite == WRITE) {
 			TMC5062_config->shadowRegister[TMC5062_VMAX(motor)] = abs(*value);
-			readRegister(motor, TMC5062_RAMPMODE(motor), &buffer);
+			readRegister(DEFAULT_ICID, TMC5062_RAMPMODE(motor), &buffer);
 			if(buffer == TMC5062_MODE_POSITION)
-				writeRegister(motor, TMC5062_VMAX(motor), abs(*value));
+				writeRegister(DEFAULT_ICID, TMC5062_VMAX(motor), abs(*value));
 		}
 		break;
 	case 5:
 		// Maximum acceleration
 		if(readWrite == READ) {
-			readRegister(motor,TMC5062_AMAX(motor), value);
+			readRegister(DEFAULT_ICID,TMC5062_AMAX(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_AMAX(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_AMAX(motor), *value);
 		}
 		break;
 	case 6:
@@ -307,89 +307,89 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 14:
 		// SW_MODE Register
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_SWMODE(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_SWMODE(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_SWMODE(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_SWMODE(motor), *value);
 		}
 		break;
 	case 15:
 		// Acceleration A1
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_A1(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_A1(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_A1(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_A1(motor), *value);
 		}
 		break;
 	case 16:
 		// Velocity V1
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_V1(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_V1(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_V1(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_V1(motor), *value);
 		}
 		break;
 	case 17:
 		// Maximum Deceleration
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_DMAX(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_DMAX(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_DMAX(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_DMAX(motor), *value);
 		}
 		break;
 	case 18:
 		// Deceleration D1
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_D1(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_D1(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_D1(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_D1(motor), *value);
 		}
 		break;
 	case 19:
 		// VSTART
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_VSTART(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_VSTART(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_VSTART(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_VSTART(motor), *value);
 		}
 		break;
 	case 20:
 		// Velocity VSTOP
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_VSTOP(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_VSTOP(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_VSTOP(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_VSTOP(motor), *value);
 		}
 		break;
 	case 21:
 		// Waiting time after ramp down
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_TZEROWAIT(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_TZEROWAIT(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_TZEROWAIT(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_TZEROWAIT(motor), *value);
 		}
 		break;
 	case 22:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_VCOOLTHRS(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_VCOOLTHRS(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_VCOOLTHRS(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_VCOOLTHRS(motor), *value);
 		}
 		break;
 	case 23:
 		// Speed threshold for high speed mode
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_VHIGH(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_VHIGH(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_VHIGH(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_VHIGH(motor), *value);
 		}
 		break;
 	case 24:
 		// Minimum speed for switching to dcStep
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_VDCMIN(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_VDCMIN(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_VDCMIN(motor), *value);
+			writeRegister(DEFAULT_ICID, TMC5062_VDCMIN(motor), *value);
 		}
 		break;
 	case 28:
@@ -470,7 +470,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 					*value |= 1<<3; // MSB wird zu value hinzugefügt
 			}
 		} else if(readWrite == WRITE) {
-			readRegister(motor, TMC5062_CHOPCONF(motor), &buffer);
+			readRegister(DEFAULT_ICID, TMC5062_CHOPCONF(motor), &buffer);
 			if(buffer & (1<<14))
 			{
 				tmc5062_fieldWrite(DEFAULT_ICID, TMC5062_HEND_FIELD(motor), *value);
@@ -484,7 +484,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 166:
 		// Chopper hysteresis start / sine wave offset
-		readRegister(motor, TMC5062_CHOPCONF(motor), &buffer);
+		readRegister(DEFAULT_ICID, TMC5062_CHOPCONF(motor), &buffer);
 		if(readWrite == READ) {
 			if( buffer & (1<<14))
 			{
@@ -591,24 +591,24 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 181:
 		// reset stall
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_SWMODE(motor), &buffer);
+			readRegister(DEFAULT_ICID, TMC5062_SWMODE(motor), &buffer);
 			if( buffer & (1<<10))
 			{
-				readRegister(motor, TMC5062_VCOOLTHRS(motor), value);
+				readRegister(DEFAULT_ICID, TMC5062_VCOOLTHRS(motor), value);
 			}
 			else
 				buffer = 0;
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_VCOOLTHRS(motor),*value);
+			writeRegister(DEFAULT_ICID, TMC5062_VCOOLTHRS(motor),*value);
 			tmc5062_fieldWrite(DEFAULT_ICID, TMC5062_SG_STOP_FIELD(motor), (*value)? 1:0);
 		}
 		break;
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_VCOOLTHRS(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_VCOOLTHRS(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_VCOOLTHRS(motor),*value);
+			writeRegister(DEFAULT_ICID, TMC5062_VCOOLTHRS(motor),*value);
 		}
 		break;
 	case 184:
@@ -638,21 +638,21 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 209:
 		// Encoder position
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_XENC(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_XENC(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_XENC(motor),*value);
+			writeRegister(DEFAULT_ICID, TMC5062_XENC(motor),*value);
 		}
 		break;
 	case 210:
 		// Encoder Resolution
 		if(readWrite == READ) {
-			readRegister(motor, TMC5062_ENC_CONST(motor), value);
+			readRegister(DEFAULT_ICID, TMC5062_ENC_CONST(motor), value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC5062_ENC_CONST(motor),*value);
+			writeRegister(DEFAULT_ICID, TMC5062_ENC_CONST(motor),*value);
 		}
 		break;
 	case 211:
-		readRegister(motor, TMC5062_GCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC5062_GCONF, &buffer);
 		if(readWrite == READ) {
 			// encoder enable
 			switch(motor)
@@ -675,7 +675,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 					buffer = (buffer & ~(1<<3)) | (1<<4);
 				else
 					buffer = (buffer | (1<<3)) & ~(1<<4);
-				writeRegister(motor, TMC5062_GCONF, buffer);
+				writeRegister(DEFAULT_ICID, TMC5062_GCONF, buffer);
 				break;
 			case 1:		// enable ENCODER2 - disable REF
 				if(*value)
@@ -684,7 +684,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				else
 					//tempValue = (tempValue & ~(1<<6)) | ~(1<<6);
 					buffer = (buffer & ~(1<<5)) | (1<<6); //todo: CHECK 3: Sind die Änderungen richtig? Codemäßig macht es so Sinn, aber die Bits sind in der Dokumentation als reserved markiert (LH) #4
-				writeRegister(motor, TMC5062_GCONF, buffer);
+				writeRegister(DEFAULT_ICID, TMC5062_GCONF, buffer);
 				break;
 			}
 		}
@@ -828,14 +828,13 @@ uint8_t dcStepActive(uint8_t motor)
     return vActual >= vDCMin;
 }
 
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
-{   UNUSED(motor);
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+{
     tmc5062_writeRegister(DEFAULT_ICID, address, value);
 }
 
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 {
-    UNUSED(motor);
     *value = tmc5062_readRegister(DEFAULT_ICID, address);
 }
 
