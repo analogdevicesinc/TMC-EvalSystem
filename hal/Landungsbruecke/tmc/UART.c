@@ -68,77 +68,76 @@ static RXTXBufferingTypeDef buffers =
 
 static void init()
 {
-	register uint16_t ubd = (CPU_BUS_CLK_HZ / 16) / UART.rxtx.baudRate;
+    register uint16_t ubd = (CPU_BUS_CLK_HZ / 16) / UART.rxtx.baudRate;
 
-	// One wire UART communication needs the TxD pin to be in open drain mode
-	// and a pull-up resistor on the RxD pin.
-	switch(UART.pinout) {
-	case UART_PINS_2:
-		HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
-		HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
-		HAL.IOs->pins->DIO10.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
-		HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
-		SIM_SCGC4 |= SIM_SCGC4_UART0_MASK;
-		UART_C2_REG(UART0_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
-		UART_C1_REG(UART0_BASE_PTR) = 0;
-		UART_C4_REG(UART0_BASE_PTR) = 0;
-		UART_BDH_REG(UART0_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
-		UART_BDL_REG(UART0_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
-		UART_C2_REG(UART0_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
-		enable_irq(INT_UART0_RX_TX-16);
-		break;
-	case UART_PINS_1:
-	default:
-		SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
-		UART_C1_REG(UART2_BASE_PTR) = 0;
-		switch(UART.mode) {
-		case UART_MODE_SINGLE_WIRE:
-			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
-			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-			HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // RxD as open drain output
-			HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // TxD with pull-up resistor
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-			// Enable single wire UART
-			UART_C1_REG(UART2_BASE_PTR) |= (UART_C1_LOOPS_MASK | UART_C1_RSRC_MASK);
-			// Set TxD as output in single wire UART
-			UART_C3_REG(UART2_BASE_PTR) |= UART_C3_TXDIR_MASK;
-			break;
-		case UART_MODE_DUAL_WIRE:
-		case UART_MODE_DUAL_WIRE_PushPull:
-		default:
-			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
-			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-			HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
-			HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-			break;
-		}
-		UART_C2_REG(UART2_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
-		UART_BDH_REG(UART2_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
-		UART_BDL_REG(UART2_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
-		UART_C2_REG(UART2_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
-		enable_irq(INT_UART2_RX_TX-16);
-		break;
-	}
+    // One wire UART communication needs the TxD pin to be in open drain mode
+    // and a pull-up resistor on the RxD pin.
+    switch(UART.pinout) {
+    case UART_PINS_2:
+        HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
+        HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
+        HAL.IOs->pins->DIO10.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
+        HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+        HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
+        HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
+        SIM_SCGC4 |= SIM_SCGC4_UART0_MASK;
+        UART_C2_REG(UART0_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
+        UART_C1_REG(UART0_BASE_PTR) = 0;
+        UART_C4_REG(UART0_BASE_PTR) = 0;
+        UART_BDH_REG(UART0_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
+        UART_BDL_REG(UART0_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
+        UART_C2_REG(UART0_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
+        enable_irq(INT_UART0_RX_TX-16);
+        break;
+    case UART_PINS_1:
+    default:
+        SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
+        UART_C1_REG(UART2_BASE_PTR) = 0;
+        switch(UART.mode) {
+        case UART_MODE_SINGLE_WIRE:
+            HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+            HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_PP;  // TxD as push-pull output
+            HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 
-//	/* Disable the transmitter and receiver */
-//	UART_C2_REG(UART0_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
+            HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+            HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // RxD as open drain output
+            HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+            break;
+        case UART_MODE_DUAL_WIRE:
+        case UART_MODE_DUAL_WIRE_PushPull:
+        default:
+            HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+            HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+            HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
+            HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+            break;
+        }
+        UART_C2_REG(UART2_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
+        UART_BDH_REG(UART2_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
+        UART_BDL_REG(UART2_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
+        UART_C2_REG(UART2_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
+        enable_irq(INT_UART2_RX_TX-16);
+        break;
+    }
+//  /* Disable the transmitter and receiver */
+//  UART_C2_REG(UART0_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
 //
-//	/* Configure the UART for 8-bit mode, no parity */
-//	/* We need all default settings, so entire register is cleared */
-//	UART_C1_REG(UART0_BASE_PTR) = 0;
+//  /* Configure the UART for 8-bit mode, no parity */
+//  /* We need all default settings, so entire register is cleared */
+//  UART_C1_REG(UART0_BASE_PTR) = 0;
 //
-//	ubd = (CPU_BUS_CLK_HZ / 16) / UART.baudRate;
+//  ubd = (CPU_BUS_CLK_HZ / 16) / UART.baudRate;
 //
-//	UART_BDH_REG(UART0_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
-//	UART_BDL_REG(UART0_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
+//  UART_BDH_REG(UART0_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
+//  UART_BDL_REG(UART0_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
 //
-//	/* Enable receiver and transmitter */
-//	UART_C2_REG(UART0_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
+//  /* Enable receiver and transmitter */
+//  UART_C2_REG(UART0_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
 
 }
 
