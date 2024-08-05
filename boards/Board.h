@@ -35,7 +35,6 @@
 #include "tmc/ic/TMC5031/TMC5031.h"
 #include "tmc/ic/TMC5041/TMC5041.h"
 #include "tmc/ic/TMC5072/TMC5072.h"
-#include "tmc/ic/TMC5130/TMC5130.h"
 #include "tmc/ic/TMC8461/TMC8461.h"
 #include "tmc/ic/TMC8462/TMC8462.h"
 
@@ -159,7 +158,6 @@ typedef union {
     TMC5031TypeDef tmc5031;
     TMC5041TypeDef tmc5041;
     TMC5072TypeDef tmc5072;
-    TMC5130TypeDef tmc5130;
     TMC8461TypeDef tmc8461;
     TMC8462TypeDef tmc8462;
 } MotionControllerBoards;

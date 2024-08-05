@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -10,66 +10,26 @@
 #include "Board.h"
 #include "tmc/ic/TMC5130/TMC5130.h"
 
+static TMC5130BusType activeBus = IC_BUS_SPI;	//Checkout README if you want to use UART
+static uint8_t nodeAddress = 0;
+static SPIChannelTypeDef *TMC5130_SPIChannel;
+static UART_Config *TMC5130_UARTChannel;
+
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  480  // VM[V/10] max
 
-// SPI Channel selection
-#define DEFAULT_CHANNEL  0
+#define DEFAULT_ICID  0
 
 #define VREF_FULLSCALE 2714 // mV
 
-static uint32_t rotate(uint8_t motor, int32_t velocity);
-static uint32_t right(uint8_t motor, int32_t velocity);
-static uint32_t left(uint8_t motor, int32_t velocity);
-static uint32_t stop(uint8_t motor);
-static uint32_t moveTo(uint8_t motor, int32_t position);
-static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
-static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-
-static void periodicJob(uint32_t tick);
-static void checkErrors(uint32_t tick);
-static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
-static uint8_t reset();
-static void enableDriver(DriverState state);
-
-static SPIChannelTypeDef *TMC5130_SPIChannel;
-static uint32_t vmax_position;
-static uint16_t vref; // mV
-
-// Helper macro - Access the chip object in the motion controller boards union
-#define TMC5130 (motionControllerBoards.tmc5130)
-
-// Translate motor number to TMC5130TypeDef
-// When using multiple ICs you can map them here
-static inline TMC5130TypeDef *motorToIC(uint8_t motor)
+// Typedefs
+typedef struct
 {
-	UNUSED(motor);
-
-	return &TMC5130;
-}
-
-// Translate channel number to SPI channel
-// When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
-{
-	UNUSED(channel);
-
-	return TMC5130_SPIChannel;
-}
-
-// SPI Wrapper for API
-void tmc5130_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
-{
-	// Map the channel to the corresponding SPI channel
-	channelToSPI(channel)->readWriteArray(data, length);
-}
+	ConfigurationTypeDef *config;
+	int32_t velocity, oldX;
+	uint32_t oldTick;
+} TMC5130TypeDef;
+static TMC5130TypeDef TMC5130;
 
 typedef struct
 {
@@ -86,49 +46,128 @@ typedef struct
 
 	IOPinTypeDef  *AIN_REF_SW;
 	IOPinTypeDef  *AIN_REF_PWM;
+	IOPinTypeDef  *CLK;
+	IOPinTypeDef  *SDI;
+	IOPinTypeDef  *SDO;
+	IOPinTypeDef  *SCK;
+	IOPinTypeDef  *CS;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
 
-// => Functions forwarded to API
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
+
+static void init_comm(TMC5130BusType mode);
+
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
+static void deInit(void);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+
+static uint8_t reset();
+static void enableDriver(DriverState state);
+
+static uint32_t vmax_position1;
+static uint16_t vref; // mV
+
+void tmc5130_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+	UNUSED(icID);
+	TMC5130_SPIChannel->readWriteArray(data, dataLength);
+}
+
+bool tmc5130_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+	UNUSED(icID);
+
+	int32_t status = UART_readWrite(TMC5130_UARTChannel, data, writeLength, readLength);
+	if(status == -1)
+		return false;
+	return true;
+}
+
+TMC5130BusType tmc5130_getBusType(uint16_t icID)
+{
+	UNUSED(icID);
+
+	return activeBus;
+}
+
+uint8_t tmc5130_getNodeAddress(uint16_t icID)
+{
+	UNUSED(icID);
+
+	return nodeAddress;
+}
+
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	tmc5130_rotate(motorToIC(motor), velocity);
-
+	UNUSED(motor);
+	// Set absolute velocity
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VMAX, abs(velocity));
+	// Set direction
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_RAMPMODE, (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
 	return 0;
 }
 
+// Rotate to the right
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	tmc5130_right(motorToIC(motor), velocity);
+	rotate( motor, velocity);
 
 	return 0;
 }
 
+// Rotate to the left
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	tmc5130_left(motorToIC(motor), velocity);
+	rotate( motor, -velocity);
 
 	return 0;
 }
 
+// Stop moving
 static uint32_t stop(uint8_t motor)
 {
-	tmc5130_stop(motorToIC(motor));
+	rotate(motor, 0);
 
 	return 0;
 }
 
+// Move to a specified position with a given velocity
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	tmc5130_moveTo(motorToIC(motor), position, vmax_position);
+	UNUSED(motor);
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_RAMPMODE, TMC5130_MODE_POSITION);
+
+	// VMAX also holds the target velocity in velocity mode.
+	// Re-write the position mode maximum velocity here.
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VMAX, vmax_position1);
+
+	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_XTARGET, position);
 
 	return 0;
 }
 
+// Move by a given amount with a given velocity
+// This function will write the absolute target position to *ticks
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	tmc5130_moveBy(motorToIC(motor), ticks, vmax_position);
+	// determine actual position and add numbers of ticks to move
+	*ticks += tmc5130_readRegister(DEFAULT_ICID, TMC5130_XACTUAL);
+
+	moveTo(motor, *ticks);
 
 	return 0;
 }
@@ -147,31 +186,32 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 0:
 		// Target position
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_XTARGET);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_XTARGET);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_XTARGET, *value);
+
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_XTARGET, *value);
 		}
 		break;
 	case 1:
 		// Actual position
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_XACTUAL);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_XACTUAL);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_XACTUAL, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_XACTUAL, *value);
 		}
 		break;
 	case 2:
 		// Target speed
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_VMAX);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_VMAX);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_VMAX, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VMAX, *value);
 		}
 		break;
 	case 3:
 		// Actual speed
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_VACTUAL);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_VACTUAL);
 			*value = CAST_Sn_TO_S32(*value, 24);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
@@ -180,41 +220,41 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 4:
 		// Maximum speed
 		if(readWrite == READ) {
-			*value = vmax_position;
+			*value = vmax_position1;
 		} else if(readWrite == WRITE) {
-			vmax_position = abs(*value);
-			if(tmc5130_readInt(motorToIC(motor), TMC5130_RAMPMODE) == TMC5130_MODE_POSITION)
-				tmc5130_writeInt(motorToIC(motor), TMC5130_VMAX, vmax_position);
+			vmax_position1 = abs(*value);
+			if(tmc5130_readRegister(DEFAULT_ICID, TMC5130_RAMPMODE) == TMC5130_MODE_POSITION)
+				tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VMAX, vmax_position1);
 		}
 		break;
 	case 5:
 		// Maximum acceleration
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_AMAX);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_AMAX);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_AMAX, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_AMAX, *value);
 		}
 		break;
 	case 6:
 		// Maximum current
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_IHOLD_IRUN, TMC5130_IRUN_MASK, TMC5130_IRUN_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_IRUN_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_IHOLD_IRUN, TMC5130_IRUN_MASK, TMC5130_IRUN_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_IRUN_FIELD, *value);
 		}
 		break;
 	case 7:
 		// Standby current
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_IHOLD_IRUN, TMC5130_IHOLD_MASK, TMC5130_IHOLD_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_IHOLD_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_IHOLD_IRUN, TMC5130_IHOLD_MASK, TMC5130_IHOLD_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_IHOLD_FIELD, *value);
 		}
 		break;
 	case 8:
 		// Position reached flag
 		if(readWrite == READ) {
-			*value = (tmc5130_readInt(motorToIC(motor), TMC5130_RAMPSTAT) & TMC5130_RS_POSREACHED)? 1:0;
+			*value = (tmc5130_readRegister(DEFAULT_ICID, TMC5130_RAMPSTAT) & TMC5130_RS_POSREACHED)? 1:0;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -235,7 +275,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 10:
 		// Right endstop
 		if(readWrite == READ) {
-			*value = (tmc5130_readInt(motorToIC(motor), TMC5130_RAMPSTAT) & TMC5130_RS_STOPR)? 0:1;
+			*value = (tmc5130_readRegister(DEFAULT_ICID, TMC5130_RAMPSTAT) & TMC5130_RS_STOPR)? 0:1;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -243,7 +283,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 11:
 		// Left endstop
 		if(readWrite == READ) {
-			*value = (tmc5130_readInt(motorToIC(motor), TMC5130_RAMPSTAT) & TMC5130_RS_STOPL)? 0:1;
+			*value = (tmc5130_readRegister(DEFAULT_ICID, TMC5130_RAMPSTAT) & TMC5130_RS_STOPL)? 0:1;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -251,161 +291,161 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 12:
 		// Automatic right stop
 		if(readWrite == READ) {
-			*value = (tmc5130_readInt(motorToIC(motor), TMC5130_SWMODE) & TMC5130_SW_STOPR_ENABLE)? 1:0;
+			*value = (tmc5130_readRegister(DEFAULT_ICID, TMC5130_SWMODE) & TMC5130_SW_STOPR_ENABLE)? 1:0;
 		} else if(readWrite == WRITE) {
-			buffer = tmc5130_readInt(motorToIC(motor), TMC5130_SWMODE);
+			buffer = tmc5130_readRegister(DEFAULT_ICID, TMC5130_SWMODE);
 			if(*value == 0)
-				tmc5130_writeInt(motorToIC(motor), TMC5130_SWMODE, buffer | TMC5130_SW_STOPR_ENABLE);
+				tmc5130_writeRegister(DEFAULT_ICID, TMC5130_SWMODE, buffer | TMC5130_SW_STOPR_ENABLE);
 			else
-				tmc5130_writeInt(motorToIC(motor), TMC5130_SWMODE, buffer & ~TMC5130_SW_STOPR_ENABLE);
+				tmc5130_writeRegister(DEFAULT_ICID, TMC5130_SWMODE, buffer & ~TMC5130_SW_STOPR_ENABLE);
 		}
 		break;
 	case 13:
 		// Automatic left stop
 		if(readWrite == READ) {
-			*value = (tmc5130_readInt(motorToIC(motor), TMC5130_SWMODE) & TMC5130_SW_STOPL_ENABLE)? 1:0;
+			*value = (tmc5130_readRegister(DEFAULT_ICID, TMC5130_SWMODE) & TMC5130_SW_STOPL_ENABLE)? 1:0;
 		} else if(readWrite == WRITE) {
-			buffer	= tmc5130_readInt(motorToIC(motor), TMC5130_SWMODE);
+			buffer	= tmc5130_readRegister(DEFAULT_ICID, TMC5130_SWMODE);
 			if(*value==0)
-				tmc5130_writeInt(motorToIC(motor), TMC5130_SWMODE, buffer | TMC5130_SW_STOPL_ENABLE);
+				tmc5130_writeRegister(DEFAULT_ICID, TMC5130_SWMODE, buffer | TMC5130_SW_STOPL_ENABLE);
 			else
-				tmc5130_writeInt(motorToIC(motor), TMC5130_SWMODE, buffer & ~TMC5130_SW_STOPL_ENABLE);
+				tmc5130_writeRegister(DEFAULT_ICID, TMC5130_SWMODE, buffer & ~TMC5130_SW_STOPL_ENABLE);
 		}
 		break;
 	case 14:
 		// SW_MODE Register
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_SWMODE);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_SWMODE);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_SWMODE, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_SWMODE, *value);
 		}
 		break;
 	case 15:
 		// Acceleration A1
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_A1);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_A1);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_A1, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_A1, *value);
 		}
 		break;
 	case 16:
 		// Velocity V1
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_V1);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_V1);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_V1, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_V1, *value);
 		}
 		break;
 	case 17:
 		// Maximum Deceleration
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_DMAX);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_DMAX);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_DMAX, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_DMAX, *value);
 		}
 		break;
 	case 18:
 		// Deceleration D1
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_D1);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_D1);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_D1, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_D1, *value);
 		}
 		break;
 	case 19:
 		// Velocity VSTART
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_VSTART);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_VSTART);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_VSTART, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VSTART, *value);
 		}
 		break;
 	case 20:
 		// Velocity VSTOP
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_VSTOP);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_VSTOP);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_VSTOP, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VSTOP, *value);
 		}
 		break;
 	case 21:
 		// Waiting time after ramp down
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_TZEROWAIT);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_TZEROWAIT);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_TZEROWAIT, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_TZEROWAIT, *value);
 		}
 		break;
 
 	case 23:
 		// Speed threshold for high speed mode
 		if(readWrite == READ) {
-			buffer = tmc5130_readInt(motorToIC(motor), TMC5130_THIGH);
+			buffer = tmc5130_readRegister(DEFAULT_ICID, TMC5130_THIGH);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			tmc5130_writeInt(motorToIC(motor), TMC5130_THIGH, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_THIGH, *value);
 		}
 		break;
 	case 24:
 		// Minimum speed for switching to dcStep
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_VDCMIN);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_VDCMIN);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_VDCMIN, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VDCMIN, *value);
 		}
 		break;
 	case 27:
 		// High speed chopper mode
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_VHIGHCHM_MASK, TMC5130_VHIGHCHM_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_VHIGHCHM_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_VHIGHCHM_MASK, TMC5130_VHIGHCHM_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_VHIGHCHM_FIELD, *value);
 		}
 		break;
 	case 28:
 		// High speed fullstep mode
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_VHIGHFS_MASK, TMC5130_VHIGHFS_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_VHIGHFS_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_VHIGHFS_MASK, TMC5130_VHIGHFS_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_VHIGHFS_FIELD, *value);
 		}
 		break;
 	case 29:
 		// Measured Speed
 		if(readWrite == READ) {
-			*value = motorToIC(motor)->velocity;
+			*value = TMC5130.velocity;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
 	case 30: // par::RampType
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_RAMPMODE, TMC5130_RAMPMODE_MASK, TMC5130_RAMPMODE_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_RAMPMODE_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_RAMPMODE, TMC5130_RAMPMODE_MASK, TMC5130_RAMPMODE_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_RAMPMODE_FIELD, *value);
 		}
 		break;
 	case 33:
 		// Analog I Scale
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_GCONF, TMC5130_I_SCALE_ANALOG_MASK, TMC5130_I_SCALE_ANALOG_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_I_SCALE_ANALOG_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_GCONF, TMC5130_I_SCALE_ANALOG_MASK, TMC5130_I_SCALE_ANALOG_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_I_SCALE_ANALOG_FIELD, *value);
 		}
 		break;
 	case 34:
 		// Internal RSense
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_GCONF, TMC5130_INTERNAL_RSENSE_MASK, TMC5130_INTERNAL_RSENSE_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_INTERNAL_RSENSE_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_GCONF, TMC5130_INTERNAL_RSENSE_MASK, TMC5130_INTERNAL_RSENSE_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_INTERNAL_RSENSE_FIELD, *value);
 		}
 		break;
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
-			*value = 256 >> TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_MRES_MASK, TMC5130_MRES_SHIFT);
+			*value = 256 >> tmc5130_field_read(DEFAULT_ICID, TMC5130_MRES_FIELD);
 		} else if(readWrite == WRITE) {
 			switch(*value)
 			{
@@ -423,7 +463,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_MRES_MASK, TMC5130_MRES_SHIFT, *value);
+				tmc5130_field_write(DEFAULT_ICID, TMC5130_MRES_FIELD, *value);
 			}
 			else
 			{
@@ -434,34 +474,34 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 162:
 		// Chopper blank time
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_TBL_MASK, TMC5130_TBL_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_TBL_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_TBL_MASK, TMC5130_TBL_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_TBL_FIELD, *value);
 		}
 		break;
 	case 163:
 		// Constant TOff Mode
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_CHM_MASK, TMC5130_CHM_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_CHM_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_CHM_MASK, TMC5130_CHM_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_CHM_FIELD, *value);
 		}
 		break;
 	case 164:
 		// Disable fast decay comparator
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_DISFDCC_MASK, TMC5130_DISFDCC_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_DISFDCC_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_DISFDCC_MASK, TMC5130_DISFDCC_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_DISFDCC_FIELD, *value);
 		}
 		break;
 	case 165:
 		// Chopper hysteresis end / fast decay time
-		buffer = tmc5130_readInt(motorToIC(motor), TMC5130_CHOPCONF);
+		buffer = tmc5130_readRegister(DEFAULT_ICID, TMC5130_CHOPCONF);
 		if(readWrite == READ) {
 			if(buffer & (1<<14))
 			{
-				*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_HEND_MASK, TMC5130_HEND_SHIFT);
+				*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_HEND_FIELD);
 			}
 			else
 			{
@@ -470,7 +510,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(buffer & (1<<14))
 			{
-				TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_HEND_MASK, TMC5130_HEND_SHIFT, *value);
+				tmc5130_field_write(DEFAULT_ICID, TMC5130_HEND_FIELD, *value);
 			}
 			else
 			{
@@ -482,110 +522,110 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				buffer &= ~(0x07<<4);
 				buffer |= (*value & 0x0F) << 4;
 
-				tmc5130_writeInt(motorToIC(motor), TMC5130_CHOPCONF,buffer);
+				tmc5130_writeRegister(DEFAULT_ICID, TMC5130_CHOPCONF,buffer);
 			}
 		}
 		break;
 	case 166:
 		// Chopper hysteresis start / sine wave offset
-		buffer = tmc5130_readInt(motorToIC(motor), TMC5130_CHOPCONF);
+		buffer = tmc5130_readRegister(DEFAULT_ICID, TMC5130_CHOPCONF);
 		if(readWrite == READ) {
 			if(buffer & (1<<14))
 			{
-				*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_HSTRT_MASK, TMC5130_HSTRT_SHIFT);
+				*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_HSTRT_FIELD);
 			}
 			else
 			{
 				*value = ((buffer >> 7) & 0x0F) | (buffer & (1<<11))? 1<<3 : 0;
 			}
 		} else if(readWrite == WRITE) {
-			if(tmc5130_readInt(motorToIC(motor), TMC5130_CHOPCONF) & (1<<14))
+			if(tmc5130_readRegister(DEFAULT_ICID, TMC5130_CHOPCONF) & (1<<14))
 			{
-				TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_HSTRT_MASK, TMC5130_HSTRT_SHIFT, *value);
+				tmc5130_field_write(DEFAULT_ICID, TMC5130_HSTRT_FIELD, *value);
 			}
 			else
 			{
-				TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_OFFSET_MASK, TMC5130_OFFSET_SHIFT, *value);
+				tmc5130_field_write(DEFAULT_ICID, TMC5130_OFFSET_FIELD, *value);
 			}
 		}
 		break;
 	case 167:
 		// Chopper off time
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_TOFF_MASK, TMC5130_TOFF_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_TOFF_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_TOFF_MASK, TMC5130_TOFF_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_TOFF_FIELD, *value);
 		}
 		break;
 	case 168:
 		// smartEnergy current minimum (SEIMIN)
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEIMIN_MASK, TMC5130_SEIMIN_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEIMIN_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEIMIN_MASK, TMC5130_SEIMIN_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEIMIN_FIELD, *value);
 		}
 		break;
 	case 169:
 		// smartEnergy current down step
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEDN_MASK, TMC5130_SEDN_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEDN_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEDN_MASK, TMC5130_SEDN_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEDN_FIELD , *value);
 		}
 		break;
 	case 170:
 		// smartEnergy hysteresis
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEMAX_MASK, TMC5130_SEMAX_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEMAX_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEMAX_MASK, TMC5130_SEMAX_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEMAX_FIELD, *value);
 		}
 		break;
 	case 171:
 		// smartEnergy current up step
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEUP_MASK, TMC5130_SEUP_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEUP_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEUP_MASK, TMC5130_SEUP_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEUP_FIELD, *value);
 		}
 		break;
 	case 172:
 		// smartEnergy hysteresis start
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEMIN_MASK, TMC5130_SEMIN_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEMIN_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SEMIN_MASK, TMC5130_SEMIN_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEMIN_FIELD, *value);
 		}
 		break;
 	case 173:
 		// stallGuard2 filter enable
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SFILT_MASK, TMC5130_SFILT_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SFILT_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SFILT_MASK, TMC5130_SFILT_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SFILT_FIELD, *value);
 		}
 		break;
 	case 174:
 		// stallGuard2 threshold
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SGT_MASK, TMC5130_SGT_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SGT_FIELD);
 			*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_COOLCONF, TMC5130_SGT_MASK, TMC5130_SGT_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SGT_FIELD, *value);
 		}
 		break;
 	case 179:
 		// VSense
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_VSENSE_MASK, TMC5130_VSENSE_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_VSENSE_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_VSENSE_MASK, TMC5130_VSENSE_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_VSENSE_FIELD, *value);
 		}
 		break;
 	case 180:
 		// smartEnergy actual current
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_DRVSTATUS, TMC5130_CS_ACTUAL_MASK, TMC5130_CS_ACTUAL_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_CS_ACTUAL_FIELD);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -595,80 +635,80 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		//this function sort of doubles with 182 but is necessary to allow cross chip compliance
 		if(readWrite == READ)
 		{
-			if(TMC5130_FIELD_READ(motorToIC(motor), TMC5130_SWMODE, TMC5130_SG_STOP_MASK, TMC5130_SG_STOP_SHIFT))
+			if(tmc5130_field_read(DEFAULT_ICID, TMC5130_SG_STOP_FIELD))
 			{
-				buffer = tmc5130_readInt(motorToIC(motor), TMC5130_TCOOLTHRS);
+				buffer = tmc5130_readRegister(DEFAULT_ICID, TMC5130_TCOOLTHRS);
 				*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer : 1));
 			}
 			else
 				*value = 0;
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_SWMODE, TMC5130_SG_STOP_MASK, TMC5130_SG_STOP_SHIFT, (*value) ? 1:0);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SG_STOP_FIELD, (*value) ? 1:0);
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			tmc5130_writeInt(motorToIC(motor), TMC5130_TCOOLTHRS, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_TCOOLTHRS, *value);
 		}
 		break;
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			buffer = tmc5130_readInt(motorToIC(motor), TMC5130_TCOOLTHRS);
+			buffer = tmc5130_readRegister(DEFAULT_ICID, TMC5130_TCOOLTHRS);
 			*value = MIN(0xFFFFF, (1 << 24) / ((buffer)? buffer : 1));
 		} else if(readWrite == WRITE) {
 			buffer = MIN(0xFFFFF, (1<<24) / ((*value)? *value : 1));
-			tmc5130_writeInt(motorToIC(motor), TMC5130_TCOOLTHRS, buffer);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_TCOOLTHRS, buffer);
 		}
 		break;
 	case 184:
 		// Random TOff mode
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_RNDTF_MASK, TMC5130_RNDTF_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_RNDTF_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_RNDTF_MASK, TMC5130_RNDTF_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_RNDTF_FIELD, *value);
 		}
 		break;
 	case 185:
 		// Chopper synchronization
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_SYNC_MASK, TMC5130_SYNC_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SYNC_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_CHOPCONF, TMC5130_SYNC_MASK, TMC5130_SYNC_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_SYNC_FIELD, *value);
 		}
 		break;
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
-			buffer = tmc5130_readInt(motorToIC(motor), TMC5130_TPWMTHRS);
+			buffer = tmc5130_readRegister(DEFAULT_ICID, TMC5130_TPWMTHRS);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer : 1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value : 1));
-			tmc5130_writeInt(motorToIC(motor), TMC5130_TPWMTHRS, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_TPWMTHRS, *value);
 		}
 		break;
 	case 187:
 		// PWM gradient
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_GRAD_MASK, TMC5130_PWM_GRAD_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_PWM_GRAD_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_GRAD_MASK, TMC5130_PWM_GRAD_SHIFT, *value);
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_GCONF, TMC5130_EN_PWM_MODE_MASK, TMC5130_EN_PWM_MODE_SHIFT, (*value)? 1:0);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_PWM_GRAD_FIELD, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_EN_PWM_MODE_FIELD, (*value)? 1:0);
 		}
 		break;
 	case 188:
 		// PWM amplitude
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_AMPL_MASK, TMC5130_PWM_AMPL_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_PWM_AMPL_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_AMPL_MASK, TMC5130_PWM_AMPL_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_PWM_AMPL_FIELD, *value);
 		}
 		break;
 	case 191:
 		// PWM frequency
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_FREQ_MASK, TMC5130_PWM_FREQ_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_PWM_FREQ_FIELD);
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 4)
 			{
-				TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_FREQ_MASK, TMC5130_PWM_FREQ_SHIFT, *value);
+				tmc5130_field_write(DEFAULT_ICID, TMC5130_PWM_FREQ_FIELD, *value);
 			}
 			else
 			{
@@ -679,11 +719,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 192:
 		// PWM autoscale
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_AUTOSCALE_MASK, TMC5130_PWM_AUTOSCALE_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_PWM_AUTOSCALE_FIELD);
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 2)
 			{
-				TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_PWMCONF, TMC5130_PWM_AUTOSCALE_MASK, TMC5130_PWM_AUTOSCALE_SHIFT, *value);
+				tmc5130_field_write(DEFAULT_ICID, TMC5130_PWM_AUTOSCALE_FIELD, *value);
 			}
 			else
 			{
@@ -694,15 +734,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 204:
 		// Freewheeling mode
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_PWMCONF, TMC5130_FREEWHEEL_MASK, TMC5130_FREEWHEEL_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_FREEWHEEL_FIELD);
 		} else if(readWrite == WRITE) {
-			TMC5130_FIELD_WRITE(motorToIC(motor), TMC5130_PWMCONF, TMC5130_FREEWHEEL_MASK, TMC5130_FREEWHEEL_SHIFT, *value);
+			tmc5130_field_write(DEFAULT_ICID, TMC5130_FREEWHEEL_FIELD, *value);
 		}
 		break;
 	case 206:
 		// Load value
 		if(readWrite == READ) {
-			*value = TMC5130_FIELD_READ(motorToIC(motor), TMC5130_DRVSTATUS, TMC5130_SG_RESULT_MASK, TMC5130_SG_RESULT_SHIFT);
+			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SG_RESULT_FIELD);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -710,17 +750,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 209:
 		// Encoder position
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_XENC);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_XENC);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_XENC, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_XENC, *value);
 		}
 		break;
 	case 210:
 		// Encoder Resolution
 		if(readWrite == READ) {
-			*value = tmc5130_readInt(motorToIC(motor), TMC5130_ENC_CONST);
+			*value = tmc5130_readRegister(DEFAULT_ICID, TMC5130_ENC_CONST);
 		} else if(readWrite == WRITE) {
-			tmc5130_writeInt(motorToIC(motor), TMC5130_ENC_CONST, *value);
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_ENC_CONST, *value);
 		}
 		break;
 	default:
@@ -750,23 +790,90 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 	return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
 {
-	UNUSED(motor);
-
-	tmc5130_writeInt(&TMC5130, (uint8_t) address, value);
+    tmc5130_writeRegister(icID, address, value);
 }
 
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 {
-	UNUSED(motor);
-
-	*value = tmc5130_readInt(&TMC5130, (uint8_t) address);
+    *value = tmc5130_readRegister(icID, address);
 }
 
+static void tmc5130_writeConfiguration()
+{
+	uint8_t *ptr = &TMC5130.config->configIndex;
+	const int32_t *settings;
+
+	if(TMC5130.config->state == CONFIG_RESTORE)
+		{
+			settings = tmc5130_shadowRegister;
+			// Find the next restorable register
+        while(*ptr < TMC5130_REGISTER_COUNT)
+        {
+					// If the register is writable and has been written to, restore it
+					if (TMC_IS_WRITABLE(tmc5130_registerAccess[*ptr]) && tmc5130_getDirtyBit(DEFAULT_ICID,*ptr))
+					{
+						break;
+					}
+
+					// Otherwise, check next register
+				(*ptr)++;
+			}
+		}
+	else
+		{
+			settings = tmc5130_sampleRegisterPreset;
+			// Find the next resettable register
+			while((*ptr < TMC5130_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5130_registerAccess[*ptr]))
+			{
+				(*ptr)++;
+			}
+		}
+
+	if(*ptr < TMC5130_REGISTER_COUNT)
+		{
+			tmc5130_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+			(*ptr)++;
+		}
+	else // Finished configuration
+		{
+
+			// Configuration reset completed
+			// Change hardware preset registers here
+			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_PWMCONF, 0x000500C8);
+
+			// Fill missing shadow registers (hardware preset registers)
+			tmc5130_initCache();
+
+
+			TMC5130.config->state = CONFIG_READY;
+		}
+}
+
+// Call this periodically
 static void periodicJob(uint32_t tick)
 {
-	tmc5130_periodicJob(&TMC5130, tick);
+	// Helper function: Configure the next register.
+	if(TMC5130.config->state != CONFIG_READY)
+	{
+		tmc5130_writeConfiguration();
+		return;
+	}
+
+	int32_t XActual;
+	uint32_t tickDiff;
+
+	// Calculate velocity v = dx/dt
+	if((tickDiff = tick - TMC5130.oldTick) >= 5)
+	{
+		XActual = tmc5130_readRegister(DEFAULT_ICID, TMC5130_XACTUAL);
+		// ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
+		TMC5130.velocity = (uint32_t) ((float32_t) ((XActual - TMC5130.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+
+		TMC5130.oldX     = XActual;
+		TMC5130.oldTick  = tick;
+	}
 }
 
 static void checkErrors(uint32_t tick)
@@ -921,33 +1028,45 @@ static void deInit(void)
 	Timer.deInit();
 };
 
+// Reset the TMC5130.
 static uint8_t reset()
 {
-	if(!tmc5130_readInt(&TMC5130, TMC5130_VACTUAL))
-		tmc5130_reset(&TMC5130);
+	if(!tmc5130_readRegister(DEFAULT_ICID, TMC5130_VACTUAL))	{
+		if(TMC5130.config->state != CONFIG_READY)
+			return false;
+
+		// Reset the dirty bits and wipe the shadow registers
+		size_t i;
+		for(i = 0; i < TMC5130_REGISTER_COUNT; i++)
+		{
+			tmc5130_dirtyBits[DEFAULT_ICID][i] = 0;
+			tmc5130_shadowRegister[DEFAULT_ICID][i] = 0;
+		}
+
+		TMC5130.config->state        = CONFIG_RESET;
+		TMC5130.config->configIndex  = 0;
+
+		return true;
+	}
 
 	HAL.IOs->config->setLow(Pins.AIN_REF_SW);
 	HAL.IOs->config->toInput(Pins.REFL_UC);
 	HAL.IOs->config->toInput(Pins.REFR_UC);
+
 	return 1;
 }
 
+// Restore the TMC5130 to the state stored in the shadow registers.
+// This can be used to recover the IC configuration after a VM power loss.
 static uint8_t restore()
 {
-	return tmc5130_restore(&TMC5130);
-}
+	if(TMC5130.config->state != CONFIG_READY)
+		return false;
 
-static void configCallback(TMC5130TypeDef *tmc5130, ConfigState completedState)
-{
-	if(completedState == CONFIG_RESET)
-	{
-		// Configuration reset completed
-		// Change hardware preset registers here
-		tmc5130_writeInt(tmc5130, TMC5130_PWMCONF, 0x000500C8);
+	TMC5130.config->state        = CONFIG_RESTORE;
+	TMC5130.config->configIndex  = 0;
 
-		// Fill missing shadow registers (hardware preset registers)
-		tmc5130_fillShadowRegisters(&TMC5130);
-	}
+	return true;
 }
 
 static void enableDriver(DriverState state)
@@ -961,45 +1080,91 @@ static void enableDriver(DriverState state)
 		HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
 }
 
+// Initialize the communication. Sets the pins. By setting the Pins
+// correctly the microcontroller can communicate to the TMC5130 how he wants to communicate.
+static void init_comm(TMC5130BusType mode)
+{
+	TMC5130_UARTChannel = HAL.UART;
+	switch(mode) {
+	case IC_BUS_UART:
+		HAL.IOs->config->reset(Pins.SCK);
+		HAL.IOs->config->reset(Pins.SDI);
+		HAL.IOs->config->reset(Pins.SDO);
+		HAL.IOs->config->reset(Pins.CS);
+		HAL.IOs->config->toOutput(Pins.SCK);
+		HAL.IOs->config->toOutput(Pins.SDI);
+		HAL.IOs->config->toOutput(Pins.SDO);
+		HAL.IOs->config->toOutput(Pins.CS);
+		HAL.IOs->config->setLow(Pins.SCK);
+		HAL.IOs->config->setLow(Pins.SDI);
+		HAL.IOs->config->setLow(Pins.SDO);
+		HAL.IOs->config->setLow(Pins.CS);
+
+	    HAL.IOs->config->setHigh(Pins.SWSEL);
+		TMC5130_UARTChannel = HAL.UART;
+		TMC5130_UARTChannel->rxtx.init();
+		break;
+	case IC_BUS_SPI:
+	    HAL.IOs->config->setLow(Pins.SWSEL);
+        TMC5130_UARTChannel->rxtx.deInit();
+
+		HAL.IOs->config->reset(Pins.SCK);
+		HAL.IOs->config->reset(Pins.SDI);
+		HAL.IOs->config->reset(Pins.SDO);
+		HAL.IOs->config->reset(Pins.CS);
+	    SPI.init();
+        TMC5130_SPIChannel = &HAL.SPI->ch1;
+        TMC5130_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+		break;
+	}
+}
+
+// Initialize the microcontroller.
 void TMC5130_init(void)
 {
-	Pins.DRV_ENN_CFG6    = &HAL.IOs->pins->DIO0;
-	Pins.ENCN_DCO        = &HAL.IOs->pins->DIO1;
-	Pins.ENCA_DCIN_CFG5  = &HAL.IOs->pins->DIO2;
-	Pins.ENCB_DCEN_CFG4  = &HAL.IOs->pins->DIO3;
-	Pins.REFL_UC         = &HAL.IOs->pins->DIO6;
-	Pins.REFR_UC         = &HAL.IOs->pins->DIO7;
+	Pins.DRV_ENN_CFG6    = &HAL.IOs->pins->DIO0; //Pin8
+	Pins.ENCN_DCO        = &HAL.IOs->pins->DIO1; //Pin9
+	Pins.ENCA_DCIN_CFG5  = &HAL.IOs->pins->DIO2; //Pin10
+	Pins.ENCB_DCEN_CFG4  = &HAL.IOs->pins->DIO3; //Pin11
+	Pins.REFL_UC         = &HAL.IOs->pins->DIO6; //Pin17
+	Pins.REFR_UC         = &HAL.IOs->pins->DIO7; //Pin18
 #if defined(LandungsbrueckeV3)
-	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10_PWM_WL;
-	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11_PWM_WH;
+	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10_PWM_WL; //Pin21
+	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11_PWM_WH; //Pin22
 #else
-	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10;
-	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11;
+	Pins.AIN_REF_SW      = &HAL.IOs->pins->DIO10; //Pin21
+	Pins.AIN_REF_PWM     = &HAL.IOs->pins->DIO11; //Pin22
 #endif
-	Pins.SWSEL           = &HAL.IOs->pins->DIO14;
-	Pins.SWP_DIAG1       = &HAL.IOs->pins->DIO15;
-	Pins.SWN_DIAG0       = &HAL.IOs->pins->DIO16;
+	Pins.CS              = &HAL.IOs->pins->SPI1_CSN; //Pin30
+	Pins.SCK             = &HAL.IOs->pins->SPI1_SCK; //Pin31
+	Pins.SDI             = &HAL.IOs->pins->SPI1_SDI; //Pin32
+	Pins.SDO             = &HAL.IOs->pins->SPI1_SDO; //Pin33
+	Pins.SWSEL           = &HAL.IOs->pins->DIO14; //Pin36
+	Pins.SWP_DIAG1       = &HAL.IOs->pins->DIO15; //Pin37
+	Pins.SWN_DIAG0       = &HAL.IOs->pins->DIO16; //Pin38
 
 	HAL.IOs->config->toInput(Pins.ENCN_DCO);
 	HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
 	HAL.IOs->config->toInput(Pins.ENCA_DCIN_CFG5);
-
-	HAL.IOs->config->toInput(Pins.SWN_DIAG0);
-	HAL.IOs->config->toInput(Pins.SWP_DIAG1);
 	HAL.IOs->config->toOutput(Pins.SWSEL);
 	HAL.IOs->config->toInput(Pins.REFL_UC);
 	HAL.IOs->config->toInput(Pins.REFR_UC);
 	HAL.IOs->config->toOutput(Pins.DRV_ENN_CFG6);
 	HAL.IOs->config->toOutput(Pins.AIN_REF_SW);
 
-	HAL.IOs->config->setLow(Pins.SWSEL);
+	init_comm(activeBus);
 
-	TMC5130_SPIChannel = &HAL.SPI->ch1;
-	TMC5130_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+	TMC5130.config = Evalboards.ch1.config;
+	TMC5130.velocity  = 0;
+	TMC5130.oldTick   = 0;
+	TMC5130.oldX      = 0;
+
+	TMC5130.config->callback     = NULL;
+	TMC5130.config->channel      = 0;
+	TMC5130.config->state      = CONFIG_RESET;
 
 	Evalboards.ch1.config->reset        = reset;
 	Evalboards.ch1.config->restore      = restore;
-	Evalboards.ch1.config->state        = CONFIG_RESET;
 	Evalboards.ch1.config->configIndex  = 0;
 
 	Evalboards.ch1.rotate               = rotate;
@@ -1022,10 +1187,8 @@ void TMC5130_init(void)
 	Evalboards.ch1.VMMax                = VM_MAX;
 	Evalboards.ch1.deInit               = deInit;
 
-	tmc5130_init(&TMC5130, 0, Evalboards.ch1.config, &tmc5130_defaultRegisterResetState[0]);
-	tmc5130_setCallback(&TMC5130, configCallback);
+	tmc5130_cache(DEFAULT_ICID, TMC5130_CACHE_READ, TMC5130_VMAX, &vmax_position1);
 
-	vmax_position = TMC5130.config->shadowRegister[TMC5130_VMAX];
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	HAL.IOs->config->toOutput(Pins.AIN_REF_PWM);

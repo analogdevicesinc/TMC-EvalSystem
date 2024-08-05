@@ -10,7 +10,6 @@
 #include "Rhino_standalone.h"
 
 #include "Board.h"
-#include "tmc/ic/TMC5130/TMC5130_Register.h"
 
 static uint32_t getInt();
 static void set();
