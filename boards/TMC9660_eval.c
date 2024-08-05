@@ -88,7 +88,7 @@ static int32_t processTunnelBL(uint8_t motor, int32_t value)
 
 	lastStatus = data[2];
 
-	return ((uint32_t)data[3] << 24) | ((uint32_t)data[4] << 16) | (data[5] << 8) | data[6];
+	return ((uint32_t)data[3] << 24) | ((uint32_t)data[4] << 16) | ((uint32_t)data[5] << 8) | data[6];
 }
 
 static uint8_t calcCheckSum(uint8_t *data, uint32_t bytes)
@@ -119,7 +119,7 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
 	UART_readWrite(TMC9660_UARTChannel, &data[0], 9, 9);
 
 	*status = data[2];
-	return ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | (data[6] << 8) | data[7];
+	return ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | ((uint32_t)data[6] << 8) | data[7];
 }
 
 static uint8_t ramDebug(uint8_t type, uint8_t motor, int32_t *value)
