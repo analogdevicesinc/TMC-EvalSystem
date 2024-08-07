@@ -466,4 +466,3 @@ static uint32_t bytesAvailable()
 {
 	return available;
 }
-
