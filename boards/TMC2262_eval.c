@@ -76,8 +76,51 @@ static void enableDriver(DriverState state);
 static TMC2262TypeDef TMC2262;
 
 
+// Helper function: Configure the next register.
+static void writeConfiguration(uint32_t tick)
 static inline TMC2262TypeDef *motorToIC(uint8_t motor)
 {
+    uint8_t *ptr = &TMC2262.config->configIndex;
+    static int32_t prevTick;
+    int32_t readData;
+
+    switch(*ptr){
+    case 0:
+        // Set PLL register to enable all the clocks and external oscillator
+        tmc2262_writeRegister(DEFAULT_ICID, TMC2262_PLL, 0x65FF);
+        (*ptr)++;
+        prevTick = tick;
+        break;
+    case 1:
+        if(tick - prevTick >= 1000)
+        {
+            // Clear the all the error flags by the PLL in [15:12]
+            tmc2262_writeRegister(DEFAULT_ICID, TMC2262_PLL, 0xF5FE);
+            // Read PLL back
+            readData = tmc2262_readRegister(DEFAULT_ICID, TMC2262_PLL);
+            readData = tmc2262_readRegister(DEFAULT_ICID, TMC2262_PLL);
+            if((readData & 0xF000) != 0)
+            {
+                *ptr = 0;
+                break;
+            }
+            (*ptr)++;
+        }
+        break;
+    case 2:
+        //Reading ChopConf register
+        readData = tmc2262_readRegister(DEFAULT_ICID, TMC2262_CHOPCONF);
+        // Set TOFF field to enable the driver
+        tmc2262_writeRegister(DEFAULT_ICID, TMC2262_CHOPCONF, (readData & 0xFFFFFFF0) | 0x3);
+        (*ptr)++;
+        break;
+    case 3:
+        // Write to GSTAT register to clear the flags
+        tmc2262_writeRegister(DEFAULT_ICID, TMC2262_GSTAT, 0x3F);
+        TMC2262.config->state = CONFIG_READY;
+        *ptr = 0;
+        break;
+    }
 	UNUSED(motor);
 	return &TMC2262;
 }
@@ -750,7 +793,10 @@ static void periodicJob(uint32_t tick)
 {
 	for(uint8_t motor = 0; motor < TMC2262_MOTORS; motor++)
 	{
-		tmc2262_periodicJob(&TMC2262, tick);
+	    if(TMC2262.config->state != CONFIG_READY)
+        {
+            writeConfiguration(tick);
+            return;
 		StepDir_periodicJob(motor);
 	}
 }
@@ -791,7 +837,16 @@ static uint8_t reset()
 	if (StepDir_getActualVelocity(0) && !VitalSignsMonitor.brownOut)
 		return 0;
 
-	tmc2262_reset(&TMC2262);
+    if(TMC2262.config->state != CONFIG_READY)
+        return false;
+
+    TMC2262.config->state        = CONFIG_RESET;
+    TMC2262.config->configIndex  = 0;
+<<<<<<< Updated upstream
+    return true;
+=======
+
+>>>>>>> Stashed changes
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP_INT, Pins.DIR_INT, Pins.DIAG1);
 	StepDir_setVelocityMax(0, 100000);
@@ -802,7 +857,11 @@ static uint8_t reset()
 
 static uint8_t restore()
 {
-	tmc2262_restore(&TMC2262);
+    if(TMC2262.config->state != CONFIG_READY)
+        return false;
+
+    TMC2262.config->state        = CONFIG_RESTORE;
+    TMC2262.config->configIndex  = 0;
 
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP_INT, Pins.DIR_INT, Pins.DIAG1);
@@ -853,7 +912,14 @@ void TMC2262_init(void)
 	Evalboards.ch2.config->restore      = restore;
 	Evalboards.ch2.config->state        = CONFIG_RESET;
 
-	tmc2262_init(&TMC2262, 0, Evalboards.ch2.config);
+    TMC2262.velocity  = 0;
+    TMC2262.oldTick   = 0;
+    TMC2262.oldX      = 0;
+
+    TMC2262.config               = Evalboards.ch2.config;
+    TMC2262.config->channel = 0;    //channel: The channel index, which will be sent back in the SPI callback
+    TMC2262.config->configIndex  = 0;
+    TMC2262.config->state        = CONFIG_READY;
 
 	// Initialize the software StepDir generator
 	StepDir_init(STEPDIR_PRECISION);
