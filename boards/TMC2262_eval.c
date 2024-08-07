@@ -42,6 +42,15 @@ void tmc2262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 #define TMC2262_RAMDEBUG_TIMER TIMER_CHANNEL_2
 #endif
 
+// TMC2262: TMC2262TypeDef struct, which represents one IC
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t velocity, oldX;
+    uint32_t oldTick;
+    uint8_t slaveAddress;
+} TMC2262TypeDef;
+static TMC2262TypeDef TMC2262;
 static bool vMaxModified = false;
 static uint32_t vmax_position;
 //static uint32_t vMax		   = 1;
