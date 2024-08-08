@@ -10,12 +10,80 @@
 #include "Board.h"
 #include "tmc/ic/TMC5271/TMC5271.h"
 
+
+#define ERRORS_VM        (1<<0)
+#define ERRORS_VM_UNDER  (1<<1)
+#define ERRORS_VM_OVER   (1<<2)
+#define VM_MIN         50   // VM[V/10] min
+#define VM_MAX         660  // VM[V/10] max
+#define DEFAULT_ICID  0
+
+// Typedefs
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t oldX;
+    int32_t velocity;
+    uint32_t oldTick;
+} TMC5271TypeDef;
+static TMC5271TypeDef TMC5271;
+
+typedef struct
+{
+    IOPinTypeDef  *REFL_UC;
+    IOPinTypeDef  *REFR_UC;
+    IOPinTypeDef  *DRV_ENN_CFG6;
+    IOPinTypeDef  *ENCA_DCIN_CFG5;
+    IOPinTypeDef  *ENCB_DCEN_CFG4;
+    IOPinTypeDef  *ENCN_DCO;
+    IOPinTypeDef  *UART_MODE;
+    IOPinTypeDef  *CLK;
+    IOPinTypeDef  *SDI;
+    IOPinTypeDef  *SDO;
+    IOPinTypeDef  *SCK;
+    IOPinTypeDef  *CS;
+
+    IOPinTypeDef  *SWN_DIAG0;
+    IOPinTypeDef  *SWP_DIAG1;
+    IOPinTypeDef  *nSLEEP;
+    IOPinTypeDef  *IREF_R2;
+    IOPinTypeDef  *IREF_R3;
+
+} PinsTypeDef;
+static PinsTypeDef Pins;
+
+
 static TMC5271BusType activeBus = IC_BUS_SPI;
 static uint8_t nodeAddress = 0;
 static SPIChannelTypeDef *TMC5271_SPIChannel;
 static UART_Config *TMC5271_UARTChannel;
+static bool vMaxModified = false;
+static uint32_t vmax_position[TMC5271_MOTORS];
+static bool noRegResetnSLEEP = false;
+static uint32_t nSLEEPTick;
 
-#define DEFAULT_MOTOR  0
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
+
+static void init_comm(TMC5271BusType mode);
+
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
+static void deInit(void);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+
+static uint8_t reset();
+static void enableDriver(DriverState state);
+
 
 void tmc5271_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
@@ -31,18 +99,9 @@ bool tmc5271_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, siz
         return false;
     return true;
 }
-#define DEFAULT_ICID  0
 
-// Typedefs
-typedef struct
 TMC5271BusType tmc5271_getBusType(uint16_t icID)
 {
-    ConfigurationTypeDef *config;
-    int32_t oldX;
-    int32_t velocity;
-    uint32_t oldTick;
-} TMC5271TypeDef;
-static TMC5271TypeDef TMC5271;
     UNUSED(icID);
 
     return activeBus;
@@ -54,87 +113,6 @@ uint8_t tmc5271_getNodeAddress(uint16_t icID)
 
     return nodeAddress;
 }
-
-
-#define ERRORS_VM        (1<<0)
-#define ERRORS_VM_UNDER  (1<<1)
-#define ERRORS_VM_OVER   (1<<2)
-
-#define VM_MIN         50   // VM[V/10] min
-#define VM_MAX         660  // VM[V/10] max
-
-static bool vMaxModified = false;
-static uint32_t vmax_position[TMC5271_MOTORS];
-
-static bool noRegResetnSLEEP = false;
-static uint32_t nSLEEPTick;
-static uint32_t targetAddressUart = 0;
-
-static uint32_t right(uint8_t motor, int32_t velocity);
-static uint32_t left(uint8_t motor, int32_t velocity);
-static uint32_t rotate(uint8_t motor, int32_t velocity);
-static uint32_t stop(uint8_t motor);
-static uint32_t moveTo(uint8_t motor, int32_t position);
-static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
-static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-
-static void init_comm(TMC5271BusType mode);
-
-static void periodicJob(uint32_t tick);
-static void checkErrors(uint32_t tick);
-static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
-static uint8_t reset();
-static void enableDriver(DriverState state);
-
-static TMC5271TypeDef TMC5271;
-
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC5271_CRC(data, length) tmc_CRC8(data, length, 1)
-
-// When using multiple ICs you can map them here
-static inline TMC5271TypeDef *motorToIC(uint8_t motor)
-{
-	UNUSED(motor);
-	return &TMC5271;
-}
-
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc5271_CRC8(uint8_t *data, size_t length)
-{
-	return tmc_CRC8(data, length, 1);
-}
-
-
-typedef struct
-{
-	IOPinTypeDef  *REFL_UC;
-	IOPinTypeDef  *REFR_UC;
-	IOPinTypeDef  *DRV_ENN_CFG6;
-	IOPinTypeDef  *ENCA_DCIN_CFG5;
-	IOPinTypeDef  *ENCB_DCEN_CFG4;
-	IOPinTypeDef  *ENCN_DCO;
-	IOPinTypeDef  *UART_MODE;
-	IOPinTypeDef  *CLK;
-	IOPinTypeDef  *SDI;
-	IOPinTypeDef  *SDO;
-	IOPinTypeDef  *SCK;
-	IOPinTypeDef  *CS;
-
-	IOPinTypeDef  *SWN_DIAG0;
-	IOPinTypeDef  *SWP_DIAG1;
-	IOPinTypeDef  *nSLEEP;
-	IOPinTypeDef  *IREF_R2;
-	IOPinTypeDef  *IREF_R3;
-
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -1204,114 +1182,114 @@ static void checkErrors(uint32_t tick)
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32_t buffer;
-	uint32_t errors = 0;
+    uint32_t buffer;
+    uint32_t errors = 0;
 
-	UNUSED(motor);
+    UNUSED(motor);
 
-	switch(type)
-	{
-	case 0:  // simulate reference switches, set high to support external ref swiches
-		/*
-		 * The the TMC5271 ref switch input is pulled high by external resistor an can be pulled low either by
-		 * this µC or external signal. To use external signal make sure the signals from µC are high or floating.
-		 */
-		if(!(*value & ~3))
-		{
-			if(*value & (1<<0))
-			{
-				HAL.IOs->config->toInput(Pins.REFR_UC); // pull up -> set it to floating causes high
-			}
-			else
-			{
-				HAL.IOs->config->toOutput(Pins.REFR_UC);
-				HAL.IOs->config->setLow(Pins.REFR_UC);
-			}
+    switch(type)
+    {
+    case 0:  // simulate reference switches, set high to support external ref swiches
+        /*
+         * The the TMC5271 ref switch input is pulled high by external resistor an can be pulled low either by
+         * this µC or external signal. To use external signal make sure the signals from µC are high or floating.
+         */
+        if(!(*value & ~3))
+        {
+            if(*value & (1<<0))
+            {
+                HAL.IOs->config->toInput(Pins.REFR_UC); // pull up -> set it to floating causes high
+            }
+            else
+            {
+                HAL.IOs->config->toOutput(Pins.REFR_UC);
+                HAL.IOs->config->setLow(Pins.REFR_UC);
+            }
 
-			if(*value & (1<<1))
-			{
-				HAL.IOs->config->toInput(Pins.REFL_UC); // pull up -> set it to floating causes high
-			}
-			else
-			{
-				HAL.IOs->config->toOutput(Pins.REFL_UC);
-				HAL.IOs->config->setLow(Pins.REFL_UC);
-			}
-		}
-		else
-		{
-			errors |= TMC_ERROR_VALUE;
-		}
-		break;
+            if(*value & (1<<1))
+            {
+                HAL.IOs->config->toInput(Pins.REFL_UC); // pull up -> set it to floating causes high
+            }
+            else
+            {
+                HAL.IOs->config->toOutput(Pins.REFL_UC);
+                HAL.IOs->config->setLow(Pins.REFL_UC);
+            }
+        }
+        else
+        {
+            errors |= TMC_ERROR_VALUE;
+        }
+        break;
 
 
-	case 4:  // set or release/read ENCB_[DCEN_CFG4]
-		switch(buffer = *value)
-		{
-		case 0:
-			HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
-			HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
-			break;
-		case 1:
-			HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
-			HAL.IOs->config->setHigh(Pins.ENCB_DCEN_CFG4);
-			break;
-		default:
-			HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
-			buffer = HAL.IOs->config->isHigh(Pins.ENCB_DCEN_CFG4);;
-			break;
-		}
-		*value = buffer;
-		break;
-	case 5:  // read interrupt pin SWN_DIAG0
-		*value = (HAL.IOs->config->isHigh(Pins.SWN_DIAG0))? 1:0;
-		break;
-	case 6:  // read interrupt pin SWP_DIAG1
-		*value = (HAL.IOs->config->isHigh(Pins.SWP_DIAG1))? 1:0;
-		break;
+    case 4:  // set or release/read ENCB_[DCEN_CFG4]
+        switch(buffer = *value)
+        {
+        case 0:
+            HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
+            HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
+            break;
+        case 1:
+            HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
+            HAL.IOs->config->setHigh(Pins.ENCB_DCEN_CFG4);
+            break;
+        default:
+            HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
+            buffer = HAL.IOs->config->isHigh(Pins.ENCB_DCEN_CFG4);;
+            break;
+        }
+        *value = buffer;
+        break;
+    case 5:  // read interrupt pin SWN_DIAG0
+        *value = (HAL.IOs->config->isHigh(Pins.SWN_DIAG0))? 1:0;
+        break;
+    case 6:  // read interrupt pin SWP_DIAG1
+        *value = (HAL.IOs->config->isHigh(Pins.SWP_DIAG1))? 1:0;
+        break;
 
-	case 8: // Enable UART mode
-		if(*value == 1)
-			activeBus = IC_BUS_UART;
-		else if(*value == 0)
-			activeBus = IC_BUS_SPI;
-		init_comm(activeBus);
-		break;
+    case 8: // Enable UART mode
+        if(*value == 1)
+            activeBus = IC_BUS_UART;
+        else if(*value == 0)
+            activeBus = IC_BUS_SPI;
+        init_comm(activeBus);
+        break;
 
-	case 252:
-		if(*value)
-		{
-			HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
-			HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
-		}
-		else
-		{
-			HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
-		}
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
-	}
-	return errors;
+    case 252:
+        if(*value)
+        {
+            HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
+            HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
+        }
+        else
+        {
+            HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
+        }
+        break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
+    }
+    return errors;
 }
 
 static void deInit(void)
 {
-	HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
-	HAL.IOs->config->setLow(Pins.UART_MODE);
-	HAL.IOs->config->reset(Pins.ENCA_DCIN_CFG5);
-	HAL.IOs->config->reset(Pins.ENCB_DCEN_CFG4);
-	HAL.IOs->config->reset(Pins.ENCN_DCO);
-	HAL.IOs->config->reset(Pins.REFL_UC);
-	HAL.IOs->config->reset(Pins.REFR_UC);
-	HAL.IOs->config->reset(Pins.SWN_DIAG0);
-	HAL.IOs->config->reset(Pins.SWP_DIAG1);
-	HAL.IOs->config->reset(Pins.DRV_ENN_CFG6);
-	HAL.IOs->config->reset(Pins.UART_MODE);
-	HAL.IOs->config->reset(Pins.nSLEEP);
-	HAL.IOs->config->reset(Pins.IREF_R2);
-	HAL.IOs->config->reset(Pins.IREF_R3);
+    HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
+    HAL.IOs->config->setLow(Pins.UART_MODE);
+    HAL.IOs->config->reset(Pins.ENCA_DCIN_CFG5);
+    HAL.IOs->config->reset(Pins.ENCB_DCEN_CFG4);
+    HAL.IOs->config->reset(Pins.ENCN_DCO);
+    HAL.IOs->config->reset(Pins.REFL_UC);
+    HAL.IOs->config->reset(Pins.REFR_UC);
+    HAL.IOs->config->reset(Pins.SWN_DIAG0);
+    HAL.IOs->config->reset(Pins.SWP_DIAG1);
+    HAL.IOs->config->reset(Pins.DRV_ENN_CFG6);
+    HAL.IOs->config->reset(Pins.UART_MODE);
+    HAL.IOs->config->reset(Pins.nSLEEP);
+    HAL.IOs->config->reset(Pins.IREF_R2);
+    HAL.IOs->config->reset(Pins.IREF_R3);
 
 };
 
@@ -1343,77 +1321,77 @@ static uint8_t reset()
 
 static uint8_t restore()
 {
-	return reset();
+    return reset();
 }
 
 static void enableDriver(DriverState state)
 {
-	if(state == DRIVER_USE_GLOBAL_ENABLE)
-		state = Evalboards.driverEnable;
+    if(state == DRIVER_USE_GLOBAL_ENABLE)
+        state = Evalboards.driverEnable;
 
-	if(state ==  DRIVER_DISABLE){
-		HAL.IOs->config->setHigh(Pins.DRV_ENN_CFG6);
-		field_write(&TMC5271, TMC5271_DRV_ENN_FIELD, 1);
-	}
-	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
-		HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
-		field_write(&TMC5271, TMC5271_DRV_ENN_FIELD, 0);
-	}
+    if(state ==  DRIVER_DISABLE){
+        HAL.IOs->config->setHigh(Pins.DRV_ENN_CFG6);
+        tmc5271_fieldWrite(&TMC5271, TMC5271_DRV_ENN_FIELD, 1);
+    }
+    else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
+        HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
+        tmc5271_fieldWrite(&TMC5271, TMC5271_DRV_ENN_FIELD, 0);
+    }
 }
 
 static void init_comm(TMC5271BusType mode)
 {
-	TMC5271_UARTChannel = HAL.UART;
-	switch(mode) {
-	case IC_BUS_UART:
+    TMC5271_UARTChannel = HAL.UART;
+    switch(mode) {
+    case IC_BUS_UART:
 
-		HAL.IOs->config->reset(Pins.SCK);
-		HAL.IOs->config->reset(Pins.SDI);
-		HAL.IOs->config->reset(Pins.SDO);
-		HAL.IOs->config->reset(Pins.CS);
-		HAL.IOs->config->toOutput(Pins.SCK);
-		HAL.IOs->config->toOutput(Pins.SDI);
-		HAL.IOs->config->toOutput(Pins.SDO);
-		HAL.IOs->config->toOutput(Pins.CS);
-		HAL.IOs->config->setLow(Pins.SCK);
-		HAL.IOs->config->setLow(Pins.SDI);
-		HAL.IOs->config->setLow(Pins.SDO);
-		HAL.IOs->config->setLow(Pins.CS);
+        HAL.IOs->config->reset(Pins.SCK);
+        HAL.IOs->config->reset(Pins.SDI);
+        HAL.IOs->config->reset(Pins.SDO);
+        HAL.IOs->config->reset(Pins.CS);
+        HAL.IOs->config->toOutput(Pins.SCK);
+        HAL.IOs->config->toOutput(Pins.SDI);
+        HAL.IOs->config->toOutput(Pins.SDO);
+        HAL.IOs->config->toOutput(Pins.CS);
+        HAL.IOs->config->setLow(Pins.SCK);
+        HAL.IOs->config->setLow(Pins.SDI);
+        HAL.IOs->config->setLow(Pins.SDO);
+        HAL.IOs->config->setLow(Pins.CS);
 
-		HAL.IOs->config->setHigh(Pins.UART_MODE);
-		TMC5271_UARTChannel = HAL.UART;
-		TMC5271_UARTChannel->pinout = UART_PINS_2;
-		TMC5271_UARTChannel->rxtx.init();
-		break;
-	case IC_BUS_SPI:
+        HAL.IOs->config->setHigh(Pins.UART_MODE);
+        TMC5271_UARTChannel = HAL.UART;
+        TMC5271_UARTChannel->pinout = UART_PINS_2;
+        TMC5271_UARTChannel->rxtx.init();
+        break;
+    case IC_BUS_SPI:
 
-		HAL.IOs->config->reset(Pins.SCK);
-		HAL.IOs->config->reset(Pins.SDI);
-		HAL.IOs->config->reset(Pins.SDO);
-		HAL.IOs->config->reset(Pins.CS);
+        HAL.IOs->config->reset(Pins.SCK);
+        HAL.IOs->config->reset(Pins.SDI);
+        HAL.IOs->config->reset(Pins.SDO);
+        HAL.IOs->config->reset(Pins.CS);
 
-		SPI.init();
-		HAL.IOs->config->setLow(Pins.UART_MODE);
-		TMC5271_UARTChannel->rxtx.deInit();
-		TMC5271_SPIChannel = &HAL.SPI->ch1;
-		TMC5271_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
-		break;
-	case IC_BUS_WLAN: // unused
-	default:
+        SPI.init();
+        HAL.IOs->config->setLow(Pins.UART_MODE);
+        TMC5271_UARTChannel->rxtx.deInit();
+        TMC5271_SPIChannel = &HAL.SPI->ch1;
+        TMC5271_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+        break;
+    case IC_BUS_WLAN: // unused
+    default:
 
-		HAL.IOs->config->reset(Pins.SCK);
-		HAL.IOs->config->reset(Pins.SDI);
-		HAL.IOs->config->reset(Pins.SDO);
-		HAL.IOs->config->reset(Pins.CS);
+        HAL.IOs->config->reset(Pins.SCK);
+        HAL.IOs->config->reset(Pins.SDI);
+        HAL.IOs->config->reset(Pins.SDO);
+        HAL.IOs->config->reset(Pins.CS);
 
-		SPI.init();
-		HAL.IOs->config->setLow(Pins.UART_MODE);
-		TMC5271_UARTChannel->rxtx.deInit();
-		TMC5271_SPIChannel = &HAL.SPI->ch1;
-		TMC5271_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
-		activeBus = IC_BUS_SPI;
-		break;
-	}
+        SPI.init();
+        HAL.IOs->config->setLow(Pins.UART_MODE);
+        TMC5271_UARTChannel->rxtx.deInit();
+        TMC5271_SPIChannel = &HAL.SPI->ch1;
+        TMC5271_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+        activeBus = IC_BUS_SPI;
+        break;
+    }
 }
 
 void TMC5271_init(void)
