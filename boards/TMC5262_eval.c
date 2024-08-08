@@ -37,6 +37,15 @@ void tmc5262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 #define TMC5262_RAMDEBUG_TIMER TIMER_CHANNEL_2
 #endif
 
+// Typedefs
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t velocity, oldX;
+    uint32_t oldTick;
+    uint8_t slaveAddress;
+} TMC5262TypeDef;
+static TMC5262TypeDef TMC5262;
 static bool vMaxModified = false;
 static uint32_t vmax_position;
 //static uint32_t vMax		   = 1;
