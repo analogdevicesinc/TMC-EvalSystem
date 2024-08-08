@@ -13,15 +13,6 @@
 #include "hal/Timer.h"
 
 
-static uint8_t nodeAddress = 0;
-static SPIChannelTypeDef *TMC5262_SPIChannel;
-
-
-void tmc5262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
-{
-	UNUSED(icID);
-	TMC5262_SPIChannel->readWriteArray(data, dataLength);
-}
 
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
@@ -29,6 +20,7 @@ void tmc5262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 
 #define VM_MIN         45   // VM[V/10] min
 #define VM_MAX         650  // VM[V/10] max
+#define DEFAULT_ICID  0
 
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
@@ -46,9 +38,24 @@ typedef struct
     uint8_t slaveAddress;
 } TMC5262TypeDef;
 static TMC5262TypeDef TMC5262;
+typedef struct
+{
+    IOPinTypeDef *N_DRN_EN;
+    IOPinTypeDef *N_SLEEP;
+    IOPinTypeDef *REFL_INT;
+    IOPinTypeDef *REFR_INT;
+    IOPinTypeDef *IREF_R2;
+    IOPinTypeDef *IREF_R3;
+    IOPinTypeDef *DIAG0;
+    IOPinTypeDef *DIAG1;
+
+} PinsTypeDef;
+
+static PinsTypeDef Pins;
+
+static SPIChannelTypeDef *TMC5262_SPIChannel;
 static bool vMaxModified = false;
 static uint32_t vmax_position;
-//static uint32_t vMax		   = 1;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -70,15 +77,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
-static TMC5262TypeDef TMC5262;
 
 // Helper function: Configure the next register.
 static void writeConfiguration(uint32_t tick)
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC5262_CRC(data, length) tmc_CRC8(data, length, 1)
-
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc5262_CRC8(uint8_t *data, size_t length)
 {
     uint8_t *ptr = &TMC5262.config->configIndex;
     static int32_t prevTick;
@@ -121,31 +122,14 @@ uint8_t tmc5262_CRC8(uint8_t *data, size_t length)
         *ptr = 0;
         break;
     }
-	return tmc_CRC8(data, length, 1);
-	//TMC5262_CRC(data, length);
 }
 
-static inline TMC5262TypeDef *motorToIC(uint8_t motor)
+void tmc5262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-	UNUSED(motor);
-	return &TMC5262;
+    UNUSED(icID);
+    TMC5262_SPIChannel->readWriteArray(data, dataLength);
 }
 
-
-typedef struct
-{
-	IOPinTypeDef *N_DRN_EN;
-	IOPinTypeDef *N_SLEEP;
-	IOPinTypeDef *REFL_INT;
-	IOPinTypeDef *REFR_INT;
-	IOPinTypeDef *IREF_R2;
-	IOPinTypeDef *IREF_R3;
-	IOPinTypeDef *DIAG0;
-	IOPinTypeDef *DIAG1;
-
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
