@@ -138,44 +138,48 @@ static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	tmc5271_rotate(motorToIC(motor),motor, velocity);
+    if(motor >= TMC5271_MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	return 0;
+    tmc5271_writeRegister(DEFAULT_ICID, TMC5271_VMAX, abs(velocity));
+    tmc5271_fieldWrite(DEFAULT_ICID, TMC5271_RAMPMODE_FIELD,  (velocity >= 0) ? TMC5271_MODE_VELPOS : TMC5271_MODE_VELNEG);
+
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	tmc5271_right(motorToIC(motor),motor, velocity);
-
-	return 0;
+    return rotate(motor, velocity);
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	tmc5271_left(motorToIC(motor),motor, velocity);
-
-	return 0;
+    return rotate(motor, -velocity);
 }
 
 static uint32_t stop(uint8_t motor)
 {
-	tmc5271_stop(motorToIC(motor),motor);
-
-	return 0;
+    return rotate(motor, 0);
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	tmc5271_moveTo(motorToIC(motor),motor, position, vmax_position[motor]);
+    if(motor >= TMC5271_MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	return 0;
+    tmc5271_fieldWrite(DEFAULT_ICID, TMC5271_RAMPMODE_FIELD, TMC5271_MODE_POSITION);
+    tmc5271_writeRegister(DEFAULT_ICID, TMC5271_VMAX, vmax_position[motor]);
+    tmc5271_writeRegister(DEFAULT_ICID, TMC5271_XTARGET, position);
+
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	tmc5271_moveBy(motorToIC(motor),motor, vmax_position[motor], ticks);
+    // determine actual position and add numbers of ticks to move
+    *ticks += tmc5271_readRegister(DEFAULT_ICID, TMC5271_XACTUAL);
 
-	return 0;
+    return moveTo(motor, *ticks);
 }
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
@@ -1155,30 +1159,47 @@ static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	if(!noRegResetnSLEEP)
-		{
-	//check if reset after nSLEEP to HIGH was performed
-	for(uint8_t motor = 0; motor < TMC5271_MOTORS; motor++)
-		{
-			tmc5271_periodicJob(&TMC5271, tick);
-		}
-	}
-	else
-	{
-		//check if minimum time since chip activation passed. Then restore.
-		if((systick_getTick()-nSLEEPTick)>20) //
-		{
-			noRegResetnSLEEP = false;
-			enableDriver(DRIVER_ENABLE);
-			field_write(DEFAULT_MOTOR, TMC5271_TOFF_FIELD, 3);
-		}
-	}
+    if(!noRegResetnSLEEP)
+    {
+        //check if reset after nSLEEP to HIGH was performed
+        uint32_t tickDiff;
+
+        if(TMC5271.config->state != CONFIG_READY)
+        {
+            TMC5271.config->state = CONFIG_READY;;
+            return;
+        }
+
+        int32_t x;
+
+        // Calculate velocity v = dx/dt
+        if((tickDiff = tick - TMC5271.oldTick) >= 5)
+        {
+            for(uint8_t motor = 0; motor < TMC5271_MOTORS; motor++)
+            {
+                x = tmc5271_readRegister(DEFAULT_ICID, TMC5271_XACTUAL);
+                TMC5271.velocity = (uint32_t) ((float32_t) ((x - TMC5271.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+                TMC5271.oldX = x;
+            }
+            TMC5271.oldTick  = tick;
+        }
+    }
+    else
+    {
+        //check if minimum time since chip activation passed. Then restore.
+        if((systick_getTick()-nSLEEPTick)>20) //
+        {
+            noRegResetnSLEEP = false;
+            enableDriver(DRIVER_ENABLE);
+            tmc5271_fieldWrite(DEFAULT_ICID, TMC5271_TOFF_FIELD, 3);
+        }
+    }
 }
 
 static void checkErrors(uint32_t tick)
 {
-	UNUSED(tick);
-	Evalboards.ch1.errors = 0;
+    UNUSED(tick);
+    Evalboards.ch1.errors = 0;
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
@@ -1297,20 +1318,27 @@ static void deInit(void)
 static uint8_t reset()
 {
 
-	HAL.IOs->config->toOutput(Pins.nSLEEP);
-	HAL.IOs->config->setHigh(Pins.nSLEEP);
-	wait(50);
-	HAL.IOs->config->setLow(Pins.nSLEEP);
-	noRegResetnSLEEP = true;
-	nSLEEPTick = systick_getTick();
-	int32_t value = 0;
+    HAL.IOs->config->toOutput(Pins.nSLEEP);
+    HAL.IOs->config->setHigh(Pins.nSLEEP);
+    wait(50);
+    HAL.IOs->config->setLow(Pins.nSLEEP);
+    noRegResetnSLEEP = true;
+    nSLEEPTick = systick_getTick();
+    int32_t value = 0;
 
-	for(uint8_t motor = 0; motor < TMC5271_MOTORS; motor++){
-	    readRegister(motor, TMC5271_VACTUAL, &value);
-		if(value != 0)
-			return 0;
-	}
-	return tmc5271_reset(&TMC5271);
+    for(uint8_t motor = 0; motor < TMC5271_MOTORS; motor++){
+        readRegister(DEFAULT_ICID, TMC5271_VACTUAL, &value);
+        if(value != 0)
+            return 0;
+    }
+
+    if(TMC5271.config->state != CONFIG_READY)
+        return false;
+
+    TMC5271.config->state        = CONFIG_RESET;
+    TMC5271.config->configIndex  = 0;
+
+    return true;
 }
 
 static uint8_t restore()
@@ -1390,84 +1418,91 @@ static void init_comm(TMC5271BusType mode)
 
 void TMC5271_init(void)
 {
-	Pins.DRV_ENN_CFG6    = &HAL.IOs->pins->DIO0; //Pin8
-	Pins.ENCN_DCO        = &HAL.IOs->pins->DIO1; //Pin9
-	Pins.ENCA_DCIN_CFG5  = &HAL.IOs->pins->DIO2; //Pin10
-	Pins.ENCB_DCEN_CFG4  = &HAL.IOs->pins->DIO3; //Pin11
-	Pins.REFL_UC         = &HAL.IOs->pins->DIO6; //Pin17
-	Pins.REFR_UC         = &HAL.IOs->pins->DIO7; //Pin18
-	Pins.nSLEEP          = &HAL.IOs->pins->DIO8; //Pin19
-	Pins.UART_MODE       = &HAL.IOs->pins->DIO9;//Pin20
-	Pins.SWP_DIAG1       = &HAL.IOs->pins->DIO15; //Pin37
-	Pins.SWN_DIAG0       = &HAL.IOs->pins->DIO16; //Pin38
-	Pins.IREF_R2         = &HAL.IOs->pins->DIO13; //Pin35
-	Pins.IREF_R3         = &HAL.IOs->pins->DIO14; //Pin36
-	Pins.SCK             = &HAL.IOs->pins->SPI1_SCK; //Pin31
-	Pins.SDI             = &HAL.IOs->pins->SPI1_SDI; //Pin32
-	Pins.SDO             = &HAL.IOs->pins->SPI1_SDO; //Pin33
-	Pins.CS              = &HAL.IOs->pins->SPI1_CSN; //Pin33
-
-	
-	HAL.IOs->config->toOutput(Pins.DRV_ENN_CFG6);
-	HAL.IOs->config->toOutput(Pins.UART_MODE);
-	HAL.IOs->config->toOutput(Pins.IREF_R2);
-	HAL.IOs->config->toOutput(Pins.IREF_R3);
-	HAL.IOs->config->toOutput(Pins.nSLEEP);
-
-	HAL.IOs->config->setLow(Pins.nSLEEP);
-	HAL.IOs->config->setHigh(Pins.DRV_ENN_CFG6);
-	HAL.IOs->config->setLow(Pins.UART_MODE);
-	HAL.IOs->config->setLow(Pins.IREF_R2);
-	HAL.IOs->config->setLow(Pins.IREF_R2);
-
-	HAL.IOs->config->toInput(Pins.ENCN_DCO);
-	HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
-	HAL.IOs->config->toInput(Pins.ENCA_DCIN_CFG5);
-
-	noRegResetnSLEEP = true;
-	nSLEEPTick = systick_getTick();
+    Pins.DRV_ENN_CFG6    = &HAL.IOs->pins->DIO0; //Pin8
+    Pins.ENCN_DCO        = &HAL.IOs->pins->DIO1; //Pin9
+    Pins.ENCA_DCIN_CFG5  = &HAL.IOs->pins->DIO2; //Pin10
+    Pins.ENCB_DCEN_CFG4  = &HAL.IOs->pins->DIO3; //Pin11
+    Pins.REFL_UC         = &HAL.IOs->pins->DIO6; //Pin17
+    Pins.REFR_UC         = &HAL.IOs->pins->DIO7; //Pin18
+    Pins.nSLEEP          = &HAL.IOs->pins->DIO8; //Pin19
+    Pins.UART_MODE       = &HAL.IOs->pins->DIO9;//Pin20
+    Pins.SWP_DIAG1       = &HAL.IOs->pins->DIO15; //Pin37
+    Pins.SWN_DIAG0       = &HAL.IOs->pins->DIO16; //Pin38
+    Pins.IREF_R2         = &HAL.IOs->pins->DIO13; //Pin35
+    Pins.IREF_R3         = &HAL.IOs->pins->DIO14; //Pin36
+    Pins.SCK             = &HAL.IOs->pins->SPI1_SCK; //Pin31
+    Pins.SDI             = &HAL.IOs->pins->SPI1_SDI; //Pin32
+    Pins.SDO             = &HAL.IOs->pins->SPI1_SDO; //Pin33
+    Pins.CS              = &HAL.IOs->pins->SPI1_CSN; //Pin33
 
 
-	HAL.IOs->config->toInput(Pins.REFL_UC);
-	HAL.IOs->config->toInput(Pins.REFR_UC);
+    HAL.IOs->config->toOutput(Pins.DRV_ENN_CFG6);
+    HAL.IOs->config->toOutput(Pins.UART_MODE);
+    HAL.IOs->config->toOutput(Pins.IREF_R2);
+    HAL.IOs->config->toOutput(Pins.IREF_R3);
+    HAL.IOs->config->toOutput(Pins.nSLEEP);
 
-	// Disable CLK output -> use internal 12 MHz clock
-	//  Switchable via user function
+    HAL.IOs->config->setLow(Pins.nSLEEP);
+    HAL.IOs->config->setHigh(Pins.DRV_ENN_CFG6);
+    HAL.IOs->config->setLow(Pins.UART_MODE);
+    HAL.IOs->config->setLow(Pins.IREF_R2);
+    HAL.IOs->config->setLow(Pins.IREF_R2);
 
-	init_comm(activeBus);
+    HAL.IOs->config->toInput(Pins.ENCN_DCO);
+    HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
+    HAL.IOs->config->toInput(Pins.ENCA_DCIN_CFG5);
 
-	Evalboards.ch1.config->reset        = reset;
-	Evalboards.ch1.config->restore      = restore;
-	Evalboards.ch1.config->state        = CONFIG_RESET;
+    noRegResetnSLEEP = true;
+    nSLEEPTick = systick_getTick();
 
-	tmc5271_init(&TMC5271, 0, Evalboards.ch1.config);
 
-	for(uint8_t motor = 0; motor < TMC5271_MOTORS; motor++)
-	{
-		vmax_position[motor] = 0;
-	}
+    HAL.IOs->config->toInput(Pins.REFL_UC);
+    HAL.IOs->config->toInput(Pins.REFR_UC);
 
-	Evalboards.ch1.rotate               = rotate;
-	Evalboards.ch1.right                = right;
-	Evalboards.ch1.left                 = left;
-	Evalboards.ch1.stop                 = stop;
-	Evalboards.ch1.GAP                  = GAP;
-	Evalboards.ch1.SAP                  = SAP;
-	Evalboards.ch1.moveTo               = moveTo;
-	Evalboards.ch1.moveBy               = moveBy;
-	Evalboards.ch1.writeRegister        = writeRegister;
-	Evalboards.ch1.readRegister         = readRegister;
-	Evalboards.ch1.periodicJob          = periodicJob;
-	Evalboards.ch1.userFunction         = userFunction;
-	Evalboards.ch1.getMeasuredSpeed     = getMeasuredSpeed;
-	Evalboards.ch1.enableDriver         = enableDriver;
-	Evalboards.ch1.checkErrors          = checkErrors;
-	Evalboards.ch1.numberOfMotors       = TMC5271_MOTORS;
-	Evalboards.ch1.VMMin                = VM_MIN;
-	Evalboards.ch1.VMMax                = VM_MAX;
-	Evalboards.ch1.deInit               = deInit;
+    // Disable CLK output -> use internal 12 MHz clock
+    //  Switchable via user function
 
-	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
+    init_comm(activeBus);
+
+    Evalboards.ch1.config->reset        = reset;
+    Evalboards.ch1.config->restore      = restore;
+    Evalboards.ch1.config->state        = CONFIG_RESET;
+
+    TMC5271.velocity = 0;
+    TMC5271.oldX = 0;
+
+    TMC5271.config               = Evalboards.ch1.config;
+    TMC5271.config->callback     = NULL;
+    TMC5271.config->channel      = 0;
+    TMC5271.config->configIndex  = 0;
+    TMC5271.config->state        = CONFIG_READY;
+
+    for(uint8_t motor = 0; motor < TMC5271_MOTORS; motor++)
+    {
+        vmax_position[motor] = 0;
+    }
+
+    Evalboards.ch1.rotate               = rotate;
+    Evalboards.ch1.right                = right;
+    Evalboards.ch1.left                 = left;
+    Evalboards.ch1.stop                 = stop;
+    Evalboards.ch1.GAP                  = GAP;
+    Evalboards.ch1.SAP                  = SAP;
+    Evalboards.ch1.moveTo               = moveTo;
+    Evalboards.ch1.moveBy               = moveBy;
+    Evalboards.ch1.writeRegister        = writeRegister;
+    Evalboards.ch1.readRegister         = readRegister;
+    Evalboards.ch1.periodicJob          = periodicJob;
+    Evalboards.ch1.userFunction         = userFunction;
+    Evalboards.ch1.getMeasuredSpeed     = getMeasuredSpeed;
+    Evalboards.ch1.enableDriver         = enableDriver;
+    Evalboards.ch1.checkErrors          = checkErrors;
+    Evalboards.ch1.numberOfMotors       = TMC5271_MOTORS;
+    Evalboards.ch1.VMMin                = VM_MIN;
+    Evalboards.ch1.VMMax                = VM_MAX;
+    Evalboards.ch1.deInit               = deInit;
+
+    enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 
 
 };
