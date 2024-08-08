@@ -35,7 +35,7 @@ void tmc2262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 
 // Stepdir precision: 2^17 -> 17 digits of precision
 #define STEPDIR_PRECISION (1 << 17)
-
+#define DEFAULT_ICID 0
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 #define TMC2262_RAMDEBUG_TIMER TIMER_CHANNEL_1
 #elif defined(LandungsbrueckeV3)
@@ -293,27 +293,27 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 14:
 		// SW_MODE Register
 		if(readWrite == READ) {
-			readRegister(motor, TMC2262_SW_MODE, value);
+			readRegister(DEFAULT_ICID, TMC2262_SW_MODE, value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC2262_SW_MODE, *value);
+			writeRegister(DEFAULT_ICID, TMC2262_SW_MODE, *value);
 		}
 		break;
 	case 26:
 		// Speed threshold for high speed mode
 		if(readWrite == READ) {
-			readRegister(motor, TMC2262_THIGH, &buffer);
+			readRegister(DEFAULT_ICID, TMC2262_THIGH, &buffer);
 			*value = MIN(0xFFFFF, (1 << 24) / ((buffer)? buffer : 1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value:1));
-			writeRegister(motor, TMC2262_THIGH, *value);
+			writeRegister(DEFAULT_ICID, TMC2262_THIGH, *value);
 		}
 		break;
 	case 27:
 		// Minimum speed for switching to dcStep
 		if(readWrite == READ) {
-			readRegister(motor, TMC2262_TUDCSTEP, value);
+			readRegister(DEFAULT_ICID, TMC2262_TUDCSTEP, value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC2262_TUDCSTEP, *value);
+			writeRegister(DEFAULT_ICID, TMC2262_TUDCSTEP, *value);
 		}
 		break;
 	case 30:
@@ -413,7 +413,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 165:
 		// Chopper hysteresis end / fast decay time
-		readRegister(motor, TMC2262_CHOPCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC2262_CHOPCONF, &buffer);
 		if(readWrite == READ) {
 			if(buffer & (1 << TMC2262_CHM_SHIFT))
 			{
@@ -573,38 +573,38 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			{
 				*value = 0x000FFFFF;
 			}
-			writeRegister(motor, TMC2262_TCOOLTHRS, *value);
+			writeRegister(DEFAULT_ICID, TMC2262_TCOOLTHRS, *value);
 		}
 		break;
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			readRegister(motor, TMC2262_TCOOLTHRS, &buffer);
+			readRegister(DEFAULT_ICID, TMC2262_TCOOLTHRS, &buffer);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			writeRegister(motor, TMC2262_TCOOLTHRS, *value);
+			writeRegister(DEFAULT_ICID, TMC2262_TCOOLTHRS, *value);
 		}
 		break;
 	case 185:
 		// Chopper synchronization
-		readRegister(motor, TMC2262_CHOPCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC2262_CHOPCONF, &buffer);
 		if(readWrite == READ) {
 			*value = (buffer >> 20) & 0x0F;
 		} else if(readWrite == WRITE) {
 			buffer &= ~(0x0F<<20);
 			buffer |= (*value & 0x0F) << 20;
-			writeRegister(motor, TMC2262_CHOPCONF, buffer);
+			writeRegister(DEFAULT_ICID, TMC2262_CHOPCONF, buffer);
 		}
 		break;
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
-			readRegister(motor, TMC2262_TPWMTHRS, &buffer);
+			readRegister(DEFAULT_ICID, TMC2262_TPWMTHRS, &buffer);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-			writeRegister(motor, TMC2262_TPWMTHRS, *value);
+			writeRegister(DEFAULT_ICID, TMC2262_TPWMTHRS, *value);
 		}
 		break;
 	case 191:
@@ -650,17 +650,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 209:
 		// Encoder position
 		if(readWrite == READ) {
-			readRegister(motor, TMC2262_X_ENC, value);
+			readRegister(DEFAULT_ICID, TMC2262_X_ENC, value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC2262_X_ENC, *value);
+			writeRegister(DEFAULT_ICID, TMC2262_X_ENC, *value);
 		}
 		break;
 	case 210:
 		// Encoder Resolution
 		if(readWrite == READ) {
-			readRegister(motor, TMC2262_ENC_CONST, value);
+			readRegister(DEFAULT_ICID, TMC2262_ENC_CONST, value);
 		} else if(readWrite == WRITE) {
-			writeRegister(motor, TMC2262_ENC_CONST, *value);
+			writeRegister(DEFAULT_ICID, TMC2262_ENC_CONST, *value);
 		}
 		break;
 	case 212:
@@ -779,14 +779,12 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	UNUSED(motor);
-	tmc2262_writeRegister(DEFAULT_MOTOR, (uint8_t) address, value);
+	tmc2262_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	UNUSED(motor);
-	*value = tmc2262_readRegister(DEFAULT_MOTOR, (uint8_t) address);
+	*value = tmc2262_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)
