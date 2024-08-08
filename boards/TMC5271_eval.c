@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -73,14 +73,11 @@ static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-
 static void init_comm(TMC5271BusType mode);
-
 static void periodicJob(uint32_t tick);
 static void checkErrors(uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
