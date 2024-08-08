@@ -11,26 +11,8 @@
 #include "hal/Timer.h"
 
 
-static SPIChannelTypeDef *TMC2262_SPIChannel;
-
-void tmc2262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
-{
-	UNUSED(icID);
-	if(Evalboards.ch1.fullCover != NULL)
-	{
-		// Takes care of the cover-mode
-		Evalboards.ch1.fullCover(&data[0], dataLength);
-	}
-	else
-	{
-	    TMC2262_SPIChannel->readWriteArray(data, dataLength);
-	}
-}
-
-
 #define VM_MIN         45   // VM[V/10] min
 #define VM_MAX         650  // VM[V/10] max
-
 #define TMC2262_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
 // Stepdir precision: 2^17 -> 17 digits of precision
@@ -42,6 +24,7 @@ void tmc2262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 #define TMC2262_RAMDEBUG_TIMER TIMER_CHANNEL_2
 #endif
 
+
 // TMC2262: TMC2262TypeDef struct, which represents one IC
 typedef struct
 {
@@ -51,6 +34,19 @@ typedef struct
     uint8_t slaveAddress;
 } TMC2262TypeDef;
 static TMC2262TypeDef TMC2262;
+
+typedef struct
+{
+    IOPinTypeDef *N_DRN_EN;
+    IOPinTypeDef *N_SLEEP;
+    IOPinTypeDef *DIAG0;
+    IOPinTypeDef *DIAG1;
+    IOPinTypeDef *STEP_INT;
+    IOPinTypeDef *DIR_INT;
+} PinsTypeDef;
+static PinsTypeDef Pins;
+
+
 static bool vMaxModified = false;
 static uint32_t vmax_position;
 //static uint32_t vMax		   = 1;
@@ -73,12 +69,9 @@ static void deInit(void);
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
-static TMC2262TypeDef TMC2262;
-
 
 // Helper function: Configure the next register.
 static void writeConfiguration(uint32_t tick)
-static inline TMC2262TypeDef *motorToIC(uint8_t motor)
 {
     uint8_t *ptr = &TMC2262.config->configIndex;
     static int32_t prevTick;
@@ -121,29 +114,23 @@ static inline TMC2262TypeDef *motorToIC(uint8_t motor)
         *ptr = 0;
         break;
     }
-	UNUSED(motor);
-	return &TMC2262;
 }
 
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
-{
-	UNUSED(channel);
+static SPIChannelTypeDef *TMC2262_SPIChannel;
 
-	return TMC2262_SPIChannel;
+void tmc2262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+    UNUSED(icID);
+    if(Evalboards.ch1.fullCover != NULL)
+    {
+        // Takes care of the cover-mode
+        Evalboards.ch1.fullCover(&data[0], dataLength);
+    }
+    else
+    {
+        TMC2262_SPIChannel->readWriteArray(data, dataLength);
+    }
 }
-
-
-typedef struct
-{
-	IOPinTypeDef *N_DRN_EN;
-	IOPinTypeDef *N_SLEEP;
-	IOPinTypeDef *DIAG0;
-	IOPinTypeDef *DIAG1;
-	IOPinTypeDef *STEP_INT;
-	IOPinTypeDef *DIR_INT;
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -795,6 +782,7 @@ static void periodicJob(uint32_t tick)
         {
             writeConfiguration(tick);
             return;
+        }
 		StepDir_periodicJob(motor);
 	}
 }
@@ -840,16 +828,13 @@ static uint8_t reset()
 
     TMC2262.config->state        = CONFIG_RESET;
     TMC2262.config->configIndex  = 0;
-<<<<<<< Updated upstream
-    return true;
-=======
 
->>>>>>> Stashed changes
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP_INT, Pins.DIR_INT, Pins.DIAG1);
 	StepDir_setVelocityMax(0, 100000);
 	StepDir_setAcceleration(0, 25000);
 	enableDriver(DRIVER_ENABLE);
+
 	return 1;
 }
 
@@ -865,6 +850,7 @@ static uint8_t restore()
 	StepDir_setPins(0, Pins.STEP_INT, Pins.DIR_INT, Pins.DIAG1);
 	StepDir_setVelocityMax(0, 100000);
 	StepDir_setAcceleration(0, 25000);
+
 	return 1;
 }
 
