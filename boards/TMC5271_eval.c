@@ -33,8 +33,16 @@ bool tmc5271_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, siz
 }
 #define DEFAULT_ICID  0
 
+// Typedefs
+typedef struct
 TMC5271BusType tmc5271_getBusType(uint16_t icID)
 {
+    ConfigurationTypeDef *config;
+    int32_t oldX;
+    int32_t velocity;
+    uint32_t oldTick;
+} TMC5271TypeDef;
+static TMC5271TypeDef TMC5271;
     UNUSED(icID);
 
     return activeBus;
