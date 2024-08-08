@@ -72,12 +72,55 @@ static void enableDriver(DriverState state);
 
 static TMC5262TypeDef TMC5262;
 
+// Helper function: Configure the next register.
+static void writeConfiguration(uint32_t tick)
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC5262_CRC(data, length) tmc_CRC8(data, length, 1)
 
 // Return the CRC8 of [length] bytes of data stored in the [data] array.
 uint8_t tmc5262_CRC8(uint8_t *data, size_t length)
 {
+    uint8_t *ptr = &TMC5262.config->configIndex;
+    static int32_t prevTick;
+    int32_t readData;
+
+    switch(*ptr){
+    case 0:
+        // Set PLL register to enable all the clocks and external oscillator
+        tmc5262_writeRegister(DEFAULT_ICID, TMC5262_PLL, 0x65FF);
+        (*ptr)++;
+        prevTick = tick;
+        break;
+    case 1:
+        if(tick - prevTick >= 1000)
+        {
+            // Clear the all the error flags by the PLL in [15:12]
+            tmc5262_writeRegister(DEFAULT_ICID, TMC5262_PLL, 0xF5FE);
+            // Read PLL back
+            readData = tmc5262_readRegister(DEFAULT_ICID, TMC5262_PLL);
+            readData = tmc5262_readRegister(DEFAULT_ICID, TMC5262_PLL);
+            if((readData & 0xF000) != 0)
+            {
+                *ptr = 0;
+                break;
+            }
+            (*ptr)++;
+        }
+        break;
+    case 2:
+        //Reading ChopConf register
+        readData = tmc5262_readRegister(DEFAULT_ICID, TMC5262_CHOPCONF);
+        // Set TOFF field to enable the driver
+        tmc5262_writeRegister(DEFAULT_ICID, TMC5262_CHOPCONF, (readData & 0xFFFFFFF0) | 0x3);
+        (*ptr)++;
+        break;
+    case 3:
+        // Write to GSTAT register to clear the flags
+        tmc5262_writeRegister(DEFAULT_ICID, TMC5262_GSTAT, 0x3F);
+        TMC5262.config->state = CONFIG_READY;
+        *ptr = 0;
+        break;
+    }
 	return tmc_CRC8(data, length, 1);
 	//TMC5262_CRC(data, length);
 }
@@ -106,44 +149,52 @@ static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	tmc5262_rotate(motorToIC(motor), velocity);
+    if(motor >= TMC5262_MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	return 0;
+    tmc5262_rotateMotor(DEFAULT_ICID, motor, velocity);
+
+	return TMC_ERROR_NONE;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	tmc5262_right(motorToIC(motor), velocity);
-
-	return 0;
+	return rotate(motor, velocity);
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	tmc5262_left(motorToIC(motor), velocity);
+    return rotate(motor, -velocity);
 
-	return 0;
 }
 
 static uint32_t stop(uint8_t motor)
 {
-	tmc5262_stop(motorToIC(motor));
+	return rotate(motor, 0);
 
-	return 0;
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	tmc5262_moveTo(motorToIC(motor), position, vmax_position);
+    tmc5262_writeRegister(DEFAULT_ICID, TMC5262_RAMPMODE, TMC5262_MODE_POSITION);
 
-	return 0;
+    // VMAX also holds the target velocity in velocity mode.
+    // Re-write the position mode maximum velocity here.
+    tmc5262_writeRegister(DEFAULT_ICID, TMC5262_VMAX, vmax_position);
+
+    tmc5262_writeRegister(DEFAULT_ICID, TMC5262_XTARGET, position);
+
+	return TMC_ERROR_NONE;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	tmc5262_moveBy(motorToIC(motor), ticks, vmax_position);
+    // determine actual position and add numbers of ticks to move
+    *ticks += tmc5262_readRegister(DEFAULT_ICID, TMC5262_XACTUAL);
 
-	return 0;
+    moveTo(motor, *ticks);
+
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
@@ -892,7 +943,25 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	tmc5262_periodicJob(&TMC5262, tick);
+    if(TMC5262.config->state != CONFIG_READY)
+    {
+        writeConfiguration(tick);
+        return;
+    }
+
+    int32_t XActual;
+    uint32_t tickDiff;
+
+    // Calculate velocity v = dx/dt
+    if((tickDiff = tick - TMC5262.oldTick) >= 5)
+    {
+        XActual = tmc5262_readRegister(DEFAULT_ICID, TMC5262_XACTUAL);
+        // ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
+        TMC5262.velocity = (int32_t) ((float32_t) ((XActual - TMC5262.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+
+        TMC5262.oldX     = XActual;
+        TMC5262.oldTick  = tick;
+    }
 }
 
 static void checkErrors(uint32_t tick)
@@ -978,15 +1047,26 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	if(!tmc5262_readRegister(DEFAULT_MOTOR, TMC5262_VACTUAL))
-		tmc5262_reset(&TMC5262);
+	if(!tmc5262_readRegister(DEFAULT_ICID, TMC5262_VACTUAL))
+	{
+	    if(TMC5262.config->state != CONFIG_READY)
+	        return false;
 
+	    TMC5262.config->state        = CONFIG_RESET;
+	    TMC5262.config->configIndex  = 0;
+	    return true;
+	}
 	return 1;
 }
 
 static uint8_t restore()
 {
-	return tmc5262_restore(&TMC5262);
+    if(TMC5262.config->state != CONFIG_READY)
+        return false;
+
+    TMC5262.config->state        = CONFIG_RESTORE;
+    TMC5262.config->configIndex  = 0;
+    return true;
 }
 
 static void enableDriver(DriverState state)
@@ -1038,7 +1118,14 @@ void TMC5262_init(void)
 	Evalboards.ch1.config->restore      = restore;
 	Evalboards.ch1.config->state        = CONFIG_RESET;
 
-	tmc5262_init(&TMC5262, 0, Evalboards.ch1.config);
+    TMC5262.velocity  = 0;
+    TMC5262.oldTick   = 0;
+    TMC5262.oldX      = 0;
+
+    TMC5262.config               = Evalboards.ch1.config;
+    TMC5262.config->channel = 0;
+    TMC5262.config->configIndex  = 0;
+    TMC5262.config->state        = CONFIG_READY;
 
 	vmax_position = 0;
 
