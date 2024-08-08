@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright © 2017 TRINAMIC Motion Control GmbH & Co. KG
+* Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
 * Copyright © 2024 Analog Devices Inc. All Rights Reserved.
@@ -13,15 +13,12 @@
 #include "hal/Timer.h"
 
 
-
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
-
 #define VM_MIN         45   // VM[V/10] min
 #define VM_MAX         650  // VM[V/10] max
 #define DEFAULT_ICID  0
-
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 #define TMC5262_RAMDEBUG_TIMER TIMER_CHANNEL_1
@@ -38,6 +35,7 @@ typedef struct
     uint8_t slaveAddress;
 } TMC5262TypeDef;
 static TMC5262TypeDef TMC5262;
+
 typedef struct
 {
     IOPinTypeDef *N_DRN_EN;
@@ -68,12 +66,10 @@ static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-
 static void periodicJob(uint32_t tick);
 static void checkErrors(uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
@@ -129,7 +125,6 @@ void tmc5262_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
     UNUSED(icID);
     TMC5262_SPIChannel->readWriteArray(data, dataLength);
 }
-
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
