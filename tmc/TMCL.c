@@ -227,6 +227,7 @@ static void checkIDs(void);
 static void SoftwareReset(void);
 static void GetVersion(void);
 static void GetInput(void);
+static void SetOutput(void);
 static void HandleWlanCommand(void);
 static void handleRamDebug(void);
 static void handleOTP(void);
@@ -338,6 +339,9 @@ void ExecuteActualCommand()
 	case TMCL_GGP:
 		GetGlobalParameter();
 		break;
+    case TMCL_SIO:
+        SetOutput();
+        break;
 	case TMCL_GIO:
 		GetInput();
 		break;
@@ -1045,6 +1049,13 @@ static void GetVersion(void)
 	else if(ActualCommand.Type == NUMBER_OF_MOTORS){
 		ActualReply.Value.UInt32 = Evalboards.ch1.numberOfMotors + Evalboards.ch2.numberOfMotors;
 	}
+}
+
+static void SetOutput(void)
+{
+    if((Evalboards.ch1.SIO(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32) == TMC_ERROR_NONE)
+        || (Evalboards.ch2.SIO(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32) == TMC_ERROR_NONE))
+        return;
 }
 
 static void GetInput(void)
