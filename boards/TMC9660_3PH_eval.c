@@ -129,6 +129,57 @@ static uint8_t ramDebug(uint8_t type, uint8_t motor, int32_t *value)
 	return status;
 }
 
+static uint32_t SIO(uint8_t type, uint8_t motor, int32_t value)
+{
+    UNUSED(motor);
+
+    switch(type) {
+    case 0: // HOLDN_FLASH
+        HAL.IOs->config->setToState(Pins.HOLDN_FLASH, (value) ? IOS_HIGH : IOS_LOW);
+        break;
+    case 1: // RESET_LB
+        HAL.IOs->config->setToState(Pins.RESET_LB, (value) ? IOS_HIGH : IOS_LOW);
+        break;
+    case 2: // DRV_ENABLE
+        HAL.IOs->config->setToState(Pins.DRV_ENABLE, (value) ? IOS_HIGH : IOS_LOW);
+        break;
+    case 3: // WAKEN_LB
+        HAL.IOs->config->setToState(Pins.WAKEN_LB, (value) ? IOS_HIGH : IOS_LOW);
+        break;
+    default:
+        return TMC_ERROR_TYPE;
+    }
+
+    return TMC_ERROR_NONE;
+}
+
+static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
+{
+    UNUSED(motor);
+
+    switch(type) {
+    case 0: // HOLDN_FLASH
+        *value = HAL.IOs->config->getState(Pins.HOLDN_FLASH);
+        break;
+    case 1: // RESET_LB
+        *value = HAL.IOs->config->getState(Pins.RESET_LB);
+        break;
+    case 2: // DRV_ENABLE
+        *value = HAL.IOs->config->getState(Pins.DRV_ENABLE);
+        break;
+    case 3: // WAKEN_LB
+        *value = HAL.IOs->config->getState(Pins.WAKEN_LB);
+        break;
+    case 4: // FAULTN_LB
+        *value = HAL.IOs->config->getState(Pins.FAULTN_LB);
+        break;
+    default:
+        return TMC_ERROR_TYPE;
+    }
+
+    return TMC_ERROR_NONE;
+}
+
 static uint32_t SGP(uint8_t type, uint8_t motor, int32_t value)
 {
 	uint8_t status;
@@ -248,10 +299,10 @@ void TMC9660_3PH_init(void)
     Pins.UART_TX               = &HAL.IOs->pins->DIO11; //Pin22
 #endif
 
-//    HAL.IOs->config->toOutput(Pins.SPI_EN);
-//    HAL.IOs->config->toOutput(Pins.I2C_EN);
-//    HAL.IOs->config->toOutput(Pins.HOLD_FLASHN);
-//    HAL.IOs->config->toOutput(Pins.RESETN);
+    HAL.IOs->config->toOutput(Pins.HOLDN_FLASH);
+    HAL.IOs->config->toOutput(Pins.WAKEN_LB);
+    HAL.IOs->config->toOutput(Pins.RESET_LB);
+    HAL.IOs->config->toOutput(Pins.DRV_ENABLE);
 
     SPI.init();
     TMC9660_3PH_SPIChannel = &HAL.SPI->ch1;
@@ -264,10 +315,13 @@ void TMC9660_3PH_init(void)
 	Evalboards.ch1.GGP                  = GGP;
 	Evalboards.ch1.SGP                  = SGP;
     Evalboards.ch1.userFunction         = userFunction;
-    Evalboards.ch1.ramDebug            = ramDebug;
+    Evalboards.ch1.ramDebug             = ramDebug;
 	Evalboards.ch1.writeRegister        = writeRegister;
 	Evalboards.ch1.readRegister         = readRegister;
 	Evalboards.ch1.getInfo              = getInfo;
+    Evalboards.ch1.SIO                  = SIO;
+    Evalboards.ch1.GIO                  = GIO;
+
 
 
 }
