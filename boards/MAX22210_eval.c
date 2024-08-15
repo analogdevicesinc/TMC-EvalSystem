@@ -272,6 +272,14 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			StepDir_setStallGuardThreshold(motor, *value);
 		}
 		break;
+    case 207:
+        // ROFF
+        if (readWrite == READ) {
+            *value = (HAL.IOs->config->getState(Pins.ROFF_CTRL) == IOS_HIGH) ? 1 : 0;
+        } else {
+            HAL.IOs->config->setToState(Pins.ROFF_CTRL, (*value) ? IOS_HIGH : IOS_LOW);
+        }
+        break;
 	default:
 		errors |= TMC_ERROR_TYPE;
 		break;
