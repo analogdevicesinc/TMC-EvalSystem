@@ -776,15 +776,11 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	for(uint8_t motor = 0; motor < TMC2262_MOTORS; motor++)
-	{
-	    if(TMC2262.config->state != CONFIG_READY)
-        {
-            writeConfiguration(tick);
-            return;
-        }
-		StepDir_periodicJob(motor);
-	}
+    if(TMC2262.config->state != CONFIG_READY)
+    {
+        writeConfiguration(tick);
+    }
+    StepDir_periodicJob(0);
 }
 
 static void checkErrors(uint32_t tick)

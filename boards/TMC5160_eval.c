@@ -828,27 +828,24 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick, uint8_t motor)
 {
-    for(uint8_t motor = 0; motor < TMC5160_MOTORS; motor++)
+    if(TMC5160.config->state != CONFIG_READY)
     {
-        if(TMC5160.config->state != CONFIG_READY)
-            {
-                writeConfiguration();
-                return;
-            }
+        writeConfiguration();
+        return;
+    }
 
-            int32_t XActual;
-            uint32_t tickDiff;
+    int32_t XActual;
+    uint32_t tickDiff;
 
-            // Calculate velocity v = dx/dt
-            if((tickDiff = tick - TMC5160.oldTick) >= 5)
-            {
-                XActual = tmc5160_readRegister(motor, TMC5160_XACTUAL);
-                // ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
-                TMC5160.velocity = (uint32_t) ((float32_t) ((XActual - TMC5160.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+    // Calculate velocity v = dx/dt
+    if((tickDiff = tick - TMC5160.oldTick) >= 5)
+    {
+        XActual = tmc5160_readRegister(motor, TMC5160_XACTUAL);
+        // ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
+        TMC5160.velocity = (uint32_t) ((float32_t) ((XActual - TMC5160.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
 
-                TMC5160.oldX     = XActual;
-                TMC5160.oldTick  = tick;
-            }
+        TMC5160.oldX     = XActual;
+        TMC5160.oldTick  = tick;
     }
 }
 

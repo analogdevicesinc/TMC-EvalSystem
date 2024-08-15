@@ -736,7 +736,6 @@ static void periodicJob(uint32_t tick)
     if(TMC2209.config->state != CONFIG_READY)
     {
         writeConfiguration();
-        return;
     }
 
     StepDir_periodicJob(0);

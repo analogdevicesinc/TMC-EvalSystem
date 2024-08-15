@@ -740,30 +740,26 @@ static void tmc5072_writeConfiguration()
 
 static void periodicJob(uint32_t tick)
 {
-	for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
-	{
-		uint32_t tickDiff;
+    if(TMC5072.config->state != CONFIG_READY)
+    {
+        tmc5072_writeConfiguration();
+        return;
+    }
 
-			if(TMC5072.config->state != CONFIG_READY)
-			{
-				tmc5072_writeConfiguration();
-				return;
-			}
+    int32_t x;
+    uint32_t tickDiff;
 
-			int32_t x;
-
-			// Calculate velocity v = dx/dt
-			if((tickDiff = tick - TMC5072.oldTick) >= 5)
-			{
-				for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
-				{
-					x = tmc5072_readRegister(DEFAULT_ICID, TMC5072_XACTUAL(motor));
-					TMC5072.velocity[motor] = (uint32_t) ((float32_t) ((x - TMC5072.oldX[motor]) / (float32_t) tickDiff) * (float32_t) 1048.576);
-					TMC5072.oldX[motor] = x;
-				}
-				TMC5072.oldTick  = tick;
-			}
-	}
+    // Calculate velocity v = dx/dt
+    if((tickDiff = tick - TMC5072.oldTick) >= 5)
+    {
+        for(uint8_t motor = 0; motor < TMC5072_MOTORS; motor++)
+        {
+            x = tmc5072_readRegister(DEFAULT_ICID, TMC5072_XACTUAL(motor));
+            TMC5072.velocity[motor] = (uint32_t) ((float32_t) ((x - TMC5072.oldX[motor]) / (float32_t) tickDiff) * (float32_t) 1048.576);
+            TMC5072.oldX[motor] = x;
+        }
+        TMC5072.oldTick  = tick;
+    }
 }
 
 static void checkErrors(uint32_t tick)
