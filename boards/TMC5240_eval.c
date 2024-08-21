@@ -15,6 +15,8 @@ static uint8_t nodeAddress = 0;
 static SPIChannelTypeDef *TMC5240_SPIChannel;
 static UART_Config *TMC5240_UARTChannel;
 
+// Typedefs
+typedef struct
 void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
     UNUSED(icID);
@@ -23,6 +25,12 @@ void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 
 bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
+    ConfigurationTypeDef *config;
+    int32_t velocity, oldX;
+    uint32_t oldTick;
+    uint8_t slaveAddress;
+} TMC5240TypeDef;
+static TMC5240TypeDef TMC5240;
     UNUSED(icID);
     int32_t status = UART_readWrite(TMC5240_UARTChannel, data, writeLength, readLength);
     if(status == -1)
