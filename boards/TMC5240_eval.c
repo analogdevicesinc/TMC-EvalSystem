@@ -10,20 +10,9 @@
 #include "Board.h"
 #include "tmc/ic/TMC5240/TMC5240.h"
 
-static TMC5240BusType activeBus = IC_BUS_SPI;
-static uint8_t nodeAddress = 0;
-static SPIChannelTypeDef *TMC5240_SPIChannel;
-static UART_Config *TMC5240_UARTChannel;
 
 // Typedefs
 typedef struct
-void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
-{
-    UNUSED(icID);
-    TMC5240_SPIChannel->readWriteArray(data, dataLength);
-}
-
-bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
     ConfigurationTypeDef *config;
     int32_t velocity, oldX;
@@ -31,108 +20,6 @@ bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, siz
     uint8_t slaveAddress;
 } TMC5240TypeDef;
 static TMC5240TypeDef TMC5240;
-    UNUSED(icID);
-    int32_t status = UART_readWrite(TMC5240_UARTChannel, data, writeLength, readLength);
-    if(status == -1)
-        return false;
-    return true;
-}
-
-TMC5240BusType tmc5240_getBusType(uint16_t icID)
-{
-    UNUSED(icID);
-
-    return activeBus;
-}
-
-uint8_t tmc5240_getNodeAddress(uint16_t icID)
-{
-    UNUSED(icID);
-
-    return nodeAddress;
-}
-
-
-#define ERRORS_VM        (1<<0)
-#define ERRORS_VM_UNDER  (1<<1)
-#define ERRORS_VM_OVER   (1<<2)
-
-#define VM_MIN         50   // VM[V/10] min
-#define VM_MAX         660  // VM[V/10] max
-
-//#define TMC5240_TIMEOUT 50 // UART Timeout in ms
-
-static bool vMaxModified = false;
-static uint32_t vmax_position;
-//static uint32_t vMax         = 1;
-
-static bool noRegResetnSLEEP = false;
-static uint32_t nSLEEPTick;
-static uint32_t targetAddressUart = 0;
-//uint8_t tmc5240_CRC8(uint8_t *data, size_t length);
-
-static uint32_t right(uint8_t motor, int32_t velocity);
-static uint32_t left(uint8_t motor, int32_t velocity);
-static uint32_t rotate(uint8_t motor, int32_t velocity);
-static uint32_t stop(uint8_t motor);
-static uint32_t moveTo(uint8_t motor, int32_t position);
-static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
-static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-
-static void init_comm(TMC5240BusType mode);
-
-static void periodicJob(uint32_t tick);
-static void checkErrors(uint32_t tick);
-static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
-static uint8_t reset();
-static uint8_t restore();
-static void enableDriver(DriverState state);
-
-static TMC5240TypeDef TMC5240;
-
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC5240_CRC(data, length) tmc_CRC8(data, length, 1)
-
-static void writeConfiguration()
-// When using multiple ICs you can map them here
-static inline TMC5240TypeDef *motorToIC(uint8_t motor)
-{
-    uint8_t *ptr = &TMC5240.config->configIndex;
-    const int32_t *settings;
-
-    settings = tmc5240_sampleRegisterPreset;
-    // Find the next resettable register
-    while((*ptr < TMC5240_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5240_registerAccess[*ptr]))
-    {
-        (*ptr)++;
-    }
-
-    if(*ptr < TMC5240_REGISTER_COUNT)
-    {
-        tmc5240_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
-        (*ptr)++;
-    }
-    else // Finished configuration
-    {
-        TMC5240.config->state = CONFIG_READY;
-    }
-    UNUSED(motor);
-    return &TMC5240;
-}
-
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc5240_CRC8(uint8_t *data, size_t length)
-{
-    return tmc_CRC8(data, length, 1);
-    //TMC5240_CRC(data, length);
-}
-
 
 typedef struct
 {
@@ -155,8 +42,100 @@ typedef struct
     IOPinTypeDef  *IREF_R3;
 
 } PinsTypeDef;
-
 static PinsTypeDef Pins;
+
+
+#define ERRORS_VM        (1<<0)
+#define ERRORS_VM_UNDER  (1<<1)
+#define ERRORS_VM_OVER   (1<<2)
+#define VM_MIN         50   // VM[V/10] min
+#define VM_MAX         660  // VM[V/10] max
+
+
+// Swtich between UART and SPI here
+static TMC5240BusType activeBus = IC_BUS_SPI;
+
+static uint8_t nodeAddress = 0;
+static SPIChannelTypeDef *TMC5240_SPIChannel;
+static UART_Config *TMC5240_UARTChannel;
+static bool vMaxModified = false;
+static uint32_t vmax_position;
+//static uint32_t vMax         = 1;
+static bool noRegResetnSLEEP = false;
+static uint32_t nSLEEPTick;
+static uint32_t targetAddressUart = 0;
+
+
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
+static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
+static void init_comm(TMC5240BusType mode);
+static void periodicJob(uint32_t tick);
+static void checkErrors(uint32_t tick);
+static void deInit(void);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+static uint8_t reset();
+static uint8_t restore();
+static void enableDriver(DriverState state);
+
+
+static void writeConfiguration()
+{
+    uint8_t *ptr = &TMC5240.config->configIndex;
+    const int32_t *settings;
+
+    settings = tmc5240_sampleRegisterPreset;
+    // Find the next resettable register
+    while((*ptr < TMC5240_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5240_registerAccess[*ptr]))
+    {
+        (*ptr)++;
+    }
+
+    if(*ptr < TMC5240_REGISTER_COUNT)
+    {
+        tmc5240_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        TMC5240.config->state = CONFIG_READY;
+    }
+}
+
+void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+    UNUSED(icID);
+    TMC5240_SPIChannel->readWriteArray(data, dataLength);
+}
+
+bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+    UNUSED(icID);
+    int32_t status = UART_readWrite(TMC5240_UARTChannel, data, writeLength, readLength);
+    if(status == -1)
+        return false;
+    return true;
+}
+
+TMC5240BusType tmc5240_getBusType(uint16_t icID)
+{
+    UNUSED(icID);
+    return activeBus;
+}
+
+uint8_t tmc5240_getNodeAddress(uint16_t icID)
+{
+    UNUSED(icID);
+    return nodeAddress;
+}
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -1271,53 +1250,53 @@ static void init_comm(TMC5240BusType mode)
 {
     TMC5240_UARTChannel = HAL.UART;
     switch(mode) {
-    case IC_BUS_UART:
+        case IC_BUS_UART:
 
-        HAL.IOs->config->reset(Pins.SCK);
-        HAL.IOs->config->reset(Pins.SDI);
-        HAL.IOs->config->reset(Pins.SDO);
-        HAL.IOs->config->reset(Pins.CS);
-        HAL.IOs->config->toOutput(Pins.SCK);
-        HAL.IOs->config->toOutput(Pins.SDI);
-        HAL.IOs->config->toOutput(Pins.SDO);
-        HAL.IOs->config->toOutput(Pins.CS);
-        HAL.IOs->config->setLow(Pins.SCK);
-        HAL.IOs->config->setLow(Pins.SDI);
-        HAL.IOs->config->setLow(Pins.SDO);
-        HAL.IOs->config->setLow(Pins.CS);
+            HAL.IOs->config->reset(Pins.SCK);
+            HAL.IOs->config->reset(Pins.SDI);
+            HAL.IOs->config->reset(Pins.SDO);
+            HAL.IOs->config->reset(Pins.CS);
+            HAL.IOs->config->toOutput(Pins.SCK);
+            HAL.IOs->config->toOutput(Pins.SDI);
+            HAL.IOs->config->toOutput(Pins.SDO);
+            HAL.IOs->config->toOutput(Pins.CS);
+            HAL.IOs->config->setLow(Pins.SCK);
+            HAL.IOs->config->setLow(Pins.SDI);
+            HAL.IOs->config->setLow(Pins.SDO);
+            HAL.IOs->config->setLow(Pins.CS);
 
-        HAL.IOs->config->setHigh(Pins.UART_MODE);
-        TMC5240_UARTChannel->pinout = UART_PINS_2;
-        TMC5240_UARTChannel->rxtx.init();
-        break;
-    case IC_BUS_SPI:
+            HAL.IOs->config->setHigh(Pins.UART_MODE);
+            TMC5240_UARTChannel->pinout = UART_PINS_2;
+            TMC5240_UARTChannel->rxtx.init();
+            break;
+        case IC_BUS_SPI:
 
-        HAL.IOs->config->reset(Pins.SCK);
-        HAL.IOs->config->reset(Pins.SDI);
-        HAL.IOs->config->reset(Pins.SDO);
-        HAL.IOs->config->reset(Pins.CS);
+            HAL.IOs->config->reset(Pins.SCK);
+            HAL.IOs->config->reset(Pins.SDI);
+            HAL.IOs->config->reset(Pins.SDO);
+            HAL.IOs->config->reset(Pins.CS);
 
-        SPI.init();
-        HAL.IOs->config->setLow(Pins.UART_MODE);
-        TMC5240_UARTChannel->rxtx.deInit();
-        TMC5240_SPIChannel = &HAL.SPI->ch1;
-        TMC5240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
-        break;
-    case IC_BUS_WLAN: // unused
-    default:
+            SPI.init();
+            HAL.IOs->config->setLow(Pins.UART_MODE);
+            TMC5240_UARTChannel->rxtx.deInit();
+            TMC5240_SPIChannel = &HAL.SPI->ch1;
+            TMC5240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+            break;
+        case IC_BUS_WLAN: // unused
+        default:
 
-        HAL.IOs->config->reset(Pins.SCK);
-        HAL.IOs->config->reset(Pins.SDI);
-        HAL.IOs->config->reset(Pins.SDO);
-        HAL.IOs->config->reset(Pins.CS);
+            HAL.IOs->config->reset(Pins.SCK);
+            HAL.IOs->config->reset(Pins.SDI);
+            HAL.IOs->config->reset(Pins.SDO);
+            HAL.IOs->config->reset(Pins.CS);
 
-        SPI.init();
-        HAL.IOs->config->setLow(Pins.UART_MODE);
-        TMC5240_UARTChannel->rxtx.deInit();
-        TMC5240_SPIChannel = &HAL.SPI->ch1;
-        TMC5240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
-        activeBus = IC_BUS_SPI;
-        break;
+            SPI.init();
+            HAL.IOs->config->setLow(Pins.UART_MODE);
+            TMC5240_UARTChannel->rxtx.deInit();
+            TMC5240_SPIChannel = &HAL.SPI->ch1;
+            TMC5240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+            activeBus = IC_BUS_SPI;
+            break;
     }
 }
 
@@ -1366,18 +1345,10 @@ void TMC5240_init(void)
     //setPinConfiguration(Pins.SWP_DIAG1);
 
 
-
-
     HAL.IOs->config->toInput(Pins.REFL_UC);
     HAL.IOs->config->toInput(Pins.REFR_UC);
 
-    // Disable CLK output -> use internal 12 MHz clock
-    //  Switchable via user function
-
-
-
     init_comm(activeBus);
-    //init_comm(IC_BUS_UART);
 
     Evalboards.ch1.config->reset        = reset;
     Evalboards.ch1.config->restore      = restore;
