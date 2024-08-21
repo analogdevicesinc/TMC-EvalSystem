@@ -79,8 +79,8 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
 static void init_comm(TMC5240BusType mode);
@@ -214,815 +214,815 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
     switch(type)
     {
-    case 0:
-        // Target position
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_XTARGET, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_XTARGET, *value);
-        }
-        break;
-    case 1:
-        // Actual position
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_XACTUAL, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_XACTUAL, *value);
-        }
-        break;
-    case 2:
-        // Target speed
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_VMAX, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_VMAX, abs(*value));
-            vMaxModified = true;
-        }
-        break;
-    case 3:
-        // Actual speed
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_VACTUAL, value);
-            *value = CAST_Sn_TO_S32(*value, 24);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 4:
-        // Maximum speed
-        if(readWrite == READ) {
-            *value = vmax_position;
-        } else if(readWrite == WRITE) {
-            vmax_position = abs(*value);
-            if(field_read(motor, TMC5240_RAMPMODE_FIELD) == TMC5240_MODE_POSITION)
-                writeRegister(motor, TMC5240_VMAX, abs(*value));
-        }
-        break;
-    case 5:
-        // Maximum acceleration
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_AMAX, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_AMAX, *value);
-        }
-        break;
-    case 6:
-        // Maximum current
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_IRUN_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_IRUN_FIELD, *value);
-        }
-        break;
-    case 7:
-        // Standby current
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_IHOLD_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_IHOLD_FIELD, *value);
-        }
-        break;
-    case 8:
-        // Position reached flag
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_POSITION_REACHED_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 10:
-        // Right endstop
-        if(readWrite == READ) {
-            *value = !field_read(motor, TMC5240_STATUS_STOP_R_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 11:
-        // Left endstop
-        if(readWrite == READ) {
-            *value = !field_read(motor, TMC5240_STATUS_STOP_L_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 12:
-        // Automatic right stop
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_STOP_R_ENABLE_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_STOP_R_ENABLE_FIELD, *value);
-        }
-        break;
-    case 13:
-        // Automatic left stop
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_STOP_L_ENABLE_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_STOP_L_ENABLE_FIELD, *value);
-        }
-        break;
-    case 14:
-        // SW_MODE Register
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_SWMODE, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_SWMODE, *value);
-        }
-        break;
-    case 15:
-        // Maximum Deceleration
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_DMAX, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_DMAX, *value);
-        }
-        break;
-    case 16:
-        // Velocity VSTART
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_VSTART, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_VSTART, *value);
-        }
-        break;
-    case 17:
-        // Acceleration A1
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_A1, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_A1, *value);
-        }
-        break;
-    case 18:
-        // Velocity V1
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_V1, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_V1, *value);
-        }
-        break;
-    case 19:
-        // Deceleration D1
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_D1, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_D1, *value);
-        }
-        break;
-    case 20:
-        // Velocity VSTOP
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_VSTOP, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_VSTOP, *value);
-        }
-        break;
-    case 21:
-        // Waiting time after ramp down
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_TZEROWAIT, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_TZEROWAIT, *value);
-        }
-        break;
-    case 22:
-        // Velocity V2
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_V2, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_V2, *value);
-        }
-        break;
-    case 23:
-        // Deceleration D2
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_D2, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_D2, *value);
-        }
-        break;
-    case 24:
-        // Acceleration A2
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_A2, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_A2, *value);
-        }
-        break;
-    case 25:
-        // TVMAX
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_TVMAX, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_TVMAX, *value);
-        }
-        break;
-
-
-    case 26:
-        // Speed threshold for high speed mode
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_THIGH, &buffer);
-            *value = MIN(0xFFFFF, (1 << 24) / ((buffer)? buffer : 1));
-        } else if(readWrite == WRITE) {
-            *value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value:1));
-            writeRegister(motor, TMC5240_THIGH, *value);
-        }
-        break;
-    case 27:
-        // Minimum speed for switching to dcStep
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_VDCMIN, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_VDCMIN, *value);
-        }
-        break;
-    case 28:
-        // High speed chopper mode
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_VHIGHCHM_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_VHIGHCHM_FIELD, *value);
-        }
-        break;
-    case 29:
-        // High speed fullstep mode
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_VHIGHFS_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_VHIGHFS_FIELD, *value);
-        }
-        break;
-    case 30:
-        // Measured Speed
-        if(readWrite == READ) {
-            *value = TMC5240.velocity;
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 34:
-        // Internal RSense
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_REFR_DIR_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_REFR_DIR_FIELD, *value);
-        }
-        break;
-    case 35:
-        // Global current scaler
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_GLOBAL_SCALER_FIELD);
-        } else if(readWrite == WRITE) {
-            if(*value > 31)
-                field_write(motor, TMC5240_GLOBAL_SCALER_FIELD, *value);
-            else
-                field_write(motor, TMC5240_GLOBAL_SCALER_FIELD, 0);
-        }
-        break;
-    case 140:
-        // Microstep Resolution
-        if(readWrite == READ) {
-            *value = 0x100 >> field_read(motor, TMC5240_MRES_FIELD);
-        } else if(readWrite == WRITE) {
-            switch(*value)
-            {
-                case 1:    *value = 8;   break;
-                case 2:    *value = 7;   break;
-                case 4:    *value = 6;   break;
-                case 8:    *value = 5;   break;
-                case 16:   *value = 4;   break;
-                case 32:   *value = 3;   break;
-                case 64:   *value = 2;   break;
-                case 128:  *value = 1;   break;
-                case 256:  *value = 0;   break;
-                default:   *value = -1;  break;
-            }
-
-            if(*value != -1)
-            {
-                field_write(motor, TMC5240_MRES_FIELD, *value);
-            }
-            else
-            {
-                errors |= TMC_ERROR_VALUE;
-            }
-        }
-        break;
-    case 162:
-        // Chopper blank time
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_TBL_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_TBL_FIELD, *value);
-        }
-        break;
-    case 163:
-        // Constant TOff Mode
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_CHM_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_CHM_FIELD, *value);
-        }
-        break;
-    case 164:
-        // Disable fast decay comparator
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_DISFDCC_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_DISFDCC_FIELD, *value);
-        }
-        break;
-    case 165:
-        // Chopper hysteresis end / fast decay time
-        readRegister(motor, TMC5240_CHOPCONF, &buffer);
-        if(readWrite == READ) {
-            if(buffer & (1 << TMC5240_CHM_SHIFT))
-            {
-                *value = (buffer >> TMC5240_HEND_OFFSET_SHIFT) & TMC5240_HEND_OFFSET_MASK;
-            }
-            else
-            {
-                readRegister(motor, TMC5240_CHOPCONF >> TMC5240_TFD_ALL_SHIFT, value);
-                *value = *value & TMC5240_TFD_ALL_MASK;
-                if(buffer & TMC5240_FD3_SHIFT)
-                    *value |= 1<<3; // MSB wird zu value dazugefügt
-            }
-        } else if(readWrite == WRITE) {
-            readRegister(motor, TMC5240_CHOPCONF, &buffer);
-            if(buffer & (1<<14))
-            {
-                field_write(motor, TMC5240_HEND_OFFSET_FIELD, *value);
-            }
-            else
-            {
-                field_write(motor, TMC5240_HEND_OFFSET_FIELD, (*value & (1<<3)));// MSB wird zu value dazugefügt
-                field_write(motor, TMC5240_TFD_ALL_FIELD, *value);
-            }
-        }
-        break;
-    case 166:
-        // Chopper hysteresis start / sine wave offset
-        readRegister(motor, TMC5240_CHOPCONF, &buffer);
-        if(readWrite == READ) {
-            if(buffer & (1 << TMC5240_CHM_SHIFT))
-            {
-                *value = (buffer >> TMC5240_TFD_ALL_SHIFT) & TMC5240_TFD_ALL_MASK;
-            }
-            else
-            {
-                *value = (buffer >> TMC5240_HEND_OFFSET_SHIFT) & TMC5240_HEND_OFFSET_MASK;
-                if(buffer & (1 << TMC5240_FD3_SHIFT))
-                    *value |= 1<<3; // MSB wird zu value dazugefügt
-            }
-        } else if(readWrite == WRITE) {
-            if(buffer & (1 << TMC5240_CHM_SHIFT))
-            {
-                field_write(motor, TMC5240_TFD_ALL_FIELD, *value);
-            }
-            else
-            {
-                field_write(motor, TMC5240_HEND_OFFSET_FIELD, *value);
-            }
-        }
-        break;
-    case 167:
-        // Chopper off time
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_TOFF_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_TOFF_FIELD, *value);
-        }
-        break;
-    case 168:
-        // smartEnergy current minimum (SEIMIN)
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SEIMIN_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SEIMIN_FIELD, *value);
-        }
-        break;
-    case 169:
-        // smartEnergy current down step
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SEDN_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SEDN_FIELD, *value);
-        }
-        break;
-    case 170:
-        // smartEnergy hysteresis
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SEMAX_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SEMAX_FIELD, *value);
-        }
-        break;
-    case 171:
-        // smartEnergy current up step
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SEUP_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SEUP_FIELD, *value);
-        }
-        break;
-    case 172:
-        // smartEnergy hysteresis start
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SEMIN_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SEMIN_FIELD, *value);
-        }
-        break;
-    case 173:
-        // stallGuard4 filter enable
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SG4_FILT_EN_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SG4_FILT_EN_FIELD, *value);
-        }
-        break;
-    case 174:
-        // stallGuard4 threshold
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SG4_THRS_FIELD);
-            *value = CAST_Sn_TO_S32(*value, 7);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SG4_THRS_FIELD, *value);
-        }
-        break;
-    case 175:
-        // stallGuard2 filter enable
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SFILT_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SFILT_FIELD, *value);
-        }
-        break;
-    case 176:
-        // stallGuard2 threshold
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SGT_FIELD);
-            *value = CAST_Sn_TO_S32(*value, 7);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SGT_FIELD, *value);
-        }
-        break;
-    case 180:
-        // smartEnergy actual current
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_CS_ACTUAL_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 181:
-        // smartEnergy stall velocity
-        //this function sort of doubles with 182 but is necessary to allow cross chip compliance
-        if(readWrite == READ) {
-            if(field_read(motor, TMC5240_SG_STOP_FIELD))
-            {
-                readRegister(motor, TMC5240_TCOOLTHRS, &buffer);
-                *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
-            }
-            else
-            {
-                *value = 0;
-            }
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_SG_STOP_FIELD, (*value)? 1:0);
-            *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-            writeRegister(motor, TMC5240_TCOOLTHRS, *value);
-        }
-        break;
-    case 182:
-        // smartEnergy threshold speed
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_TCOOLTHRS, &buffer);
-            *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
-        } else if(readWrite == WRITE) {
-            *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-            writeRegister(motor, TMC5240_TCOOLTHRS, *value);
-        }
-        break;
-    case 184:
-            // SG_ANGLE_OFFSET
+        case 0:
+            // Target position
             if(readWrite == READ) {
-                *value = field_read(motor, TMC5240_SG_ANGLE_OFFSET_FIELD);
+                readRegister(DEFAULT_ICID, TMC5240_XTARGET, value);
             } else if(readWrite == WRITE) {
-                field_write(motor, TMC5240_SG_ANGLE_OFFSET_FIELD, *value);
+                writeRegister(DEFAULT_ICID, TMC5240_XTARGET, *value);
             }
             break;
-    case 185:
-        // Chopper synchronization
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_CHOPCONF, value);
-            *value = (*value >> 20) & 0x0F;
-        } else if(readWrite == WRITE) {
-            readRegister(motor, TMC5240_CHOPCONF, &buffer);
-            buffer &= ~(0x0F<<20);
-            buffer |= (*value & 0x0F) << 20;
-            writeRegister(motor, TMC5240_CHOPCONF,buffer);
-        }
-        break;
-    case 186:
-        // PWM threshold speed
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_TPWMTHRS, &buffer);
-            *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
-        } else if(readWrite == WRITE) {
-            *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-            writeRegister(motor, TMC5240_TPWMTHRS, *value);
-        }
-        break;
-    case 187:
-        // PWM gradient
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_PWM_GRAD_FIELD);
-        } else if(readWrite == WRITE) {
-            // Set gradient
-            field_write(motor, TMC5240_PWM_GRAD_FIELD, *value);
-            // Enable/disable stealthChop accordingly
-            field_write(motor, TMC5240_EN_PWM_MODE_FIELD, (*value) ? 1 : 0);
-        }
-        break;
-    case 188:
-        // PWM amplitude
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_PWM_OFS_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_PWM_OFS_FIELD, *value);
-        }
-        break;
-    case 191:
-        // PWM frequency
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_PWM_FREQ_FIELD);
-        } else if(readWrite == WRITE) {
-            if(*value >= 0 && *value < 4)
-            {
-                field_write(motor, TMC5240_PWM_FREQ_FIELD, *value);
+        case 1:
+            // Actual position
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_XACTUAL, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_XACTUAL, *value);
             }
-            else
-            {
-                errors |= TMC_ERROR_VALUE;
+            break;
+        case 2:
+            // Target speed
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_VMAX, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_VMAX, abs(*value));
+                vMaxModified = true;
             }
-        }
-        break;
-    case 192:
-        // PWM autoscale
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_PWM_AUTOSCALE_FIELD);
-        } else if(readWrite == WRITE) {
-            if(*value >= 0 && *value < 2)
-            {
-                field_write(motor, TMC5240_PWM_AUTOSCALE_FIELD, *value);
-            }
-            else
-            {
-                errors |= TMC_ERROR_VALUE;
-            }
-        }
-        break;
-    case 193:
-        // PWM scale sum
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_PWM_SCALE_SUM_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 194:
-        // MSCNT
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_MSCNT_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 195:
-        // MEAS_SD_EN
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_PWM_MEAS_SD_ENABLE_FIELD);
-        } else if(readWrite == WRITE) {
-            if(*value >= 0 && *value < 2)
-                field_write(motor, TMC5240_PWM_MEAS_SD_ENABLE_FIELD, *value);
-            else
+            break;
+        case 3:
+            // Actual speed
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_VACTUAL, value);
+                *value = CAST_Sn_TO_S32(*value, 24);
+            } else if(readWrite == WRITE) {
                 errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 196:
-        // DIS_REG_STST
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_PWM_DIS_REG_STST_FIELD);
-        } else if(readWrite == WRITE) {
-            if(*value >= 0 && *value < 2)
-                field_write(motor, TMC5240_PWM_DIS_REG_STST_FIELD, *value);
-            else
+            }
+            break;
+        case 4:
+            // Maximum speed
+            if(readWrite == READ) {
+                *value = vmax_position;
+            } else if(readWrite == WRITE) {
+                vmax_position = abs(*value);
+                if(tmc5240_fieldRead(DEFAULT_ICID, TMC5240_RAMPMODE_FIELD) == TMC5240_MODE_POSITION)
+                    writeRegister(DEFAULT_ICID, TMC5240_VMAX, abs(*value));
+            }
+            break;
+        case 5:
+            // Maximum acceleration
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_AMAX, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_AMAX, *value);
+            }
+            break;
+        case 6:
+            // Maximum current
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_IRUN_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_IRUN_FIELD, *value);
+            }
+            break;
+        case 7:
+            // Standby current
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_IHOLD_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_IHOLD_FIELD, *value);
+            }
+            break;
+        case 8:
+            // Position reached flag
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_POSITION_REACHED_FIELD);
+            } else if(readWrite == WRITE) {
                 errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 204:
-        // Freewheeling mode
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_FREEWHEEL_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_FREEWHEEL_FIELD, *value);
-        }
-        break;
-    case 206:
-        // Load value
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_SG_RESULT_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 209:
-        // Encoder position
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_XENC, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_XENC, *value);
-        }
-        break;
-    case 210:
-        // Encoder Resolution
-        if(readWrite == READ) {
-            readRegister(motor, TMC5240_ENC_CONST, value);
-        } else if(readWrite == WRITE) {
-            writeRegister(motor, TMC5240_ENC_CONST, *value);
-        }
-        break;
-    case 211:
-        //ADC Scaling Resitors
-        if(readWrite == READ) {
-            uint8_t val2 = (HAL.IOs->config->isHigh(Pins.IREF_R2));
-            uint8_t val3 = (HAL.IOs->config->isHigh(Pins.IREF_R3));
-            if (val2 == 0 && val3 == 0){ //48k
-                *value = 0;
             }
-            else if (val2 == 1 && val3 == 0){//24k
-                *value = 1;
+            break;
+        case 10:
+            // Right endstop
+            if(readWrite == READ) {
+                *value = !tmc5240_fieldRead(DEFAULT_ICID, TMC5240_STATUS_STOP_R_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
             }
-            else if (val2 == 0 && val3 == 1){//16k
-                *value = 2;
+            break;
+        case 11:
+            // Left endstop
+            if(readWrite == READ) {
+                *value = !tmc5240_fieldRead(DEFAULT_ICID, TMC5240_STATUS_STOP_L_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
             }
-            else if (val2 == 1 && val3 == 1){//12k
-                *value = 3;
+            break;
+        case 12:
+            // Automatic right stop
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_STOP_R_ENABLE_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_STOP_R_ENABLE_FIELD, *value);
             }
-        }
-        else if(readWrite == WRITE) {
-            if(*value == 0) { //48k
-                HAL.IOs->config->toOutput(Pins.IREF_R2);
-                HAL.IOs->config->toOutput(Pins.IREF_R3);
-                HAL.IOs->config->setLow(Pins.IREF_R2);
-                HAL.IOs->config->setLow(Pins.IREF_R3);
+            break;
+        case 13:
+            // Automatic left stop
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_STOP_L_ENABLE_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_STOP_L_ENABLE_FIELD, *value);
+            }
+            break;
+        case 14:
+            // SW_MODE Register
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_SWMODE, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_SWMODE, *value);
+            }
+            break;
+        case 15:
+            // Maximum Deceleration
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_DMAX, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_DMAX, *value);
+            }
+            break;
+        case 16:
+            // Velocity VSTART
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_VSTART, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_VSTART, *value);
+            }
+            break;
+        case 17:
+            // Acceleration A1
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_A1, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_A1, *value);
+            }
+            break;
+        case 18:
+            // Velocity V1
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_V1, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_V1, *value);
+            }
+            break;
+        case 19:
+            // Deceleration D1
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_D1, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_D1, *value);
+            }
+            break;
+        case 20:
+            // Velocity VSTOP
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_VSTOP, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_VSTOP, *value);
+            }
+            break;
+        case 21:
+            // Waiting time after ramp down
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_TZEROWAIT, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_TZEROWAIT, *value);
+            }
+            break;
+        case 22:
+            // Velocity V2
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_V2, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_V2, *value);
+            }
+            break;
+        case 23:
+            // Deceleration D2
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_D2, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_D2, *value);
+            }
+            break;
+        case 24:
+            // Acceleration A2
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_A2, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_A2, *value);
+            }
+            break;
+        case 25:
+            // TVMAX
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_TVMAX, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_TVMAX, *value);
+            }
+            break;
+
+
+        case 26:
+            // Speed threshold for high speed mode
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_THIGH, &buffer);
+                *value = MIN(0xFFFFF, (1 << 24) / ((buffer)? buffer : 1));
+            } else if(readWrite == WRITE) {
+                *value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value:1));
+                writeRegister(DEFAULT_ICID, TMC5240_THIGH, *value);
+            }
+            break;
+        case 27:
+            // Minimum speed for switching to dcStep
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_VDCMIN, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_VDCMIN, *value);
+            }
+            break;
+        case 28:
+            // High speed chopper mode
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_VHIGHCHM_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_VHIGHCHM_FIELD, *value);
+            }
+            break;
+        case 29:
+            // High speed fullstep mode
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_VHIGHFS_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_VHIGHFS_FIELD, *value);
+            }
+            break;
+        case 30:
+            // Measured Speed
+            if(readWrite == READ) {
+                *value = TMC5240.velocity;
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 34:
+            // Internal RSense
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_REFR_DIR_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_REFR_DIR_FIELD, *value);
+            }
+            break;
+        case 35:
+            // Global current scaler
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_GLOBAL_SCALER_FIELD);
+            } else if(readWrite == WRITE) {
+                if(*value > 31)
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_GLOBAL_SCALER_FIELD, *value);
+                else
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_GLOBAL_SCALER_FIELD, 0);
+            }
+            break;
+        case 140:
+            // Microstep Resolution
+            if(readWrite == READ) {
+                *value = 0x100 >> tmc5240_fieldRead(DEFAULT_ICID, TMC5240_MRES_FIELD);
+            } else if(readWrite == WRITE) {
+                switch(*value)
+                {
+                    case 1:    *value = 8;   break;
+                    case 2:    *value = 7;   break;
+                    case 4:    *value = 6;   break;
+                    case 8:    *value = 5;   break;
+                    case 16:   *value = 4;   break;
+                    case 32:   *value = 3;   break;
+                    case 64:   *value = 2;   break;
+                    case 128:  *value = 1;   break;
+                    case 256:  *value = 0;   break;
+                    default:   *value = -1;  break;
                 }
-            else if(*value == 1) {//24k
-                HAL.IOs->config->toOutput(Pins.IREF_R2);
-                HAL.IOs->config->toOutput(Pins.IREF_R3);
-                HAL.IOs->config->setHigh(Pins.IREF_R2);
-                HAL.IOs->config->setLow(Pins.IREF_R3);
-                }
-            else if(*value == 2) {//16k
-                HAL.IOs->config->toOutput(Pins.IREF_R2);
-                HAL.IOs->config->toOutput(Pins.IREF_R3);
-                HAL.IOs->config->setLow(Pins.IREF_R2);
-                HAL.IOs->config->setHigh(Pins.IREF_R3);
-                }
-            else if(*value == 3) {//12k
-                HAL.IOs->config->toOutput(Pins.IREF_R2);
-                HAL.IOs->config->toOutput(Pins.IREF_R3);
-                HAL.IOs->config->setHigh(Pins.IREF_R2);
-                HAL.IOs->config->setHigh(Pins.IREF_R3);
-                }
-        }
-        break;
-    case 212:
-        // Current range from DRV_CONF reg
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_CURRENT_RANGE_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_CURRENT_RANGE_FIELD, *value);
-        }
-        break;
 
-    case 213:
-        // ADCTemperatur
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_ADC_TEMP_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 214:
-        // ADCIN
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_ADC_AIN_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 215:
-        // ADCSupply
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_ADC_VSUPPLY_FIELD);
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 216:
-        // Overvoltage Limit ADC value
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_OVERVOLTAGE_VTH_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_OVERVOLTAGE_VTH_FIELD, *value);
-        }
-        break;
-    case 217:
-        // Overtemperature Warning Limit
-        if(readWrite == READ) {
-            *value = field_read(motor, TMC5240_OVERTEMPPREWARNING_VTH_FIELD);
-        } else if(readWrite == WRITE) {
-            field_write(motor, TMC5240_OVERTEMPPREWARNING_VTH_FIELD, *value);
-        }
-        break;
-    case 218:
-        // ADCTemperatur Converted
-        if(readWrite == READ) {
-
-            int32_t adc = field_read(motor, TMC5240_ADC_TEMP_FIELD);
-            *value = (int32_t)10*(adc-2038)/77;
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 219:
-        // ADCIN converted
-        if(readWrite == READ) {
-            int32_t adc = field_read(motor, TMC5240_ADC_AIN_FIELD);
-            *value = (int32_t)3052*adc/10000;
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 220:
-        // ADCSupply
-        if(readWrite == READ) {
-            int32_t adc = field_read(motor, TMC5240_ADC_VSUPPLY_FIELD);
-            *value = (int32_t)32*3052*adc/10000;
-        } else if(readWrite == WRITE) {
-            errors |= TMC_ERROR_TYPE;
-        }
-        break;
-    case 221:
-        // Overvoltage Limit converted
-        if(readWrite == READ) {
-            int32_t val = field_read(motor, TMC5240_OVERVOLTAGE_VTH_FIELD);
-            *value = (int32_t)32*3052*val/10000;
-        } else if(readWrite == WRITE) {
-            int32_t val = (int32_t)(*value*10000/(3052*32));
-            field_write(motor, TMC5240_OVERVOLTAGE_VTH_FIELD, val);
-        }
-        break;
-    case 222:
-        // Overtemperature Warning Limit
-        if(readWrite == READ) {
-            int32_t temp = field_read(motor, TMC5240_OVERTEMPPREWARNING_VTH_FIELD);
-            *value = (int32_t)(temp-2038)/7.7;
-        } else if(readWrite == WRITE) {
-            float valf  = *value*7.7;
-            int32_t val = (int32_t)valf;
-            val = val+2038;
-            field_write(motor, TMC5240_OVERTEMPPREWARNING_VTH_FIELD, val);
-        }
-        break;
-
-    case 223:
-        if(readWrite == READ) {
-            *value = HAL.IOs->config->isHigh(Pins.nSLEEP);
-        } else if(readWrite == WRITE) {
-            if(*value == 1)
-            {
-                HAL.IOs->config->toOutput(Pins.nSLEEP);
-                HAL.IOs->config->setHigh(Pins.nSLEEP);
-                noRegResetnSLEEP = true;
-                nSLEEPTick = systick_getTick();
+                if(*value != -1)
+                {
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_MRES_FIELD, *value);
+                }
+                else
+                {
+                    errors |= TMC_ERROR_VALUE;
+                }
             }
-            else if(*value == 0)
-            {
-                HAL.IOs->config->toOutput(Pins.nSLEEP);
-                HAL.IOs->config->setLow(Pins.nSLEEP);
+            break;
+        case 162:
+            // Chopper blank time
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_TBL_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_TBL_FIELD, *value);
             }
+            break;
+        case 163:
+            // Constant TOff Mode
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_CHM_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_CHM_FIELD, *value);
+            }
+            break;
+        case 164:
+            // Disable fast decay comparator
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_DISFDCC_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_DISFDCC_FIELD, *value);
+            }
+            break;
+        case 165:
+            // Chopper hysteresis end / fast decay time
+            readRegister(DEFAULT_ICID, TMC5240_CHOPCONF, &buffer);
+            if(readWrite == READ) {
+                if(buffer & (1 << TMC5240_CHM_SHIFT))
+                {
+                    *value = (buffer >> TMC5240_HEND_OFFSET_SHIFT) & TMC5240_HEND_OFFSET_MASK;
+                }
+                else
+                {
+                    readRegister(DEFAULT_ICID, TMC5240_CHOPCONF >> TMC5240_TFD_ALL_SHIFT, value);
+                    *value = *value & TMC5240_TFD_ALL_MASK;
+                    if(buffer & TMC5240_FD3_SHIFT)
+                        *value |= 1<<3; // MSB wird zu value dazugefügt
+                }
+            } else if(readWrite == WRITE) {
+                readRegister(DEFAULT_ICID, TMC5240_CHOPCONF, &buffer);
+                if(buffer & (1<<14))
+                {
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_HEND_OFFSET_FIELD, *value);
+                }
+                else
+                {
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_HEND_OFFSET_FIELD, (*value & (1<<3)));// MSB wird zu value dazugefügt
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_TFD_ALL_FIELD, *value);
+                }
+            }
+            break;
+        case 166:
+            // Chopper hysteresis start / sine wave offset
+            readRegister(DEFAULT_ICID, TMC5240_CHOPCONF, &buffer);
+            if(readWrite == READ) {
+                if(buffer & (1 << TMC5240_CHM_SHIFT))
+                {
+                    *value = (buffer >> TMC5240_TFD_ALL_SHIFT) & TMC5240_TFD_ALL_MASK;
+                }
+                else
+                {
+                    *value = (buffer >> TMC5240_HEND_OFFSET_SHIFT) & TMC5240_HEND_OFFSET_MASK;
+                    if(buffer & (1 << TMC5240_FD3_SHIFT))
+                        *value |= 1<<3; // MSB wird zu value dazugefügt
+                }
+            } else if(readWrite == WRITE) {
+                if(buffer & (1 << TMC5240_CHM_SHIFT))
+                {
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_TFD_ALL_FIELD, *value);
+                }
+                else
+                {
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_HEND_OFFSET_FIELD, *value);
+                }
+            }
+            break;
+        case 167:
+            // Chopper off time
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_TOFF_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_TOFF_FIELD, *value);
+            }
+            break;
+        case 168:
+            // smartEnergy current minimum (SEIMIN)
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SEIMIN_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SEIMIN_FIELD, *value);
+            }
+            break;
+        case 169:
+            // smartEnergy current down step
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SEDN_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SEDN_FIELD, *value);
+            }
+            break;
+        case 170:
+            // smartEnergy hysteresis
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SEMAX_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SEMAX_FIELD, *value);
+            }
+            break;
+        case 171:
+            // smartEnergy current up step
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SEUP_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SEUP_FIELD, *value);
+            }
+            break;
+        case 172:
+            // smartEnergy hysteresis start
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SEMIN_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SEMIN_FIELD, *value);
+            }
+            break;
+        case 173:
+            // stallGuard4 filter enable
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SG4_FILT_EN_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SG4_FILT_EN_FIELD, *value);
+            }
+            break;
+        case 174:
+            // stallGuard4 threshold
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SG4_THRS_FIELD);
+                *value = CAST_Sn_TO_S32(*value, 7);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SG4_THRS_FIELD, *value);
+            }
+            break;
+        case 175:
+            // stallGuard2 filter enable
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SFILT_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SFILT_FIELD, *value);
+            }
+            break;
+        case 176:
+            // stallGuard2 threshold
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SGT_FIELD);
+                *value = CAST_Sn_TO_S32(*value, 7);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SGT_FIELD, *value);
+            }
+            break;
+        case 180:
+            // smartEnergy actual current
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_CS_ACTUAL_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 181:
+            // smartEnergy stall velocity
+            //this function sort of doubles with 182 but is necessary to allow cross chip compliance
+            if(readWrite == READ) {
+                if(tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SG_STOP_FIELD))
+                {
+                    readRegister(DEFAULT_ICID, TMC5240_TCOOLTHRS, &buffer);
+                    *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
+                }
+                else
+                {
+                    *value = 0;
+                }
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SG_STOP_FIELD, (*value)? 1:0);
+                *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
+                writeRegister(DEFAULT_ICID, TMC5240_TCOOLTHRS, *value);
+            }
+            break;
+        case 182:
+            // smartEnergy threshold speed
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_TCOOLTHRS, &buffer);
+                *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
+            } else if(readWrite == WRITE) {
+                *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
+                writeRegister(DEFAULT_ICID, TMC5240_TCOOLTHRS, *value);
+            }
+            break;
+        case 184:
+            // SG_ANGLE_OFFSET
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SG_ANGLE_OFFSET_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_SG_ANGLE_OFFSET_FIELD, *value);
+            }
+            break;
+        case 185:
+            // Chopper synchronization
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_CHOPCONF, value);
+                *value = (*value >> 20) & 0x0F;
+            } else if(readWrite == WRITE) {
+                readRegister(DEFAULT_ICID, TMC5240_CHOPCONF, &buffer);
+                buffer &= ~(0x0F<<20);
+                buffer |= (*value & 0x0F) << 20;
+                writeRegister(DEFAULT_ICID, TMC5240_CHOPCONF,buffer);
+            }
+            break;
+        case 186:
+            // PWM threshold speed
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_TPWMTHRS, &buffer);
+                *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
+            } else if(readWrite == WRITE) {
+                *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
+                writeRegister(DEFAULT_ICID, TMC5240_TPWMTHRS, *value);
+            }
+            break;
+        case 187:
+            // PWM gradient
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_PWM_GRAD_FIELD);
+            } else if(readWrite == WRITE) {
+                // Set gradient
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_PWM_GRAD_FIELD, *value);
+                // Enable/disable stealthChop accordingly
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_EN_PWM_MODE_FIELD, (*value) ? 1 : 0);
+            }
+            break;
+        case 188:
+            // PWM amplitude
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_PWM_OFS_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_PWM_OFS_FIELD, *value);
+            }
+            break;
+        case 191:
+            // PWM frequency
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_PWM_FREQ_FIELD);
+            } else if(readWrite == WRITE) {
+                if(*value >= 0 && *value < 4)
+                {
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_PWM_FREQ_FIELD, *value);
+                }
+                else
+                {
+                    errors |= TMC_ERROR_VALUE;
+                }
+            }
+            break;
+        case 192:
+            // PWM autoscale
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_PWM_AUTOSCALE_FIELD);
+            } else if(readWrite == WRITE) {
+                if(*value >= 0 && *value < 2)
+                {
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_PWM_AUTOSCALE_FIELD, *value);
+                }
+                else
+                {
+                    errors |= TMC_ERROR_VALUE;
+                }
+            }
+            break;
+        case 193:
+            // PWM scale sum
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_PWM_SCALE_SUM_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 194:
+            // MSCNT
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_MSCNT_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 195:
+            // MEAS_SD_EN
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_PWM_MEAS_SD_ENABLE_FIELD);
+            } else if(readWrite == WRITE) {
+                if(*value >= 0 && *value < 2)
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_PWM_MEAS_SD_ENABLE_FIELD, *value);
+                else
+                    errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 196:
+            // DIS_REG_STST
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_PWM_DIS_REG_STST_FIELD);
+            } else if(readWrite == WRITE) {
+                if(*value >= 0 && *value < 2)
+                    tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_PWM_DIS_REG_STST_FIELD, *value);
+                else
+                    errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 204:
+            // Freewheeling mode
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_FREEWHEEL_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_FREEWHEEL_FIELD, *value);
+            }
+            break;
+        case 206:
+            // Load value
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_SG_RESULT_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 209:
+            // Encoder position
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_XENC, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_XENC, *value);
+            }
+            break;
+        case 210:
+            // Encoder Resolution
+            if(readWrite == READ) {
+                readRegister(DEFAULT_ICID, TMC5240_ENC_CONST, value);
+            } else if(readWrite == WRITE) {
+                writeRegister(DEFAULT_ICID, TMC5240_ENC_CONST, *value);
+            }
+            break;
+        case 211:
+            //ADC Scaling Resitors
+            if(readWrite == READ) {
+                uint8_t val2 = (HAL.IOs->config->isHigh(Pins.IREF_R2));
+                uint8_t val3 = (HAL.IOs->config->isHigh(Pins.IREF_R3));
+                if (val2 == 0 && val3 == 0){ //48k
+                    *value = 0;
+                }
+                else if (val2 == 1 && val3 == 0){//24k
+                    *value = 1;
+                }
+                else if (val2 == 0 && val3 == 1){//16k
+                    *value = 2;
+                }
+                else if (val2 == 1 && val3 == 1){//12k
+                    *value = 3;
+                }
+            }
+            else if(readWrite == WRITE) {
+                if(*value == 0) { //48k
+                    HAL.IOs->config->toOutput(Pins.IREF_R2);
+                    HAL.IOs->config->toOutput(Pins.IREF_R3);
+                    HAL.IOs->config->setLow(Pins.IREF_R2);
+                    HAL.IOs->config->setLow(Pins.IREF_R3);
+                }
+                else if(*value == 1) {//24k
+                    HAL.IOs->config->toOutput(Pins.IREF_R2);
+                    HAL.IOs->config->toOutput(Pins.IREF_R3);
+                    HAL.IOs->config->setHigh(Pins.IREF_R2);
+                    HAL.IOs->config->setLow(Pins.IREF_R3);
+                }
+                else if(*value == 2) {//16k
+                    HAL.IOs->config->toOutput(Pins.IREF_R2);
+                    HAL.IOs->config->toOutput(Pins.IREF_R3);
+                    HAL.IOs->config->setLow(Pins.IREF_R2);
+                    HAL.IOs->config->setHigh(Pins.IREF_R3);
+                }
+                else if(*value == 3) {//12k
+                    HAL.IOs->config->toOutput(Pins.IREF_R2);
+                    HAL.IOs->config->toOutput(Pins.IREF_R3);
+                    HAL.IOs->config->setHigh(Pins.IREF_R2);
+                    HAL.IOs->config->setHigh(Pins.IREF_R3);
+                }
+            }
+            break;
+        case 212:
+            // Current range from DRV_CONF reg
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_CURRENT_RANGE_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_CURRENT_RANGE_FIELD, *value);
+            }
+            break;
 
-        }
-        break;
+        case 213:
+            // ADCTemperatur
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_ADC_TEMP_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 214:
+            // ADCIN
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_ADC_AIN_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 215:
+            // ADCSupply
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_ADC_VSUPPLY_FIELD);
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 216:
+            // Overvoltage Limit ADC value
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_OVERVOLTAGE_VTH_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_OVERVOLTAGE_VTH_FIELD, *value);
+            }
+            break;
+        case 217:
+            // Overtemperature Warning Limit
+            if(readWrite == READ) {
+                *value = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_OVERTEMPPREWARNING_VTH_FIELD);
+            } else if(readWrite == WRITE) {
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_OVERTEMPPREWARNING_VTH_FIELD, *value);
+            }
+            break;
+        case 218:
+            // ADCTemperatur Converted
+            if(readWrite == READ) {
 
-    default:
-        errors |= TMC_ERROR_TYPE;
-        break;
+                int32_t adc = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_ADC_TEMP_FIELD);
+                *value = (int32_t)10*(adc-2038)/77;
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 219:
+            // ADCIN converted
+            if(readWrite == READ) {
+                int32_t adc = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_ADC_AIN_FIELD);
+                *value = (int32_t)3052*adc/10000;
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 220:
+            // ADCSupply
+            if(readWrite == READ) {
+                int32_t adc = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_ADC_VSUPPLY_FIELD);
+                *value = (int32_t)32*3052*adc/10000;
+            } else if(readWrite == WRITE) {
+                errors |= TMC_ERROR_TYPE;
+            }
+            break;
+        case 221:
+            // Overvoltage Limit converted
+            if(readWrite == READ) {
+                int32_t val = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_OVERVOLTAGE_VTH_FIELD);
+                *value = (int32_t)32*3052*val/10000;
+            } else if(readWrite == WRITE) {
+                int32_t val = (int32_t)(*value*10000/(3052*32));
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_OVERVOLTAGE_VTH_FIELD, val);
+            }
+            break;
+        case 222:
+            // Overtemperature Warning Limit
+            if(readWrite == READ) {
+                int32_t temp = tmc5240_fieldRead(DEFAULT_ICID, TMC5240_OVERTEMPPREWARNING_VTH_FIELD);
+                *value = (int32_t)(temp-2038)/7.7;
+            } else if(readWrite == WRITE) {
+                float valf  = *value*7.7;
+                int32_t val = (int32_t)valf;
+                val = val+2038;
+                tmc5240_fieldWrite(DEFAULT_ICID, TMC5240_OVERTEMPPREWARNING_VTH_FIELD, val);
+            }
+            break;
+
+        case 223:
+            if(readWrite == READ) {
+                *value = HAL.IOs->config->isHigh(Pins.nSLEEP);
+            } else if(readWrite == WRITE) {
+                if(*value == 1)
+                {
+                    HAL.IOs->config->toOutput(Pins.nSLEEP);
+                    HAL.IOs->config->setHigh(Pins.nSLEEP);
+                    noRegResetnSLEEP = true;
+                    nSLEEPTick = systick_getTick();
+                }
+                else if(*value == 0)
+                {
+                    HAL.IOs->config->toOutput(Pins.nSLEEP);
+                    HAL.IOs->config->setLow(Pins.nSLEEP);
+                }
+
+            }
+            break;
+
+        default:
+            errors |= TMC_ERROR_TYPE;
+            break;
     }
     return errors;
 }
@@ -1047,16 +1047,14 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
     return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
 {
-    UNUSED(motor);
-    tmc5240_writeRegister(DEFAULT_MOTOR, address, value);
+    tmc5240_writeRegister(icID, address, value);
 }
 
-static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 {
-    UNUSED(motor);
-    *value = tmc5240_readRegister(DEFAULT_MOTOR, address);
+    *value = tmc5240_readRegister(icID, address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -1110,94 +1108,94 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 
     switch(type)
     {
-    case 0:  // simulate reference switches, set high to support external ref swiches
-        /*
-         * The the TMC5240 ref switch input is pulled high by external resistor an can be pulled low either by
-         * this µC or external signal. To use external signal make sure the signals from µC are high or floating.
-         */
-        if(!(*value & ~3))
-        {
-            if(*value & (1<<0))
+        case 0:  // simulate reference switches, set high to support external ref swiches
+            /*
+             * The the TMC5240 ref switch input is pulled high by external resistor an can be pulled low either by
+             * this µC or external signal. To use external signal make sure the signals from µC are high or floating.
+             */
+            if(!(*value & ~3))
             {
-                HAL.IOs->config->toInput(Pins.REFR_UC); // pull up -> set it to floating causes high
+                if(*value & (1<<0))
+                {
+                    HAL.IOs->config->toInput(Pins.REFR_UC); // pull up -> set it to floating causes high
+                }
+                else
+                {
+                    HAL.IOs->config->toOutput(Pins.REFR_UC);
+                    HAL.IOs->config->setLow(Pins.REFR_UC);
+                }
+
+                if(*value & (1<<1))
+                {
+                    HAL.IOs->config->toInput(Pins.REFL_UC); // pull up -> set it to floating causes high
+                }
+                else
+                {
+                    HAL.IOs->config->toOutput(Pins.REFL_UC);
+                    HAL.IOs->config->setLow(Pins.REFL_UC);
+                }
             }
             else
             {
-                HAL.IOs->config->toOutput(Pins.REFR_UC);
-                HAL.IOs->config->setLow(Pins.REFR_UC);
+                errors |= TMC_ERROR_VALUE;
             }
-
-            if(*value & (1<<1))
-            {
-                HAL.IOs->config->toInput(Pins.REFL_UC); // pull up -> set it to floating causes high
-            }
-            else
-            {
-                HAL.IOs->config->toOutput(Pins.REFL_UC);
-                HAL.IOs->config->setLow(Pins.REFL_UC);
-            }
-        }
-        else
-        {
-            errors |= TMC_ERROR_VALUE;
-        }
-        break;
-
-
-    case 4:  // set or release/read ENCB_[DCEN_CFG4]
-        switch(buffer = *value)
-        {
-        case 0:
-            HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
-            HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
             break;
-        case 1:
-            HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
-            HAL.IOs->config->setHigh(Pins.ENCB_DCEN_CFG4);
+
+
+        case 4:  // set or release/read ENCB_[DCEN_CFG4]
+            switch(buffer = *value)
+            {
+                case 0:
+                    HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
+                    HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
+                    break;
+                case 1:
+                    HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
+                    HAL.IOs->config->setHigh(Pins.ENCB_DCEN_CFG4);
+                    break;
+                default:
+                    HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
+                    buffer = HAL.IOs->config->isHigh(Pins.ENCB_DCEN_CFG4);;
+                    break;
+            }
+            *value = buffer;
+            break;
+        case 5:  // read interrupt pin SWN_DIAG0
+            *value = (HAL.IOs->config->isHigh(Pins.SWN_DIAG0))? 1:0;
+            break;
+        case 6:  // read interrupt pin SWP_DIAG1
+            *value = (HAL.IOs->config->isHigh(Pins.SWP_DIAG1))? 1:0;
+            break;
+//        case 7:  // enable single wire interface (SWSEL)
+//                if(*value == 1) HAL.IOs->config->setHigh(Pins.SWSEL);
+//                else HAL.IOs->config->setLow(Pins.SWSEL);
+//            break;
+        case 8: // Enable UART mode
+            if(*value == 1)
+                activeBus = IC_BUS_UART;
+            else if(*value == 0)
+                activeBus = IC_BUS_SPI;
+            init_comm(activeBus);
+            break;
+
+//        case 9: // Set UART address
+//            tmc5240_setSlaveAddress()
+//            break;
+
+        case 252:
+            if(*value)
+            {
+                HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
+                HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
+            }
+            else
+            {
+                HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
+            }
             break;
         default:
-            HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
-            buffer = HAL.IOs->config->isHigh(Pins.ENCB_DCEN_CFG4);;
+            errors |= TMC_ERROR_TYPE;
             break;
-        }
-        *value = buffer;
-        break;
-    case 5:  // read interrupt pin SWN_DIAG0
-        *value = (HAL.IOs->config->isHigh(Pins.SWN_DIAG0))? 1:0;
-        break;
-    case 6:  // read interrupt pin SWP_DIAG1
-        *value = (HAL.IOs->config->isHigh(Pins.SWP_DIAG1))? 1:0;
-        break;
-//  case 7:  // enable single wire interface (SWSEL)
-//          if(*value == 1) HAL.IOs->config->setHigh(Pins.SWSEL);
-//          else HAL.IOs->config->setLow(Pins.SWSEL);
-//      break;
-    case 8: // Enable UART mode
-        if(*value == 1)
-            activeBus = IC_BUS_UART;
-        else if(*value == 0)
-            activeBus = IC_BUS_SPI;
-        init_comm(activeBus);
-        break;
-        /*
-    case 9: // Set UART address
-        tmc5240_setSlaveAddress()
-        break;
-*/
-    case 252:
-        if(*value)
-        {
-            HAL.IOs->config->toOutput(Pins.ENCB_DCEN_CFG4);
-            HAL.IOs->config->setLow(Pins.ENCB_DCEN_CFG4);
-        }
-        else
-        {
-            HAL.IOs->config->toInput(Pins.ENCB_DCEN_CFG4);
-        }
-        break;
-    default:
-        errors |= TMC_ERROR_TYPE;
-        break;
     }
     return errors;
 }
@@ -1226,7 +1224,7 @@ static void deInit(void)
 static uint8_t reset()
 {
     int32_t value = 0;
-    readRegister(DEFAULT_MOTOR, TMC5240_VACTUAL, &value);
+    readRegister(DEFAULT_ICID, TMC5240_VACTUAL, &value);
 
     if(!value)
     {
