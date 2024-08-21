@@ -91,6 +91,7 @@ static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static uint8_t reset();
+static uint8_t restore();
 static void enableDriver(DriverState state);
 
 static TMC5240TypeDef TMC5240;
@@ -98,9 +99,29 @@ static TMC5240TypeDef TMC5240;
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC5240_CRC(data, length) tmc_CRC8(data, length, 1)
 
+static void writeConfiguration()
 // When using multiple ICs you can map them here
 static inline TMC5240TypeDef *motorToIC(uint8_t motor)
 {
+    uint8_t *ptr = &TMC5240.config->configIndex;
+    const int32_t *settings;
+
+    settings = tmc5240_sampleRegisterPreset;
+    // Find the next resettable register
+    while((*ptr < TMC5240_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5240_registerAccess[*ptr]))
+    {
+        (*ptr)++;
+    }
+
+    if(*ptr < TMC5240_REGISTER_COUNT)
+    {
+        tmc5240_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        TMC5240.config->state = CONFIG_READY;
+    }
     UNUSED(motor);
     return &TMC5240;
 }
@@ -139,44 +160,48 @@ static PinsTypeDef Pins;
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-    tmc5240_rotate(motorToIC(motor), velocity);
+    if(motor >= TMC5240_MOTORS)
+        return TMC_ERROR_MOTOR;
 
-    return 0;
+    tmc5240_rotateMotor(DEFAULT_ICID, motor, velocity);
+
+    return TMC_ERROR_NONE;;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-    tmc5240_right(motorToIC(motor), velocity);
-
-    return 0;
+    return rotate(motor, velocity);
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-    tmc5240_left(motorToIC(motor), velocity);
-
-    return 0;
+    return rotate(motor, -velocity);
 }
 
 static uint32_t stop(uint8_t motor)
 {
-    tmc5240_stop(motorToIC(motor));
-
-    return 0;
+    return rotate(motor, 0);
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-    tmc5240_moveTo(motorToIC(motor), position, vmax_position);
+    tmc5240_writeRegister(DEFAULT_ICID, TMC5240_RAMPMODE, TMC5240_MODE_POSITION);
 
-    return 0;
+    // VMAX also holds the target velocity in velocity mode.
+    // Re-write the position mode maximum velocity here.
+    tmc5240_writeRegister(DEFAULT_ICID, TMC5240_VMAX, vmax_position);
+
+    tmc5240_writeRegister(DEFAULT_ICID, TMC5240_XTARGET, position);
+
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-    tmc5240_moveBy(motorToIC(motor), ticks, vmax_position);
+    // determine actual position and add numbers of ticks to move
+    *ticks += tmc5240_readRegister(DEFAULT_ICID, TMC5240_XACTUAL);
 
-    return 0;
+    return moveTo(motor, *ticks);
 }
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
@@ -1039,17 +1064,32 @@ static void periodicJob(uint32_t tick)
     //check if reset after nSLEEP to HIGH was performed
     if(!noRegResetnSLEEP)
     {
-        for(uint8_t motor = 0; motor < TMC5240_MOTORS; motor++)
-            {
-                tmc5240_periodicJob(&TMC5240, tick);
-            }
+        if(TMC5240.config->state != CONFIG_READY)
+        {
+            writeConfiguration();
+            return;
+        }
+
+        int32_t XActual;
+        uint32_t tickDiff;
+
+        // Calculate velocity v = dx/dt
+        if((tickDiff = tick - TMC5240.oldTick) >= 5)
+        {
+            XActual = tmc5240_readRegister(DEFAULT_ICID, TMC5240_XACTUAL);
+            // ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
+            TMC5240.velocity = (uint32_t) ((float32_t) ((XActual - TMC5240.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+
+            TMC5240.oldX     = XActual;
+            TMC5240.oldTick  = tick;
+        }
     }
     else
     {
         //check if minimum time since chip activation passed. Then restore.
         if((systick_getTick()-nSLEEPTick)>5000) //
         {
-            tmc5240_restore(&TMC5240);
+            restore();
             noRegResetnSLEEP = false;
         }
     }
@@ -1189,7 +1229,15 @@ static uint8_t reset()
     readRegister(DEFAULT_MOTOR, TMC5240_VACTUAL, &value);
 
     if(!value)
-        tmc5240_reset(&TMC5240);
+    {
+        if(TMC5240.config->state != CONFIG_READY)
+            return false;
+
+        TMC5240.config->state        = CONFIG_RESET;
+        TMC5240.config->configIndex  = 0;
+
+        return true;
+    }
 
     HAL.IOs->config->toInput(Pins.REFL_UC);
     HAL.IOs->config->toInput(Pins.REFR_UC);
@@ -1197,9 +1245,17 @@ static uint8_t reset()
     return 1;
 }
 
+// Restore the TMC5240 to the state stored in the shadow registers.
+// This can be used to recover the IC configuration after a VM power loss.
 static uint8_t restore()
 {
-    return tmc5240_restore(&TMC5240);
+    if(TMC5240.config->state != CONFIG_READY)
+        return false;
+
+    TMC5240.config->state        = CONFIG_RESTORE;
+    TMC5240.config->configIndex  = 0;
+
+    return true;
 }
 
 static void enableDriver(DriverState state)
@@ -1329,7 +1385,15 @@ void TMC5240_init(void)
     Evalboards.ch1.config->restore      = restore;
     Evalboards.ch1.config->state        = CONFIG_RESET;
 
-    tmc5240_init(&TMC5240, 0, Evalboards.ch1.config, tmc5240_defaultRegisterResetState);
+    TMC5240.velocity  = 0;
+    TMC5240.oldTick   = 0;
+    TMC5240.oldX      = 0;
+
+    TMC5240.config               = Evalboards.ch1.config;
+    TMC5240.config->callback     = NULL;
+    TMC5240.config->channel      = 0;
+    TMC5240.config->configIndex  = 0;
+    TMC5240.config->state        = CONFIG_READY;
 
     vmax_position = 0;
 
