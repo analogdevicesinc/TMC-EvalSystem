@@ -27,6 +27,7 @@ typedef enum {
     RAMDEBUG_CAPTURE    = 2,
     RAMDEBUG_COMPLETE   = 3,
     RAMDEBUG_PRETRIGGER = 4,
+    RAMDEBUG_ERROR      = 5,
 } RAMDebugState;
 
 // Capture channel configuration

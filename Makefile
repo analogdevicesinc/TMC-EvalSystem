@@ -78,6 +78,7 @@ SRC             += boards/TMC2262_eval.c
 SRC             += boards/TMC9660_3PH_eval.c
 SRC             += boards/TMC9660_STEPPER_eval.c
 SRC				+= boards/MAX22215_eval.c
+SRC             += boards/TMC6460_eval.c
 
 endif
 
@@ -131,6 +132,7 @@ SRC             += TMC-API/tmc/ic/TMC5271/TMC5271.c
 SRC             += TMC-API/tmc/ic/TMC5272/TMC5272.c
 SRC             += TMC-API/tmc/ic/TMC6100/TMC6100.c
 SRC             += TMC-API/tmc/ic/TMC6200/TMC6200.c
+SRC             += TMC-API/tmc/ic/TMC6460/TMC6460.c
 SRC             += TMC-API/tmc/ic/TMC7300/TMC7300.c
 SRC             += TMC-API/tmc/ic/TMC5262/TMC5262.c
 SRC             += TMC-API/tmc/ic/TMC2262/TMC2262.c
@@ -305,6 +307,10 @@ endif
 ### TMC-API build-time settings ################################################
 # General settings
 CDEFS += -DTMC_API_EXTERNAL_CRC_TABLE=1
+
+# TMC6460 settings
+CDEFS += -DTMC_API_TMC6460_RTMI_SUPPORT=1
+CDEFS += -DTMC_API_TMC6460_CRC_SUPPORT=1
 
 ### Git info for build image ###################################################
 # Output file location
