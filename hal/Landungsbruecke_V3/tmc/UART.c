@@ -112,7 +112,7 @@ static void init()
 	}
 
 
-    usart_baudrate_set(usart_periph, 115200);
+    usart_baudrate_set(usart_periph, UART.rxtx.baudRate);
     usart_word_length_set(usart_periph, USART_WL_8BIT);
     usart_stop_bit_set(usart_periph, USART_STB_1BIT);
     usart_parity_config(usart_periph, USART_PM_NONE);
