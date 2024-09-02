@@ -91,18 +91,45 @@ static PinsTypeDef Pins;
 
 static uint8_t restore(void);
 
+static void writeConfiguration()
 static inline TMC2225TypeDef *motorToIC(uint8_t motor)
 {
-	UNUSED(motor);
+    uint8_t *ptr = &TMC2225.config->configIndex;
+    const int32_t *settings;
 
-	return &TMC2225;
-}
+    if (TMC2225.config->state == CONFIG_RESTORE)
+    {
+        settings = tmc2225_shadowRegister;
+        // Find the next restorable register
+        while (*ptr < TMC2225_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc2225_registerAccess[*ptr]) && tmc2225_getDirtyBit(DEFAULT_ICID, *ptr))
+            {
+                break;
+            }
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc2225_sampleRegisterPreset;
+        // Find the next resettable register
+        while ((*ptr < TMC2225_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2225_registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
 
-static inline UART_Config *channelToUART(uint8_t channel)
-{
-	UNUSED(channel);
-
-	return TMC2225_UARTChannel;
+    if (*ptr < TMC2225_REGISTER_COUNT)
+    {
+        tmc2225_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        TMC2225.config->state = CONFIG_READY;
+    }
 }
 
 {
@@ -632,15 +659,35 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+    StepDir_init(STEPDIR_PRECISION);
+    StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 
-	return tmc2225_reset(&TMC2225);
+    //	return tmc2225_reset(&TMC2225);
+    if (TMC2225.config->state != CONFIG_READY)
+        return false;
+
+    // Reset the dirty bits and wipe the shadow registers
+    for (size_t i = 0; i < TMC2225_REGISTER_COUNT; i++)
+    {
+        tmc2225_dirtyBits[DEFAULT_ICID][i]      = 0;
+        tmc2225_shadowRegister[DEFAULT_ICID][i] = 0;
+    }
+
+    TMC2225.config->state       = CONFIG_RESET;
+    TMC2225.config->configIndex = 0;
+
+    return true;
 }
 
 static uint8_t restore()
 {
-	return tmc2225_restore(&TMC2225);
+    if (TMC2225.config->state != CONFIG_READY)
+        return false;
+
+    TMC2225.config->state       = CONFIG_RESTORE;
+    TMC2225.config->configIndex = 0;
+
+    return true;
 }
 
 static void enableDriver(DriverState state)
@@ -656,89 +703,91 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
-	for(uint8_t motor = 0; motor < MOTORS; motor++)
-	{
-		tmc2225_periodicJob(&TMC2225, tick);
-		StepDir_periodicJob(motor);
-	}
+    if (TMC2225.config->state != CONFIG_READY)
+        writeConfiguration();
+
+    StepDir_periodicJob(0);
 }
 
 void TMC2225_init(void)
 {
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	timerChannel = TIMER_CHANNEL_3;
+    timerChannel = TIMER_CHANNEL_3;
 
 #elif defined(LandungsbrueckeV3)
-	timerChannel = TIMER_CHANNEL_4;
+    timerChannel = TIMER_CHANNEL_4;
 #endif
 
-	Pins.DRV_ENN  = &HAL.IOs->pins->DIO0;
-	Pins.STEP     = &HAL.IOs->pins->DIO6;
-	Pins.DIR      = &HAL.IOs->pins->DIO7;
-	Pins.MS1      = &HAL.IOs->pins->DIO3;
-	Pins.MS2      = &HAL.IOs->pins->DIO4;
-	Pins.DIAG     = &HAL.IOs->pins->DIO1;
-	Pins.INDEX    = &HAL.IOs->pins->DIO2;
-	Pins.UC_PWM   = &HAL.IOs->pins->DIO9;
+    Pins.DRV_ENN = &HAL.IOs->pins->DIO0;
+    Pins.STEP    = &HAL.IOs->pins->DIO6;
+    Pins.DIR     = &HAL.IOs->pins->DIO7;
+    Pins.MS1     = &HAL.IOs->pins->DIO3;
+    Pins.MS2     = &HAL.IOs->pins->DIO4;
+    Pins.DIAG    = &HAL.IOs->pins->DIO1;
+    Pins.INDEX   = &HAL.IOs->pins->DIO2;
+    Pins.UC_PWM  = &HAL.IOs->pins->DIO9;
 
-	HAL.IOs->config->toOutput(Pins.DRV_ENN);
-	HAL.IOs->config->toOutput(Pins.STEP);
-	HAL.IOs->config->toOutput(Pins.DIR);
-	HAL.IOs->config->toOutput(Pins.MS1);
-	HAL.IOs->config->toOutput(Pins.MS2);
-	HAL.IOs->config->toInput(Pins.DIAG);
-	HAL.IOs->config->toInput(Pins.INDEX);
+    HAL.IOs->config->toOutput(Pins.DRV_ENN);
+    HAL.IOs->config->toOutput(Pins.STEP);
+    HAL.IOs->config->toOutput(Pins.DIR);
+    HAL.IOs->config->toOutput(Pins.MS1);
+    HAL.IOs->config->toOutput(Pins.MS2);
+    HAL.IOs->config->toInput(Pins.DIAG);
+    HAL.IOs->config->toInput(Pins.INDEX);
 
-	TMC2225_UARTChannel = HAL.UART;
-	TMC2225_UARTChannel->pinout = UART_PINS_2;
-	TMC2225_UARTChannel->rxtx.init();
+    TMC2225_UARTChannel         = HAL.UART;
+    TMC2225_UARTChannel->pinout = UART_PINS_2;
+    TMC2225_UARTChannel->rxtx.init();
 
-	TMC2225_config = Evalboards.ch2.config;
+    Evalboards.ch2.config->reset       = reset;
+    Evalboards.ch2.config->restore     = restore;
+    Evalboards.ch2.config->state       = CONFIG_RESET;
+    Evalboards.ch2.config->configIndex = 0;
 
-	Evalboards.ch2.config->reset        = reset;
-	Evalboards.ch2.config->restore      = restore;
-	Evalboards.ch2.config->state        = CONFIG_RESET;
-	Evalboards.ch2.config->configIndex  = 0;
+    Evalboards.ch2.rotate         = rotate;
+    Evalboards.ch2.right          = right;
+    Evalboards.ch2.left           = left;
+    Evalboards.ch2.stop           = stop;
+    Evalboards.ch2.GAP            = GAP;
+    Evalboards.ch2.SAP            = SAP;
+    Evalboards.ch2.moveTo         = moveTo;
+    Evalboards.ch2.moveBy         = moveBy;
+    Evalboards.ch2.writeRegister  = writeRegister;
+    Evalboards.ch2.readRegister   = readRegister;
+    Evalboards.ch2.userFunction   = userFunction;
+    Evalboards.ch2.enableDriver   = enableDriver;
+    Evalboards.ch2.checkErrors    = checkErrors;
+    Evalboards.ch2.numberOfMotors = MOTORS;
+    Evalboards.ch2.VMMin          = VM_MIN;
+    Evalboards.ch2.VMMax          = VM_MAX;
+    Evalboards.ch2.deInit         = deInit;
+    Evalboards.ch2.periodicJob    = periodicJob;
 
-	Evalboards.ch2.rotate               = rotate;
-	Evalboards.ch2.right                = right;
-	Evalboards.ch2.left                 = left;
-	Evalboards.ch2.stop                 = stop;
-	Evalboards.ch2.GAP                  = GAP;
-	Evalboards.ch2.SAP                  = SAP;
-	Evalboards.ch2.moveTo               = moveTo;
-	Evalboards.ch2.moveBy               = moveBy;
-	Evalboards.ch2.writeRegister        = writeRegister;
-	Evalboards.ch2.readRegister         = readRegister;
-	Evalboards.ch2.userFunction         = userFunction;
-	Evalboards.ch2.enableDriver         = enableDriver;
-	Evalboards.ch2.checkErrors          = checkErrors;
-	Evalboards.ch2.numberOfMotors       = MOTORS;
-	Evalboards.ch2.VMMin                = VM_MIN;
-	Evalboards.ch2.VMMax                = VM_MAX;
-	Evalboards.ch2.deInit               = deInit;
-	Evalboards.ch2.periodicJob          = periodicJob;
+    TMC2225.config = Evalboards.ch2.config;
+    ;
+    TMC2225.config->callback    = NULL;
+    TMC2225.config->channel     = 0;
+    TMC2225.config->configIndex = 0;
+    TMC2225.config->state       = CONFIG_READY;
 
-	tmc2225_init(&TMC2225, 0, TMC2225_config, &tmc2225_defaultRegisterResetState[0]);
+    StepDir_init(STEPDIR_PRECISION);
+    StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+    StepDir_setVelocityMax(0, 51200);
+    StepDir_setAcceleration(0, 51200);
 
-	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
-	StepDir_setVelocityMax(0, 51200);
-	StepDir_setAcceleration(0, 51200);
-
-	HAL.IOs->config->toOutput(Pins.UC_PWM);
+    HAL.IOs->config->toOutput(Pins.UC_PWM);
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+    Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #elif defined(LandungsbrueckeV3)
-	Pins.UC_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;
-	gpio_af_set(Pins.UC_PWM->port, GPIO_AF_1, Pins.UC_PWM->bitWeight);
+    Pins.UC_PWM->configuration.GPIO_Mode = GPIO_MODE_AF;
+    gpio_af_set(Pins.UC_PWM->port, GPIO_AF_1, Pins.UC_PWM->bitWeight);
 #endif
 
-	vref = 2000;
-	HAL.IOs->config->set(Pins.UC_PWM);
-	Timer.init();
-	Timer.setDuty(timerChannel, ((float)vref) / VREF_FULLSCALE);
+    vref = 2000;
+    HAL.IOs->config->set(Pins.UC_PWM);
+    Timer.init();
+    Timer.setDuty(timerChannel, ((float) vref) / VREF_FULLSCALE);
 
-	enableDriver(DRIVER_ENABLE);
+    enableDriver(DRIVER_ENABLE);
 };
