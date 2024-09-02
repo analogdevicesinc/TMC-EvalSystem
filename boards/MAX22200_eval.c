@@ -1,0 +1,121 @@
+#include "Board.h"
+#include <tmc/ic/MAX22200/MAX22200.h>
+
+#define DEFAULT_ICID    0
+#define MOTORS 8
+
+#define VM_MIN  45   // VM[V/10] min
+#define VM_MAX  360  // VM[V/10] max
+
+static SPIChannelTypeDef *MAX22200_SPIChannel;
+
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
+static void periodicJob(uint32_t tick);
+static uint8_t reset(void);
+static void enableDriver(DriverState state);
+static uint8_t restore(void);
+
+typedef struct
+{
+    IOPinTypeDef *CMD;
+    IOPinTypeDef *EN;
+    IOPinTypeDef *FAULT_N;
+    IOPinTypeDef *TRIGA;
+    IOPinTypeDef *TRIGB;
+    IOPinTypeDef *IREF_CFG1;
+    IOPinTypeDef *IREF_CFG2;
+    IOPinTypeDef *IREF_CFG3;
+} PinsTypeDef;
+static PinsTypeDef Pins;
+void max22200_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength, bool *cmd_mode)
+{
+    if (cmd_mode == true)
+        HAL.IOs->config->setHigh(Pins.CMD);
+
+    MAX22200_SPIChannel->readWriteArray(data, dataLength);
+    HAL.IOs->config->setLow(Pins.CMD);
+}
+
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+{
+    max22200_writeRegister(DEFAULT_ICID, address, value);
+}
+
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+{
+    *value = max22200_readRegister(DEFAULT_ICID, address);
+}
+
+
+static uint8_t reset()
+{
+    return 0;
+}
+
+static uint8_t restore()
+{
+    return 0;
+}
+
+static void enableDriver(DriverState state)
+{
+    UNUSED(state);
+}
+
+static void periodicJob(uint32_t tick)
+{
+    UNUSED(tick);
+}
+
+static void deInit(void)
+{
+}
+
+void MAX22200_init(void)
+{
+    Pins.CMD = &HAL.IOs->pins->DIO14;
+    Pins.EN = &HAL.IOs->pins->DIO0;
+    Pins.FAULT_N = &HAL.IOs->pins->DIO1;
+    Pins.TRIGA = &HAL.IOs->pins->DIO10;
+    Pins.TRIGB = &HAL.IOs->pins->DIO8;
+    Pins.IREF_CFG1 = &HAL.IOs->pins->DIO13;
+    Pins.IREF_CFG2 = &HAL.IOs->pins->DIO12;
+    Pins.IREF_CFG3 = &HAL.IOs->pins->SPI1_SDI;
+
+    MAX22200_SPIChannel = &HAL.SPI->ch2;
+    MAX22200_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
+
+    spi_setFrequency(MAX22200_SPIChannel, 500000);
+
+    HAL.IOs->config->toOutput(Pins.CMD);
+    HAL.IOs->config->toOutput(Pins.EN);
+    HAL.IOs->config->toInput(Pins.FAULT_N);
+
+    HAL.IOs->config->setHigh(Pins.EN);
+
+    Evalboards.ch2.config->reset        = reset;
+    Evalboards.ch2.config->restore      = restore;
+    Evalboards.ch2.config->state        = CONFIG_READY;
+    Evalboards.ch2.config->configIndex  = 0;
+
+
+    Evalboards.ch2.writeRegister        = writeRegister;
+    Evalboards.ch2.readRegister         = readRegister;
+
+    Evalboards.ch2.enableDriver         = enableDriver;
+
+    Evalboards.ch2.numberOfMotors       = MOTORS;
+    Evalboards.ch2.VMMin                = VM_MIN;
+    Evalboards.ch2.VMMax                = VM_MAX;
+    Evalboards.ch2.deInit               = deInit;
+    Evalboards.ch2.periodicJob          = periodicJob;
+
+    configure_MISO_pullup(MAX22200_SPIChannel);
+
+    max22200_writeRegister(DEFAULT_ICID, 0x00, 0x01); // active = 1
+    max22200_readRegister(DEFAULT_ICID, 0x00); // read status register to clear uvm flag
+
+    Timer.init();
+    wait(100);
+}

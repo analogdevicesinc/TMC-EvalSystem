@@ -6,39 +6,39 @@
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
-
 #ifndef BOARD_ASSIGNMENT_H
 #define BOARD_ASSIGNMENT_H
 
 #include "boards/Board.h"
 
-typedef enum {
-	FOUND_BY_NONE,
-	FOUND_BY_MONOFLOP,
-	FOUND_BY_EEPROM
+typedef enum
+{
+    FOUND_BY_NONE,
+    FOUND_BY_MONOFLOP,
+    FOUND_BY_EEPROM
 } IDFinder;
 
 typedef struct
 {
-	uint8_t state;          // detection state of this board
-	uint8_t id;             // id of board
-	IDFinder detectedBy;  // Holds the method used to detect the ID (Monoflop or EEPROM)
-	uint32_t counter_1;     // Timer cycles elapsed on ID pulse rising edge
-	uint32_t counter_2;     // Timer cycles elapsed on ID pulse falling edge
-	uint32_t timer_1;       // Current timer value on ID pulse rising edge
-	uint32_t timer_2;       // Current timer value on ID pulse falling edge
-} IdStateTypeDef;         // interface for id and detection state of a board
+    uint8_t state;       // detection state of this board
+    uint8_t id;          // id of board
+    IDFinder detectedBy; // Holds the method used to detect the ID (Monoflop or EEPROM)
+    uint32_t counter_1;  // Timer cycles elapsed on ID pulse rising edge
+    uint32_t counter_2;  // Timer cycles elapsed on ID pulse falling edge
+    uint32_t timer_1;    // Current timer value on ID pulse rising edge
+    uint32_t timer_2;    // Current timer value on ID pulse falling edge
+} IdStateTypeDef;        // interface for id and detection state of a board
 
 typedef struct
 {
-	IdStateTypeDef ch1;  // interface for id and detection state for the driver board
-	IdStateTypeDef ch2;  // interface for id and detection state for the motion controller board
-} IdAssignmentTypeDef;   // interface for id and detection state of driver and motion controller board
+    IdStateTypeDef ch1; // interface for id and detection state for the driver board
+    IdStateTypeDef ch2; // interface for id and detection state for the motion controller board
+} IdAssignmentTypeDef;  // interface for id and detection state of driver and motion controller board
 
 extern IdAssignmentTypeDef IdState;
 
-int32_t Board_assign(IdAssignmentTypeDef *ids);     // ids and states of assigned driver and motion controller board
-int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of supported driver and motion controller board
+int32_t Board_assign(IdAssignmentTypeDef *ids);    // ids and states of assigned driver and motion controller board
+int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supported driver and motion controller board
 
 #include "boards/SelfTest.h"
 
@@ -92,13 +92,14 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC8100        34
 #define ID_TMC2262        35
 #define ID_MAX22215       36
-
+#define ID_MAX22200_EVAL 42
 #define TM01       1414332417
 
 #define ID_GROUP_TMC9660_STEPPER(id) ((id) >= ID_TMC9660_STEPPER_BL_EVAL && (id) <= ID_TMC9660_STEPPER_PARAM_EVAL)
 #define ID_GROUP_TMC9660_3PH(id) ((id) >= ID_TMC9660_3PH_BL_EVAL && (id) <= ID_TMC9660_3PH_PARAM_EVAL)
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
+extern void MAX22200_init();
 extern void MAX22216_init();
 extern void MAX22204_init();
 extern void MAX22210_init();
@@ -140,12 +141,13 @@ extern void MAX22215_init();
 extern void SelfTest_init();
 
 #if defined(LandungsbrueckeV3)
-	extern void PD8_IRQHandler();
+extern void PD8_IRQHandler();
 #endif
 
-typedef struct {
-	uint16_t id;
-	void (*init)(void);
+typedef struct
+{
+    uint16_t id;
+    void (*init)(void);
 } init_assignment;
 
 static const init_assignment init_ch1[] =
@@ -189,6 +191,7 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_MAX22216_BOB,  .init = MAX22216_init    },
 	{ .id = ID_MAX22204_EVAL, .init = MAX22204_init    },
 	{ .id = ID_MAX22210_EVAL, .init = MAX22210_init    },
+	{ .id = ID_MAX22200_EVAL, .init = MAX22200_init    },
 	{ .id = ID_TMC2209,     .init = TMC2209_init     },
 	{ .id = ID_TMC2225,     .init = TMC2225_init     },
 	{ .id = ID_TMC2226,     .init = TMC2226_init     },
