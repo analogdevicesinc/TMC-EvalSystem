@@ -11,6 +11,7 @@
 #include "tmc/ic/TMC2224/TMC2224.h"
 #include "tmc/StepDir.h"
 
+#define DEFAULT_ICID 0
 /*Phase 1 rework*/
 static UART_Config *TMC2224_UARTChannel;
 static uint8_t nodeAddress = 0;
@@ -67,6 +68,44 @@ static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
+void tmc2224_writeConfiguration()
+{
+    uint8_t *ptr = &TMC2224.config->configIndex;
+    const int32_t *settings;
+
+    if (TMC2224.config->state == CONFIG_RESTORE)
+    {
+        settings = tmc2224_shadowRegister;
+        // Find the next restorable register
+        while (*ptr < TMC2224_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc2224_registerAccess[*ptr]) && tmc2224_getDirtyBit(DEFAULT_ICID, *ptr))
+            {
+                break;
+            }
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc2224_sampleRegisterPreset;
+        while ((*ptr < TMC2224_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2224_registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+
+    if (*ptr < TMC2224_REGISTER_COUNT)
+    {
+        tmc2224_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else
+    {
+        TMC2224.config->state = CONFIG_READY;
+    }
+}
 //static ConfigurationTypeDef *TMC2224_config;
 
 // Helper macro - Access the chip object in the driver boards union
@@ -211,12 +250,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			StepDir_setAcceleration(motor, *value);
 		}
 		break;
-	case 6:
-		// UART slave address
-		if(readWrite == READ) {
-			*value = tmc2224_get_slave(&TMC2224);
-		} else if(readWrite == WRITE) {
-			tmc2224_set_slave(&TMC2224, *value);
 		}
 		break;
 	default:
@@ -225,6 +258,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	}
 
 	return errors;
+    case 6:
+        // UART slave address
+        if (readWrite == READ)
+        {
+            *value = TMC2224.slave;
+        }
+        else if (readWrite == WRITE)
+        {
+            TMC2224.slave = *value;
+        }
+        break;
 }
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
@@ -235,6 +279,14 @@ static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
 	return handleParameter(READ, motor, type, value);
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+{
+    tmc2224_writeRegister(DEFAULT_ICID, address, value);
+}
+
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+{
+    *value = tmc2224_readRegister(DEFAULT_ICID, address);
 }
 
 static void checkErrors(uint32_t tick)
@@ -278,15 +330,34 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+    StepDir_init(STEPDIR_PRECISION);
+    StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 
-	return tmc2224_reset(&TMC2224,TMC2224.config);
+    if (TMC2224.config->state != CONFIG_READY)
+        return 0;
+
+    // Reset the dirty bits and wipe the shadow registers
+    for (size_t i = 0; i < TMC2224_REGISTER_COUNT; i++)
+    {
+        tmc2224_dirtyBits[DEFAULT_ICID][i]      = 0;
+        tmc2224_shadowRegister[DEFAULT_ICID][i] = 0;
+        ;
+    }
+    TMC2224.config->state       = CONFIG_RESET;
+    TMC2224.config->configIndex = 0;
+
+    return 1;
 }
 
 static uint8_t restore()
 {
-	return tmc2224_restore(TMC2224.config);
+    if (TMC2224.config->state != CONFIG_READY)
+        return 0;
+
+    TMC2224.config->state       = CONFIG_RESTORE;
+    TMC2224.config->configIndex = 0;
+
+    return 1;
 }
 
 static void enableDriver(DriverState state)
@@ -302,68 +373,71 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
-	for(uint8_t motor = 0; motor < MOTORS; motor++)
-	{
-		tmc2224_periodicJob(motor, tick, &TMC2224, TMC2224.config);
-		StepDir_periodicJob(motor);
-	}
+    if (TMC2224.config->state != CONFIG_READY && (tick - TMC2224.oldTick) > 2)
+    {
+        tmc2224_writeConfiguration();
+        TMC2224.oldTick = tick;
+    }
+
+    StepDir_periodicJob(0);
 }
 
 void TMC2224_init(void)
 {
-	tmc_fillCRC8Table(0x07, true, 1);
+    TMC2224.velocity     = 0;
+    TMC2224.oldTick      = 0;
+    TMC2224.oldX         = 0;
+    TMC2224.vMaxModified = false;
 
-	tmc2224_initConfig(&TMC2224);
+    Pins.DRV_ENN = &HAL.IOs->pins->DIO0;
+    Pins.STEP    = &HAL.IOs->pins->DIO6;
+    Pins.DIR     = &HAL.IOs->pins->DIO7;
+    Pins.MS1     = &HAL.IOs->pins->DIO3;
+    Pins.MS2     = &HAL.IOs->pins->DIO4;
+    Pins.DIAG    = &HAL.IOs->pins->DIO1;
+    Pins.INDEX   = &HAL.IOs->pins->DIO2;
 
-	Pins.DRV_ENN  = &HAL.IOs->pins->DIO0;
-	Pins.STEP     = &HAL.IOs->pins->DIO6;
-	Pins.DIR      = &HAL.IOs->pins->DIO7;
-	Pins.MS1      = &HAL.IOs->pins->DIO3;
-	Pins.MS2      = &HAL.IOs->pins->DIO4;
-	Pins.DIAG     = &HAL.IOs->pins->DIO1;
-	Pins.INDEX    = &HAL.IOs->pins->DIO2;
+    HAL.IOs->config->toOutput(Pins.DRV_ENN);
+    HAL.IOs->config->toOutput(Pins.STEP);
+    HAL.IOs->config->toOutput(Pins.DIR);
+    HAL.IOs->config->toOutput(Pins.MS1);
+    HAL.IOs->config->toOutput(Pins.MS2);
+    HAL.IOs->config->toInput(Pins.DIAG);
+    HAL.IOs->config->toInput(Pins.INDEX);
 
-	HAL.IOs->config->toOutput(Pins.DRV_ENN);
-	HAL.IOs->config->toOutput(Pins.STEP);
-	HAL.IOs->config->toOutput(Pins.DIR);
-	HAL.IOs->config->toOutput(Pins.MS1);
-	HAL.IOs->config->toOutput(Pins.MS2);
-	HAL.IOs->config->toInput(Pins.DIAG);
-	HAL.IOs->config->toInput(Pins.INDEX);
+    TMC2224_UARTChannel = HAL.UART;
+    TMC2224_UARTChannel->rxtx.init();
 
-	TMC2224_UARTChannel = HAL.UART;
-	TMC2224_UARTChannel->rxtx.init();
+    TMC2224.config = Evalboards.ch2.config;
 
-	TMC2224.config = Evalboards.ch2.config;
+    Evalboards.ch2.config->reset       = reset;
+    Evalboards.ch2.config->restore     = restore;
+    Evalboards.ch2.config->state       = CONFIG_RESET;
+    Evalboards.ch2.config->configIndex = 0;
 
-	Evalboards.ch2.config->reset        = reset;
-	Evalboards.ch2.config->restore      = restore;
-	Evalboards.ch2.config->state        = CONFIG_RESET;
-	Evalboards.ch2.config->configIndex  = 0;
+    Evalboards.ch2.rotate         = rotate;
+    Evalboards.ch2.right          = right;
+    Evalboards.ch2.left           = left;
+    Evalboards.ch2.stop           = stop;
+    Evalboards.ch2.GAP            = GAP;
+    Evalboards.ch2.SAP            = SAP;
+    Evalboards.ch2.moveTo         = moveTo;
+    Evalboards.ch2.moveBy         = moveBy;
+    Evalboards.ch2.writeRegister  = writeRegister;
+    Evalboards.ch2.readRegister   = readRegister;
+    Evalboards.ch2.userFunction   = userFunction;
+    Evalboards.ch2.enableDriver   = enableDriver;
+    Evalboards.ch2.checkErrors    = checkErrors;
+    Evalboards.ch2.numberOfMotors = MOTORS;
+    Evalboards.ch2.VMMin          = VM_MIN;
+    Evalboards.ch2.VMMax          = VM_MAX;
+    Evalboards.ch2.deInit         = deInit;
+    Evalboards.ch2.periodicJob    = periodicJob;
 
-	Evalboards.ch2.rotate               = rotate;
-	Evalboards.ch2.right                = right;
-	Evalboards.ch2.left                 = left;
-	Evalboards.ch2.stop                 = stop;
-	Evalboards.ch2.GAP                  = GAP;
-	Evalboards.ch2.SAP                  = SAP;
-	Evalboards.ch2.moveTo               = moveTo;
-	Evalboards.ch2.moveBy               = moveBy;
-	Evalboards.ch2.writeRegister        = tmc2224_writeRegister;
-	Evalboards.ch2.readRegister         = tmc2224_readRegister;
-	Evalboards.ch2.userFunction         = userFunction;
-	Evalboards.ch2.enableDriver         = enableDriver;
-	Evalboards.ch2.checkErrors          = checkErrors;
-	Evalboards.ch2.numberOfMotors       = MOTORS;
-	Evalboards.ch2.VMMin                = VM_MIN;
-	Evalboards.ch2.VMMax                = VM_MAX;
-	Evalboards.ch2.deInit               = deInit;
-	Evalboards.ch2.periodicJob          = periodicJob;
+    StepDir_init(STEPDIR_PRECISION);
+    StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+    StepDir_setVelocityMax(0, 51200);
+    StepDir_setAcceleration(0, 51200);
 
-	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
-	StepDir_setVelocityMax(0, 51200);
-	StepDir_setAcceleration(0, 51200);
-
-	enableDriver(DRIVER_ENABLE);
+    enableDriver(DRIVER_ENABLE);
 };
