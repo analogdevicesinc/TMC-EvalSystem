@@ -2,54 +2,56 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
-
 
 #include "Board.h"
 #include "tmc/ic/TMC2224/TMC2224.h"
 #include "tmc/StepDir.h"
 
 #define DEFAULT_ICID 0
-/*Phase 1 rework*/
-static UART_Config *TMC2224_UARTChannel;
-static uint8_t nodeAddress = 0;
 
-bool tmc2224_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
-{
-    UNUSED(icID);
-    int32_t status = UART_readWrite(TMC2224_UARTChannel, data, writeLength, readLength);
-    if(status == -1)
-        return false;
-    return true;
-}
-
-uint8_t tmc2224_getNodeAddress(uint16_t icID)
-{
-    UNUSED(icID);
-
-    return nodeAddress;
-}
-
-/*Phase 1 rework*/
-
-#undef  TMC2224_MAX_VELOCITY
-#define TMC2224_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
+#undef TMC2224_MAX_VELOCITY
+#define TMC2224_MAX_VELOCITY STEPDIR_MAX_VELOCITY
 
 // Stepdir precision: 2^17 -> 17 digits of precision
 #define STEPDIR_PRECISION (1 << 17)
 
-#define ERRORS_VM        (1<<0)
-#define ERRORS_VM_UNDER  (1<<1)
-#define ERRORS_VM_OVER   (1<<2)
+#define ERRORS_VM       (1 << 0)
+#define ERRORS_VM_UNDER (1 << 1)
+#define ERRORS_VM_OVER  (1 << 2)
+#define VM_MIN          50  // VM[V/10] min
+#define VM_MAX          390 // VM[V/10] max
+#define MOTORS          1
+#define TIMEOUT_VALUE   20 // 15 ms
 
-#define VM_MIN  50   // VM[V/10] min
-#define VM_MAX  390  // VM[V/10] max
+// Usage note: use 1 TypeDef per IC
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t velocity;
+    int32_t oldX;
+    uint32_t oldTick;
+    bool vMaxModified;
+    uint8_t slave;
+} TMC2224TypeDef;
+static TMC2224TypeDef TMC2224;
 
-#define MOTORS 1
+typedef struct
+{
+    IOPinTypeDef *DRV_ENN;
+    IOPinTypeDef *STEP;
+    IOPinTypeDef *DIR;
+    IOPinTypeDef *MS1;
+    IOPinTypeDef *MS2;
+    IOPinTypeDef *DIAG;
+    IOPinTypeDef *INDEX;
+} PinsTypeDef;
+static PinsTypeDef Pins;
 
-#define TIMEOUT_VALUE 20 // 15 ms
+static UART_Config *TMC2224_UARTChannel;
+static uint8_t nodeAddress = 0;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -59,11 +61,11 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-
-static void checkErrors (uint32_t tick);
+static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
+static void checkErrors(uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
 static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
@@ -106,158 +108,144 @@ void tmc2224_writeConfiguration()
         TMC2224.config->state = CONFIG_READY;
     }
 }
-//static ConfigurationTypeDef *TMC2224_config;
 
-// Helper macro - Access the chip object in the driver boards union
-//#define TMC2224 (driverBoards.tmc2224)
-
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-//#define TMC2224_CRC(data, length) tmc_CRC8(data, length, 1)
-
-typedef struct
+bool tmc2224_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
-	IOPinTypeDef  *DRV_ENN;
-	IOPinTypeDef  *STEP;
-	IOPinTypeDef  *DIR;
-	IOPinTypeDef  *MS1;
-	IOPinTypeDef  *MS2;
-	IOPinTypeDef  *DIAG;
-	IOPinTypeDef  *INDEX;
-} PinsTypeDef;
+    UNUSED(icID);
+    int32_t status = UART_readWrite(TMC2224_UARTChannel, data, writeLength, readLength);
+    if (status == -1)
+        return false;
+    return true;
+}
 
-static PinsTypeDef Pins;
+uint8_t tmc2224_getNodeAddress(uint16_t icID)
+{
+    UNUSED(icID);
 
-//void tmc2224_writeRegister(uint8_t motor, uint16_t address, int32_t value)
-//{
-//	UNUSED(motor);
-//	UART_writeInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), (uint8_t) address, value);
-//	TMC2224_config->shadowRegister[(uint8_t) address] = value;
-//	TMC2224.registerAccess[(uint8_t) address] |= TMC_ACCESS_DIRTY;
-//}
-//
-//void tmc2224_readRegister(uint8_t motor, uint16_t address, int32_t *value)
-//{
-//	UNUSED(motor);
-//	if (!TMC_IS_READABLE(TMC2224.registerAccess[(uint8_t) address])){
-//
-//		*value= TMC2224_config->shadowRegister[(uint8_t) address];
-//		return;
-//	}
-//	UART_readInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), (uint8_t) address, value);
-//}
+    return nodeAddress;
+}
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	if(motor >= MOTORS)
-		return TMC_ERROR_MOTOR;
+    if (motor >= MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	StepDir_rotate(motor, velocity);
+    StepDir_rotate(motor, velocity);
 
-	return TMC_ERROR_NONE;
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	return rotate(motor, velocity);
+    return rotate(motor, velocity);
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	return rotate(motor, -velocity);
+    return rotate(motor, -velocity);
 }
 
 static uint32_t stop(uint8_t motor)
 {
-	return rotate(motor, 0);
+    return rotate(motor, 0);
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	if(motor >= MOTORS)
-		return TMC_ERROR_MOTOR;
+    if (motor >= MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	StepDir_moveTo(motor, position);
+    StepDir_moveTo(motor, position);
 
-	return TMC_ERROR_NONE;
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	if(motor >= MOTORS)
-		return TMC_ERROR_MOTOR;
+    if (motor >= MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	// determine actual position and add numbers of ticks to move
-	*ticks += StepDir_getActualPosition(motor);
+    // determine actual position and add numbers of ticks to move
+    *ticks += StepDir_getActualPosition(motor);
 
-	return moveTo(motor, *ticks);
+    return moveTo(motor, *ticks);
 }
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	uint32_t errors = TMC_ERROR_NONE;
+    uint32_t errors = TMC_ERROR_NONE;
 
+    if (motor >= MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	if(motor >= MOTORS)
-		return TMC_ERROR_MOTOR;
-
-	switch(type)
-	{
-	case 0:
-		// Target position
-		if(readWrite == READ) {
-			*value = StepDir_getTargetPosition(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_moveTo(motor, *value);
-		}
-		break;
-	case 1:
-		// Actual position
-		if(readWrite == READ) {
-			*value = StepDir_getActualPosition(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setActualPosition(motor, *value);
-		}
-		break;
-	case 2:
-		// Target speed
-		if(readWrite == READ) {
-			*value = StepDir_getTargetVelocity(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_rotate(motor, *value);
-		}
-		break;
-	case 3:
-		// Actual speed
-		if(readWrite == READ) {
-			*value = StepDir_getActualVelocity(motor);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 4:
-		// Maximum speed
-		if(readWrite == READ) {
-			*value = StepDir_getVelocityMax(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setVelocityMax(motor, abs(*value));
-		}
-		break;
-	case 5:
-		// Maximum acceleration
-		if(readWrite == READ) {
-			*value = StepDir_getAcceleration(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setAcceleration(motor, *value);
-		}
-		break;
-		}
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
-	}
-
-	return errors;
+    switch (type)
+    {
+    case 0:
+        // Target position
+        if (readWrite == READ)
+        {
+            *value = StepDir_getTargetPosition(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_moveTo(motor, *value);
+        }
+        break;
+    case 1:
+        // Actual position
+        if (readWrite == READ)
+        {
+            *value = StepDir_getActualPosition(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_setActualPosition(motor, *value);
+        }
+        break;
+    case 2:
+        // Target speed
+        if (readWrite == READ)
+        {
+            *value = StepDir_getTargetVelocity(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_rotate(motor, *value);
+        }
+        break;
+    case 3:
+        // Actual speed
+        if (readWrite == READ)
+        {
+            *value = StepDir_getActualVelocity(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            errors |= TMC_ERROR_TYPE;
+        }
+        break;
+    case 4:
+        // Maximum speed
+        if (readWrite == READ)
+        {
+            *value = StepDir_getVelocityMax(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_setVelocityMax(motor, abs(*value));
+        }
+        break;
+    case 5:
+        // Maximum acceleration
+        if (readWrite == READ)
+        {
+            *value = StepDir_getAcceleration(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_setAcceleration(motor, *value);
+        }
+        break;
     case 6:
         // UART slave address
         if (readWrite == READ)
@@ -269,16 +257,24 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             TMC2224.slave = *value;
         }
         break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
+    }
+
+    return errors;
 }
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
-	return handleParameter(WRITE, motor, type, &value);
+    return handleParameter(WRITE, motor, type, &value);
 }
 
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
-	return handleParameter(READ, motor, type, value);
+    return handleParameter(READ, motor, type, value);
+}
+
 static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
 {
     tmc2224_writeRegister(DEFAULT_ICID, address, value);
@@ -291,41 +287,41 @@ static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 
 static void checkErrors(uint32_t tick)
 {
-	UNUSED(tick);
-	Evalboards.ch2.errors = 0;
+    UNUSED(tick);
+    Evalboards.ch2.errors = 0;
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32_t errors = 0;
+    uint32_t errors = 0;
 
-	switch(type)
-	{
-	case 0:  // Read StepDir status bits
-		*value = StepDir_getStatus(motor);
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
-	}
+    switch (type)
+    {
+    case 0: // Read StepDir status bits
+        *value = StepDir_getStatus(motor);
+        break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
+    }
 
-	return errors;
+    return errors;
 }
 
 static void deInit(void)
 {
-	enableDriver(DRIVER_DISABLE);
+    enableDriver(DRIVER_DISABLE);
 
-	HAL.IOs->config->reset(Pins.DRV_ENN);
-	HAL.IOs->config->reset(Pins.STEP);
-	HAL.IOs->config->reset(Pins.DIR);
-	HAL.IOs->config->reset(Pins.MS1);
-	HAL.IOs->config->reset(Pins.MS2);
-	HAL.IOs->config->reset(Pins.DIAG);
-	HAL.IOs->config->reset(Pins.INDEX);
+    HAL.IOs->config->reset(Pins.DRV_ENN);
+    HAL.IOs->config->reset(Pins.STEP);
+    HAL.IOs->config->reset(Pins.DIR);
+    HAL.IOs->config->reset(Pins.MS1);
+    HAL.IOs->config->reset(Pins.MS2);
+    HAL.IOs->config->reset(Pins.DIAG);
+    HAL.IOs->config->reset(Pins.INDEX);
 
-	TMC2224_UARTChannel->rxtx.deInit();
-	StepDir_deInit();
+    TMC2224_UARTChannel->rxtx.deInit();
+    StepDir_deInit();
 };
 
 static uint8_t reset()
@@ -362,13 +358,13 @@ static uint8_t restore()
 
 static void enableDriver(DriverState state)
 {
-	if(state == DRIVER_USE_GLOBAL_ENABLE)
-		state = Evalboards.driverEnable;
+    if (state == DRIVER_USE_GLOBAL_ENABLE)
+        state = Evalboards.driverEnable;
 
-	if(state == DRIVER_DISABLE)
-		HAL.IOs->config->setHigh(Pins.DRV_ENN);
-	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE))
-		HAL.IOs->config->setLow(Pins.DRV_ENN);
+    if (state == DRIVER_DISABLE)
+        HAL.IOs->config->setHigh(Pins.DRV_ENN);
+    else if ((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE))
+        HAL.IOs->config->setLow(Pins.DRV_ENN);
 }
 
 static void periodicJob(uint32_t tick)
