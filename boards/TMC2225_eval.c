@@ -41,6 +41,7 @@ uint8_t tmc2225_getNodeAddress(uint16_t icID)
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
+#define DEFAULT_ICID    0
 
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  390  // VM[V/10] max
@@ -104,14 +105,10 @@ static inline UART_Config *channelToUART(uint8_t channel)
 	return TMC2225_UARTChannel;
 }
 
-void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	tmc2225_writeRegister(motor, (uint8_t) address, value);
 }
 
-void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value = tmc2225_readRegister(motor, (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -162,302 +159,407 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	uint32_t errors = TMC_ERROR_NONE;
-	int32_t buffer = 0;
+    uint32_t errors = TMC_ERROR_NONE;
+    int32_t buffer  = 0;
 
-	if(motor >= MOTORS)
-		return TMC_ERROR_MOTOR;
+    if (motor >= MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	switch(type)
-	{
-	case 0:
-		// Target position
-		if(readWrite == READ) {
-			*value = StepDir_getTargetPosition(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_moveTo(motor, *value);
-		}
-		break;
-	case 1:
-		// Actual position
-		if(readWrite == READ) {
-			*value = StepDir_getActualPosition(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setActualPosition(motor, *value);
-		}
-		break;
-	case 2:
-		// Target speed
-		if(readWrite == READ) {
-			*value = StepDir_getTargetVelocity(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_rotate(motor, *value);
-		}
-		break;
-	case 3:
-		// Actual speed
-		if(readWrite == READ) {
-			*value = StepDir_getActualVelocity(motor);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 4:
-		// Maximum speed
-		if(readWrite == READ) {
-			*value = StepDir_getVelocityMax(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setVelocityMax(motor, abs(*value));
-		}
-		break;
-	case 5:
-		// Maximum acceleration
-		if(readWrite == READ) {
-			*value = StepDir_getAcceleration(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setAcceleration(motor, *value);
-		}
-		break;
-	case 6:
-		// Maximum current
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_IRUN_FIELD);
-		} else if(readWrite == WRITE) {
-			tmc2225_field_write(motor, TMC2225_IRUN_FIELD, *value);
-		}
-		break;
-	case 7:
-		// Standby current
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_IHOLD_FIELD);
-		} else if(readWrite == WRITE) {
-			tmc2225_field_write(motor, TMC2225_IHOLD_FIELD, *value);
-		}
-		break;
-	case 8:
-		// Position reached flag
-		if(readWrite == READ) {
-			*value = (StepDir_getStatus(motor) & STATUS_TARGET_REACHED)? 1:0;
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 9:
-		// VREF
-		if (readWrite == READ) {
-			*value = vref;
-		} else {
-			if ((uint32_t) *value < VREF_FULLSCALE) {
-				vref = *value;
-				Timer.setDuty(timerChannel, ((float)vref) / VREF_FULLSCALE);
-			} else {
-				errors |= TMC_ERROR_VALUE;
-			}
-		}
-		break;
-	case 28:
-		// Internal RSense
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_INTERNAL_RSENSE_FIELD);
-		} else if(readWrite == WRITE) {
-			tmc2225_field_write(motor, TMC2225_INTERNAL_RSENSE_FIELD, *value);
-		}
-		break;
-	case 29:
-		// Measured Speed
-		if(readWrite == READ) {
-			buffer = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)tmc2225_field_read(motor, TMC2225_TSTEP_FIELD));
-			*value = (abs(buffer) < 20) ? 0 : buffer;
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 50: // StepDir internal(0)/external(1)
-		if(readWrite == READ) {
-			*value = StepDir_getMode(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setMode(motor, *value);
-		}
-		break;
-	case 51: // StepDir interrupt frequency
-		if(readWrite == READ) {
-			*value = StepDir_getFrequency(motor);
-		} else if(readWrite == WRITE) {
-			StepDir_setFrequency(motor, *value);
-		}
-		break;
-	case 140:
-		// Microstep Resolution
-		if(readWrite == READ) {
-			*value = 256 >> tmc2225_field_read(motor, TMC2225_MRES_FIELD);
-		} else if(readWrite == WRITE) {
-			switch(*value)
-			{
-			case 1:    *value = 8;   break;
-			case 2:    *value = 7;   break;
-			case 4:    *value = 6;   break;
-			case 8:    *value = 5;   break;
-			case 16:   *value = 4;   break;
-			case 32:   *value = 3;   break;
-			case 64:   *value = 2;   break;
-			case 128:  *value = 1;   break;
-			case 256:  *value = 0;   break;
-			default:   *value = -1;  break;
-			}
+    switch (type)
+    {
+    case 0:
+        // Target position
+        if (readWrite == READ)
+        {
+            *value = StepDir_getTargetPosition(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_moveTo(motor, *value);
+        }
+        break;
+    case 1:
+        // Actual position
+        if (readWrite == READ)
+        {
+            *value = StepDir_getActualPosition(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_setActualPosition(motor, *value);
+        }
+        break;
+    case 2:
+        // Target speed
+        if (readWrite == READ)
+        {
+            *value = StepDir_getTargetVelocity(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_rotate(motor, *value);
+        }
+        break;
+    case 3:
+        // Actual speed
+        if (readWrite == READ)
+        {
+            *value = StepDir_getActualVelocity(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            errors |= TMC_ERROR_TYPE;
+        }
+        break;
+    case 4:
+        // Maximum speed
+        if (readWrite == READ)
+        {
+            *value = StepDir_getVelocityMax(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_setVelocityMax(motor, abs(*value));
+        }
+        break;
+    case 5:
+        // Maximum acceleration
+        if (readWrite == READ)
+        {
+            *value = StepDir_getAcceleration(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_setAcceleration(motor, *value);
+        }
+        break;
+    case 6:
+        // Maximum current
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_IRUN_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_IRUN_FIELD, *value);
+        }
+        break;
+    case 7:
+        // Standby current
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_IHOLD_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_IHOLD_FIELD, *value);
+        }
+        break;
+    case 8:
+        // Position reached flag
+        if (readWrite == READ)
+        {
+            *value = (StepDir_getStatus(motor) & STATUS_TARGET_REACHED) ? 1 : 0;
+        }
+        else if (readWrite == WRITE)
+        {
+            errors |= TMC_ERROR_TYPE;
+        }
+        break;
+    case 9:
+        // VREF
+        if (readWrite == READ)
+        {
+            *value = vref;
+        }
+        else
+        {
+            if ((uint32_t) *value < VREF_FULLSCALE)
+            {
+                vref = *value;
+                Timer.setDuty(timerChannel, ((float) vref) / VREF_FULLSCALE);
+            }
+            else
+            {
+                errors |= TMC_ERROR_VALUE;
+            }
+        }
+        break;
+    case 28:
+        // Internal RSense
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_INTERNAL_RSENSE_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_INTERNAL_RSENSE_FIELD, *value);
+        }
+        break;
+    case 29:
+        // Measured Speed
+        if (readWrite == READ)
+        {
+            buffer = (int32_t) (((int64_t) StepDir_getFrequency(motor) * (int64_t) 122) /
+                                (int64_t) tmc2225_fieldRead(DEFAULT_ICID, TMC2225_TSTEP_FIELD));
+            *value = (abs(buffer) < 20) ? 0 : buffer;
+        }
+        else if (readWrite == WRITE)
+        {
+            errors |= TMC_ERROR_TYPE;
+        }
+        break;
+    case 50: // StepDir internal(0)/external(1)
+        if (readWrite == READ)
+        {
+            *value = StepDir_getMode(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_setMode(motor, *value);
+        }
+        break;
+    case 51: // StepDir interrupt frequency
+        if (readWrite == READ)
+        {
+            *value = StepDir_getFrequency(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            StepDir_setFrequency(motor, *value);
+        }
+        break;
+    case 140:
+        // Microstep Resolution
+        if (readWrite == READ)
+        {
+            *value = 256 >> tmc2225_fieldRead(DEFAULT_ICID, TMC2225_MRES_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            switch (*value)
+            {
+            case 1:
+                *value = 8;
+                break;
+            case 2:
+                *value = 7;
+                break;
+            case 4:
+                *value = 6;
+                break;
+            case 8:
+                *value = 5;
+                break;
+            case 16:
+                *value = 4;
+                break;
+            case 32:
+                *value = 3;
+                break;
+            case 64:
+                *value = 2;
+                break;
+            case 128:
+                *value = 1;
+                break;
+            case 256:
+                *value = 0;
+                break;
+            default:
+                *value = -1;
+                break;
+            }
 
-			if(*value != -1)
-			{
-				tmc2225_field_write(motor, TMC2225_MRES_FIELD, *value);
-			}
-			else
-			{
-				errors |= TMC_ERROR_VALUE;
-			}
-		}
-		break;
-	case 162:
-		// Chopper blank time
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_TBL_FIELD);
-		} else if(readWrite == WRITE) {
-			tmc2225_field_write(motor, TMC2225_TBL_FIELD, *value);
-		}
-		break;
-	case 165:
-		// Chopper hysteresis end / fast decay time
-		if(readWrite == READ) {
-			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
-			{
-				*value = tmc2225_field_read(motor, TMC2225_HEND_FIELD);
-			}
-			else
-			{
-				buffer = tmc2225_readRegister(motor, TMC2225_CHOPCONF);
-				*value = (tmc2225_readRegister(motor, TMC2225_CHOPCONF) >> 4) & 0x07;
-				if(buffer & (1<<11))
-					*value |= 1<<3;
-			}
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 166:
-		// Chopper hysteresis start / sine wave offset
-		if(readWrite == READ) {
-			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
-			{
-				*value = tmc2225_field_read(motor, TMC2225_HSTRT_FIELD);
-			}
-			else
-			{
-				buffer = tmc2225_readRegister(motor, TMC2225_CHOPCONF);
-				*value = (tmc2225_readRegister(motor, TMC2225_CHOPCONF) >> 7) & 0x0F;
-				if(buffer & (1<<11))
-					*value |= 1<<3;
-			}
-		} else if(readWrite == WRITE) {
-			if(tmc2225_readRegister(motor, TMC2225_CHOPCONF) & (1<<14))
-			{
-				tmc2225_field_write(motor, TMC2225_HSTRT_FIELD, *value);
-			}
-			else
-			{
-				tmc2225_field_write(motor, TMC2225_HEND_FIELD, *value);
-			}
-		}
-		break;
-	case 167:
-		// Chopper off time
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_TOFF_FIELD);
-		} else if(readWrite == WRITE) {
-			tmc2225_field_write(motor, TMC2225_TOFF_FIELD, *value);
-		}
-		break;
-	case 179:
-		// VSense
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_VSENSE_FIELD);
-		} else if(readWrite == WRITE) {
-			tmc2225_field_write(motor, TMC2225_VSENSE_FIELD, *value);
-		}
-		break;
-	case 180:
-		// smartEnergy actual current
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_CS_ACTUAL_FIELD);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 181:
-		// smartEnergy stall velocity
-		if(readWrite == READ) {
-			*value = StepDir_getStallGuardThreshold(motor);
-		} else if(readWrite == WRITE) {
-			// Store the threshold value in the internal StepDir generator
-			StepDir_setStallGuardThreshold(motor, *value);
-		}
-		break;
-	case 186:
-		// PWM threshold speed
-		if(readWrite == READ) {
-			buffer = tmc2225_readRegister(motor, TMC2225_TPWMTHRS);
-			*value = MIN(0xFFFFF, (1<<24) / ((buffer) ? buffer : 1));
-		} else if(readWrite == WRITE) {
-			*value = MIN(0xFFFFF, (1<<24) / ((*value) ? *value : 1));
-			tmc2225_writeRegister(motor, TMC2225_TPWMTHRS, *value);
-		}
-		break;
-	case 187:
-		// PWM gradient
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_PWM_GRAD_FIELD);
-		} else if(readWrite == WRITE) {
-			// Set gradient
-			tmc2225_field_write(motor, TMC2225_PWM_GRAD_FIELD, *value);
+            if (*value != -1)
+            {
+                tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_MRES_FIELD, *value);
+            }
+            else
+            {
+                errors |= TMC_ERROR_VALUE;
+            }
+        }
+        break;
+    case 162:
+        // Chopper blank time
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_TBL_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_TBL_FIELD, *value);
+        }
+        break;
+    case 165:
+        // Chopper hysteresis end / fast decay time
+        if (readWrite == READ)
+        {
+            if (tmc2225_readRegister(DEFAULT_ICID, TMC2225_CHOPCONF) & (1 << 14))
+            {
+                *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_HEND_FIELD);
+            }
+            else
+            {
+                buffer = tmc2225_readRegister(DEFAULT_ICID, TMC2225_CHOPCONF);
+                *value = (tmc2225_readRegister(DEFAULT_ICID, TMC2225_CHOPCONF) >> 4) & 0x07;
+                if (buffer & (1 << 11))
+                    *value |= 1 << 3;
+            }
+        }
+        else if (readWrite == WRITE)
+        {
+            errors |= TMC_ERROR_TYPE;
+        }
+        break;
+    case 166:
+        // Chopper hysteresis start / sine wave offset
+        if (readWrite == READ)
+        {
+            if (tmc2225_readRegister(DEFAULT_ICID, TMC2225_CHOPCONF) & (1 << 14))
+            {
+                *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_HSTRT_FIELD);
+            }
+            else
+            {
+                buffer = tmc2225_readRegister(DEFAULT_ICID, TMC2225_CHOPCONF);
+                *value = (tmc2225_readRegister(DEFAULT_ICID, TMC2225_CHOPCONF) >> 7) & 0x0F;
+                if (buffer & (1 << 11))
+                    *value |= 1 << 3;
+            }
+        }
+        else if (readWrite == WRITE)
+        {
+            if (tmc2225_readRegister(DEFAULT_ICID, TMC2225_CHOPCONF) & (1 << 14))
+            {
+                tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_HSTRT_FIELD, *value);
+            }
+            else
+            {
+                tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_HEND_FIELD, *value);
+            }
+        }
+        break;
+    case 167:
+        // Chopper off time
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_TOFF_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_TOFF_FIELD, *value);
+        }
+        break;
+    case 179:
+        // VSense
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_VSENSE_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_VSENSE_FIELD, *value);
+        }
+        break;
+    case 180:
+        // smartEnergy actual current
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_CS_ACTUAL_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            errors |= TMC_ERROR_TYPE;
+        }
+        break;
+    case 181:
+        // smartEnergy stall velocity
+        if (readWrite == READ)
+        {
+            *value = StepDir_getStallGuardThreshold(motor);
+        }
+        else if (readWrite == WRITE)
+        {
+            // Store the threshold value in the internal StepDir generator
+            StepDir_setStallGuardThreshold(motor, *value);
+        }
+        break;
+    case 186:
+        // PWM threshold speed
+        if (readWrite == READ)
+        {
+            buffer = tmc2225_readRegister(DEFAULT_ICID, TMC2225_TPWMTHRS);
+            *value = MIN(0xFFFFF, (1 << 24) / ((buffer) ? buffer : 1));
+        }
+        else if (readWrite == WRITE)
+        {
+            *value = MIN(0xFFFFF, (1 << 24) / ((*value) ? *value : 1));
+            tmc2225_writeRegister(DEFAULT_ICID, TMC2225_TPWMTHRS, *value);
+        }
+        break;
+    case 187:
+        // PWM gradient
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_PWM_GRAD_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            // Set gradient
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_PWM_GRAD_FIELD, *value);
 
-			// Enable/disable stealthChop accordingly
-			tmc2225_field_write(motor, TMC2225_EN_SPREADCYCLE_FIELD, (*value > 0) ? 0 : 1);
-		}
-		break;
-	case 191:
-		// PWM frequency
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_PWM_FREQ_FIELD);
-		} else if(readWrite == WRITE) {
-			if(*value >= 0 && *value < 4)
-			{
-				tmc2225_field_write(motor, TMC2225_PWM_FREQ_FIELD, *value);
-			}
-			else
-			{
-				errors |= TMC_ERROR_VALUE;
-			}
-		}
-		break;
-	case 192:
-		// PWM autoscale
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_PWM_AUTOSCALE_FIELD);
-		} else if(readWrite == WRITE) {
-			tmc2225_field_write(motor, TMC2225_PWM_AUTOSCALE_FIELD, (*value)? 1:0);
-		}
-		break;
-	case 204:
-		// Freewheeling mode
-		if(readWrite == READ) {
-			*value = tmc2225_field_read(motor, TMC2225_FREEWHEEL_FIELD);
-		} else if(readWrite == WRITE) {
-			tmc2225_field_write(motor, TMC2225_FREEWHEEL_FIELD, *value);
-		}
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
-	}
+            // Enable/disable stealthChop accordingly
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_EN_SPREADCYCLE_FIELD, (*value > 0) ? 0 : 1);
+        }
+        break;
+    case 191:
+        // PWM frequency
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_PWM_FREQ_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            if (*value >= 0 && *value < 4)
+            {
+                tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_PWM_FREQ_FIELD, *value);
+            }
+            else
+            {
+                errors |= TMC_ERROR_VALUE;
+            }
+        }
+        break;
+    case 192:
+        // PWM autoscale
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_PWM_AUTOSCALE_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_PWM_AUTOSCALE_FIELD, (*value) ? 1 : 0);
+        }
+        break;
+    case 204:
+        // Freewheeling mode
+        if (readWrite == READ)
+        {
+            *value = tmc2225_fieldRead(DEFAULT_ICID, TMC2225_FREEWHEEL_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            tmc2225_fieldWrite(DEFAULT_ICID, TMC2225_FREEWHEEL_FIELD, *value);
+        }
+        break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
+    }
 
-	return errors;
+    return errors;
 }
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
@@ -503,6 +605,14 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 	}
 
 	return errors;
+void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+{
+    tmc2225_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
+}
+
+void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+{
+    *value = tmc2225_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static void deInit(void)
