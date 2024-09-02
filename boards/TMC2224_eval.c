@@ -11,6 +11,28 @@
 #include "tmc/ic/TMC2224/TMC2224.h"
 #include "tmc/StepDir.h"
 
+/*Phase 1 rework*/
+static UART_Config *TMC2224_UARTChannel;
+static uint8_t nodeAddress = 0;
+
+bool tmc2224_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+    UNUSED(icID);
+    int32_t status = UART_readWrite(TMC2224_UARTChannel, data, writeLength, readLength);
+    if(status == -1)
+        return false;
+    return true;
+}
+
+uint8_t tmc2224_getNodeAddress(uint16_t icID)
+{
+    UNUSED(icID);
+
+    return nodeAddress;
+}
+
+/*Phase 1 rework*/
+
 #undef  TMC2224_MAX_VELOCITY
 #define TMC2224_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
@@ -45,14 +67,13 @@ static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
-static UART_Config *TMC2224_UARTChannel;
-static ConfigurationTypeDef *TMC2224_config;
+//static ConfigurationTypeDef *TMC2224_config;
 
 // Helper macro - Access the chip object in the driver boards union
-#define TMC2224 (driverBoards.tmc2224)
+//#define TMC2224 (driverBoards.tmc2224)
 
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC2224_CRC(data, length) tmc_CRC8(data, length, 1)
+//#define TMC2224_CRC(data, length) tmc_CRC8(data, length, 1)
 
 typedef struct
 {
@@ -67,24 +88,24 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-void tmc2224_writeRegister(uint8_t motor, uint16_t address, int32_t value)
-{
-	UNUSED(motor);
-	UART_writeInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), (uint8_t) address, value);
-	TMC2224_config->shadowRegister[(uint8_t) address] = value;
-	TMC2224.registerAccess[(uint8_t) address] |= TMC_ACCESS_DIRTY;
-}
-
-void tmc2224_readRegister(uint8_t motor, uint16_t address, int32_t *value)
-{
-	UNUSED(motor);
-	if (!TMC_IS_READABLE(TMC2224.registerAccess[(uint8_t) address])){
-
-		*value= TMC2224_config->shadowRegister[(uint8_t) address];
-		return;
-	}
-	UART_readInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), (uint8_t) address, value);
-}
+//void tmc2224_writeRegister(uint8_t motor, uint16_t address, int32_t value)
+//{
+//	UNUSED(motor);
+//	UART_writeInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), (uint8_t) address, value);
+//	TMC2224_config->shadowRegister[(uint8_t) address] = value;
+//	TMC2224.registerAccess[(uint8_t) address] |= TMC_ACCESS_DIRTY;
+//}
+//
+//void tmc2224_readRegister(uint8_t motor, uint16_t address, int32_t *value)
+//{
+//	UNUSED(motor);
+//	if (!TMC_IS_READABLE(TMC2224.registerAccess[(uint8_t) address])){
+//
+//		*value= TMC2224_config->shadowRegister[(uint8_t) address];
+//		return;
+//	}
+//	UART_readInt(TMC2224_UARTChannel, tmc2224_get_slave(&TMC2224), (uint8_t) address, value);
+//}
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -260,12 +281,12 @@ static uint8_t reset()
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 
-	return tmc2224_reset(&TMC2224,TMC2224_config);
+	return tmc2224_reset(&TMC2224,TMC2224.config);
 }
 
 static uint8_t restore()
 {
-	return tmc2224_restore(TMC2224_config);
+	return tmc2224_restore(TMC2224.config);
 }
 
 static void enableDriver(DriverState state)
@@ -283,7 +304,7 @@ static void periodicJob(uint32_t tick)
 {
 	for(uint8_t motor = 0; motor < MOTORS; motor++)
 	{
-		tmc2224_periodicJob(motor, tick, &TMC2224, TMC2224_config);
+		tmc2224_periodicJob(motor, tick, &TMC2224, TMC2224.config);
 		StepDir_periodicJob(motor);
 	}
 }
@@ -313,7 +334,7 @@ void TMC2224_init(void)
 	TMC2224_UARTChannel = HAL.UART;
 	TMC2224_UARTChannel->rxtx.init();
 
-	TMC2224_config = Evalboards.ch2.config;
+	TMC2224.config = Evalboards.ch2.config;
 
 	Evalboards.ch2.config->reset        = reset;
 	Evalboards.ch2.config->restore      = restore;
