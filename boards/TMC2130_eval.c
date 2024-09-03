@@ -13,12 +13,6 @@
 
 static SPIChannelTypeDef *TMC2130_SPIChannel;
 
-void tmc2130_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
-{
-    UNUSED(icID);
-    TMC2130_SPIChannel->readWriteArray(data, dataLength);
-}
-
 #define DEFAULT_ICID  0
 
 #define TMC2130_EVAL_VM_MIN  50   // VM[V/10] min
@@ -29,8 +23,6 @@ void tmc2130_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 
 // Stepdir precision: 2^17 -> 17 digits of precision
 #define STEPDIR_PRECISION (1 << 17)
-
-
 
 #define VREF_FULLSCALE 2714 // mV
 
@@ -43,6 +35,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static void writeConfiguration();
 static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t getMin(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value);
@@ -54,7 +47,6 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void deInit(void);
 static uint8_t reset();
 static uint8_t restore();
-static void configCallback(TMC2130TypeDef *tmc2130, ConfigState state);
 static void enableDriver(DriverState state);
 
 //static int32_t measured_velocity = 0;
@@ -75,17 +67,32 @@ typedef struct
 
 static PinsTypeDef Pins;
 
+
+// Typedefs
+typedef struct
+{
+    ConfigurationTypeDef *config;
+} TMC2130TypeDef;
+
+static TMC2130TypeDef TMC2130;
+
 static uint16_t vref; // mV
 
-// Translate channel number to SPI channel
-// When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
+// => SPI wrapper (also takes care of cover mode)
+void tmc2130_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-    UNUSED(channel);
-
-    return TMC2130_SPIChannel;
+    UNUSED(icID);
+    if(Evalboards.ch1.fullCover != NULL)
+    {
+        Evalboards.ch1.fullCover(&data[0], dataLength);
+    }
+    else
+    {
+        // Map the channel to the corresponding SPI channel
+        TMC2130_SPIChannel-> readWriteArray(data, dataLength);
+    }
 }
-
+// <= SPI wrapper
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -205,7 +212,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // Maximum current
         if(readWrite == READ) {
             *value = tmc2130_field_read(DEFAULT_ICID, TMC2130_IRUN_FIELD);
-        }         else if(readWrite == WRITE) {
+        } else if(readWrite == WRITE) {
             tmc2130_field_write(DEFAULT_ICID, TMC2130_IRUN_FIELD, *value);
         }
         break;
@@ -619,6 +626,60 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     return handleParameter(READ, motor, type, value);
 }
 
+// Helper function: Configure the next register.
+static void writeConfiguration()
+{
+
+    uint8_t *ptr = &TMC2130.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC2130.config->state == CONFIG_RESTORE)
+    {
+        settings = *(tmc2130_shadowRegister+0);
+        // Find the next restorable register
+        while(*ptr < TMC2130_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc2130_registerAccess[*ptr]) && tmc2130_getDirtyBit(DEFAULT_MOTOR, *ptr))
+            {
+                break;
+            }
+
+            // Otherwise, check next register
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc2130_sampleRegisterPreset;
+        // Find the next resettable register
+        while((*ptr < TMC2130_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2130_registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+
+    if(*ptr < TMC2130_REGISTER_COUNT)
+    {
+        tmc2130_writeRegister(DEFAULT_MOTOR, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+
+        if(TMC2130.config->state == CONFIG_RESET)
+        {
+            // Change hardware preset registers here
+            tmc2130_writeRegister(DEFAULT_ICID, TMC2130_PWMCONF, 0x000504C8);
+
+            // Fill missing shadow registers (hardware preset registers)
+            tmc2130_initCache();
+        }
+
+        TMC2130.config->state = CONFIG_READY;
+    }
+}
+
 static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor, int32_t *value)
 {
     UNUSED(motor);
@@ -660,11 +721,13 @@ static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
+    UNUSED(motor);
     tmc2130_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
+    UNUSED(motor);
     *value = tmc2130_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
@@ -673,7 +736,7 @@ static void periodicJob(uint32_t tick)
 //    static int32_t m_velocity = 0;
 //    static uint32_t old_tick = 0;
 //
-//    m_velocity += (int32_t)((StepDir_getFrequency(0) * 12) / TMC2130_tmc2130_field_read(DEFAULT_ICIDToIC(0), TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
+//    m_velocity += (int32_t)((StepDir_getFrequency(0) * 12) / TMC2130_tmc2130_field_read(DEFAULT_ICID, TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
 //
 //    if(tick - old_tick > 10)
 //    {
@@ -682,7 +745,12 @@ static void periodicJob(uint32_t tick)
 //        old_tick = tick;
 //    }
 
-    tmc2130_periodicJob(&TMC2130, tick);
+
+    if(TMC2130.config->state != CONFIG_READY)
+    {
+        writeConfiguration();
+           return;
+    }
 
     StepDir_periodicJob(DEFAULT_MOTOR);
 
@@ -811,7 +879,19 @@ static uint8_t reset()
     if(StepDir_getActualVelocity(0) && !VitalSignsMonitor.brownOut)
         return 0;
 
-    tmc2130_reset(&TMC2130);
+    if(TMC2130.config->state != CONFIG_READY)
+        return false;
+
+    // Reset the dirty bits and wipe the shadow registers
+       size_t i;
+       for(i = 0; i < TMC2130_REGISTER_COUNT; i++)
+       {
+           tmc2130_setDirtyBit(DEFAULT_ICID, i, false);
+           tmc2130_shadowRegister[DEFAULT_ICID][i] = 0;
+       }
+
+    TMC2130.config->state        = CONFIG_RESET;
+    TMC2130.config->configIndex  = 0;
 
     StepDir_init(STEPDIR_PRECISION);
     StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
@@ -821,20 +901,16 @@ static uint8_t reset()
 
 static uint8_t restore()
 {
-    return tmc2130_restore(&TMC2130);
-}
+    // Restore the TMC2130 to the state stored in the shadow registers.
+    // This can be used to recover the IC configuration after a VM power loss.
 
-static void configCallback(TMC2130TypeDef *tmc2130, ConfigState completedState)
-{
-    if(completedState == CONFIG_RESET)
-    {
-        // Configuration reset completed
-        // Change hardware preset registers here
-        tmc2130_writeRegister(tmc2130, TMC2130_PWMCONF, 0x000504C8);
+    if(TMC2130.config->state != CONFIG_READY)
+        return false;
 
-        // Fill missing shadow registers (hardware preset registers)
-        tmc2130_fillShadowRegisters(tmc2130);
-    }
+    TMC2130.config->state        = CONFIG_RESTORE;
+    TMC2130.config->configIndex  = 0;
+
+    return true;
 }
 
 static void enableDriver(DriverState state)
@@ -850,8 +926,7 @@ static void enableDriver(DriverState state)
 
 void TMC2130_init(void)
 {
-    tmc2130_init(&TMC2130, 1, Evalboards.ch2.config, &tmc2130_defaultRegisterResetState[0]);
-    tmc2130_setCallback(&TMC2130, configCallback);
+    TMC2130.config   = Evalboards.ch2.config;
 
     // Initialize the hardware pins
     Pins.DRV_ENN_CFG6    = &HAL.IOs->pins->DIO0;
@@ -896,9 +971,13 @@ void TMC2130_init(void)
 
     Evalboards.ch2.type = (void *)&TMC2130;
 
+    TMC2130.config->callback     = NULL;
+    TMC2130.config->channel      = 1;
+
     Evalboards.ch2.config->reset        = reset;
     Evalboards.ch2.config->restore      = restore;
     Evalboards.ch2.config->state        = CONFIG_RESET;
+
     Evalboards.ch2.config->configIndex  = 0;
 
     Evalboards.ch2.rotate               = rotate;
@@ -921,6 +1000,7 @@ void TMC2130_init(void)
     Evalboards.ch2.deInit               = deInit;
     Evalboards.ch2.getMin               = getMin;
     Evalboards.ch2.getMax               = getMax;
+
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
     HAL.IOs->config->toOutput(Pins.AIN_REF_PWM);
