@@ -6,53 +6,52 @@
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
-
 #include "boards/Board.h"
 #include "tmc/ic/TMC2226/TMC2226.h"
 #include "tmc/StepDir.h"
 
 // Usage note: use 1 TypeDef per IC
 typedef struct
-uint8_t nodeAddress = 0;
-static UART_Config *TMC2226_UARTChannel;
-
-
-bool tmc2226_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
     ConfigurationTypeDef *config;
     uint8_t slaveAddress;
 } TMC2226TypeDef;
 static TMC2226TypeDef TMC2226;
-	UNUSED(icID);
-	int32_t status = UART_readWrite(TMC2226_UARTChannel, data, writeLength, readLength);
-	if(status == -1)
-		return false;
-	return true;
-}
 
-uint8_t tmc2226_getNodeAddress(uint16_t icID)
+typedef struct
 {
-	UNUSED(icID);
+    IOPinTypeDef *ENN;
+    IOPinTypeDef *SPREAD;
+    IOPinTypeDef *STEP;
+    IOPinTypeDef *DIR;
+    IOPinTypeDef *MS1_AD0;
+    IOPinTypeDef *MS2_AD1;
+    IOPinTypeDef *DIAG;
+    IOPinTypeDef *INDEX;
+    IOPinTypeDef *UC_PWM;
+} PinsTypeDef;
+static PinsTypeDef Pins;
 
-	return nodeAddress;
-}
-#undef  TMC2226_MAX_VELOCITY
-#define TMC2226_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
+#undef TMC2226_MAX_VELOCITY
+#define TMC2226_MAX_VELOCITY STEPDIR_MAX_VELOCITY
 
 // Stepdir precision: 2^17 -> 17 digits of precision
 #define STEPDIR_PRECISION 131072
 
-#define ERRORS_VM        (1<<0)
-#define ERRORS_VM_UNDER  (1<<1)
-#define ERRORS_VM_OVER   (1<<2)
-
-#define VM_MIN  50   // VM[V/10] min
-#define VM_MAX  390  // VM[V/10] max
+#define ERRORS_VM       (1 << 0)
+#define ERRORS_VM_UNDER (1 << 1)
+#define ERRORS_VM_OVER  (1 << 2)
+#define VM_MIN          50   // VM[V/10] min
+#define VM_MAX          390  // VM[V/10] max
+#define VREF_FULLSCALE  2714 // mV
+#define MOTORS          1
 #define DEFAULT_ICID    0
 
-#define VREF_FULLSCALE 2714 // mV
-
-#define MOTORS 1
+uint8_t nodeAddress = 0;
+static UART_Config *TMC2226_UARTChannel;
+static int32_t thigh;
+static uint16_t vref; // mV
+static timer_channel timerChannel;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -62,45 +61,22 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-
-static void checkErrors (uint32_t tick);
+static void checkErrors(uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
 static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
 static uint8_t restore(void);
 static void enableDriver(DriverState state);
-
 static uint16_t getVREF();
 static void setVREF(uint16_t vref);
-
-static ConfigurationTypeDef *TMC2226_config;
-
-static int32_t thigh;
-static uint16_t vref; // mV
-static timer_channel timerChannel;
 
 extern IOPinTypeDef DummyPin;
 
 static void writeConfiguration()
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC2226_CRC(data, length) tmc_CRC8(data, length, 1)
-
-typedef struct
 {
     uint8_t *ptr = &TMC2226.config->configIndex;
     const int32_t *settings;
-	IOPinTypeDef  *ENN;
-	IOPinTypeDef  *SPREAD;
-	IOPinTypeDef  *STEP;
-	IOPinTypeDef  *DIR;
-	IOPinTypeDef  *MS1_AD0;
-	IOPinTypeDef  *MS2_AD1;
-	IOPinTypeDef  *DIAG;
-	IOPinTypeDef  *INDEX;
-	IOPinTypeDef  *UC_PWM;
-} PinsTypeDef;
 
     if (TMC2226.config->state == CONFIG_RESTORE)
     {
@@ -113,7 +89,6 @@ typedef struct
             {
                 break;
             }
-static PinsTypeDef Pins;
 
             // Otherwise, check next register
             (*ptr)++;
@@ -128,9 +103,6 @@ static PinsTypeDef Pins;
             (*ptr)++;
         }
     }
-static inline TMC2226TypeDef *motorToIC(uint8_t motor)
-{
-	UNUSED(motor);
 
     if (*ptr < TMC2226_REGISTER_COUNT)
     {
@@ -141,20 +113,16 @@ static inline TMC2226TypeDef *motorToIC(uint8_t motor)
     {
         TMC2226.config->state = CONFIG_READY;
     }
-	return &TMC2226;
 }
 
-static inline UART_Config *channelToUART(uint8_t channel)
+bool tmc2226_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
-	UNUSED(channel);
-
-	return TMC2226_UARTChannel;
+    UNUSED(icID);
+    int32_t status = UART_readWrite(TMC2226_UARTChannel, data, writeLength, readLength);
+    if (status == -1)
+        return false;
+    return true;
 }
-
-// => UART wrapper
-// Write [writeLength] bytes from the [data] array.
-// If [readLength] is greater than zero, read [readLength] bytes from the
-// [data] array.
 
 uint8_t tmc2226_getNodeAddress(uint16_t icID)
 {
@@ -174,48 +142,45 @@ void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	if(motor >= MOTORS)
-		return TMC_ERROR_MOTOR;
+    if (motor >= MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	StepDir_rotate(motor, velocity);
-
-	return TMC_ERROR_NONE;
+    StepDir_rotate(motor, velocity);
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	return rotate(motor, velocity);
+    return rotate(motor, velocity);
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	return rotate(motor, -velocity);
+    return rotate(motor, -velocity);
 }
 
 static uint32_t stop(uint8_t motor)
 {
-	return rotate(motor, 0);
+    return rotate(motor, 0);
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	if(motor >= MOTORS)
-		return TMC_ERROR_MOTOR;
+    if (motor >= MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	StepDir_moveTo(motor, position);
-
-	return TMC_ERROR_NONE;
+    StepDir_moveTo(motor, position);
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	if(motor >= MOTORS)
-		return TMC_ERROR_MOTOR;
+    if (motor >= MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	// determine actual position and add numbers of ticks to move
-	*ticks += StepDir_getActualPosition(motor);
-
-	return moveTo(motor, *ticks);
+    // determine actual position and add numbers of ticks to move
+    *ticks += StepDir_getActualPosition(motor);
+    return moveTo(motor, *ticks);
 }
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
@@ -779,103 +744,105 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
-	return handleParameter(WRITE, motor, type, &value);
+    return handleParameter(WRITE, motor, type, &value);
 }
 
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
-	return handleParameter(READ, motor, type, value);
+    return handleParameter(READ, motor, type, value);
 }
 
 static void checkErrors(uint32_t tick)
 {
-	UNUSED(tick);
-	Evalboards.ch2.errors = 0;
+    UNUSED(tick);
+    Evalboards.ch2.errors = 0;
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32_t errors = 0;
-	uint8_t state;
-	IOPinTypeDef *pin;
+    uint32_t errors = 0;
+    uint8_t state;
+    IOPinTypeDef *pin;
 
-	switch(type)
-	{
-	case 0:  // Read StepDir status bits
-		*value = StepDir_getStatus(motor);
-		break;
-	case 3:
-		*value = Timer.getDuty(timerChannel) * 100 / TIMER_MAX;
-		break;
-	case 4:
-		Timer.setDuty(timerChannel, ((float)*value) / 100);
-		break;
-	case 5: // Set pin state
-		state = (*value) & 0x03;
-		pin = Pins.ENN;
-		switch(motor) {
-		case 0:
-			pin = Pins.ENN;
-			break;
-		case 1:
-			pin = Pins.SPREAD;
-			break;
-		case 2:
-			pin = Pins.MS1_AD0;
-			break;
-		case 3:
-			pin = Pins.MS2_AD1;
-			break;
-		case 4:
-			pin = Pins.UC_PWM;
-			break;
-		}
-		HAL.IOs->config->setToState(pin, state);
-		break;
-	case 6: // Get pin state
-		pin = Pins.ENN;
-		switch(motor) {
-		case 0:
-			pin = Pins.ENN;
-			break;
-		case 1:
-			pin = Pins.SPREAD;
-			break;
-		case 2:
-			pin = Pins.MS1_AD0;
-			break;
-		case 3:
-			pin = Pins.MS2_AD1;
-			break;
-		case 4:
-			pin = Pins.UC_PWM;
-			break;
-		}
-		*value = (uint32_t) HAL.IOs->config->getState(pin);
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
-	}
+    switch (type)
+    {
+    case 0: // Read StepDir status bits
+        *value = StepDir_getStatus(motor);
+        break;
+    case 3:
+        *value = Timer.getDuty(timerChannel) * 100 / TIMER_MAX;
+        break;
+    case 4:
+        Timer.setDuty(timerChannel, ((float) *value) / 100);
+        break;
+    case 5: // Set pin state
+        state = (*value) & 0x03;
+        pin   = Pins.ENN;
+        switch (motor)
+        {
+        case 0:
+            pin = Pins.ENN;
+            break;
+        case 1:
+            pin = Pins.SPREAD;
+            break;
+        case 2:
+            pin = Pins.MS1_AD0;
+            break;
+        case 3:
+            pin = Pins.MS2_AD1;
+            break;
+        case 4:
+            pin = Pins.UC_PWM;
+            break;
+        }
+        HAL.IOs->config->setToState(pin, state);
+        break;
+    case 6: // Get pin state
+        pin = Pins.ENN;
+        switch (motor)
+        {
+        case 0:
+            pin = Pins.ENN;
+            break;
+        case 1:
+            pin = Pins.SPREAD;
+            break;
+        case 2:
+            pin = Pins.MS1_AD0;
+            break;
+        case 3:
+            pin = Pins.MS2_AD1;
+            break;
+        case 4:
+            pin = Pins.UC_PWM;
+            break;
+        }
+        *value = (uint32_t) HAL.IOs->config->getState(pin);
+        break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
+    }
 
-	return errors;
+    return errors;
 }
 
 static void deInit(void)
 {
-	enableDriver(DRIVER_DISABLE);
-	HAL.IOs->config->reset(Pins.ENN);
-	HAL.IOs->config->reset(Pins.SPREAD);
-	HAL.IOs->config->reset(Pins.STEP);
-	HAL.IOs->config->reset(Pins.DIR);
-	HAL.IOs->config->reset(Pins.MS1_AD0);
-	HAL.IOs->config->reset(Pins.MS2_AD1);
-	HAL.IOs->config->reset(Pins.DIAG);
-	HAL.IOs->config->reset(Pins.INDEX);
-	HAL.IOs->config->reset(Pins.UC_PWM);
+    enableDriver(DRIVER_DISABLE);
+    HAL.IOs->config->reset(Pins.ENN);
+    HAL.IOs->config->reset(Pins.SPREAD);
+    HAL.IOs->config->reset(Pins.STEP);
+    HAL.IOs->config->reset(Pins.DIR);
+    HAL.IOs->config->reset(Pins.MS1_AD0);
+    HAL.IOs->config->reset(Pins.MS2_AD1);
+    HAL.IOs->config->reset(Pins.DIAG);
+    HAL.IOs->config->reset(Pins.INDEX);
+    HAL.IOs->config->reset(Pins.UC_PWM);
 
-	StepDir_deInit();
-	Timer.deInit();
+    StepDir_deInit();
+    Timer.deInit();
 }
 
 static uint8_t reset()
@@ -923,20 +890,20 @@ static void enableDriver(DriverState state)
 
 static uint16_t getVREF()
 {
-	return vref;
+    return vref;
 }
 
 // Set VREF (in mV)
 static void setVREF(uint16_t value)
 {
-	if (value >= VREF_FULLSCALE)
-		return;
+    if (value >= VREF_FULLSCALE)
+        return;
 
-	// Store the VREF value for accurate reading
-	// Calculating VREF from the timer duty cycle introduces rounding errors
-	vref = value;
+    // Store the VREF value for accurate reading
+    // Calculating VREF from the timer duty cycle introduces rounding errors
+    vref = value;
 
-	Timer.setDuty(timerChannel, ((float)vref) / VREF_FULLSCALE);
+    Timer.setDuty(timerChannel, ((float) vref) / VREF_FULLSCALE);
 }
 
 static void periodicJob(uint32_t tick)
