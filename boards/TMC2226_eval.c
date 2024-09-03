@@ -11,12 +11,18 @@
 #include "tmc/ic/TMC2226/TMC2226.h"
 #include "tmc/StepDir.h"
 
+// Usage note: use 1 TypeDef per IC
+typedef struct
 uint8_t nodeAddress = 0;
 static UART_Config *TMC2226_UARTChannel;
 
 
 bool tmc2226_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
+    ConfigurationTypeDef *config;
+    uint8_t slaveAddress;
+} TMC2226TypeDef;
+static TMC2226TypeDef TMC2226;
 	UNUSED(icID);
 	int32_t status = UART_readWrite(TMC2226_UARTChannel, data, writeLength, readLength);
 	if(status == -1)
@@ -77,11 +83,14 @@ static timer_channel timerChannel;
 
 extern IOPinTypeDef DummyPin;
 
+static void writeConfiguration()
 // Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
 #define TMC2226_CRC(data, length) tmc_CRC8(data, length, 1)
 
 typedef struct
 {
+    uint8_t *ptr = &TMC2226.config->configIndex;
+    const int32_t *settings;
 	IOPinTypeDef  *ENN;
 	IOPinTypeDef  *SPREAD;
 	IOPinTypeDef  *STEP;
@@ -93,12 +102,45 @@ typedef struct
 	IOPinTypeDef  *UC_PWM;
 } PinsTypeDef;
 
+    if (TMC2226.config->state == CONFIG_RESTORE)
+    {
+        settings = tmc2226_shadowRegister;
+        // Find the next restorable register
+        while (*ptr < TMC2226_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc2226_registerAccess[*ptr]) && tmc2226_getDirtyBit(DEFAULT_ICID, *ptr))
+            {
+                break;
+            }
 static PinsTypeDef Pins;
 
+            // Otherwise, check next register
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc2226_sampleRegisterPreset;
+        // Find the next resettable register
+        while ((*ptr < TMC2226_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2226_registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
 static inline TMC2226TypeDef *motorToIC(uint8_t motor)
 {
 	UNUSED(motor);
 
+    if (*ptr < TMC2226_REGISTER_COUNT)
+    {
+        tmc2226_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        TMC2226.config->state = CONFIG_READY;
+    }
 	return &TMC2226;
 }
 
@@ -838,26 +880,45 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
+    StepDir_init(STEPDIR_PRECISION);
+    StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
 
-	return tmc2226_reset(&TMC2226);
+    if (TMC2226.config->state != CONFIG_READY)
+        return false;
+
+    // Reset the dirty bits and wipe the shadow registers
+    for (size_t i = 0; i < TMC2226_REGISTER_COUNT; i++)
+    {
+        tmc2226_dirtyBits[DEFAULT_ICID][i]      = 0;
+        tmc2226_shadowRegister[DEFAULT_ICID][i] = 0;
+    }
+
+    TMC2226.config->state       = CONFIG_RESET;
+    TMC2226.config->configIndex = 0;
+
+    return true;
 }
 
 static uint8_t restore()
 {
-	return tmc2226_restore(&TMC2226);
+    if (TMC2226.config->state != CONFIG_READY)
+        return false;
+
+    TMC2226.config->state       = CONFIG_RESTORE;
+    TMC2226.config->configIndex = 0;
+
+    return true;
 }
 
 static void enableDriver(DriverState state)
 {
-	if(state == DRIVER_USE_GLOBAL_ENABLE)
-		state = Evalboards.driverEnable;
+    if (state == DRIVER_USE_GLOBAL_ENABLE)
+        state = Evalboards.driverEnable;
 
-	if(state == DRIVER_DISABLE)
-		HAL.IOs->config->setHigh(Pins.ENN);
-	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE))
-		HAL.IOs->config->setLow(Pins.ENN);
+    if (state == DRIVER_DISABLE)
+        HAL.IOs->config->setHigh(Pins.ENN);
+    else if ((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE))
+        HAL.IOs->config->setLow(Pins.ENN);
 }
 
 static uint16_t getVREF()
@@ -880,89 +941,94 @@ static void setVREF(uint16_t value)
 
 static void periodicJob(uint32_t tick)
 {
-	tmc2226_periodicJob(&TMC2226, tick);
-	StepDir_periodicJob(0);
+    if (TMC2226.config->state != CONFIG_READY)
+        writeConfiguration();
+
+    StepDir_periodicJob(0);
 }
 
 void TMC2226_init(void)
 {
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	timerChannel = TIMER_CHANNEL_3;
+    timerChannel = TIMER_CHANNEL_3;
 
 #elif defined(LandungsbrueckeV3)
-	timerChannel = TIMER_CHANNEL_4;
+    timerChannel = TIMER_CHANNEL_4;
 #endif
-	thigh = 0;
+    thigh = 0;
 
-	Pins.ENN      = &HAL.IOs->pins->DIO0;
-	Pins.SPREAD   = &HAL.IOs->pins->DIO8;
-	Pins.STEP     = &HAL.IOs->pins->DIO6;
-	Pins.DIR      = &HAL.IOs->pins->DIO7;
-	Pins.MS1_AD0  = &HAL.IOs->pins->DIO3;
-	Pins.MS2_AD1  = &HAL.IOs->pins->DIO4;
-	Pins.DIAG     = &HAL.IOs->pins->DIO1;
-	Pins.INDEX    = &HAL.IOs->pins->DIO2;
-	Pins.UC_PWM   = &HAL.IOs->pins->DIO9;
+    Pins.ENN     = &HAL.IOs->pins->DIO0;
+    Pins.SPREAD  = &HAL.IOs->pins->DIO8;
+    Pins.STEP    = &HAL.IOs->pins->DIO6;
+    Pins.DIR     = &HAL.IOs->pins->DIO7;
+    Pins.MS1_AD0 = &HAL.IOs->pins->DIO3;
+    Pins.MS2_AD1 = &HAL.IOs->pins->DIO4;
+    Pins.DIAG    = &HAL.IOs->pins->DIO1;
+    Pins.INDEX   = &HAL.IOs->pins->DIO2;
+    Pins.UC_PWM  = &HAL.IOs->pins->DIO9;
 
-	HAL.IOs->config->toOutput(Pins.ENN);
-	HAL.IOs->config->toOutput(Pins.SPREAD);
-	HAL.IOs->config->toOutput(Pins.STEP);
-	HAL.IOs->config->toOutput(Pins.DIR);
-	HAL.IOs->config->toOutput(Pins.MS1_AD0);
-	HAL.IOs->config->toOutput(Pins.MS2_AD1);
-	HAL.IOs->config->toInput(Pins.DIAG);
-	HAL.IOs->config->toInput(Pins.INDEX);
+    HAL.IOs->config->toOutput(Pins.ENN);
+    HAL.IOs->config->toOutput(Pins.SPREAD);
+    HAL.IOs->config->toOutput(Pins.STEP);
+    HAL.IOs->config->toOutput(Pins.DIR);
+    HAL.IOs->config->toOutput(Pins.MS1_AD0);
+    HAL.IOs->config->toOutput(Pins.MS2_AD1);
+    HAL.IOs->config->toInput(Pins.DIAG);
+    HAL.IOs->config->toInput(Pins.INDEX);
 
-	HAL.IOs->config->setLow(Pins.MS1_AD0);
-	HAL.IOs->config->setLow(Pins.MS2_AD1);
+    HAL.IOs->config->setLow(Pins.MS1_AD0);
+    HAL.IOs->config->setLow(Pins.MS2_AD1);
 
-	TMC2226_UARTChannel = HAL.UART;
-	TMC2226_UARTChannel->pinout = UART_PINS_2;
-	TMC2226_UARTChannel->rxtx.init();
+    TMC2226_UARTChannel         = HAL.UART;
+    TMC2226_UARTChannel->pinout = UART_PINS_2;
+    TMC2226_UARTChannel->rxtx.init();
 
-	TMC2226_config = Evalboards.ch2.config;
+    Evalboards.ch2.config->reset   = reset;
+    Evalboards.ch2.config->restore = restore;
 
-	Evalboards.ch2.config->reset        = reset;
-	Evalboards.ch2.config->restore      = restore;
+    Evalboards.ch2.rotate         = rotate;
+    Evalboards.ch2.right          = right;
+    Evalboards.ch2.left           = left;
+    Evalboards.ch2.stop           = stop;
+    Evalboards.ch2.GAP            = GAP;
+    Evalboards.ch2.SAP            = SAP;
+    Evalboards.ch2.moveTo         = moveTo;
+    Evalboards.ch2.moveBy         = moveBy;
+    Evalboards.ch2.writeRegister  = writeRegister;
+    Evalboards.ch2.readRegister   = readRegister;
+    Evalboards.ch2.userFunction   = userFunction;
+    Evalboards.ch2.enableDriver   = enableDriver;
+    Evalboards.ch2.checkErrors    = checkErrors;
+    Evalboards.ch2.numberOfMotors = MOTORS;
+    Evalboards.ch2.VMMin          = VM_MIN;
+    Evalboards.ch2.VMMax          = VM_MAX;
+    Evalboards.ch2.deInit         = deInit;
+    Evalboards.ch2.periodicJob    = periodicJob;
 
-	Evalboards.ch2.rotate               = rotate;
-	Evalboards.ch2.right                = right;
-	Evalboards.ch2.left                 = left;
-	Evalboards.ch2.stop                 = stop;
-	Evalboards.ch2.GAP                  = GAP;
-	Evalboards.ch2.SAP                  = SAP;
-	Evalboards.ch2.moveTo               = moveTo;
-	Evalboards.ch2.moveBy               = moveBy;
-	Evalboards.ch2.writeRegister        = writeRegister;
-	Evalboards.ch2.readRegister         = readRegister;
-	Evalboards.ch2.userFunction         = userFunction;
-	Evalboards.ch2.enableDriver         = enableDriver;
-	Evalboards.ch2.checkErrors          = checkErrors;
-	Evalboards.ch2.numberOfMotors       = MOTORS;
-	Evalboards.ch2.VMMin                = VM_MIN;
-	Evalboards.ch2.VMMax                = VM_MAX;
-	Evalboards.ch2.deInit               = deInit;
-	Evalboards.ch2.periodicJob          = periodicJob;
+    TMC2226.slaveAddress        = 0;
+    TMC2226.config              = Evalboards.ch2.config;
+    TMC2226.config->callback    = NULL;
+    TMC2226.config->channel     = 0;
+    TMC2226.config->configIndex = 0;
+    TMC2226.config->state       = CONFIG_READY;
 
-	tmc2226_init(&TMC2226, 0, 0, TMC2226_config, &tmc2226_defaultRegisterResetState[0]);
+    StepDir_init(STEPDIR_PRECISION);
+    StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
+    StepDir_setVelocityMax(0, 51200);
+    StepDir_setAcceleration(0, 51200);
 
-	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
-	StepDir_setVelocityMax(0, 51200);
-	StepDir_setAcceleration(0, 51200);
-
-	HAL.IOs->config->toOutput(Pins.UC_PWM);
+    HAL.IOs->config->toOutput(Pins.UC_PWM);
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
+    Pins.UC_PWM->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #elif defined(LandungsbrueckeV3)
-	Pins.UC_PWM->configuration.GPIO_Mode  = GPIO_MODE_AF;
-	gpio_af_set(Pins.UC_PWM->port, GPIO_AF_1, Pins.UC_PWM->bitWeight);
+    Pins.UC_PWM->configuration.GPIO_Mode = GPIO_MODE_AF;
+    gpio_af_set(Pins.UC_PWM->port, GPIO_AF_1, Pins.UC_PWM->bitWeight);
 #endif
 
-	HAL.IOs->config->set(Pins.UC_PWM);
-	Timer.init();
-	setVREF(2000); // mV
+    HAL.IOs->config->set(Pins.UC_PWM);
+    Timer.init();
+    setVREF(2000); // mV
 
-	enableDriver(DRIVER_ENABLE);
+    enableDriver(DRIVER_ENABLE);
 };
