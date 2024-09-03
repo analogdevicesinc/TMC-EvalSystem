@@ -2,8 +2,8 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved. This software is
-* proprietary & confidential to Analog Devices, Inc. and its licensors.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
+* This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
 
@@ -15,13 +15,6 @@ static SPIChannelTypeDef *TMC2160_SPIChannel;
 
 #define DEFAULT_MOTOR  0
 #define DEFAULT_ICID   0
-
-void tmc2160_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
-{
-    UNUSED(icID);
-    TMC2160_SPIChannel->readWriteArray(data, dataLength);
-}
-
 
 #define TMC2160_EVAL_VM_MIN  80   // VM[V/10] min
 #define TMC2160_EVAL_VM_MAX  590  // VM[V/10] max +5%
@@ -43,6 +36,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static void tmc2160_writeConfiguration();
 static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t getMin(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value);
@@ -54,12 +48,18 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void deInit(void);
 static uint8_t reset();
 static uint8_t restore();
-static void configCallback(TMC2160TypeDef *tmc2160, ConfigState state);
 static void enableDriver(DriverState state);
 
 static uint8_t init_state = 0;
 
 extern IOPinTypeDef DummyPin;
+
+typedef struct
+{
+    ConfigurationTypeDef *config;
+} TMC2160TypeDef;
+
+static TMC2160TypeDef TMC2160;
 
 typedef struct
 {
@@ -76,23 +76,21 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-// Translate motor number to TMC5130TypeDef
-// When using multiple ICs you can map them here
-static inline TMC2160TypeDef *motorToIC(uint8_t motor)
+// => SPI wrapper (also takes care of cover mode)
+void tmc2160_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-    UNUSED(motor);
-
-    return &TMC2160;
+    UNUSED(icID);
+    if(Evalboards.ch1.fullCover != NULL)
+    {
+        Evalboards.ch1.fullCover(&data[0], dataLength);
+    }
+    else
+    {
+        // Map the channel to the corresponding SPI channel
+        TMC2160_SPIChannel-> readWriteArray(data, dataLength);
+    }
 }
-
-// Translate channel number to SPI channel
-// When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
-{
-    UNUSED(channel);
-
-    return TMC2160_SPIChannel;
-}
+// <= SPI wrapper
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
@@ -620,6 +618,58 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     return handleParameter(READ, motor, type, value);
 }
 
+
+static void tmc2160_writeConfiguration()
+{
+    uint8_t *ptr = &TMC2160.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC2160.config->state == CONFIG_RESTORE)
+    {
+        settings = *(tmc2160_shadowRegister+0);
+        // Find the next restorable register
+        while(*ptr < TMC2160_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc2160_registerAccess[*ptr]) && tmc2160_getDirtyBit(DEFAULT_MOTOR, *ptr))
+            {
+                break;
+            }
+
+            // Otherwise, check next register
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc2160_sampleRegisterPreset;
+        // Find the next resettable register
+        while((*ptr < TMC2160_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2160_registerAccess[*ptr]))
+            (*ptr)++;
+    }
+
+    if(*ptr < TMC2160_REGISTER_COUNT)
+    {
+        tmc2160_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        if(TMC2160.config->state == CONFIG_RESET)
+        {
+            // Change hardware preset registers here
+            tmc2160_writeRegister(DEFAULT_ICID, TMC2160_PWMCONF, 0xC40C001E);
+            tmc2160_writeRegister(DEFAULT_ICID, TMC2160_DRV_CONF, 0x00080400);
+
+            // Fill missing shadow registers (hardware preset registers)
+            tmc2160_initCache();
+        }
+
+        TMC2160.config->state = CONFIG_READY;
+    }
+}
+
+
 static uint32_t getLimit(AxisParameterLimit limit, uint8_t type, uint8_t motor, int32_t *value)
 {
     UNUSED(motor);
@@ -688,7 +738,8 @@ static void periodicJob(uint32_t tick)
         break;
     }
 
-    tmc2160_periodicJob(&TMC2160, tick);
+    if(TMC2160.config->state != CONFIG_READY)
+        tmc2160_writeConfiguration();
 
     StepDir_periodicJob(0);
 
@@ -811,7 +862,19 @@ static uint8_t reset()
     if(StepDir_getActualVelocity(0) && !VitalSignsMonitor.brownOut)
         return 0;
 
-    tmc2160_reset(&TMC2160);
+    if(TMC2160.config->state != CONFIG_READY)
+        return false;
+
+    // Reset the dirty bits and wipe the shadow registers
+    for(size_t i = 0; i < TMC2160_REGISTER_COUNT; i++)
+    {
+       tmc2160_setDirtyBit(DEFAULT_ICID, i, false);
+       tmc2160_shadowRegister[DEFAULT_ICID][i] = 0;
+    }
+
+
+    TMC2160.config->state        = CONFIG_RESET;
+    TMC2160.config->configIndex  = 0;
 
     StepDir_init(STEPDIR_PRECISION);
     StepDir_setPins(0, Pins.REFL_STEP, Pins.REFR_DIR, NULL);
@@ -821,19 +884,13 @@ static uint8_t reset()
 
 static uint8_t restore()
 {
-    return tmc2160_restore(&TMC2160);
-}
+    if(TMC2160.config->state != CONFIG_READY)
+        return false;
 
-static void configCallback(TMC2160TypeDef *tmc2160, ConfigState state)
-{
-    if(state == CONFIG_RESET)
-    {    // Change hardware-preset registers here
-        tmc2160_writeRegister(tmc2160, TMC2160_PWMCONF, 0xC40C001E);
-        tmc2160_writeRegister(tmc2160, TMC2160_DRV_CONF, 0x00080400);
-        //tmc2160_writeRegister(tmc2160, TMC2160_PWMCONF, 0x000504C8);
+    TMC2160.config->state        = CONFIG_RESTORE;
+    TMC2160.config->configIndex  = 0;
 
-        tmc2160_fillShadowRegisters(tmc2160);
-    }
+    return true;
 }
 
 static void enableDriver(DriverState state)
@@ -849,8 +906,7 @@ static void enableDriver(DriverState state)
 
 void TMC2160_init(void)
 {
-    tmc2160_init(&TMC2160, 1, Evalboards.ch2.config, &tmc2160_defaultRegisterResetState[0]);
-    tmc2160_setCallback(&TMC2160, configCallback);
+    TMC2160.config   = Evalboards.ch2.config;
 
     Pins.DRV_ENN = &HAL.IOs->pins->DIO0;
     Pins.REFL_STEP = &HAL.IOs->pins->DIO6;
@@ -894,6 +950,8 @@ void TMC2160_init(void)
     Evalboards.ch2.config->restore      = restore;
     Evalboards.ch2.config->state        = CONFIG_RESET;
     Evalboards.ch2.config->configIndex  = 0;
+    Evalboards.ch2.config->callback     = NULL;
+    Evalboards.ch2.config->channel      = 1;
 
     Evalboards.ch2.rotate               = rotate;
     Evalboards.ch2.right                = right;
