@@ -10,18 +10,8 @@
 #include "Board.h"
 #include "tmc/ic/TMC5041/TMC5041.h"
 
-static uint8_t nodeAddress = 0;
-static SPIChannelTypeDef *TMC5041_SPIChannel;
-
-
 #define DEFAULT_MOTOR  0
 #define DEFAULT_ICID   0
-
-void tmc5041_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
-{
-    UNUSED(icID);
-    TMC5041_SPIChannel->readWriteArray(data, dataLength);
-}
 
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
@@ -29,6 +19,10 @@ void tmc5041_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  280  // VM[V/10] max +10%
+
+static TMC5041TypeDef TMC5041;
+static uint8_t nodeAddress = 0;
+static SPIChannelTypeDef *TMC5041_SPIChannel;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -43,6 +37,7 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
+static void writeConfiguration();
 static void periodicJob(uint32_t tick);
 static void checkErrors    (uint32_t tick);
 static void deInit(void);
@@ -63,13 +58,20 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-// Translate motor number to TMC5041TypeDef
-// When using multiple ICs you can map them here
-static inline TMC5041TypeDef *motorToIC(uint8_t motor)
-{
-	UNUSED(motor);
+// Usage note: use 1 TypeDef per IC
+typedef struct {
+    ConfigurationTypeDef *config;
 
-	return &TMC5041;
+    int32_t velocity[2], oldX[2];
+    uint32_t oldTick;
+    bool vMaxModified[2];
+} TMC5041TypeDef;
+
+
+void tmc5041_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+    UNUSED(icID);
+    TMC5041_SPIChannel->readWriteArray(data, dataLength);
 }
 
 // Translate channel number to SPI channel
@@ -86,9 +88,9 @@ static uint32_t rotate(uint8_t motor, int32_t velocity)
     if(motor >= TMC5041_MOTORS)
         return TMC_ERROR_MOTOR;
 
-    tmc5041_writeRegister(motor, TMC5041_VMAX(motor), abs(velocity));
+    tmc5041_writeRegister(DEFAULT_ICID, TMC5041_VMAX(motor), abs(velocity));
     TMC5041.vMaxModified[motor] = true;
-    tmc5041_writeRegister(motor, TMC5041_RAMPMODE(motor), (velocity >= 0)? TMC5041_MODE_VELPOS:TMC5041_MODE_VELNEG);
+    tmc5041_writeRegister(DEFAULT_ICID, TMC5041_RAMPMODE(motor), (velocity >= 0)? TMC5041_MODE_VELPOS:TMC5041_MODE_VELNEG);
     return TMC_ERROR_NONE;
 }
 
@@ -662,9 +664,77 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
     *value = tmc5041_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
+static void writeConfiguration()
+{
+    uint8_t *ptr = &TMC5041.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC5041.config->state == CONFIG_RESTORE)
+       {
+           settings = *(tmc5041_shadowRegister+0);
+           // Find the next restorable register
+          while(*ptr < TMC5041_REGISTER_COUNT)
+          {
+                   // If the register is writable and has been written to, restore it
+                   if (TMC_IS_WRITABLE(tmc5041_registerAccess[*ptr]) && tmc5041_getDirtyBit(DEFAULT_ICID,*ptr))
+                   {
+                       break;
+                   }
+
+                   // Otherwise, check next register
+               (*ptr)++;
+           }
+       }
+    else
+       {
+           settings = tmc5041_sampleRegisterPreset;
+           // Find the next resettable register
+           while((*ptr < TMC5041_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5041_registerAccess[*ptr]))
+           {
+               (*ptr)++;
+           }
+       }
+
+    if(*ptr < TMC5041_REGISTER_COUNT)
+    {
+        tmc5041_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else
+    {
+        if(TMC5041.config->state == CONFIG_RESET)
+        {
+            // Fill missing shadow registers (hardware preset registers)
+            tmc5041_initCache();
+        }
+
+        TMC5041.config->state = CONFIG_READY;
+    }
+}
+
 static void periodicJob(uint32_t tick)
 {
-    tmc5041_periodicJob(&TMC5041, tick);
+    int32_t xActual;
+    uint32_t tickDiff;
+
+    if(TMC5041.config->state != CONFIG_READY)
+    {
+        writeConfiguration();
+        return;
+    }
+
+    if((tickDiff = tick - TMC5041.oldTick) >= 5)
+    {
+        int32_t i;
+        for (i = 0; i < TMC5041_MOTORS; i++)
+        {
+            xActual = tmc5041_readRegister(DEFAULT_ICID, TMC5041_XACTUAL(i));
+            tmc5041_shadowRegister[DEFAULT_ICID][TMC5041_XACTUAL(i)] = xActual;
+            TMC5041.velocity[i] = (int32_t) ((float) (abs(xActual-TMC5041.oldX[i]) / (float) tickDiff) * (float) 1048.576);
+            TMC5041.oldX[i] = xActual;
+        }
+        TMC5041.oldTick = tick;
+    }
 }
 
 static void checkErrors(uint32_t tick)
@@ -705,15 +775,33 @@ static void deInit(void)
 static uint8_t reset()
 {
     for(uint8_t motor = 0; motor < TMC5041_MOTORS; motor++)
-        if(tmc5041_readRegister(motor, TMC5041_VACTUAL(motor)) != 0)
+        if(tmc5041_readRegister(DEFAULT_ICID, TMC5041_VACTUAL(motor)) != 0)
             return 0;
 
-    return tmc5041_reset(&TMC5041);
+    if(TMC5041.config->state != CONFIG_READY)
+        return 0;
+
+    // Reset the dirty bits and wipe the shadow registers
+   for(size_t i = 0; i < TMC5041_REGISTER_COUNT; i++)
+   {
+       tmc5041_setDirtyBit(DEFAULT_ICID, i, false);
+       tmc5041_shadowRegister[DEFAULT_ICID][i] = 0;
+   }
+
+    TMC5041.config->state        = CONFIG_RESET;
+    TMC5041.config->configIndex  = 0;
+
+    return 1;
 }
 
 static uint8_t restore()
 {
-    return tmc5041_restore(&TMC5041);
+    if(TMC5041.config->state != CONFIG_READY)
+        return 0;
+
+    TMC5041.config->state        = CONFIG_RESTORE;
+    TMC5041.config->configIndex  = 0;
+    return 1;
 }
 
 static void enableDriver(DriverState state)
@@ -729,7 +817,16 @@ static void enableDriver(DriverState state)
 
 void TMC5041_init(void)
 {
-    tmc5041_init(&TMC5041, 0, Evalboards.ch1.config, tmc5041_defaultRegisterResetState);
+
+    TMC5041.velocity[0]      = 0;
+    TMC5041.velocity[1]      = 0;
+    TMC5041.oldTick          = 0;
+    TMC5041.oldX[0]          = 0;
+    TMC5041.oldX[1]          = 0;
+    TMC5041.vMaxModified[0]  = false;
+    TMC5041.vMaxModified[1]  = false;
+
+    TMC5041.config   = Evalboards.ch1.config;
 
     Pins.DRV_ENN   = &HAL.IOs->pins->DIO0;
     Pins.INT_ENCA  = &HAL.IOs->pins->DIO5;
@@ -748,6 +845,8 @@ void TMC5041_init(void)
     Evalboards.ch1.config->restore      = restore;
     Evalboards.ch1.config->state        = CONFIG_RESET;
     Evalboards.ch1.config->configIndex  = 0;
+    Evalboards.ch1.config->callback     = NULL;
+    Evalboards.ch1.config->channel      = 0;
 
     Evalboards.ch1.rotate               = rotate;
     Evalboards.ch1.right                = right;
