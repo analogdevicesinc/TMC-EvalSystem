@@ -77,7 +77,7 @@ void tmc2224_writeConfiguration()
 
     if (TMC2224.config->state == CONFIG_RESTORE)
     {
-        settings = tmc2224_shadowRegister;
+        settings = *(tmc2224_shadowRegister + 0);
         // Find the next restorable register
         while (*ptr < TMC2224_REGISTER_COUNT)
         {

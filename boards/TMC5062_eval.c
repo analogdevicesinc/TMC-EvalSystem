@@ -725,7 +725,7 @@ static void writeConfiguration()
 
     if(TMC5062.config->state == CONFIG_RESTORE)
     {
-        settings = tmc5062_shadowRegister;
+        settings = *(tmc5062_shadowRegister + 0);
         // Find the next restorable register
         while(*ptr < TMC5062_REGISTER_COUNT)
         {

@@ -97,7 +97,7 @@ static void writeConfiguration(void)
 
     if(TMC2209.config->state == CONFIG_RESTORE)
     {
-        settings = tmc2209_shadowRegister;
+        settings = *(tmc2209_shadowRegister + 0);
         // Find the next restorable register
         while(*ptr < TMC2209_REGISTER_COUNT)
         {

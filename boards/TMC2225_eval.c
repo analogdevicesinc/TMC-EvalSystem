@@ -77,7 +77,7 @@ static void writeConfiguration()
 
     if (TMC2225.config->state == CONFIG_RESTORE)
     {
-        settings = tmc2225_shadowRegister;
+        settings = *(tmc2225_shadowRegister + 0);
         // Find the next restorable register
         while (*ptr < TMC2225_REGISTER_COUNT)
         {

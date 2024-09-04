@@ -807,7 +807,7 @@ static void tmc5130_writeConfiguration()
 
 	if(TMC5130.config->state == CONFIG_RESTORE)
 		{
-			settings = tmc5130_shadowRegister;
+			settings = *(tmc5130_shadowRegister + 0);
 			// Find the next restorable register
         while(*ptr < TMC5130_REGISTER_COUNT)
         {

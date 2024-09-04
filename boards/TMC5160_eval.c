@@ -119,7 +119,7 @@ static void writeConfiguration()
 
     if(TMC5160.config->state == CONFIG_RESTORE)
     {
-        settings = tmc5160_shadowRegister;
+        settings = *(tmc5160_shadowRegister + 0);
         // Find the next restorable register
         while(*ptr < TMC5160_REGISTER_COUNT)
         {
