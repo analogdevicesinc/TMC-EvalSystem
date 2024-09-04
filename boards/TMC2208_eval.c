@@ -18,7 +18,51 @@ static UART_Config *TMC2208_UARTChannel;
 
 #define DEFAULT_MOTOR  0
 
+// Usage note: use 1 TypeDef per IC
+typedef struct {
+    ConfigurationTypeDef *config;
+} TMC2208TypeDef;
+static TMC2208TypeDef TMC2208;
 
+static void writeConfiguration()
+{
+    uint8_t *ptr = &TMC2208.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC2208.config->state == CONFIG_RESTORE)
+    {
+        settings = TMC2208.config->shadowRegister;
+        // Find the next restorable register
+        while((*ptr < TMC2208_REGISTER_COUNT) && !TMC_IS_RESTORABLE(TMC2208.registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = TMC2208.registerResetState;
+        // Find the next resettable register
+        while((*ptr < TMC2208_REGISTER_COUNT) && !TMC_IS_RESETTABLE(TMC2208.registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+
+    if(*ptr < TMC2208_REGISTER_COUNT)
+    {
+        tmc2208_writeRegister(tmc2208, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        if(TMC2208.config->callback)
+        {
+            ((tmc2208_callback)TMC2208.config->callback)(tmc2208, TMC2208.config->state);
+        }
+
+        TMC2208.config->state = CONFIG_READY;
+    }
+}
 
 bool tmc2208_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
@@ -226,7 +270,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 6:
 		// UART slave address
 		if(readWrite == READ) {
-			*value = tmc2208_get_slave(&TMC2208);
+		    // The TMC2208 has a hardcoded slave address 0
+			*value = 0;
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -300,37 +345,59 @@ static void deInit(void)
 	StepDir_deInit();
 }
 
-static uint8_t reset()
+static uint8_t reset ()
 {
-	StepDir_init(STEPDIR_PRECISION);
-	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
+    StepDir_init(STEPDIR_PRECISION);
+    StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
 
-	return tmc2208_reset(&TMC2208);
+    //	return tmc2208_reset(&TMC2208);
+    if (TMC2208.config->state != CONFIG_READY)
+        return false;
+
+    // Reset the dirty bits and wipe the shadow registers
+    for (size_t i = 0; i < TMC2208_REGISTER_COUNT; i++)
+    {
+        TMC2208.registerAccess[i] &= ~TMC_ACCESS_DIRTY;
+        TMC2208.config->shadowRegister[i] = 0;
+    }
+
+    TMC2208.config->state       = CONFIG_RESET;
+    TMC2208.config->configIndex = 0;
+
+    return true;
 }
 
 static uint8_t restore()
 {
-	return tmc2208_restore(&TMC2208);
+    //	return tmc2208_restore(&TMC2208);
+    if (TMC2208.config->state != CONFIG_READY)
+        return false;
+
+    TMC2208.config->state       = CONFIG_RESTORE;
+    TMC2208.config->configIndex = 0;
+
+    return true;
 }
 
 static void enableDriver(DriverState state)
 {
-	if(state == DRIVER_USE_GLOBAL_ENABLE)
-		state = Evalboards.driverEnable;
+    if (state == DRIVER_USE_GLOBAL_ENABLE)
+        state = Evalboards.driverEnable;
 
-	if(state == DRIVER_DISABLE)
-		HAL.IOs->config->setHigh(Pins.DRV_ENN);
-	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE))
-		HAL.IOs->config->setLow(Pins.DRV_ENN);
+    if (state == DRIVER_DISABLE)
+        HAL.IOs->config->setHigh (Pins.DRV_ENN);
+    else if ((state == DRIVER_ENABLE)
+            && (Evalboards.driverEnable == DRIVER_ENABLE))
+        HAL.IOs->config->setLow (Pins.DRV_ENN);
 }
 
 static void periodicJob(uint32_t tick)
 {
-	for(uint8_t motor = 0; motor < MOTORS; motor++)
-	{
-		tmc2208_periodicJob(&TMC2208, tick);
-		StepDir_periodicJob(motor);
-	}
+//    tmc2208_periodicJob (&TMC2208, tick);
+    if(tmc2208->config->state != CONFIG_READY)
+        writeConfiguration();
+
+    StepDir_periodicJob (0);
 }
 
 void TMC2208_init(void)
@@ -363,12 +430,12 @@ void TMC2208_init(void)
 	TMC2208_UARTChannel->pinout = UART_PINS_1;
 	TMC2208_UARTChannel->rxtx.init();
 
-	TMC2208_config = Evalboards.ch2.config;
+//	TMC2208_config = Evalboards.ch2.config;
 
 	Evalboards.ch2.config->reset        = reset;
 	Evalboards.ch2.config->restore      = restore;
-	Evalboards.ch2.config->state        = CONFIG_RESET;
-	Evalboards.ch2.config->configIndex  = 0;
+//	Evalboards.ch2.config->state        = CONFIG_RESET;
+//	Evalboards.ch2.config->configIndex  = 0;
 
 	Evalboards.ch2.rotate               = rotate;
 	Evalboards.ch2.right                = right;
@@ -389,7 +456,12 @@ void TMC2208_init(void)
 	Evalboards.ch2.deInit               = deInit;
 	Evalboards.ch2.periodicJob          = periodicJob;
 
-	tmc2208_init(&TMC2208, 0, TMC2208_config, &tmc2208_defaultRegisterResetState[0]);
+//	tmc2208_init(&TMC2208, 0, TMC2208_config, &tmc2208_defaultRegisterResetState[0]);
+    TMC2208.config               = Evalboards.ch2.config;
+    TMC2208.config->callback     = NULL;
+    TMC2208.config->channel      = 0;
+    TMC2208.config->configIndex  = 0;
+    TMC2208.config->state        = CONFIG_READY;
 
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, NULL);
