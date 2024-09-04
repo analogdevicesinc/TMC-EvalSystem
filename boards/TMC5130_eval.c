@@ -238,17 +238,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 6:
 		// Maximum current
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_IRUN_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_IRUN_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_IRUN_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_IRUN_FIELD, *value);
 		}
 		break;
 	case 7:
 		// Standby current
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_IHOLD_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_IHOLD_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_IHOLD_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_IHOLD_FIELD, *value);
 		}
 		break;
 	case 8:
@@ -398,17 +398,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 27:
 		// High speed chopper mode
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_VHIGHCHM_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_VHIGHCHM_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_VHIGHCHM_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_VHIGHCHM_FIELD, *value);
 		}
 		break;
 	case 28:
 		// High speed fullstep mode
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_VHIGHFS_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_VHIGHFS_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_VHIGHFS_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_VHIGHFS_FIELD, *value);
 		}
 		break;
 	case 29:
@@ -421,31 +421,31 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 30: // par::RampType
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_RAMPMODE_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_RAMPMODE_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_RAMPMODE_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_RAMPMODE_FIELD, *value);
 		}
 		break;
 	case 33:
 		// Analog I Scale
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_I_SCALE_ANALOG_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_I_SCALE_ANALOG_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_I_SCALE_ANALOG_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_I_SCALE_ANALOG_FIELD, *value);
 		}
 		break;
 	case 34:
 		// Internal RSense
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_INTERNAL_RSENSE_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_INTERNAL_RSENSE_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_INTERNAL_RSENSE_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_INTERNAL_RSENSE_FIELD, *value);
 		}
 		break;
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
-			*value = 256 >> tmc5130_field_read(DEFAULT_ICID, TMC5130_MRES_FIELD);
+			*value = 256 >> tmc5130_fieldRead(DEFAULT_ICID, TMC5130_MRES_FIELD);
 		} else if(readWrite == WRITE) {
 			switch(*value)
 			{
@@ -463,7 +463,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 			if(*value != -1)
 			{
-				tmc5130_field_write(DEFAULT_ICID, TMC5130_MRES_FIELD, *value);
+				tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_MRES_FIELD, *value);
 			}
 			else
 			{
@@ -474,25 +474,25 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 162:
 		// Chopper blank time
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_TBL_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_TBL_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_TBL_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_TBL_FIELD, *value);
 		}
 		break;
 	case 163:
 		// Constant TOff Mode
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_CHM_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_CHM_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_CHM_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_CHM_FIELD, *value);
 		}
 		break;
 	case 164:
 		// Disable fast decay comparator
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_DISFDCC_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_DISFDCC_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_DISFDCC_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_DISFDCC_FIELD, *value);
 		}
 		break;
 	case 165:
@@ -501,7 +501,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(buffer & (1<<14))
 			{
-				*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_HEND_FIELD);
+				*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_HEND_FIELD);
 			}
 			else
 			{
@@ -510,7 +510,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(buffer & (1<<14))
 			{
-				tmc5130_field_write(DEFAULT_ICID, TMC5130_HEND_FIELD, *value);
+				tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_HEND_FIELD, *value);
 			}
 			else
 			{
@@ -532,7 +532,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(buffer & (1<<14))
 			{
-				*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_HSTRT_FIELD);
+				*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_HSTRT_FIELD);
 			}
 			else
 			{
@@ -541,91 +541,91 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 			if(tmc5130_readRegister(DEFAULT_ICID, TMC5130_CHOPCONF) & (1<<14))
 			{
-				tmc5130_field_write(DEFAULT_ICID, TMC5130_HSTRT_FIELD, *value);
+				tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_HSTRT_FIELD, *value);
 			}
 			else
 			{
-				tmc5130_field_write(DEFAULT_ICID, TMC5130_OFFSET_FIELD, *value);
+				tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_OFFSET_FIELD, *value);
 			}
 		}
 		break;
 	case 167:
 		// Chopper off time
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_TOFF_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_TOFF_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_TOFF_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_TOFF_FIELD, *value);
 		}
 		break;
 	case 168:
 		// smartEnergy current minimum (SEIMIN)
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEIMIN_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SEIMIN_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEIMIN_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SEIMIN_FIELD, *value);
 		}
 		break;
 	case 169:
 		// smartEnergy current down step
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEDN_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SEDN_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEDN_FIELD , *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SEDN_FIELD , *value);
 		}
 		break;
 	case 170:
 		// smartEnergy hysteresis
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEMAX_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SEMAX_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEMAX_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SEMAX_FIELD, *value);
 		}
 		break;
 	case 171:
 		// smartEnergy current up step
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEUP_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SEUP_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEUP_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SEUP_FIELD, *value);
 		}
 		break;
 	case 172:
 		// smartEnergy hysteresis start
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SEMIN_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SEMIN_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SEMIN_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SEMIN_FIELD, *value);
 		}
 		break;
 	case 173:
 		// stallGuard2 filter enable
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SFILT_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SFILT_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SFILT_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SFILT_FIELD, *value);
 		}
 		break;
 	case 174:
 		// stallGuard2 threshold
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SGT_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SGT_FIELD);
 			*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SGT_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SGT_FIELD, *value);
 		}
 		break;
 	case 179:
 		// VSense
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_VSENSE_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_VSENSE_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_VSENSE_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_VSENSE_FIELD, *value);
 		}
 		break;
 	case 180:
 		// smartEnergy actual current
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_CS_ACTUAL_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_CS_ACTUAL_FIELD);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -635,7 +635,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		//this function sort of doubles with 182 but is necessary to allow cross chip compliance
 		if(readWrite == READ)
 		{
-			if(tmc5130_field_read(DEFAULT_ICID, TMC5130_SG_STOP_FIELD))
+			if(tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SG_STOP_FIELD))
 			{
 				buffer = tmc5130_readRegister(DEFAULT_ICID, TMC5130_TCOOLTHRS);
 				*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer : 1));
@@ -643,7 +643,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			else
 				*value = 0;
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SG_STOP_FIELD, (*value) ? 1:0);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SG_STOP_FIELD, (*value) ? 1:0);
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
 			tmc5130_writeRegister(DEFAULT_ICID, TMC5130_TCOOLTHRS, *value);
 		}
@@ -661,17 +661,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 184:
 		// Random TOff mode
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_RNDTF_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_RNDTF_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_RNDTF_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_RNDTF_FIELD, *value);
 		}
 		break;
 	case 185:
 		// Chopper synchronization
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SYNC_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SYNC_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_SYNC_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_SYNC_FIELD, *value);
 		}
 		break;
 	case 186:
@@ -687,28 +687,28 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 187:
 		// PWM gradient
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_PWM_GRAD_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_PWM_GRAD_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_PWM_GRAD_FIELD, *value);
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_EN_PWM_MODE_FIELD, (*value)? 1:0);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_PWM_GRAD_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_EN_PWM_MODE_FIELD, (*value)? 1:0);
 		}
 		break;
 	case 188:
 		// PWM amplitude
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_PWM_AMPL_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_PWM_AMPL_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_PWM_AMPL_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_PWM_AMPL_FIELD, *value);
 		}
 		break;
 	case 191:
 		// PWM frequency
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_PWM_FREQ_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_PWM_FREQ_FIELD);
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 4)
 			{
-				tmc5130_field_write(DEFAULT_ICID, TMC5130_PWM_FREQ_FIELD, *value);
+				tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_PWM_FREQ_FIELD, *value);
 			}
 			else
 			{
@@ -719,11 +719,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 192:
 		// PWM autoscale
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_PWM_AUTOSCALE_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_PWM_AUTOSCALE_FIELD);
 		} else if(readWrite == WRITE) {
 			if(*value >= 0 && *value < 2)
 			{
-				tmc5130_field_write(DEFAULT_ICID, TMC5130_PWM_AUTOSCALE_FIELD, *value);
+				tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_PWM_AUTOSCALE_FIELD, *value);
 			}
 			else
 			{
@@ -734,15 +734,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 204:
 		// Freewheeling mode
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_FREEWHEEL_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_FREEWHEEL_FIELD);
 		} else if(readWrite == WRITE) {
-			tmc5130_field_write(DEFAULT_ICID, TMC5130_FREEWHEEL_FIELD, *value);
+			tmc5130_fieldWrite(DEFAULT_ICID, TMC5130_FREEWHEEL_FIELD, *value);
 		}
 		break;
 	case 206:
 		// Load value
 		if(readWrite == READ) {
-			*value = tmc5130_field_read(DEFAULT_ICID, TMC5130_SG_RESULT_FIELD);
+			*value = tmc5130_fieldRead(DEFAULT_ICID, TMC5130_SG_RESULT_FIELD);
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
