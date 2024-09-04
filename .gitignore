@@ -8,6 +8,8 @@ deploy_*.sh
 ### C ###
 # Prerequisites
 *.d
+# code format
+.clang-format
 
 # Object files
 *.o
