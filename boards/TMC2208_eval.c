@@ -12,11 +12,10 @@
 #include "tmc/StepDir.h"
 
 
-
 static uint8_t nodeAddress = 0;
 static UART_Config *TMC2208_UARTChannel;
 
-#define DEFAULT_MOTOR  0
+#define DEFAULT_ICID  0
 
 // Usage note: use 1 TypeDef per IC
 typedef struct {
@@ -31,12 +30,12 @@ static void writeConfiguration()
 
     if(TMC2208.config->state == CONFIG_RESTORE)
     {
-        settings = tmc2208_shadowRegister;
+        settings = *(tmc2208_shadowRegister + 0);
         // Find the next restorable register
         while(*ptr < TMC2208_REGISTER_COUNT)
         {
             // If the register is writable and has been written to, restore it
-            if (TMC_IS_WRITABLE(tmc2208_registerAccess[*ptr]) && tmc2208_getDirtyBit(DEFAULT_MOTOR, *ptr))
+            if (TMC_IS_WRITABLE(tmc2208_registerAccess[*ptr]) && tmc2208_getDirtyBit(DEFAULT_ICID, *ptr))
             {
                 break;
             }
@@ -57,7 +56,7 @@ static void writeConfiguration()
 
     if(*ptr < TMC2208_REGISTER_COUNT)
     {
-        tmc2208_writeRegister(DEFAULT_MOTOR, *ptr, settings[*ptr]);
+        tmc2208_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
         (*ptr)++;
     }
     else // Finished configuration
@@ -156,14 +155,14 @@ static inline UART_Config *channelToUART(uint8_t channel)
     return TMC2208_UARTChannel;
 }
 
-void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+void writeRegister(uint8_t icID, uint16_t address, int32_t value)
 {
-    tmc2208_writeRegister(motor, (uint8_t) address, value);
+    tmc2208_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
-void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+void readRegister(uint8_t icID, uint16_t address, int32_t *value)
 {
-    *value = tmc2208_readRegister(motor, (uint8_t) address);
+    *value = tmc2208_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -359,8 +358,8 @@ static uint8_t reset ()
     // Reset the dirty bits and wipe the shadow registers
     for (size_t i = 0; i < TMC2208_REGISTER_COUNT; i++)
     {
-        tmc2208_setDirtyBit(DEFAULT_MOTOR, i, false);
-        tmc2208_shadowRegister[DEFAULT_MOTOR][i] = 0;
+        tmc2208_setDirtyBit(DEFAULT_ICID, i, false);
+        tmc2208_shadowRegister[DEFAULT_ICID][i] = 0;
     }
 
     TMC2208.config->state       = CONFIG_RESET;
