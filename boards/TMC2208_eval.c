@@ -12,16 +12,62 @@
 #include "tmc/StepDir.h"
 
 
+#undef  TMC2208_MAX_VELOCITY
+#define TMC2208_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
+
+#define STEPDIR_PRECISION (1 << 17) // Stepdir precision: 2^17 -> 17 digits of precision
+#define ERRORS_VM        (1<<0)
+#define ERRORS_VM_UNDER  (1<<1)
+#define ERRORS_VM_OVER   (1<<2)
+#define VM_MIN  50   // VM[V/10] min
+#define VM_MAX  390  // VM[V/10] max
+#define MOTORS 1
+#define VREF_FULLSCALE 2100 // mV
+#define DEFAULT_ICID  0
+
+
 static uint8_t nodeAddress = 0;
 static UART_Config *TMC2208_UARTChannel;
+static timer_channel timerChannel;
+static uint16_t vref; // mV
 
-#define DEFAULT_ICID  0
 
 // Usage note: use 1 TypeDef per IC
 typedef struct {
     ConfigurationTypeDef *config;
 } TMC2208TypeDef;
 static TMC2208TypeDef TMC2208;
+
+typedef struct
+{
+    IOPinTypeDef  *DRV_ENN;
+    IOPinTypeDef  *STEP;
+    IOPinTypeDef  *DIR;
+    IOPinTypeDef  *MS1;
+    IOPinTypeDef  *MS2;
+    IOPinTypeDef  *DIAG;
+    IOPinTypeDef  *INDEX;
+    IOPinTypeDef  *UC_PWM;
+} PinsTypeDef;
+static PinsTypeDef Pins;
+
+
+static uint32_t right(uint8_t motor, int32_t velocity);
+static uint32_t left(uint8_t motor, int32_t velocity);
+static uint32_t rotate(uint8_t motor, int32_t velocity);
+static uint32_t stop(uint8_t motor);
+static uint32_t moveTo(uint8_t motor, int32_t position);
+static uint32_t moveBy(uint8_t motor, int32_t *ticks);
+static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
+static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void checkErrors (uint32_t tick);
+static void deInit(void);
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
+static void periodicJob(uint32_t tick);
+static uint8_t reset(void);
+static void enableDriver(DriverState state);
+static uint8_t restore(void);
+
 
 static void writeConfiguration()
 {
@@ -77,82 +123,7 @@ bool tmc2208_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, siz
 uint8_t tmc2208_getNodeAddress(uint16_t icID)
 {
     UNUSED(icID);
-
     return nodeAddress;
-}
-
-#undef  TMC2208_MAX_VELOCITY
-#define TMC2208_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
-
-// Stepdir precision: 2^17 -> 17 digits of precision
-#define STEPDIR_PRECISION (1 << 17)
-
-#define ERRORS_VM        (1<<0)
-#define ERRORS_VM_UNDER  (1<<1)
-#define ERRORS_VM_OVER   (1<<2)
-
-#define VM_MIN  50   // VM[V/10] min
-#define VM_MAX  390  // VM[V/10] max
-
-#define MOTORS 1
-
-#define VREF_FULLSCALE 2100 // mV
-
-static uint32_t right(uint8_t motor, int32_t velocity);
-static uint32_t left(uint8_t motor, int32_t velocity);
-static uint32_t rotate(uint8_t motor, int32_t velocity);
-static uint32_t stop(uint8_t motor);
-static uint32_t moveTo(uint8_t motor, int32_t position);
-static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-
-static void checkErrors (uint32_t tick);
-static void deInit(void);
-static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
-
-static void periodicJob(uint32_t tick);
-static uint8_t reset(void);
-static void enableDriver(DriverState state);
-
-static UART_Config *TMC2208_UARTChannel;
-static ConfigurationTypeDef *TMC2208_config;
-static timer_channel timerChannel;
-
-
-static uint16_t vref; // mV
-
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC2208_CRC(data, length) tmc_CRC8(data, length, 1)
-
-typedef struct
-{
-    IOPinTypeDef  *DRV_ENN;
-    IOPinTypeDef  *STEP;
-    IOPinTypeDef  *DIR;
-    IOPinTypeDef  *MS1;
-    IOPinTypeDef  *MS2;
-    IOPinTypeDef  *DIAG;
-    IOPinTypeDef  *INDEX;
-    IOPinTypeDef  *UC_PWM;
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
-
-static uint8_t restore(void);
-
-static inline TMC2208TypeDef *motorToIC(uint8_t motor)
-{
-    UNUSED(motor);
-
-    return &TMC2208;
-}
-
-static inline UART_Config *channelToUART(uint8_t channel)
-{
-    UNUSED(channel);
-
-    return TMC2208_UARTChannel;
 }
 
 void writeRegister(uint8_t icID, uint16_t address, int32_t value)
