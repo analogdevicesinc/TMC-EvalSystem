@@ -856,7 +856,7 @@ static uint8_t reset()
     // Reset the dirty bits and wipe the shadow registers
     for (size_t i = 0; i < TMC2226_REGISTER_COUNT; i++)
     {
-        tmc2226_dirtyBits[DEFAULT_ICID][i]      = 0;
+        tmc2226_setDirtyBit(DEFAULT_ICID, i, false);
         tmc2226_shadowRegister[DEFAULT_ICID][i] = 0;
     }
 

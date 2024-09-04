@@ -1039,7 +1039,7 @@ static uint8_t reset()
 		size_t i;
 		for(i = 0; i < TMC5130_REGISTER_COUNT; i++)
 		{
-			tmc5130_dirtyBits[DEFAULT_ICID][i] = 0;
+	        tmc5130_setDirtyBit(DEFAULT_ICID, i, false);
 			tmc5130_shadowRegister[DEFAULT_ICID][i] = 0;
 		}
 

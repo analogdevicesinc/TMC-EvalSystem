@@ -24,7 +24,7 @@
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  390  // VM[V/10] max
 
-#define DEFAULT_MOTOR  0
+#define DEFAULT_ICID  0
 
 #define VREF_FULLSCALE 2100 // mV // with R308 achievable Vref_max is ~2100mV
 //#define VREF_FULLSCALE 3300 // mV // without R308 achievable Vref_max is ~2500mV
@@ -102,7 +102,7 @@ static void writeConfiguration(void)
         while(*ptr < TMC2209_REGISTER_COUNT)
         {
         	// If the register is writable and has been written to, restore it
-        	if (TMC_IS_WRITABLE(tmc2209_registerAccess[*ptr]) && tmc2209_getDirtyBit(DEFAULT_MOTOR, *ptr))
+        	if (TMC_IS_WRITABLE(tmc2209_registerAccess[*ptr]) && tmc2209_getDirtyBit(DEFAULT_ICID, *ptr))
         	{
         		break;
         	}
@@ -123,7 +123,7 @@ static void writeConfiguration(void)
 
     if(*ptr < TMC2209_REGISTER_COUNT)
     {
-        tmc2209_writeRegister(DEFAULT_MOTOR, *ptr, settings[*ptr]);
+        tmc2209_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
         (*ptr)++;
     }
     else // Finished configuration
@@ -697,8 +697,8 @@ static uint8_t reset()
     // Reset the dirty bits and wipe the shadow registers
     for(size_t i = 0; i < TMC2209_REGISTER_COUNT; i++)
     {
-    	tmc2209_dirtyBits[DEFAULT_MOTOR][i] = 0;
-        tmc2209_shadowRegister[DEFAULT_MOTOR][i] = 0;
+        tmc2209_setDirtyBit(DEFAULT_ICID, i, false);
+        tmc2209_shadowRegister[DEFAULT_ICID][i] = 0;
     }
 
     TMC2209.config->state        = CONFIG_RESET;
@@ -744,13 +744,13 @@ static void periodicJob(uint32_t tick)
 static void writeRegister(uint8_t motor, uint8_t address, int32_t value)
 {
     UNUSED(motor);
-    tmc2209_writeRegister(DEFAULT_MOTOR, address, value);
+    tmc2209_writeRegister(DEFAULT_ICID, address, value);
 }
 
 static void readRegister(uint8_t motor, uint8_t address, int32_t *value)
 {
     UNUSED(motor);
-    *value = tmc2209_readRegister(DEFAULT_MOTOR, address);
+    *value = tmc2209_readRegister(DEFAULT_ICID, address);
 }
 void TMC2209_init(void)
 {

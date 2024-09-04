@@ -820,7 +820,7 @@ static uint8_t reset()
 	// Reset the dirty bits and wipe the shadow registers
 	for(size_t i = 0; i < TMC5072_REGISTER_COUNT; i++)
 	{
-		tmc5072_dirtyBits[DEFAULT_ICID][i] = 0;
+        tmc5072_setDirtyBit(DEFAULT_ICID, i, false);
 		tmc5072_shadowRegister[DEFAULT_ICID][i] = 0;
 	}
 

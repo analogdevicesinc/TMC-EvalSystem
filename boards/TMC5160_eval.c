@@ -1030,7 +1030,7 @@ static uint8_t reset()
         size_t i;
         for(i = 0; i < TMC5160_REGISTER_COUNT; i++)
         {
-            tmc5160_dirtyBits[DEFAULT_ICID][i] = 0;
+            tmc5160_setDirtyBit(DEFAULT_ICID, i, false);
             tmc5160_shadowRegister[DEFAULT_ICID][i] = 0;
         }
 
