@@ -33,8 +33,8 @@ void TMC8461_init_ch2(void);
 static void periodicJob(uint32_t actualSystick);
 static void register_write(uint8_t motor, uint16_t address, int32_t value);
 static void register_read(uint8_t motor, uint16_t address, int32_t *value);
-static void memory_read(uint8_t motor, uint8_t address, int32_t *value);
-static void memory_write(uint8_t motor, uint8_t address, int32_t value);
+static void memory_read(uint8_t motor, uint16_t address, int32_t *value);
+static void memory_write(uint8_t motor, uint16_t address, int32_t value);
 static void pdi_reset(void);
 static uint32_t eep_read(int32_t *value);
 static uint32_t eep_write(int32_t value);
@@ -139,12 +139,12 @@ static void register_read(uint8_t motor, uint16_t address, int32_t *value)
 	}
 }
 
-static void memory_read(uint8_t motor, uint8_t address, int32_t *value)
+static void memory_read(uint8_t motor, uint16_t address, int32_t *value)
 {
 	*value = tmc8461_esc_read_16(&TMC8461, (motor << 8) | address);
 }
 
-static void memory_write(uint8_t motor, uint8_t address, int32_t value)
+static void memory_write(uint8_t motor, uint16_t address, int32_t value)
 {
 	tmc8461_esc_write_8(&TMC8461, (motor << 8) | address, BYTE(value, 0));
 }

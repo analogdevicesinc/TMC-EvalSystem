@@ -275,13 +275,15 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     return handleParameter(READ, motor, type, value);
 }
 
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
+    UNUSED(motor);
     tmc2224_writeRegister(DEFAULT_ICID, address, value);
 }
 
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
+    UNUSED(motor);
     *value = tmc2224_readRegister(DEFAULT_ICID, address);
 }
 

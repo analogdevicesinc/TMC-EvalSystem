@@ -83,8 +83,8 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
 static void periodicJob(uint32_t tick);
@@ -828,13 +828,15 @@ uint8_t dcStepActive(uint8_t motor)
     return vActual >= vDCMin;
 }
 
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
+    UNUSED(motor);
     tmc5062_writeRegister(DEFAULT_ICID, address, value);
 }
 
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
+    UNUSED(motor);
     *value = tmc5062_readRegister(DEFAULT_ICID, address);
 }
 

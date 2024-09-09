@@ -394,8 +394,9 @@ void ADC1_IRQHandler()
 	}
 }
 
-void timer_callback(void)
+void timer_callback(timer_channel channel)
 {
+    UNUSED(channel);
 	// clear timer overflow flag
 	//FTM0_SC &= ~FTM_SC_TOF_MASK;
 

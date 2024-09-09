@@ -87,7 +87,6 @@ static uint32_t vmax_position[TMC5272_MOTORS];
 
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
-static uint32_t targetAddressUart = 0;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -1592,13 +1591,13 @@ static void enableDriver(DriverState state)
 
 	if(state ==  DRIVER_DISABLE){
 		HAL.IOs->config->setHigh(Pins.DRV_ENN_CFG6);
-		tmc5272_fieldWrite(&TMC5272, TMC5272_GCONF_M0_DRV_ENN_FIELD, 1);
-		tmc5272_fieldWrite(&TMC5272, TMC5272_GCONF_M1_DRV_ENN_FIELD, 1);
+		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD, 1);
+		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD, 1);
 	}
 	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
 		HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
-		tmc5272_fieldWrite(&TMC5272, TMC5272_GCONF_M0_DRV_ENN_FIELD, 0);
-		tmc5272_fieldWrite(&TMC5272, TMC5272_GCONF_M1_DRV_ENN_FIELD, 0);
+		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD, 0);
+		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD, 0);
 	}
 }
 

@@ -70,8 +70,8 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void init_comm(TMC5271BusType mode);
 static void periodicJob(uint32_t tick);
@@ -1122,13 +1122,15 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
     return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
+    UNUSED(motor);
     tmc5271_writeRegister(DEFAULT_ICID, address, value);
 }
 
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
+    UNUSED(motor);
     *value = tmc5271_readRegister(DEFAULT_ICID, address);
 }
 
@@ -1328,11 +1330,11 @@ static void enableDriver(DriverState state)
 
     if(state ==  DRIVER_DISABLE){
         HAL.IOs->config->setHigh(Pins.DRV_ENN_CFG6);
-        tmc5271_fieldWrite(&TMC5271, TMC5271_DRV_ENN_FIELD, 1);
+        tmc5271_fieldWrite(DEFAULT_ICID, TMC5271_DRV_ENN_FIELD, 1);
     }
     else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
         HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
-        tmc5271_fieldWrite(&TMC5271, TMC5271_DRV_ENN_FIELD, 0);
+        tmc5271_fieldWrite(DEFAULT_ICID, TMC5271_DRV_ENN_FIELD, 0);
     }
 }
 

@@ -32,7 +32,7 @@ static SPIChannelTypeDef *TMC4671_SPIChannel;
 static int32_t MAX_POS_DEVIATION = 0;
 static int32_t MAX_VEL_DEVIATION = 0;
 
-static void timer_overflow(void);
+static void timer_overflow(timer_channel channel);
 
 typedef struct
 {
@@ -909,8 +909,9 @@ static void periodicJob(uint32_t actualSystick)
 	}
 }
 
-static void timer_overflow(void)
+static void timer_overflow(timer_channel channel)
 {
+    UNUSED(channel);
 	// RAMDebug
 	debug_nextProcess();
 }

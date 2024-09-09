@@ -452,7 +452,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 
 			uint32_t spiOutFormat = tmc4361A_readInt(motorToIC(motor), TMC4361A_SPIOUT_CONF) & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
-			uint32_t minLimit, maxLimit;
+			int32_t minLimit, maxLimit;
 			switch(spiOutFormat)
 			{//S/D Mode:
 			case 0x0B:
@@ -470,6 +470,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				maxLimit = 255;
 				break;
 			default:
+                minLimit = 0;
+                maxLimit = 0;
 				break;
 			}
 
@@ -491,7 +493,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		} else if(readWrite == WRITE) {
 
 			uint32_t spiOutFormat = tmc4361A_readInt(motorToIC(motor), TMC4361A_SPIOUT_CONF) & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
-			uint32_t minLimit, maxLimit;
+			int32_t minLimit, maxLimit;
 			switch(spiOutFormat)
 			{//S/D Mode:
 			case 0x0B:
@@ -509,6 +511,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				maxLimit = 255;
 				break;
 			default:
+			    minLimit = 0;
+			    maxLimit = 0;
 				break;
 			}
 

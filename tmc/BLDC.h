@@ -20,7 +20,7 @@ typedef enum {
 } BLDCMeasurementType;
 
 void BLDC_init(BLDCMeasurementType type, uint32_t currentScaling, IOPinTypeDef *hallU, IOPinTypeDef *hallV, IOPinTypeDef *hallW);
-void timer_callback(void);
+void timer_callback(timer_channel channel);
 
 void BLDC_calibrateADCs();
 

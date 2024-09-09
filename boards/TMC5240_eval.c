@@ -63,8 +63,6 @@ static uint32_t vmax_position;
 //static uint32_t vMax         = 1;
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
-static uint32_t targetAddressUart = 0;
-
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -74,8 +72,8 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void init_comm(TMC5240BusType mode);
 static void periodicJob(uint32_t tick);
@@ -164,6 +162,7 @@ static uint32_t stop(uint8_t motor)
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
+    UNUSED(motor);
     tmc5240_writeRegister(DEFAULT_ICID, TMC5240_RAMPMODE, TMC5240_MODE_POSITION);
 
     // VMAX also holds the target velocity in velocity mode.

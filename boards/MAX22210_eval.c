@@ -42,7 +42,6 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void deInit(void);
 static uint8_t reset();
 static uint8_t restore();
-static void timer_overflow(void);
 
 //static int32_t measured_velocity = 0;
 
@@ -411,12 +410,6 @@ static uint8_t reset()
 static uint8_t restore()
 {
 	return 1;
-}
-
-static void timer_overflow(void)
-{
-	// RAMDebug
-	debug_nextProcess();
 }
 
 void MAX22210_init(void)

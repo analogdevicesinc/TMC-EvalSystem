@@ -74,7 +74,7 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 static void init_comm(TMC5160BusType mode);
-static void periodicJob(uint32_t tick, uint8_t motor);
+static void periodicJob(uint32_t tick);
 static void checkErrors(uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
@@ -826,7 +826,7 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
     *value = tmc5160_readRegister(DEFAULT_ICID, address );
 }
 
-static void periodicJob(uint32_t tick, uint8_t motor)
+static void periodicJob(uint32_t tick)
 {
     if(TMC5160.config->state != CONFIG_READY)
     {
@@ -840,7 +840,7 @@ static void periodicJob(uint32_t tick, uint8_t motor)
     // Calculate velocity v = dx/dt
     if((tickDiff = tick - TMC5160.oldTick) >= 5)
     {
-        XActual = tmc5160_readRegister(motor, TMC5160_XACTUAL);
+        XActual = tmc5160_readRegister(DEFAULT_ICID, TMC5160_XACTUAL);
         // ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
         TMC5160.velocity = (uint32_t) ((float32_t) ((XActual - TMC5160.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
 

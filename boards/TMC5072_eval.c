@@ -108,7 +108,7 @@ static PinsTypeDef Pins;
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
 	if(motor >= TMC5072_MOTORS)
-			return NULL;
+			return TMC_ERROR_MOTOR;
 
 		tmc5072_writeRegister(DEFAULT_ICID, TMC5072_VMAX(motor), (velocity >= 0)? velocity : -velocity);
 		tmc5072_fieldWrite(DEFAULT_ICID, TMC5072_RAMPMODE_FIELD(motor), (velocity >= 0) ? TMC5072_MODE_VELPOS : TMC5072_MODE_VELNEG);
@@ -137,7 +137,7 @@ static uint32_t stop(uint8_t motor)
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
 	if(motor >= TMC5072_MOTORS)
-		return;
+		return TMC_ERROR_MOTOR;
 
 	tmc5072_writeRegister(DEFAULT_ICID, TMC5072_RAMPMODE(motor), TMC5072_MODE_POSITION);
 	tmc5072_writeRegister(DEFAULT_ICID, TMC5072_VMAX(motor), vmax_position[motor]);
@@ -729,11 +729,10 @@ static void tmc5072_writeConfiguration()
 			{
 				// Change hardware preset registers here
 				tmc5072_writeRegister(DEFAULT_ICID, TMC5072_PWMCONF(motor), 0x000504C8);
-
-				// Fill missing shadow registers (hardware preset registers)
-				tmc5072_initCache();
 			}
 
+            // Fill missing shadow registers (hardware preset registers)
+            tmc5072_initCache();
 			TMC5072.config->state = CONFIG_READY;
 		}
 }

@@ -130,13 +130,15 @@ uint8_t tmc2226_getNodeAddress(uint16_t icID)
     return nodeAddress;
 }
 
-void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
+    UNUSED(motor);
     tmc2226_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
-void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
+    UNUSED(motor);
     *value = tmc2226_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
@@ -908,6 +910,7 @@ static void setVREF(uint16_t value)
 
 static void periodicJob(uint32_t tick)
 {
+    UNUSED(tick);
     if (TMC2226.config->state != CONFIG_READY)
         writeConfiguration();
 
