@@ -698,15 +698,15 @@ static void tmc5031_writeConfiguration()
        {
            settings = *(tmc5031_shadowRegister+0);
            // Find the next restorable register
-          while(*ptr < TMC5031_REGISTER_COUNT)
-          {
-                   // If the register is writable and has been written to, restore it
-                   if (TMC_IS_WRITABLE(tmc5031_registerAccess[*ptr]) && tmc5031_getDirtyBit(DEFAULT_ICID,*ptr))
-                   {
-                       break;
-                   }
+           while(*ptr < TMC5031_REGISTER_COUNT)
+           {
+               // If the register is writable and has been written to, restore it
+               if (TMC_IS_WRITABLE(tmc5031_registerAccess[*ptr]) && tmc5031_getDirtyBit(DEFAULT_ICID,*ptr))
+               {
+                   break;
+               }
 
-                   // Otherwise, check next register
+               // Otherwise, check next register
                (*ptr)++;
            }
        }
@@ -912,5 +912,5 @@ void TMC5031_init(void)
     Evalboards.ch1.VMMax                = VM_MAX;
     Evalboards.ch1.deInit               = deInit;
 
-enableDriver(DRIVER_ENABLE);
+    enableDriver(DRIVER_ENABLE);
 };
