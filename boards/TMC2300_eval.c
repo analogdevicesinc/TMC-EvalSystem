@@ -30,6 +30,8 @@
 #define VM_MAX  121  // VM[V/10] max
 
 #define MOTORS 1
+#define DEFAULT_MOTOR  0
+#define DEFAULT_ICID  0
 
 #define TIMEOUT_VALUE 10 // 10 ms
 
@@ -57,15 +59,13 @@ static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
+static uint8_t nodeAddress = 0;
 static UART_Config *TMC2300_UARTChannel;
 
 static int32_t thigh;
 
 // Helper macro - Access the chip object in the driver boards union
 #define TMC2300 (driverBoards.tmc2300)
-
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC2300_CRC(data, length) tmc_CRC8(data, length, 1)
 
 typedef struct
 {
@@ -83,46 +83,47 @@ static PinsTypeDef Pins;
 
 static uint8_t restore(void);
 
-static inline TMC2300TypeDef *motorToIC(uint8_t motor)
+
+
+
+
+bool tmc2300_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+    UNUSED(icID);
+
+    // When we are in standby or in the reset procedure we do not actually write
+    // to the IC - we only update the shadow registers. After exiting standby or
+    // completing a reset we transition into a restore, which pushes the shadow
+    // register contents into the chip.
+    if (TMC2300.standbyEnabled)
+        return false;
+    if (TMC2300.config->state == CONFIG_RESET && readLength== 0 )
+        return false;
+
+
+    int32_t status = UART_readWrite(TMC2300_UARTChannel, data, writeLength, readLength);
+    if(status == -1)
+        return false;
+    return true;
+}
+
+uint8_t tmc2300_getNodeAddress(uint16_t icID)
+{
+    UNUSED(icID);
+
+    return nodeAddress;
+}
+
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
-
-    return &TMC2300;
+    tmc2300_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
-static inline UART_Config *channelToUART(uint8_t channel)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-    UNUSED(channel);
-
-    return TMC2300_UARTChannel;
-}
-
-// => UART wrapper
-// Write [writeLength] bytes from the [data] array.
-// If [readLength] is greater than zero, read [readLength] bytes from the
-// [data] array.
-void tmc2300_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
-{
-    UART_readWrite(channelToUART(channel), data, writeLength, readLength);
-}
-// <= UART wrapper
-
-// => CRC wrapper
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc2300_CRC8(uint8_t *data, size_t length)
-{
-    return TMC2300_CRC(data, length);
-}
-// <= CRC wrapper
-
-void tmc2300_writeRegister(uint8_t motor, uint16_t address, int32_t value)
-{
-    tmc2300_writeInt(motorToIC(motor), (uint8_t) address, value);
-}
-
-void tmc2300_readRegister(uint8_t motor, uint16_t address, int32_t *value)
-{
-    *value = tmc2300_readInt(motorToIC(motor), (uint8_t) address);
+    UNUSED(motor);
+    *value = tmc2300_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -232,17 +233,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 6:
         // Maximum current
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IRUN_MASK, TMC2300_IRUN_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_IRUN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IRUN_MASK, TMC2300_IRUN_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_IRUN_FIELD, *value);
         }
         break;
     case 7:
         // Standby current
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IHOLD_MASK, TMC2300_IHOLD_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_IHOLD_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_IHOLD_IRUN, TMC2300_IHOLD_MASK, TMC2300_IHOLD_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_IHOLD_FIELD, *value);
         }
         break;
     case 8:
@@ -275,7 +276,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 29:
         // Measured Speed
         if(readWrite == READ) {
-            buffer = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)TMC2300_FIELD_READ(motorToIC(motor), TMC2300_TSTEP, TMC2300_TSTEP_MASK, TMC2300_TSTEP_SHIFT));
+            buffer = (int32_t)(((int64_t)StepDir_getFrequency(motor) * (int64_t)122) / (int64_t)tmc2300_fieldRead(DEFAULT_ICID, TMC2300_TSTEP_FIELD));
             *value = (abs(buffer) < 20) ? 0 : buffer;
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -309,7 +310,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 140:
         // Microstep Resolution
         if(readWrite == READ) {
-            *value = 256 >> TMC2300_FIELD_READ(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_MRES_MASK, TMC2300_MRES_SHIFT);
+            *value = 256 >> tmc2300_fieldRead(DEFAULT_ICID, TMC2300_MRES_FIELD);
         } else if(readWrite == WRITE) {
             switch(*value)
             {
@@ -327,7 +328,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
             if(*value != -1)
             {
-                TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_MRES_MASK, TMC2300_MRES_SHIFT, *value);
+                tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_MRES_FIELD, *value);
             }
             else
             {
@@ -338,68 +339,68 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 162:
         // Chopper blank time
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_TBL_MASK, TMC2300_TBL_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_TBL_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_CHOPCONF, TMC2300_TBL_MASK, TMC2300_TBL_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_TBL_FIELD, *value);
         }
         break;
     case 168:
         // smartEnergy current minimum (SEIMIN)
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEIMIN_MASK, TMC2300_SEIMIN_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID,TMC2300_SEIMIN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEIMIN_MASK, TMC2300_SEIMIN_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_SEIMIN_FIELD, *value);
         }
         break;
     case 169:
         // smartEnergy current down step
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEDN_MASK, TMC2300_SEDN_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_SEDN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEDN_MASK, TMC2300_SEDN_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_SEDN_FIELD, *value);
         }
         break;
     case 170:
         // smartEnergy hysteresis
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMAX_MASK, TMC2300_SEMAX_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_SEMAX_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMAX_MASK, TMC2300_SEMAX_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID,TMC2300_SEMAX_FIELD, *value);
         }
         break;
     case 171:
         // smartEnergy current up step
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEUP_MASK, TMC2300_SEUP_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_SEUP_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEUP_MASK, TMC2300_SEUP_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_SEUP_FIELD, *value);
         }
         break;
     case 172:
         // smartEnergy hysteresis start
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMIN_MASK, TMC2300_SEMIN_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_SEMIN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SEMIN_MASK, TMC2300_SEMIN_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_SEMIN_FIELD, *value);
         }
         break;
     case 174:
         // stallGuard2 threshold
         if(readWrite == READ) {
-            //*value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SGT_MASK, TMC2300_SGT_SHIFT);
+            //*value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_COOLCONF, TMC2300_SGT_MASK, TMC2300_SGT_SHIFT);
             //*value = StepDir_getStallGuardThreshold(motor);
-            *value = tmc2300_readInt(motorToIC(motor), TMC2300_SGTHRS);
+            *value = tmc2300_readRegister(DEFAULT_ICID, TMC2300_SGTHRS);
             //*value = CAST_Sn_TO_S32(*value, 7);
         } else if(readWrite == WRITE) {
-            tmc2300_writeInt(motorToIC(motor), TMC2300_SGTHRS, *value);
+            tmc2300_writeRegister(DEFAULT_ICID, TMC2300_SGTHRS, *value);
             //StepDir_setStallGuardThreshold(motor, *value);
-            //TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_COOLCONF, TMC2300_SGT_MASK, TMC2300_SGT_SHIFT, *value);
+            //tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_COOLCONF, TMC2300_SGT_MASK, TMC2300_SGT_SHIFT, *value);
         }
         break;
     case 180:
         // smartEnergy actual current
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_DRVSTATUS, TMC2300_CS_ACTUAL_MASK, TMC2300_CS_ACTUAL_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_CS_ACTUAL_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -425,39 +426,39 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             {
                 *value = 0x000FFFFF;
             }
-            tmc2300_writeInt(motorToIC(motor), TMC2300_TCOOLTHRS, *value);
+            tmc2300_writeRegister(DEFAULT_ICID, TMC2300_TCOOLTHRS, *value);
         }
         break;
     case 182:
         // smartEnergy threshold speed
         if(readWrite == READ) {
-            buffer = tmc2300_readInt(motorToIC(motor), TMC2300_TCOOLTHRS);
+            buffer = tmc2300_readRegister(DEFAULT_ICID, TMC2300_TCOOLTHRS);
             *value = MIN(0xFFFFF, (1<<24) / ((buffer) ? buffer : 1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1<<24) / ((*value) ? *value : 1));
-            tmc2300_writeInt(motorToIC(motor), TMC2300_TCOOLTHRS, *value);
+            tmc2300_writeRegister(DEFAULT_ICID, TMC2300_TCOOLTHRS, *value);
         }
         break;
     case 187:
         // PWM gradient
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_GRAD_MASK, TMC2300_PWM_GRAD_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID,TMC2300_PWM_GRAD_FIELD);
         } else if(readWrite == WRITE) {
             // Set gradient
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_GRAD_MASK, TMC2300_PWM_GRAD_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_PWM_GRAD_FIELD, *value);
 
             // Enable/disable stealthChop accordingly
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_GCONF, TMC2300_EN_SPREADCYCLE_MASK, TMC2300_EN_SPREADCYCLE_SHIFT, (*value > 0) ? 0 : 1);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_EN_SPREADCYCLE_SHIFT_FIELD, (*value > 0) ? 0 : 1);
         }
         break;
     case 191:
         // PWM frequency
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_FREQ_MASK, TMC2300_PWM_FREQ_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID,TMC2300_PWM_FREQ_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 4)
             {
-                TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_FREQ_MASK, TMC2300_PWM_FREQ_SHIFT, *value);
+                tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_PWM_FREQ_FIELD, *value);
             }
             else
             {
@@ -468,23 +469,23 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 192:
         // PWM autoscale
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_AUTOSCALE_MASK, TMC2300_PWM_AUTOSCALE_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_PWM_AUTOSCALE_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_PWM_AUTOSCALE_MASK, TMC2300_PWM_AUTOSCALE_SHIFT, (*value)? 1:0);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_PWM_AUTOSCALE_FIELD, (*value)? 1:0);
         }
         break;
     case 204:
         // Freewheeling mode
         if(readWrite == READ) {
-            *value = TMC2300_FIELD_READ(motorToIC(motor), TMC2300_PWMCONF, TMC2300_FREEWHEEL_MASK, TMC2300_FREEWHEEL_SHIFT);
+            *value = tmc2300_fieldRead(DEFAULT_ICID, TMC2300_FREEWHEEL_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2300_FIELD_WRITE(motorToIC(motor), TMC2300_PWMCONF, TMC2300_FREEWHEEL_MASK, TMC2300_FREEWHEEL_SHIFT, *value);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_FREEWHEEL_FIELD, *value);
         }
         break;
     case 206:
         // Load value
         if(readWrite == READ) {
-            *value = tmc2300_readInt(motorToIC(motor), TMC2300_SG_VALUE);
+            *value = tmc2300_readRegister(DEFAULT_ICID, TMC2300_SG_VALUE);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -677,8 +678,8 @@ void TMC2300_init(void)
     Evalboards.ch2.SAP                  = SAP;
     Evalboards.ch2.moveTo               = moveTo;
     Evalboards.ch2.moveBy               = moveBy;
-    Evalboards.ch2.writeRegister        = tmc2300_writeRegister;
-    Evalboards.ch2.readRegister         = tmc2300_readRegister;
+    Evalboards.ch2.writeRegister        = writeRegister;
+    Evalboards.ch2.readRegister         = readRegister;
     Evalboards.ch2.userFunction         = userFunction;
     Evalboards.ch2.enableDriver         = enableDriver;
     Evalboards.ch2.checkErrors          = checkErrors;
