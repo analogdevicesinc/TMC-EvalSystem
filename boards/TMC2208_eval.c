@@ -126,13 +126,13 @@ uint8_t tmc2208_getNodeAddress(uint16_t icID)
     return nodeAddress;
 }
 
-void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
     tmc2208_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
-void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
     UNUSED(motor);
     *value = tmc2208_readRegister(DEFAULT_ICID, (uint8_t) address);
