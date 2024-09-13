@@ -20,9 +20,29 @@
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  280  // VM[V/10] max +10%
 
+typedef struct
+{
+    IOPinTypeDef  *DRV_ENN;
+    IOPinTypeDef  *INT_ENCA;
+    IOPinTypeDef  *PP_ENCB;
+} PinsTypeDef;
+
+static PinsTypeDef Pins;
+
+// Usage note: use 1 TypeDef per IC
+typedef struct {
+    ConfigurationTypeDef *config;
+
+    int32_t velocity[2], oldX[2];
+    uint32_t oldTick;
+    bool vMaxModified[2];
+} TMC5041TypeDef;
+
 static TMC5041TypeDef TMC5041;
 static uint8_t nodeAddress = 0;
 static SPIChannelTypeDef *TMC5041_SPIChannel;
+static SPIChannelTypeDef *TMC5041_SPIChannel;
+static ConfigurationTypeDef *TMC5041_config;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -45,28 +65,6 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static uint8_t reset();
 static void enableDriver(DriverState state);
-
-static SPIChannelTypeDef *TMC5041_SPIChannel;
-static ConfigurationTypeDef *TMC5041_config;
-
-typedef struct
-{
-    IOPinTypeDef  *DRV_ENN;
-    IOPinTypeDef  *INT_ENCA;
-    IOPinTypeDef  *PP_ENCB;
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
-
-// Usage note: use 1 TypeDef per IC
-typedef struct {
-    ConfigurationTypeDef *config;
-
-    int32_t velocity[2], oldX[2];
-    uint32_t oldTick;
-    bool vMaxModified[2];
-} TMC5041TypeDef;
-
 
 void tmc5041_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
