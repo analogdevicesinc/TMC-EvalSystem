@@ -16,7 +16,6 @@
 #include "hal/HAL.h"
 #include "tmc/VitalSignsMonitor.h"
 
-#include "tmc/ic/TMC2208/TMC2208.h"
 #include "tmc/ic/TMC2590/TMC2590.h"
 #include "tmc/ic/TMC2660/TMC2660.h"
 #include "tmc/ic/TMC6100/TMC6100.h"
@@ -153,7 +152,6 @@ extern MotionControllerBoards motionControllerBoards;
 // Group all the driver chip objects into a single union to save memory,
 // since we will only ever use one motion controller at a time
 typedef union {
-    TMC2208TypeDef tmc2208;
     TMC2590TypeDef tmc2590;
     TMC2660TypeDef tmc2660;
     TMC7300TypeDef tmc7300;
