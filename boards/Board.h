@@ -18,7 +18,6 @@
 
 #include "tmc/ic/TMC2590/TMC2590.h"
 #include "tmc/ic/TMC2660/TMC2660.h"
-#include "tmc/ic/TMC6100/TMC6100.h"
 #include "tmc/ic/TMC6200/TMC6200.h"
 #include "tmc/ic/TMC7300/TMC7300.h"
 #include "tmc/ic/TMC2300/TMC2300.h"

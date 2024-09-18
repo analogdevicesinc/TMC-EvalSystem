@@ -13,7 +13,8 @@
 #define VM_MIN         50   // VM[V/10] min
 #define VM_MAX         550  // VM[V/10] max
 
-#define TMC6100_DEFAULT_MOTOR 0
+#define DEFAULT_MOTOR 0
+#define DEFAULT_ICID  0
 
 // use this define for TMC4671-TMC6100-BOB
 //#define COMPILE_FOR_TMC4671_TMC6100_BOB
@@ -38,39 +39,32 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
-SPIChannelTypeDef *TMC6100_SPIChannel;
+static SPIChannelTypeDef *TMC6100_SPIChannel;
 IOPinTypeDef *TMC6100_SPIchipSelect = NULL;
 
-// => SPI wrapper
-uint8_t tmc6100_readwriteByte(uint8_t motor, uint8_t data, uint8_t lastTransfer)
+void tmc6100_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-	if (motor == TMC6100_DEFAULT_MOTOR)
-	{
-		IOPinTypeDef *tmp = NULL;
+   UNUSED(icID);
 
-		if (TMC6100_SPIchipSelect)
-		{
-			// Swap to the TMC6100's CSN
-			tmp = TMC6100_SPIChannel->CSN;
-			TMC6100_SPIChannel->CSN = TMC6100_SPIchipSelect;
-		}
+   IOPinTypeDef *tmp = NULL;
 
-		uint8_t retVal = TMC6100_SPIChannel->readWrite(data, lastTransfer);
+   // For the BOB version:
+   // Do not override the CSN in the SPIChannel - this would break the motion controller using SPI1
+   // Instead store the pin in a separate variable
+   if (TMC6100_SPIchipSelect)
+   {
+       // Swap to the TMC6100's CSN
+       tmp = TMC6100_SPIChannel->CSN;
+       TMC6100_SPIChannel->CSN = TMC6100_SPIchipSelect;
+   }
+   TMC6100_SPIChannel->readWriteArray(data, dataLength);
 
-		if (TMC6100_SPIchipSelect)
-		{
-			// Swap back to the original CSN
-			TMC6100_SPIChannel->CSN = tmp;
-		}
-
-		return retVal;
-	}
-	else
-	{
-		return 0;
-	}
+   if (TMC6100_SPIchipSelect)
+   {
+       // Swap back to the original CSN
+       TMC6100_SPIChannel->CSN = tmp;
+   }
 }
-// <= SPI wrapper
 
 typedef struct
 {
@@ -171,13 +165,13 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
-	tmc6100_writeInt(TMC6100_DEFAULT_MOTOR, (uint8_t) address, value);
+	tmc6100_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
-	*value = tmc6100_readInt(TMC6100_DEFAULT_MOTOR, (uint8_t) address);
+	*value = tmc6100_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -207,7 +201,7 @@ static void deInit(void)
 static uint8_t reset()
 {
 	// set default PWM configuration for evaluation board use with TMC467x-EVAL
-	tmc6100_writeInt(TMC6100_DEFAULT_MOTOR, TMC6100_GCONF, 0x40);
+    tmc6100_writeRegister(DEFAULT_ICID, TMC6100_GCONF, 0x40);
 
 	return 1;
 }
@@ -215,7 +209,7 @@ static uint8_t reset()
 static uint8_t restore()
 {
 	// set default PWM configuration for evaluation board use with TMC467x-EVAL
-	tmc6100_writeInt(TMC6100_DEFAULT_MOTOR, TMC6100_GCONF, 0x40);
+    tmc6100_writeRegister(DEFAULT_ICID, TMC6100_GCONF, 0x40);
 
 	return 1;
 }
@@ -264,7 +258,7 @@ void TMC6100_init(void)
 	Evalboards.ch2.deInit               = deInit;
 
 	// set default PWM configuration for evaluation board use with TMC467x-EVAL
-	tmc6100_writeInt(TMC6100_DEFAULT_MOTOR, TMC6100_GCONF, 0x40);
+	tmc6100_writeRegister(DEFAULT_ICID, TMC6100_GCONF, 0x40);
 
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 }
