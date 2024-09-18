@@ -113,11 +113,7 @@ uint8_t tmc5130_getNodeAddress(uint16_t icID)
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	UNUSED(motor);
-	// Set absolute velocity
-	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_VMAX, abs(velocity));
-	// Set direction
-	tmc5130_writeRegister(DEFAULT_ICID, TMC5130_RAMPMODE, (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
+	tmc5130_rotateMotor(DEFAULT_ICID, motor, velocity);
 	return 0;
 }
 
