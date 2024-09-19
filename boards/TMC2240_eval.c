@@ -34,14 +34,23 @@ static UART_Config *TMC2240_UARTChannel;
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
 
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t velocity, oldX;
+    uint32_t oldTick;
+    uint8_t slaveAddress;
+} TMC2240TypeDef;
+
+static TMC2240TypeDef TMC2240;
+
 static uint32_t rotate(uint8_t motor, int32_t velocity);
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t stop(uint8_t motor);
 static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
-static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type,
-        int32_t *value);
+static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
@@ -50,6 +59,7 @@ static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static void checkErrors(uint32_t tick);
 
 static void init_comm(TMC2240BusType mode);
+static void writeConfiguration();
 static void periodicJob(uint32_t tick);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
@@ -891,23 +901,73 @@ static void checkErrors(uint32_t tick)
     UNUSED(tick);
     Evalboards.ch1.errors = 0;
 }
+// Helper function: Configure the next register.
+static void writeConfiguration()
+{
+    uint8_t *ptr = &TMC2240.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC2240.config->state == CONFIG_RESTORE)
+    {
+        settings = *(tmc2240_shadowRegister+0);
+        // Find the next restorable register
+        while(*ptr < TMC2240_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc2240_registerAccess[*ptr]) && tmc2240_getDirtyBit(DEFAULT_ICID,*ptr))
+            {
+                break;
+            }
+
+            // Otherwise, check next register
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc2240_sampleRegisterPreset;
+        // Find the next resettable register
+        while((*ptr < TMC2240_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2240_registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+    if(*ptr < TMC2240_REGISTER_COUNT)
+    {
+        tmc2240_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        if(TMC2240.config->state == CONFIG_RESET)
+        {
+            // Fill missing shadow registers (hardware preset registers)
+            tmc2240_initCache();
+        }
+
+        TMC2240.config->state = CONFIG_READY;
+    }
+}
 static void periodicJob(uint32_t tick)
 {
+    UNUSED(tick);
+
     //check if reset after nSLEEP to HIGH was performed
     if(!noRegResetnSLEEP)
     {
-        for(uint8_t motor = 0; motor < TMC2240_MOTORS; motor++)
+        if(TMC2240.config->state != CONFIG_READY)
         {
-            tmc2240_periodicJob(&TMC2240, tick);
-            StepDir_periodicJob(motor);
+            writeConfiguration(TMC2240);
         }
+        StepDir_periodicJob(DEFAULT_MOTOR);
     }
     else
     {
         //check if minimum time since chip activation passed. Then restore.
         if((systick_getTick()-nSLEEPTick)>5000) //
         {
-            tmc2240_restore(&TMC2240);
+            restore();
+
             noRegResetnSLEEP = false;
         }
     }
@@ -971,25 +1031,38 @@ static void deInit(void) {
 }
 
 static uint8_t reset() {
+
     if (StepDir_getActualVelocity(0) && !VitalSignsMonitor.brownOut)
         return 0;
 
-    tmc2240_reset(&TMC2240);
     StepDir_init(STEPDIR_PRECISION);
     StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG1);
     StepDir_setVelocityMax(0, 100000);
     StepDir_setAcceleration(0, 25000);
     enableDriver(DRIVER_ENABLE);
+
+    if(TMC2240.config->state != CONFIG_READY)
+        return 0;
+
+    // Reset the dirty bits and wipe the shadow registers
+    for(size_t i = 0; i < TMC2240_REGISTER_COUNT; i++)
+    {
+        tmc2240_setDirtyBit(DEFAULT_ICID, i, false);
+        tmc2240_shadowRegister[DEFAULT_ICID][i] = 0;
+    }
+
+    TMC2240.config->state        = CONFIG_RESET;
+    TMC2240.config->configIndex  = 0;
+
     return 1;
 }
 
 static uint8_t restore() {
-    tmc2240_restore(&TMC2240);
+    if(TMC2240.config->state != CONFIG_READY)
+        return 0;
 
-    StepDir_init(STEPDIR_PRECISION);
-    StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG1);
-    StepDir_setVelocityMax(0, 100000);
-    StepDir_setAcceleration(0, 25000);
+    TMC2240.config->state        = CONFIG_RESTORE;
+    TMC2240.config->configIndex  = 0;
     return 1;
 }
 
@@ -1063,7 +1136,6 @@ static void init_comm(TMC2240BusType mode)
     }
 }
 
-
 void TMC2240_init(void) {
     tmc_fillCRC8Table(0x07, true, 1);
 
@@ -1072,8 +1144,8 @@ void TMC2240_init(void) {
     // Initialize the hardware pins
     Pins.DRV_ENN_CFG6 = &HAL.IOs->pins->DIO0;
     Pins.STEP         = &HAL.IOs->pins->DIO6;
-    Pins.DIR 	      = &HAL.IOs->pins->DIO7;
-    Pins.DIAG0 	 	  = &HAL.IOs->pins->DIO16;
+    Pins.DIR          = &HAL.IOs->pins->DIO7;
+    Pins.DIAG0        = &HAL.IOs->pins->DIO16;
     Pins.DIAG1        = &HAL.IOs->pins->DIO15;
     Pins.nSLEEP       = &HAL.IOs->pins->DIO8;
     Pins.IREF_R2      = &HAL.IOs->pins->DIO1;
@@ -1087,8 +1159,8 @@ void TMC2240_init(void) {
 #else
     Pins.DRV_ENN_CFG6 = &HAL.IOs->pins->DIO0;
     Pins.STEP         = &HAL.IOs->pins->DIO6;
-    Pins.DIR 	      = &HAL.IOs->pins->DIO7;
-    Pins.DIAG0 	 	  = &HAL.IOs->pins->DIO16;
+    Pins.DIR          = &HAL.IOs->pins->DIO7;
+    Pins.DIAG0        = &HAL.IOs->pins->DIO16;
     Pins.DIAG1        = &HAL.IOs->pins->DIO15;
     Pins.nSLEEP       = &HAL.IOs->pins->DIO8;
     Pins.IREF_R2      = &HAL.IOs->pins->DIO13;
@@ -1119,16 +1191,20 @@ void TMC2240_init(void) {
     HAL.IOs->config->setLow(Pins.IREF_R2);
     HAL.IOs->config->setLow(Pins.IREF_R2);
 
-
     // Initialize the SPI channel
     init_comm(activeBus);
 
+    TMC2240.config   = Evalboards.ch2.config;
     Evalboards.ch2.config->reset = reset;
     Evalboards.ch2.config->restore = restore;
     Evalboards.ch2.config->state = CONFIG_RESET;
     Evalboards.ch2.config->configIndex = 0;
+    Evalboards.ch2.config->callback     = NULL;
+    Evalboards.ch2.config->channel      = 0;
 
-    tmc2240_init(&TMC2240, 0, Evalboards.ch2.config, tmc2240_defaultRegisterResetState);
+    TMC2240.velocity  = 0;
+    TMC2240.oldTick   = 0;
+    TMC2240.oldX      = 0;
 
     // Initialize the software StepDir generator
     StepDir_init(STEPDIR_PRECISION);
