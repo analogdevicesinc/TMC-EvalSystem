@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -67,7 +67,7 @@ uint8_t actualMotionMode[TMC4671_MOTORS];
 int32_t lastRampTargetPosition[TMC4671_MOTORS];
 int32_t lastRampTargetVelocity[TMC4671_MOTORS];
 
-// Helper functions for unit conversion
+// helper functions for unit conversion
 static int32_t linearPositionToInternalPosition(int32_t position, int32_t scaler, int polePairs);
 static int32_t internalPositionToLinearPosition(int32_t position, int32_t scaler, int polePairs);
 static int32_t linearVelocityToInternalVelocity(int32_t velocity, int32_t scaler);
@@ -176,7 +176,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 4: // max velocity
 		if(readWrite == READ)
 		{
-			*value = (uint32_t) tmc4671_readRegister(motor, TMC4671_PID_VELOCITY_LIMIT);
+			*value = (uint32_t)tmc4671_readRegister(motor, TMC4671_PID_VELOCITY_LIMIT);
 
 			// update also ramp generator value
 			rampGenerator[motor].maxVelocity = *value;
@@ -193,7 +193,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 6: // max torque/flux
 		if (readWrite == READ)
 		{
-			//*value = motorConfig[motor].maximumCurrent;
 			*value = tmc4671_getTorqueFluxLimit_mA(motor, motorConfig[motor].torqueMeasurementFactor);
 		}
 		else if (readWrite == WRITE)
@@ -207,8 +206,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 				errors |= TMC_ERROR_TYPE;
 		}
 		break;
-	case 8:
-		// Position reached flag
+	case 8: // position reached flag
 		if(readWrite == READ) {
 			*value = positionReached(tmc4671_readRegister(motor, TMC4671_PID_POSITION_TARGET), tmc4671_readRegister(motor, TMC4671_PID_POSITION_ACTUAL), tmc4671_readRegister(motor, TMC4671_PID_VELOCITY_ACTUAL), MAX_POS_DEVIATION, MAX_VEL_DEVIATION);
 		} else if(readWrite == WRITE) {
@@ -240,21 +238,21 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
-	case 14: //max velocity deviation
+	case 14: // max velocity deviation
 		if(readWrite == READ) {
 			*value = MAX_VEL_DEVIATION;
 		} else if(readWrite == WRITE) {
 			MAX_VEL_DEVIATION = *value;
 		}
 		break;
-	case 15: //max position deviation
+	case 15: // max position deviation
 		if(readWrite == READ) {
 			*value = MAX_POS_DEVIATION;
 		} else if(readWrite == WRITE) {
 			MAX_POS_DEVIATION = *value;
 		}
 		break;
-	case 20: // Linear scaler [µm/rotation]
+	case 20: // linear scaler [µm/rotation]
 		if (readWrite == READ)
 		{
 			*value = motorConfig[motor].linearScaler;
@@ -264,7 +262,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			motorConfig[motor].linearScaler = *value;
 		}
 		break;
-	case 21: // Linear maximum velocity [µm/s]
+	case 21: // linear maximum velocity [µm/s]
 		if (readWrite == READ)
 		{
 			uint32_t velocity = (uint32_t) tmc4671_readRegister(motor, TMC4671_PID_VELOCITY_LIMIT);
@@ -272,115 +270,111 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			// update also ramp generator value
 			rampGenerator[motor].maxVelocity = velocity;
 
-			// Internal -> linear
+			// internal -> linear
 			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
 		}
 		else
 		{
-			// Linear -> Internal
+			// linear -> Internal
 			uint32_t velocity = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
 			tmc4671_writeRegister(motor, TMC4671_PID_VELOCITY_LIMIT, velocity);
 
-			// Also update ramp generator value
+			// also update ramp generator value
 			rampGenerator[motor].maxVelocity = velocity;
 		}
 		break;
-	case 22: // Linear acceleration [µm/s/s]
+	case 22: // linear acceleration [µm/s/s]
 		if (readWrite == READ)
 		{
 			*value = rampGenerator[motor].acceleration;
 
-			// Internal -> linear
+			// internal -> linear
 			*value = internalVelocityToLinearVelocity(*value, motorConfig[motor].linearScaler);
 		}
 		else
 		{
-			// Linear -> internal
+			// linear -> internal
 			uint32_t acceleration = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
 			rampGenerator[motor].acceleration = acceleration;
 		}
 		break;
-	case 23: // Linear ramp velocity [µm/s]
+	case 23: // linear ramp velocity [µm/s]
 		if (readWrite == READ)
 		{
 			*value = rampGenerator[motor].rampVelocity;
 
-			// Internal -> linear
+			// internal -> linear
 			*value = internalVelocityToLinearVelocity(*value, motorConfig[motor].linearScaler);
 		}
 		break;
-	case 24: // Linear ramp position [µm]
+	case 24: // linear ramp position [µm]
 		if (readWrite == READ)
 		{
-			// Internal -> linear
-			//int32_t polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			// internal -> linear
 			int32_t polePairs = tmc4671_fieldRead(motor, TMC4671_N_POLE_PAIRS_FIELD);
 			*value = internalPositionToLinearPosition(rampGenerator[motor].rampPosition, motorConfig[motor].linearScaler, polePairs);
 		}
 		break;
-	case 25: // Linear target position [µm]
+	case 25: // linear target position [µm]
 		if (readWrite == READ)
 		{
-			// Internal -> linear
-			//int32_t polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			// internal -> linear
 			int32_t polePairs = tmc4671_fieldRead(motor, TMC4671_N_POLE_PAIRS_FIELD);
 			*value = internalPositionToLinearPosition(tmc4671_readRegister(motor, TMC4671_PID_POSITION_TARGET), motorConfig[motor].linearScaler, polePairs);
 		}
 		else
 		{
-			//int32_t polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
 			int32_t polePairs = tmc4671_fieldRead(motor, TMC4671_N_POLE_PAIRS_FIELD);
 			int32_t position = linearPositionToInternalPosition(*value, motorConfig[motor].linearScaler, polePairs);
 
-			// Switch to position motion mode
+			// switch to position motion mode
 			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_POSITION);
 
-			// Set target position for ramp generator
+			// set target position for ramp generator
 			rampGenerator[motor].targetPosition = position;
 
-			// Remember switched motion mode
+			// remember switched motion mode
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_POSITION;
 		}
 		break;
-	case 26: // Linear actual velocity [µm/s]
+	case 26: // linear actual velocity [µm/s]
 		if (readWrite == READ)
 		{
 			int32_t velocity = motorConfig[motor].actualVelocityPT1;
 
-			// Internal -> linear
+			// internal -> linear
 			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
 		}
 		break;
-	case 27: // Linear actual position [µm]
+	case 27: // linear actual position [µm]
 		if (readWrite == READ)
 		{
 			int32_t position = tmc4671_getActualPosition(motor);
 
-			// Internal -> linear
-			//int32_t polePairs = TMC4671_FIELD_READ(motor, TMC4671_MOTOR_TYPE_N_POLE_PAIRS, TMC4671_N_POLE_PAIRS_MASK, TMC4671_N_POLE_PAIRS_SHIFT);
+			// internal -> linear
 			int32_t polePairs = tmc4671_fieldRead(motor, TMC4671_N_POLE_PAIRS_FIELD);
 			*value = internalPositionToLinearPosition(position, motorConfig[motor].linearScaler, polePairs);
 		}
 		break;
-	case 28: // Linear target velocity [µm/s]
+	case 28: // linear target velocity [µm/s]
 		if (readWrite == READ)
 		{
 			tmc4671_writeRegister(motor, TMC4671_INTERIM_ADDR, 2);
 			int32_t velocity = tmc4671_readRegister(motor, TMC4671_INTERIM_DATA);
 
-			// Internal -> linear
+			// internal -> linear
 			*value = internalVelocityToLinearVelocity(velocity, motorConfig[motor].linearScaler);
 		}
 		else
 		{
-			// Switch to velocity motion mode
+			// switch to velocity motion mode
 			tmc4671_switchToMotionMode(motor, TMC4671_MOTION_MODE_VELOCITY);
 
-			// Set target velocity for ramp generator
-			// Linear -> internal
+			// set target velocity for ramp generator
+			// linear -> internal
 			rampGenerator[motor].targetVelocity = linearVelocityToInternalVelocity(*value, motorConfig[motor].linearScaler);
 
-			// Remember switched motion mode
+			// remember switched motion mode
 			actualMotionMode[motor] = TMC4671_MOTION_MODE_VELOCITY;
 		}
 		break;
@@ -415,17 +409,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 
-	case 70: // Torque P
+	case 70: // torque P
 		if (readWrite == READ)
 		{
-			//*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_P_TORQUE_I, TMC4671_PID_TORQUE_P_MASK, TMC4671_PID_TORQUE_P_SHIFT);
 			*value = (int16_t)tmc4671_fieldRead(motor, TMC4671_PID_TORQUE_P_FIELD);
 		}
 		else
 		{
 			if (*value >= 0 && *value < 32768)
 			{
-				//TMC4671_FIELD_UPDATE(motor, TMC4671_PID_TORQUE_P_TORQUE_I, TMC4671_PID_TORQUE_P_MASK, TMC4671_PID_TORQUE_P_SHIFT, *value);
 				tmc4671_fieldWrite(motor, TMC4671_PID_TORQUE_P_FIELD, *value);
 			}
 			else
@@ -434,17 +426,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 71: // Torque I
+	case 71: // torque I
 		if (readWrite == READ)
 		{
-			//*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_P_TORQUE_I, TMC4671_PID_TORQUE_I_MASK, TMC4671_PID_TORQUE_I_SHIFT);
 			*value = (int16_t)tmc4671_fieldRead(motor, TMC4671_PID_TORQUE_I_FIELD);
 		}
 		else
 		{
 			if (*value >= 0 && *value < 32768)
 			{
-				//TMC4671_FIELD_UPDATE(motor, TMC4671_PID_TORQUE_P_TORQUE_I, TMC4671_PID_TORQUE_I_MASK, TMC4671_PID_TORQUE_I_SHIFT, *value);
 				tmc4671_fieldWrite(motor, TMC4671_PID_TORQUE_I_FIELD, *value);
 			}
 			else
@@ -453,17 +443,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 72: // Flux P
+	case 72: // flux P
 		if (readWrite == READ)
 		{
-			//*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_FLUX_P_FLUX_I, TMC4671_PID_FLUX_P_MASK, TMC4671_PID_FLUX_P_SHIFT);
 			*value = (int16_t)tmc4671_fieldRead(motor, TMC4671_PID_FLUX_P_FIELD);
 		}
 		else
 		{
 			if (*value >= 0 && *value < 32768)
 			{
-				//TMC4671_FIELD_UPDATE(motor, TMC4671_PID_FLUX_P_FLUX_I, TMC4671_PID_FLUX_P_MASK, TMC4671_PID_FLUX_P_SHIFT, *value);
 				tmc4671_fieldWrite(motor, TMC4671_PID_FLUX_P_FIELD, *value);
 			}
 			else
@@ -472,17 +460,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 73: // Flux I
+	case 73: // flux I
 		if (readWrite == READ)
 		{
-			//*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_FLUX_P_FLUX_I, TMC4671_PID_FLUX_I_MASK, TMC4671_PID_FLUX_I_SHIFT);
 			*value = (int16_t)tmc4671_fieldRead(motor, TMC4671_PID_FLUX_I_FIELD);
 		}
 		else
 		{
 			if (*value >= 0 && *value < 32768)
 			{
-				//TMC4671_FIELD_UPDATE(motor, TMC4671_PID_FLUX_P_FLUX_I, TMC4671_PID_FLUX_I_MASK, TMC4671_PID_FLUX_I_SHIFT, *value);
 				tmc4671_fieldWrite(motor, TMC4671_PID_FLUX_I_FIELD, *value);
 			}
 			else
@@ -491,17 +477,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 74: // Velocity P
+	case 74: // velocity P
 		if (readWrite == READ)
 		{
-			//*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_VELOCITY_P_VELOCITY_I, TMC4671_PID_VELOCITY_P_MASK, TMC4671_PID_VELOCITY_P_SHIFT);
 			*value = (int16_t)tmc4671_fieldRead(motor, TMC4671_PID_VELOCITY_P_FIELD);
 		}
 		else
 		{
 			if (*value >= 0 && *value < 32768)
 			{
-				//TMC4671_FIELD_UPDATE(motor, TMC4671_PID_VELOCITY_P_VELOCITY_I, TMC4671_PID_VELOCITY_P_MASK, TMC4671_PID_VELOCITY_P_SHIFT, *value);
 				tmc4671_fieldWrite(motor, TMC4671_PID_VELOCITY_P_FIELD, *value);
 			}
 			else
@@ -510,17 +494,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 75: // Velocity I
+	case 75: // velocity I
 		if (readWrite == READ)
 		{
-			//*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_VELOCITY_P_VELOCITY_I, TMC4671_PID_VELOCITY_I_MASK, TMC4671_PID_VELOCITY_I_SHIFT);
 			*value = (int16_t)tmc4671_fieldRead(motor, TMC4671_PID_VELOCITY_I_FIELD);
 		}
 		else
 		{
 			if (*value >= 0 && *value < 32768)
 			{
-				//TMC4671_FIELD_UPDATE(motor, TMC4671_PID_VELOCITY_P_VELOCITY_I, TMC4671_PID_VELOCITY_I_MASK, TMC4671_PID_VELOCITY_I_SHIFT, *value);
 				tmc4671_fieldWrite(motor, TMC4671_PID_VELOCITY_I_FIELD, *value);
 			}
 			else
@@ -529,17 +511,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 76: // Position P
+	case 76: // position P
 		if (readWrite == READ)
 		{
-			//*value = (int16_t) TMC4671_FIELD_READ(motor, TMC4671_PID_POSITION_P_POSITION_I, TMC4671_PID_POSITION_P_MASK, TMC4671_PID_POSITION_P_SHIFT);
 			*value = (int16_t)tmc4671_fieldRead(motor, TMC4671_PID_POSITION_P_FIELD);
 		}
 		else
 		{
 			if (*value >= 0 && *value < 32768)
 			{
-				//TMC4671_FIELD_UPDATE(motor, TMC4671_PID_POSITION_P_POSITION_I, TMC4671_PID_POSITION_P_MASK, TMC4671_PID_POSITION_P_SHIFT, *value);
 				tmc4671_fieldWrite(motor, TMC4671_PID_POSITION_P_FIELD, *value);
 			}
 			else
@@ -549,12 +529,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		}
 		break;
 
-// add biquad settings here!
-
 	case 174:
 		// target position (scaled)
 		if(readWrite == READ) {
-			*value = (int32_t) ((float)tmc4671_readRegister(motor, TMC4671_PID_POSITION_TARGET) * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX));
+			*value = (int32_t)((float)tmc4671_readRegister(motor, TMC4671_PID_POSITION_TARGET) * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX));
 		} else if(readWrite == WRITE) {
 			// scale target position
 			int32_t position = (float)*value * (float)POSITION_SCALE_MAX / (float)motorConfig[motor].positionScaler;
@@ -596,7 +574,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 179:
 		// actual position (scaled)
 		if(readWrite == READ) {
-			*value = (int32_t) ((float)tmc4671_getActualPosition(motor) * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX));
+			*value = (int32_t)((float)tmc4671_getActualPosition(motor) * ((float)motorConfig[motor].positionScaler / (float)POSITION_SCALE_MAX));
 		}
 		else if(readWrite == WRITE)
 		{
@@ -615,10 +593,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			}
 		}
 		break;
-	case 181: // Actual torque (unfiltered)
+	case 181: // actual torque (unfiltered)
 		if(readWrite == READ)
 		{
-			//int16_t actualCurrentRaw = tmc4671_readRegister16BitValue(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, BIT_16_TO_31);
 			int16_t actualCurrentRaw = tmc4671_fieldRead(motor, TMC4671_PID_TORQUE_ACTUAL_FIELD);
 			*value = ((int32_t)actualCurrentRaw * (int32_t)motorConfig[motor].torqueMeasurementFactor) / 256;
 		}
@@ -627,7 +604,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			errors |= TMC_ERROR_TYPE;
 		}
 		break;
-	case 182: // Actual velocity (unfiltered)
+	case 182: // actual velocity (unfiltered)
 		if (readWrite == READ)
 		{
 			*value = tmc4671_getActualVelocity(motor);
@@ -772,7 +749,7 @@ static int32_t linearPositionToInternalPosition(int32_t linearPosition, int32_t 
 	// linear / scaler * polePairs * 65536 = [1/65536 * electricalRotation]
 	//
 	// Do the multiplications first to minimize rounding errors:
-	return ((int64_t) linearPosition) * 65536 * polePairs / scaler;
+	return ((int64_t)linearPosition) * 65536 * polePairs / scaler;
 }
 
 static int32_t internalPositionToLinearPosition(int32_t internalPosition, int32_t scaler, int polePairs)
@@ -788,7 +765,7 @@ static int32_t internalPositionToLinearPosition(int32_t internalPosition, int32_
 	// internal / 65536 / polePairs * scaler = [µm]
 	//
 	// Do the multiplication first to minimize rounding errors:
-	return ((int64_t) internalPosition) * scaler / 65536 / polePairs;
+	return ((int64_t)internalPosition) * scaler / 65536 / polePairs;
 }
 
 static int32_t linearVelocityToInternalVelocity(int32_t linearVelocity, int32_t scaler)
@@ -803,7 +780,7 @@ static int32_t linearVelocityToInternalVelocity(int32_t linearVelocity, int32_t 
 	// linear / scaler * 60 = [mechanicalRotation / minute]
 	//
 	// Do the multiplication first to minimize rounding errors:
-	return ((int64_t) linearVelocity) * 60 / scaler;
+	return ((int64_t)linearVelocity) * 60 / scaler;
 }
 
 static int32_t internalVelocityToLinearVelocity(int32_t internalVelocity, int32_t scaler)
@@ -818,7 +795,7 @@ static int32_t internalVelocityToLinearVelocity(int32_t internalVelocity, int32_
 	// internal / 60 * scaler = [µm / s]
 	//
 	// Do the multiplication first to minimize rounding errors:
-	return ((int64_t) internalVelocity) * scaler / 60;
+	return ((int64_t)internalVelocity) * scaler / 60;
 }
 
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
@@ -855,7 +832,6 @@ static void periodicJob(uint32_t actualSystick)
 			motorConfig[motor].actualVelocityPT1 = tmc_filterPT1(&motorConfig[motor].akkuActualVelocity, tmc4671_getActualVelocity(motor), motorConfig[motor].actualVelocityPT1, 3, 8);
 
 			// filter actual current
-			//int16_t actualCurrentRaw = TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, TMC4671_PID_TORQUE_ACTUAL_MASK, TMC4671_PID_TORQUE_ACTUAL_SHIFT);
 			int16_t actualCurrentRaw = tmc4671_fieldRead(motor, TMC4671_PID_TORQUE_ACTUAL_FIELD);
 			if ((actualCurrentRaw > -32000) && (actualCurrentRaw < 32000))
 			{
@@ -864,7 +840,6 @@ static void periodicJob(uint32_t actualSystick)
 			}
 
 			// filter actual flux
-			//int16_t actualFluxRaw = TMC4671_FIELD_READ(motor, TMC4671_PID_TORQUE_FLUX_ACTUAL, TMC4671_PID_FLUX_ACTUAL_MASK, TMC4671_PID_FLUX_ACTUAL_SHIFT);
 			int16_t actualFluxRaw = tmc4671_fieldRead(motor, TMC4671_PID_FLUX_ACTUAL_FIELD);
 			if ((actualFluxRaw > -32000) && (actualFluxRaw < 32000))
 			{
@@ -938,13 +913,13 @@ static void timer_overflow(timer_channel channel)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
-	tmc4671_writeRegister(DEFAULT_MOTOR, (uint8_t) address, value);
+	tmc4671_writeRegister(DEFAULT_MOTOR, (uint8_t)address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
-	*value = tmc4671_readRegister(DEFAULT_MOTOR, (uint8_t) address);
+	*value = tmc4671_readRegister(DEFAULT_MOTOR, (uint8_t)address);
 }
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
@@ -989,7 +964,7 @@ static uint8_t reset()
 	{
 		tmc4671_writeRegister(motor, TMC4671_PWM_POLARITIES, 0);
 		tmc4671_writeRegister(motor, TMC4671_PWM_SV_CHOP, TMC4671_PWM_SV_MASK);
-		tmc4671_writeRegister(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
+		tmc4671_writeRegister(motor, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 	}
 
 	return 1;
@@ -1002,7 +977,7 @@ static uint8_t restore()
 	{
 		tmc4671_writeRegister(motor, TMC4671_PWM_POLARITIES, 0);
 		tmc4671_writeRegister(motor, TMC4671_PWM_SV_CHOP, TMC4671_PWM_SV_MASK);
-		tmc4671_writeRegister(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
+		tmc4671_writeRegister(motor, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 	}
 
 	//enableDriver(DRIVER_DISABLE);
