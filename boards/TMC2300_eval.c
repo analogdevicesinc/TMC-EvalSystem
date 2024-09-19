@@ -55,17 +55,16 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static void setStandby(uint8_t enableStandby);
 static uint8_t onPinChange(IOPinTypeDef *pin, IO_States state);
 
+static uint8_t restore(void);
+
+static void writeConfiguration();
 static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
 static uint8_t nodeAddress = 0;
 static UART_Config *TMC2300_UARTChannel;
-
 static int32_t thigh;
-
-// Helper macro - Access the chip object in the driver boards union
-#define TMC2300 (driverBoards.tmc2300)
 
 typedef struct
 {
@@ -81,10 +80,20 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-static uint8_t restore(void);
+// Usage note: use 1 TypeDef per IC
+typedef struct {
+    ConfigurationTypeDef *config;
 
+    int32_t registerResetState[TMC2300_REGISTER_COUNT];
+    uint8_t registerAccess[TMC2300_REGISTER_COUNT];
 
+    uint8_t slaveAddress;
+    uint8_t standbyEnabled;
+    uint8_t brownout;
+    uint32_t oldTick;
+} TMC2300TypeDef;
 
+TMC2300TypeDef TMC2300;
 
 
 bool tmc2300_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
@@ -258,7 +267,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // Standby
         if (readWrite == READ)
         {
-            *value = tmc2300_getStandby(motorToIC(motor));
+            *value = TMC2300.standbyEnabled;
         } else if (readWrite == WRITE) {
             setStandby(*value);
         }
@@ -284,10 +293,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         break;
     case 30: // UART slave address
         if (readWrite == READ) {
-            *value = tmc2300_getSlaveAddress(motorToIC(motor));
+            *value = TMC2300.slaveAddress;
         } else {
             if (*value >= 0 && *value <= 3) {
-                tmc2300_setSlaveAddress(motorToIC(motor), *value);
+                TMC2300.slaveAddress = *value;
             } else {
                 errors |= TMC_ERROR_VALUE;
             }
@@ -569,8 +578,13 @@ static void setStandby(uint8_t enableStandby)
         // ToDo: Needed?
         wait(10);
     }
-    // Update the APIs internal standby state
-    tmc2300_setStandby(&TMC2300, enableStandby);
+    // start up after standby
+    if (TMC2300.standbyEnabled && !enableStandby)
+    {
+        // Just exited standby -> call the restore
+        restore();
+    }
+    TMC2300.standbyEnabled = enableStandby;
 }
 
 static uint8_t onPinChange(IOPinTypeDef *pin, IO_States state)
@@ -584,12 +598,34 @@ static uint8_t reset()
     StepDir_init(STEPDIR_PRECISION);
     StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
 
-    return tmc2300_reset(&TMC2300);
+    // A reset can always happen - even during another reset or restore
+    // Reset the dirty bits and wipe the shadow registers
+    size_t i;
+    for(i = 0; i < TMC2300_REGISTER_COUNT; i++)
+    {
+        tmc2300_setDirtyBit(DEFAULT_ICID, i, false);
+        tmc2300_shadowRegister[DEFAULT_ICID][i] = 0;
+    }
+    tmc2300_initCache();
+
+    // Activate the reset config mechanism
+    TMC2300.config->state        = CONFIG_RESET;
+    TMC2300.config->configIndex  = 0;
+
+    return 1;
 }
 
 static uint8_t restore()
 {
-    return tmc2300_restore(&TMC2300);
+    // Do not interrupt a reset
+    // A reset will transition into a restore anyways
+    if(TMC2300.config->state == CONFIG_RESET)
+        return 0;
+
+    TMC2300.config->state        = CONFIG_RESTORE;
+    TMC2300.config->configIndex  = 0;
+
+    return 1;
 }
 
 static void enableDriver(DriverState state)
@@ -603,39 +639,110 @@ static void enableDriver(DriverState state)
         HAL.IOs->config->setHigh(Pins.DRV_EN);
 }
 
-static void periodicJob(uint32_t tick)
+static void writeConfiguration()
 {
-    tmc2300_periodicJob(&TMC2300, tick);
-    StepDir_periodicJob(0);
-}
+    uint8_t *ptr = &TMC2300.config->configIndex;
+    const int32_t *settings;
 
-static void configCallback(TMC2300TypeDef *tmc2300, ConfigState state)
-{
-    UNUSED(tmc2300);
-
-    if (state == CONFIG_RESET)
+    if(TMC2300.config->state == CONFIG_RESTORE)
     {
-        // Configuration reset completed
-        // Change hardware preset registers here
+        // Do not restore while in standby
+        if (TMC2300.standbyEnabled)
+            return;
 
-        // Lower the default run and standstill currents
-        tmc2300_writeInt(tmc2300, TMC2300_IHOLD_IRUN, 0x00010402);
+        settings = *(tmc2300_shadowRegister+0);
+        // Find the next restorable register
+        while(*ptr < TMC2300_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc2300_registerAccess[*ptr]) && tmc2300_getDirtyBit(DEFAULT_ICID,*ptr))
+            {
+                break;
+            }
+            // Otherwise, check next register
+            (*ptr)++;
+        }
+
+        // Configuration restore complete
+        // The driver may only be enabled once the configuration is done
+        enableDriver(DRIVER_USE_GLOBAL_ENABLE);
     }
     else
     {
-        // Configuration restore complete
+        settings = tmc2300_sampleRegisterPreset;
+        // Find the next resettable register
+        while((*ptr < TMC2300_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc2300_registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
 
-        // The driver may only be enabled once the configuration is done
-        enableDriver(DRIVER_USE_GLOBAL_ENABLE);
+    if(*ptr < TMC2300_REGISTER_COUNT)
+    {
+        // Reset/restore the found register
+        tmc2300_writeRegister(0, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else
+    {
+
+        if (TMC2300.config->state == CONFIG_RESET)
+        {
+            // Reset done -> Perform a restore
+            TMC2300.config->state        = CONFIG_RESTORE;
+            TMC2300.config->configIndex  = 0;
+            tmc2300_initCache();
+        }
+        else
+        {
+            // Restore done -> configuration complete
+            TMC2300.config->state = CONFIG_READY;
+        }
+    }
+}
+
+static void periodicJob(uint32_t tick)
+{
+    UNUSED(tick);
+    StepDir_periodicJob(0);
+
+    if(TMC2300.config->state != CONFIG_READY)
+    {
+        writeConfiguration();
+        return;
+    }
+    // check if IC is brownout
+    //Is the IC in an active state an is ready?
+    if ((TMC2300.standbyEnabled == 0) && (Evalboards.driverEnable == DRIVER_ENABLE) && (TMC2300.config->state == CONFIG_READY) && (tick - TMC2300.oldTick >= 100))
+    {
+        //Check if the IOIN register is like expected filled with data
+        uint32_t ioin = tmc2300_readRegister(DEFAULT_ICID,  TMC7300_IOIN);
+        if (ioin == 0)
+        {
+            TMC2300.brownout = 1;
+            enableDriver(DRIVER_DISABLE);
+        }
+
+        // If IC is in bownout and comes back. Go in restore
+        else if ((TMC2300.brownout == 1) && (ioin != 0))
+        {
+            TMC2300.brownout = 0;
+            restore();
+        }
     }
 }
 
 void TMC2300_init(void)
 {
-    tmc_fillCRC8Table(0x07, true, 1);
+    TMC2300.config   = Evalboards.ch2.config;
 
-    tmc2300_init(&TMC2300, 0, Evalboards.ch2.config, &tmc2300_defaultRegisterResetState[0]);
-    tmc2300_setCallback(&TMC2300, configCallback);
+    // Default slave address: 0
+    TMC2300.slaveAddress = 0;
+
+    // Start in standby
+    TMC2300.standbyEnabled = 1;
+
+    TMC2300.oldTick      = 0;
 
     Pins.DRV_EN   = &HAL.IOs->pins->DIO0;
     Pins.DIAG     = &HAL.IOs->pins->DIO1;
@@ -662,12 +769,16 @@ void TMC2300_init(void)
 
     TMC2300_UARTChannel = HAL.UART;
     TMC2300_UARTChannel->pinout = UART_PINS_2;
-    TMC2300_UARTChannel->rxtx.baudRate = 9600;
+    TMC2300_UARTChannel->rxtx.baudRate = 57600;
     TMC2300_UARTChannel->rxtx.init();
 
     Evalboards.ch2.config->reset        = reset;
     Evalboards.ch2.config->restore      = restore;
     Evalboards.ch2.config->state        = CONFIG_RESET;
+    Evalboards.ch2.config->configIndex  = 0;
+
+    Evalboards.ch2.config->callback     = NULL;
+    Evalboards.ch2.config->channel      = 0;
     Evalboards.ch2.config->configIndex  = 0;
 
     Evalboards.ch2.rotate               = rotate;
@@ -689,6 +800,7 @@ void TMC2300_init(void)
     Evalboards.ch2.deInit               = deInit;
     Evalboards.ch2.periodicJob          = periodicJob;
     Evalboards.ch2.onPinChange          = onPinChange;
+
 
     StepDir_init(STEPDIR_PRECISION);
     StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.DIAG);
