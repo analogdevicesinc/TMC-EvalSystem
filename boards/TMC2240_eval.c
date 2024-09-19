@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -20,11 +20,17 @@
 
 // Stepdir precision: 2^17 -> 17 digits of precision
 #define STEPDIR_PRECISION (1 << 17)
+#define TMC2240_TIMEOUT 50 // UART Timeout in ms
 
 #define TMC2240_MOTORS 1
+#define DEFAULT_MOTOR  0
+#define DEFAULT_ICID   0
 
-static TMC_Board_Comm_Mode commMode = TMC_BOARD_COMM_SPI;
-static uint32_t targetAddressUart = 0;
+static TMC2240BusType activeBus = IC_BUS_SPI;
+static uint8_t nodeAddress = 0;
+static SPIChannelTypeDef *TMC2240_SPIChannel;
+static UART_Config *TMC2240_UARTChannel;
+
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
 
@@ -41,15 +47,9 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 
-static int32_t tmc2240_UARTreadInt(UART_Config *channel, uint8_t address);
-static void tmc2240_UARTwriteInt(UART_Config *channel, uint8_t address, int32_t value);
-
-void	tmc2240_writeInt(TMC2240TypeDef *tmc2240, uint8_t address, int32_t value);
-int32_t tmc2240_readInt(TMC2240TypeDef *tmc2240, uint8_t address);
 static void checkErrors(uint32_t tick);
 
-static void init_comm(TMC_Board_Comm_Mode mode);
-
+static void init_comm(TMC2240BusType mode);
 static void periodicJob(uint32_t tick);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
@@ -57,11 +57,6 @@ static void deInit(void);
 static uint8_t reset();
 static uint8_t restore();
 static void enableDriver(DriverState state);
-
-static UART_Config *TMC2240_UARTChannel;
-static SPIChannelTypeDef *TMC2240_SPIChannel;
-static TMC2240TypeDef TMC2240;
-#define TMC2240_TIMEOUT 50 // UART Timeout in ms
 
 typedef struct {
     IOPinTypeDef *STEP;
@@ -82,101 +77,33 @@ typedef struct {
 static PinsTypeDef Pins;
 
 
-
-
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC2240_CRC(data, length) tmc_CRC8(data, length, 1)
-
-// When using multiple ICs you can map them here
-static inline TMC2240TypeDef *motorToIC(uint8_t motor)
+void tmc2240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-    UNUSED(motor);
-    return &TMC2240;
+    UNUSED(icID);
+    TMC2240_SPIChannel->readWriteArray(data, dataLength);
 }
 
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc2240_CRC8(uint8_t *data, size_t length)
+bool tmc2240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
-    return tmc_CRC8(data, length, 1);
-    //TMC2240_CRC(data, length);
+    UNUSED(icID);
+    int32_t status = UART_readWrite(TMC2240_UARTChannel, data, writeLength, readLength);
+    if(status == -1)
+        return false;
+    return true;
 }
 
-int32_t tmc2240_readInt(TMC2240TypeDef *tmc2240, uint8_t address){
-    UNUSED(tmc2240);
-    if(commMode == TMC_BOARD_COMM_SPI)
-    {
-        spi_readInt(TMC2240_SPIChannel, address);
-        return spi_readInt(TMC2240_SPIChannel, address);
-    }
-    else if (commMode == TMC_BOARD_COMM_UART){
-        //int32_t *returnvalue = 0;
-        //UART_readInt(TMC2240_UARTChannel,0x00, address, &returnvalue);
-        //returnvalue = 0;
-        //UART_readInt(TMC2240_UARTChannel,targetAddressUart, address, &returnvalue);
-        //return returnvalue;
-        return tmc2240_UARTreadInt(TMC2240_UARTChannel,  address);
-    }
-    return -1;
-}
-
-void tmc2240_writeInt(TMC2240TypeDef *tmc2240, uint8_t address, int32_t value){
-    UNUSED(tmc2240);
-    if(commMode == TMC_BOARD_COMM_SPI)
-    {
-        spi_writeInt(TMC2240_SPIChannel,  address,  value);
-    }
-    else if (commMode == TMC_BOARD_COMM_UART)
-    {
-        //UART_writeInt(TMC2240_UARTChannel,  targetAddressUart,  address,  value);
-        tmc2240_UARTwriteInt(TMC2240_UARTChannel,  address,  value);
-    }
-}
-void tmc2240_UARTwriteInt(UART_Config *channel, uint8_t address, int32_t value)
+TMC2240BusType tmc2240_getBusType(uint16_t icID)
 {
-    uint8_t data[8];
+    UNUSED(icID);
 
-    data[0] = 0x05;
-    data[1] = targetAddressUart;
-    data[2] = address | TMC_WRITE_BIT;
-    data[3] = (value >> 24) & 0xFF;
-    data[4] = (value >> 16) & 0xFF;
-    data[5] = (value >> 8 ) & 0xFF;
-    data[6] = (value      ) & 0xFF;
-    data[7] = tmc2240_CRC8(data, 7);
-
-    UART_readWrite(channel, &data[0], 8, 0);
+    return activeBus;
 }
 
-int32_t tmc2240_UARTreadInt(UART_Config *channel, uint8_t address)
+uint8_t tmc2240_getNodeAddress(uint16_t icID)
 {
-    uint8_t data[8] = { 0 };
+    UNUSED(icID);
 
-    address = TMC_ADDRESS(address);
-
-    data[0] = 0x05;
-    data[1] = targetAddressUart;
-    data[2] = address;
-    data[3] = tmc2240_CRC8(data, 3);
-
-    UART_readWrite(channel, data, 4, 8);
-
-    // Byte 0: Sync nibble correct?
-    if (data[0] != 0x05)
-        return 0;
-
-    // Byte 1: Master address correct?
-    if (data[1] != 0xFF)
-        return 0;
-
-    // Byte 2: Address correct?
-    if (data[2] != address)
-        return 0;
-
-    // Byte 7: CRC correct?
-    if (data[7] != tmc2240_CRC8(data, 7))
-        return 0;
-
-    return ((uint32_t)data[3] << 24) | ((uint32_t)data[4] << 16) | (data[5] << 8) | data[6];
+    return nodeAddress;
 }
 
 
@@ -268,7 +195,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
                         (int32_t)(
                                 ((int64_t) StepDir_getFrequency(motor)
                                         * (int64_t) 122)
-                                        / (int64_t)TMC2240_FIELD_READ(motorToIC(motor), TMC2240_TSTEP, TMC2240_TSTEP_MASK, TMC2240_TSTEP_SHIFT));
+                                        / (int64_t)tmc2240_fieldRead(DEFAULT_ICID, TMC2240_TSTEP_FIELD));
                 *value = (abs(tempValue) < 20) ? 0 : tempValue;
                 break;
             }
@@ -295,21 +222,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 6:
         // Maximum current
         if (readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_IHOLD_IRUN,
-                    TMC2240_IRUN_MASK, TMC2240_IRUN_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_IRUN_FIELD);
         } else if (readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_IHOLD_IRUN,
-                    TMC2240_IRUN_MASK, TMC2240_IRUN_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_IRUN_FIELD, *value);
         }
         break;
     case 7:
         // Standby current
         if (readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_IHOLD_IRUN,
-                    TMC2240_IHOLD_MASK, TMC2240_IHOLD_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_IHOLD_FIELD);
         } else if (readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_IHOLD_IRUN,
-                    TMC2240_IHOLD_MASK, TMC2240_IHOLD_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_IHOLD_FIELD, *value);
         }
         break;
     case 8:
@@ -326,28 +249,29 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 26:
         // Speed threshold for high speed mode
         if(readWrite == READ) {
-            buffer = tmc2240_readInt(motorToIC(motor), TMC2240_THIGH);
+            buffer = tmc2240_readRegister(DEFAULT_ICID, TMC2240_THIGH);
             *value = MIN(0xFFFFF, (1 << 24) / ((buffer)? buffer : 1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value:1));
-            tmc2240_writeInt(motorToIC(motor), TMC2240_THIGH, *value);
+            tmc2240_writeRegister(DEFAULT_ICID, TMC2240_THIGH, *value);
         }
+
         break;
 
     case 28:
         // High speed chopper mode
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_VHIGHCHM_MASK, TMC2240_VHIGHCHM_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_VHIGHCHM_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_VHIGHCHM_MASK, TMC2240_VHIGHCHM_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_VHIGHCHM_FIELD, *value);
         }
         break;
     case 29:
         // High speed fullstep mode
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_VHIGHFS_MASK, TMC2240_VHIGHFS_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_VHIGHFS_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_VHIGHFS_MASK, TMC2240_VHIGHFS_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_VHIGHFS_FIELD, *value);
         }
         break;
     case 30:
@@ -361,29 +285,29 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 34:
         // Internal RSense
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_GCONF, TMC2240_REFR_DIR_MASK, TMC2240_REFR_DIR_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_FAST_STANDSTILL_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_GCONF, TMC2240_REFR_DIR_MASK, TMC2240_REFR_DIR_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_FAST_STANDSTILL_FIELD, *value);
         }
         break;
 
     case 35:
         // Global current scaler
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_GLOBAL_SCALER, TMC2240_GLOBALSCALER_MASK, TMC2240_GLOBALSCALER_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_GLOBALSCALER_FIELD);
         } else if(readWrite == WRITE) {
             if(*value > 31){
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_GLOBAL_SCALER, TMC2240_GLOBALSCALER_MASK, TMC2240_GLOBALSCALER_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_GLOBALSCALER_FIELD, *value);
             }
             else{
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_GLOBAL_SCALER, TMC2240_GLOBALSCALER_MASK, TMC2240_GLOBALSCALER_SHIFT, 0);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_GLOBALSCALER_FIELD, 0);
             }
         }
         break;
     case 140:
         // Microstep Resolution
         if(readWrite == READ) {
-            *value = 0x100 >> TMC2240_FIELD_READ(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_MRES_MASK, TMC2240_MRES_SHIFT);
+            *value = 0x100 >> tmc2240_fieldRead(DEFAULT_ICID,TMC2240_MRES_FIELD);
         } else if(readWrite == WRITE) {
             switch(*value)
             {
@@ -401,7 +325,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
             if(*value != -1)
             {
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_MRES_MASK, TMC2240_MRES_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_MRES_FIELD, *value);
             }
             else
             {
@@ -412,30 +336,30 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 162:
         // Chopper blank time
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_TBL_MASK, TMC2240_TBL_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_TBL_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_TBL_MASK, TMC2240_TBL_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_TBL_FIELD, *value);
         }
         break;
     case 163:
         // Constant TOff Mode
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_CHM_MASK, TMC2240_CHM_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_CHM_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_CHM_MASK, TMC2240_CHM_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_CHM_FIELD, *value);
         }
         break;
     case 164:
         // Disable fast decay comparator
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_DISFDCC_MASK, TMC2240_DISFDCC_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_DISFDCC_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_DISFDCC_MASK, TMC2240_DISFDCC_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_DISFDCC_FIELD, *value);
         }
         break;
     case 165:
         // Chopper hysteresis end / fast decay time
-        buffer = tmc2240_readInt(motorToIC(motor), TMC2240_CHOPCONF);
+        buffer = tmc2240_readRegister(DEFAULT_ICID, TMC2240_CHOPCONF);
         if(readWrite == READ) {
             if(buffer & (1 << TMC2240_CHM_SHIFT))
             {
@@ -443,25 +367,25 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             }
             else
             {
-                *value = (tmc2240_readInt(motorToIC(motor), TMC2240_CHOPCONF) >> TMC2240_HSTRT_TFD210_SHIFT) & TMC2240_HSTRT_TFD210_MASK;
+                *value = (tmc2240_readRegister(DEFAULT_ICID, TMC2240_CHOPCONF) >> TMC2240_HSTRT_TFD210_SHIFT) & TMC2240_HSTRT_TFD210_MASK;
                 if(buffer & TMC2240_FD3_SHIFT)
                     *value |= 1<<3; // MSB wird zu value dazugefügt
             }
         } else if(readWrite == WRITE) {
-            if(tmc2240_readInt(motorToIC(motor), TMC2240_CHOPCONF) & (1<<14))
+            if(tmc2240_readRegister(DEFAULT_ICID, TMC2240_CHOPCONF) & (1<<14))
             {
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_HEND_OFFSET_MASK, TMC2240_HEND_OFFSET_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_HEND_OFFSET_FIELD, *value);
             }
             else
             {
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_FD3_MASK, TMC2240_FD3_SHIFT, (*value & (1<<3))); // MSB wird zu value dazugefügt
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_HSTRT_TFD210_MASK, TMC2240_HSTRT_TFD210_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_FD3_FIELD, (*value & (1<<3))); // MSB wird zu value dazugefügt
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_HSTRT_TFD210_FIELD, *value);
             }
         }
         break;
     case 166:
         // Chopper hysteresis start / sine wave offset
-        buffer = tmc2240_readInt(motorToIC(motor), TMC2240_CHOPCONF);
+        buffer = tmc2240_readRegister(DEFAULT_ICID, TMC2240_CHOPCONF);
         if(readWrite == READ) {
             if(buffer & (1 << TMC2240_CHM_SHIFT))
             {
@@ -476,100 +400,100 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         } else if(readWrite == WRITE) {
             if(buffer & (1 << TMC2240_CHM_SHIFT))
             {
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_HSTRT_TFD210_MASK, TMC2240_HSTRT_TFD210_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_HSTRT_TFD210_FIELD, *value);
             }
             else
             {
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_HEND_OFFSET_MASK, TMC2240_HEND_OFFSET_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_HSTRT_TFD210_FIELD, *value);
             }
         }
         break;
     case 167:
         // Chopper off time
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_TOFF_MASK, TMC2240_TOFF_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_TOFF_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_CHOPCONF, TMC2240_TOFF_MASK, TMC2240_TOFF_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_TOFF_FIELD, *value);
         }
         break;
     case 168:
         // smartEnergy current minimum (SEIMIN)
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEIMIN_MASK, TMC2240_SEIMIN_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_SEIMIN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEIMIN_MASK, TMC2240_SEIMIN_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID,  TMC2240_SEIMIN_FIELD, *value);
         }
         break;
     case 169:
         // smartEnergy current down step
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEDN_MASK, TMC2240_SEDN_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_SEDN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEDN_MASK, TMC2240_SEDN_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_SEDN_FIELD, *value);
         }
         break;
     case 170:
         // smartEnergy hysteresis
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEMAX_MASK, TMC2240_SEMAX_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_SEMAX_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEMAX_MASK, TMC2240_SEMAX_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_SEMAX_FIELD, *value);
         }
         break;
     case 171:
         // smartEnergy current up step
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEUP_MASK, TMC2240_SEUP_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_SEUP_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEUP_MASK, TMC2240_SEUP_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_SEUP_FIELD, *value);
         }
         break;
     case 172:
         // smartEnergy hysteresis start
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEMIN_MASK, TMC2240_SEMIN_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_SEMIN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SEMIN_MASK, TMC2240_SEMIN_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_SEMIN_FIELD, *value);
         }
         break;
     case 173:
         // stallGuard4 filter enable
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_FILT_EN_MASK, TMC2240_SG4_FILT_EN_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID,  TMC2240_SG4_FILT_EN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_FILT_EN_MASK, TMC2240_SG4_FILT_EN_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_SG4_FILT_EN_FIELD, *value);
         }
         break;
     case 174:
         // stallGuard4 threshold
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_THRS_MASK, TMC2240_SG4_THRS_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_SG4_THRS_FIELD);
             *value = CAST_Sn_TO_S32(*value, 7);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG4_THRS_MASK, TMC2240_SG4_THRS_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_SG4_THRS_FIELD, *value);
         }
         break;
     case 175:
         // stallGuard2 filter enable
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SFILT_MASK, TMC2240_SFILT_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID,  TMC2240_SFILT_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SFILT_MASK, TMC2240_SFILT_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_SFILT_FIELD, *value);
         }
         break;
     case 176:
         // stallGuard2 threshold
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SGT_MASK, TMC2240_SGT_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID,  TMC2240_SGT_FIELD);
             *value = CAST_Sn_TO_S32(*value, 7);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_COOLCONF, TMC2240_SGT_MASK, TMC2240_SGT_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_SGT_FIELD, *value);
         }
         break;
     case 180:
         // smartEnergy actual current
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_DRVSTATUS, TMC2240_CS_ACTUAL_MASK, TMC2240_CS_ACTUAL_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_CS_ACTUAL_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -595,75 +519,75 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             {
                 *value = 0x000FFFFF;
             }
-            tmc2240_writeInt(motorToIC(motor), TMC2240_TCOOLTHRS, *value);
+            tmc2240_writeRegister(DEFAULT_ICID, TMC2240_TCOOLTHRS, *value);
         }
         break;
     case 182:
         // smartEnergy threshold speed
         if(readWrite == READ) {
-            buffer = tmc2240_readInt(motorToIC(motor), TMC2240_TCOOLTHRS);
+            buffer = tmc2240_readRegister(DEFAULT_ICID, TMC2240_TCOOLTHRS);
             *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-            tmc2240_writeInt(motorToIC(motor), TMC2240_TCOOLTHRS, *value);
+            tmc2240_writeRegister(DEFAULT_ICID, TMC2240_TCOOLTHRS, *value);
         }
         break;
     case 184:
         // SG_ANGLE_OFFSET
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG_ANGLE_OFFSET_MASK, TMC2240_SG_ANGLE_OFFSET_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_SG_ANGLE_OFFSET_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_SG4_THRS, TMC2240_SG_ANGLE_OFFSET_MASK, TMC2240_SG_ANGLE_OFFSET_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID,TMC2240_SG_ANGLE_OFFSET_FIELD, *value);
         }
         break;
     case 185:
         // Chopper synchronization
         if(readWrite == READ) {
-            *value = (tmc2240_readInt(motorToIC(motor), TMC2240_CHOPCONF) >> 20) & 0x0F;
+            *value = (tmc2240_readRegister(DEFAULT_ICID, TMC2240_CHOPCONF) >> 20) & 0x0F;
         } else if(readWrite == WRITE) {
-            buffer = tmc2240_readInt(motorToIC(motor), TMC2240_CHOPCONF);
+            buffer = tmc2240_readRegister(DEFAULT_ICID, TMC2240_CHOPCONF);
             buffer &= ~(0x0F<<20);
             buffer |= (*value & 0x0F) << 20;
-            tmc2240_writeInt(motorToIC(motor), TMC2240_CHOPCONF,buffer);
+            tmc2240_writeRegister(DEFAULT_ICID, TMC2240_CHOPCONF,buffer);
         }
         break;
     case 186:
         // PWM threshold speed
         if(readWrite == READ) {
-            buffer = tmc2240_readInt(motorToIC(motor), TMC2240_TPWMTHRS);
+            buffer = tmc2240_readRegister(DEFAULT_ICID, TMC2240_TPWMTHRS);
             *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-            tmc2240_writeInt(motorToIC(motor), TMC2240_TPWMTHRS, *value);
+            tmc2240_writeRegister(DEFAULT_ICID, TMC2240_TPWMTHRS, *value);
         }
         break;
     case 187:
         // PWM gradient
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_GRAD_MASK, TMC2240_PWM_GRAD_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_PWM_GRAD_FIELD);
         } else if(readWrite == WRITE) {
             // Set gradient
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_GRAD_MASK, TMC2240_PWM_GRAD_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_PWM_GRAD_FIELD, *value);
             // Enable/disable stealthChop accordingly
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_GCONF, TMC2240_EN_PWM_MODE_MASK, TMC2240_EN_PWM_MODE_SHIFT, (*value) ? 1 : 0);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_PWM_GRAD_FIELD, (*value) ? 1 : 0);
         }
         break;
     case 188:
         // PWM amplitude
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_OFS_MASK, TMC2240_PWM_OFS_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_PWM_OFS_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_OFS_MASK, TMC2240_PWM_OFS_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID,  TMC2240_PWM_OFS_FIELD, *value);
         }
         break;
     case 191:
         // PWM frequency
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_FREQ_MASK, TMC2240_PWM_FREQ_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID,  TMC2240_PWM_FREQ_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 4)
             {
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_FREQ_MASK, TMC2240_PWM_FREQ_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_PWM_FREQ_FIELD, *value);
             }
             else
             {
@@ -674,11 +598,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 192:
         // PWM autoscale
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_AUTOSCALE_MASK, TMC2240_PWM_AUTOSCALE_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID,  TMC2240_PWM_AUTOSCALE_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 2)
             {
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_AUTOSCALE_MASK, TMC2240_PWM_AUTOSCALE_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_PWM_AUTOSCALE_FIELD, *value);
             }
             else
             {
@@ -689,7 +613,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 193:
         // PWM scale sum
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_PWMSCALE, TMC2240_PWM_SCALE_SUM_MASK, TMC2240_PWM_SCALE_SUM_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_PWM_SCALE_SUM_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -697,7 +621,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 194:
         // MSCNT
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_MSCNT, TMC2240_MSCNT_MASK, TMC2240_MSCNT_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_MSCNT_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -705,10 +629,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 195:
         // MEAS_SD_EN
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_MEAS_SD_ENABLE_MASK, TMC2240_PWM_MEAS_SD_ENABLE_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_PWM_MEAS_SD_ENABLE_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 2)
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_MEAS_SD_ENABLE_MASK, TMC2240_PWM_MEAS_SD_ENABLE_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_PWM_MEAS_SD_ENABLE_FIELD, *value);
             else
                 errors |= TMC_ERROR_TYPE;
         }
@@ -716,10 +640,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 196:
         // DIS_REG_STST
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_DIS_REG_STST_MASK, TMC2240_PWM_DIS_REG_STST_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_PWM_DIS_REG_STST_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 2)
-                TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_PWMCONF, TMC2240_PWM_DIS_REG_STST_MASK, TMC2240_PWM_DIS_REG_STST_SHIFT, *value);
+                tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_PWM_DIS_REG_STST_FIELD, *value);
             else
                 errors |= TMC_ERROR_TYPE;
         }
@@ -727,15 +651,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 204:
         // Freewheeling mode
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_PWMCONF, TMC2240_FREEWHEEL_MASK, TMC2240_FREEWHEEL_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_FREEWHEEL_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_PWMCONF, TMC2240_FREEWHEEL_MASK, TMC2240_FREEWHEEL_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_FREEWHEEL_FIELD, *value);
         }
         break;
     case 206:
         // Load value
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_DRVSTATUS, TMC2240_SG_RESULT_MASK, TMC2240_SG_RESULT_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_SG_RESULT_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -743,17 +667,17 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 209:
         // Encoder position
         if(readWrite == READ) {
-            *value = tmc2240_readInt(motorToIC(motor), TMC2240_XENC);
+            *value = tmc2240_readRegister(DEFAULT_ICID, TMC2240_XENC);
         } else if(readWrite == WRITE) {
-            tmc2240_writeInt(motorToIC(motor), TMC2240_XENC, *value);
+            tmc2240_writeRegister(DEFAULT_ICID, TMC2240_XENC, *value);
         }
         break;
     case 210:
         // Encoder Resolution
         if(readWrite == READ) {
-            *value = tmc2240_readInt(motorToIC(motor), TMC2240_ENC_CONST);
+            *value = tmc2240_readRegister(DEFAULT_ICID, TMC2240_ENC_CONST);
         } else if(readWrite == WRITE) {
-            tmc2240_writeInt(motorToIC(motor), TMC2240_ENC_CONST, *value);
+            tmc2240_writeRegister(DEFAULT_ICID, TMC2240_ENC_CONST, *value);
         }
         break;
     case 211:
@@ -804,16 +728,16 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 212:
         // Current range from DRV_CONF reg
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_DRV_CONF, TMC2240_CURRENT_RANGE_MASK, TMC2240_CURRENT_RANGE_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_CURRENT_RANGE_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_DRV_CONF, TMC2240_CURRENT_RANGE_MASK, TMC2240_CURRENT_RANGE_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_CURRENT_RANGE_FIELD, *value);
         }
         break;
 
     case 213:
         // ADCTemperatur
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_ADC_TEMP, TMC2240_ADC_TEMP_MASK, TMC2240_ADC_TEMP_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID,  TMC2240_ADC_TEMP_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -821,7 +745,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 214:
         // ADCIN
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_ADC_VSUPPLY_AIN, TMC2240_ADC_AIN_MASK, TMC2240_ADC_AIN_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_ADC_AIN_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -829,7 +753,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 215:
         // ADCSupply
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_ADC_VSUPPLY_AIN, TMC2240_ADC_VSUPPLY_MASK, TMC2240_ADC_VSUPPLY_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_ADC_VSUPPLY_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -837,24 +761,24 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 216:
         // Overvoltage Limit ADC value
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERVOLTAGE_VTH_MASK, TMC2240_OVERVOLTAGE_VTH_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_OVERVOLTAGE_VTH_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERVOLTAGE_VTH_MASK, TMC2240_OVERVOLTAGE_VTH_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_OVERVOLTAGE_VTH_FIELD, *value);
         }
         break;
     case 217:
         // Overtemperature Warning Limit
         if(readWrite == READ) {
-            *value = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERTEMPPREWARNING_VTH_MASK, TMC2240_OVERTEMPPREWARNING_VTH_SHIFT);
+            *value = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_OVERTEMPPREWARNING_VTH_FIELD);
         } else if(readWrite == WRITE) {
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERTEMPPREWARNING_VTH_MASK, TMC2240_OVERTEMPPREWARNING_VTH_SHIFT, *value);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_OVERTEMPPREWARNING_VTH_FIELD, *value);
         }
         break;
     case 218:
         // ADCTemperatur Converted
         if(readWrite == READ) {
 
-            int32_t adc = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_ADC_TEMP, TMC2240_ADC_TEMP_MASK, TMC2240_ADC_TEMP_SHIFT);
+            int32_t adc = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_ADC_TEMP_FIELD);
             *value = (int32_t)10*(adc-2038)/77;
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -863,7 +787,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 219:
         // ADCIN converted
         if(readWrite == READ) {
-            int32_t adc = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_ADC_VSUPPLY_AIN, TMC2240_ADC_AIN_MASK, TMC2240_ADC_AIN_SHIFT);
+            int32_t adc = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_ADC_AIN_FIELD);
             *value = (int32_t)3052*adc/10000;
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -872,7 +796,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 220:
         // ADCSupply
         if(readWrite == READ) {
-            int32_t adc = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_ADC_VSUPPLY_AIN, TMC2240_ADC_VSUPPLY_MASK, TMC2240_ADC_VSUPPLY_SHIFT);
+            int32_t adc = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_ADC_VSUPPLY_FIELD);
             *value = (int32_t)32*3052*adc/10000;
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -881,23 +805,23 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 221:
         // Overvoltage Limit converted
         if(readWrite == READ) {
-            int32_t val = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERVOLTAGE_VTH_MASK, TMC2240_OVERVOLTAGE_VTH_SHIFT);
+            int32_t val = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_OVERVOLTAGE_VTH_FIELD);
             *value = (int32_t)32*3052*val/10000;
         } else if(readWrite == WRITE) {
             int32_t val = (int32_t)(*value*10000/(3052*32));
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERVOLTAGE_VTH_MASK, TMC2240_OVERVOLTAGE_VTH_SHIFT, val);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_OVERVOLTAGE_VTH_FIELD, val);
         }
         break;
     case 222:
         // Overtemperature Warning Limit
         if(readWrite == READ) {
-            int32_t temp = TMC2240_FIELD_READ(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERTEMPPREWARNING_VTH_MASK, TMC2240_OVERTEMPPREWARNING_VTH_SHIFT);
+            int32_t temp = tmc2240_fieldRead(DEFAULT_ICID, TMC2240_OVERTEMPPREWARNING_VTH_FIELD);
             *value = (int32_t)(temp-2038)/7.7;
         } else if(readWrite == WRITE) {
             float valf  = *value*7.7;
             int32_t val = (int32_t)valf;
             val = val+2038;
-            TMC2240_FIELD_WRITE(motorToIC(motor), TMC2240_OTW_OV_VTH, TMC2240_OVERTEMPPREWARNING_VTH_MASK, TMC2240_OVERTEMPPREWARNING_VTH_SHIFT, val);
+            tmc2240_fieldWrite(DEFAULT_ICID, TMC2240_OVERTEMPPREWARNING_VTH_FIELD, val);
         }
         break;
 
@@ -923,15 +847,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 224: // Enable UART mode
         if (readWrite == WRITE) {
             if(*value == 1)
-                commMode = TMC_BOARD_COMM_UART;
+                activeBus = IC_BUS_UART;
             else if(*value == 0)
-                commMode = TMC_BOARD_COMM_SPI;
-            init_comm(commMode);
+                activeBus = IC_BUS_SPI;
+            init_comm(activeBus);
         }
         else if(readWrite == READ) {
-            if(commMode == TMC_BOARD_COMM_UART)
+            if(activeBus == IC_BUS_UART)
                 *value = 1;
-            else if (commMode == TMC_BOARD_COMM_SPI)
+            else if (activeBus == IC_BUS_SPI)
                 *value = 0;
         }
         break;
@@ -943,6 +867,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     return errors;
 }
 
+
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value) {
     return handleParameter(WRITE, motor, type, &value);
 }
@@ -953,11 +878,13 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value) {
 
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value) {
-    tmc2240_writeInt(motorToIC(motor), (uint8_t) address, value);
+    UNUSED(motor);
+    tmc2240_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value) {
-    *value = tmc2240_readInt(motorToIC(motor), (uint8_t) address);
+    UNUSED(motor);
+    *value = tmc2240_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 static void checkErrors(uint32_t tick)
 {
@@ -1000,10 +927,10 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         break;
     case 8: // Enable UART mode
         if(*value == 1)
-            commMode = TMC_BOARD_COMM_UART;
+            activeBus = IC_BUS_UART;
         else if(*value == 0)
-            commMode = TMC_BOARD_COMM_SPI;
-        init_comm(commMode);
+            activeBus = IC_BUS_SPI;
+        init_comm(activeBus);
         break;
 
     default:
@@ -1077,11 +1004,11 @@ static void enableDriver(DriverState state) {
             && (Evalboards.driverEnable == DRIVER_ENABLE))
         HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
 }
-static void init_comm(TMC_Board_Comm_Mode mode)
+static void init_comm(TMC2240BusType mode)
 {
     TMC2240_UARTChannel = HAL.UART;
     switch(mode) {
-    case TMC_BOARD_COMM_UART:
+    case IC_BUS_UART:
         HAL.IOs->config->reset(Pins.SCK);
         HAL.IOs->config->reset(Pins.SDI);
         HAL.IOs->config->reset(Pins.SDO);
@@ -1098,7 +1025,7 @@ static void init_comm(TMC_Board_Comm_Mode mode)
         TMC2240_UARTChannel->pinout = UART_PINS_2;
         TMC2240_UARTChannel->rxtx.init();
         break;
-    case TMC_BOARD_COMM_SPI:
+    case IC_BUS_SPI:
         HAL.IOs->config->reset(Pins.SCK);
         HAL.IOs->config->reset(Pins.SDI);
         HAL.IOs->config->reset(Pins.SDO);
@@ -1114,7 +1041,7 @@ static void init_comm(TMC_Board_Comm_Mode mode)
         TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
 #endif
         break;
-    case TMC_BOARD_COMM_WLAN: // unused
+    case IC_BUS_WLAN: // unused
     default:
         HAL.IOs->config->reset(Pins.SCK);
         HAL.IOs->config->reset(Pins.SDI);
@@ -1126,7 +1053,7 @@ static void init_comm(TMC_Board_Comm_Mode mode)
         TMC2240_SPIChannel = &HAL.SPI->ch2;
 #ifndef BoardVersion2240EvalDEV
         TMC2240_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN0;
-        commMode = TMC_BOARD_COMM_SPI;
+        activeBus = IC_BUS_SPI;
 
 #else
         TMC2240_SPIChannel = &HAL.SPI->ch1;
@@ -1194,8 +1121,7 @@ void TMC2240_init(void) {
 
 
     // Initialize the SPI channel
-    init_comm(commMode);
-
+    init_comm(activeBus);
 
     Evalboards.ch2.config->reset = reset;
     Evalboards.ch2.config->restore = restore;
