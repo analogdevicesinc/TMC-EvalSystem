@@ -44,14 +44,16 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 
+static uint8_t tmc7300_consistencyCheck();
 static void checkErrors (uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 
 static void setStandby(uint8_t enabled);
-
+static void writeConfiguration();
 static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
+static uint8_t restore(void);
 static void enableDriver(DriverState state);
 
 static uint8_t nodeAddress = 0;
@@ -68,8 +70,16 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-static uint8_t restore(void);
+// Usage note: use 1 TypeDef per IC
+typedef struct {
+    ConfigurationTypeDef *config;
+    uint8_t slaveAddress;
+    uint8_t standbyEnabled;
+    uint8_t brownout;
+    uint32_t oldTick;
+} TMC7300TypeDef;
 
+TMC7300TypeDef TMC7300;
 
 
 bool tmc7300_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
@@ -228,7 +238,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 7:
         // Standby
         if (readWrite == READ) {
-            *value = tmc7300_getStandby(motorToIC(motor));
+            *value = TMC7300.standbyEnabled;
         } else if(readWrite == WRITE) {
             setStandby(*value);
         }
@@ -302,11 +312,28 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     return handleParameter(READ, motor, type, value);
 }
 
+static uint8_t tmc7300_consistencyCheck()
+{
+    // Config has not yet been written -> it can't be consistent
+    if(TMC7300.config->state != CONFIG_READY)
+        return 0;
+
+    // Standby is enabled -> registers can't be accessed
+    if(TMC7300.standbyEnabled)
+        return 0;
+
+    // If the PWM_DIRECT bit is no longer set, report an error
+    if (tmc7300_fieldRead(DEFAULT_ICID, TMC7300_PWM_DIRECT_FIELD) == 0)
+        return 1;
+
+    // No inconsistency detected
+    return 0;
+}
 static void checkErrors(uint32_t tick)
 {
     static uint32_t tick_old = 0;
     if((tick - tick_old) >= CONSISTENCY_CHECK_INTERVAL) {
-        Evalboards.ch2.errors = FIELD_SET(Evalboards.ch2.errors, ERROR_INCONSISTENT_MASK, ERROR_INCONSISTENT_SHIFT, tmc7300_consistencyCheck(&TMC7300));
+        Evalboards.ch2.errors = FIELD_SET(Evalboards.ch2.errors, ERROR_INCONSISTENT_MASK, ERROR_INCONSISTENT_SHIFT, tmc7300_consistencyCheck());
         tick_old = tick;
     }
 
@@ -316,15 +343,16 @@ static void checkErrors(uint32_t tick)
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
+    UNUSED(motor);
     uint32_t errors = 0;
 
     switch(type)
     {
     case 1:
-        tmc7300_set_slave(motorToIC(motor), (*value) & 0xFF);
+        TMC7300.slaveAddress = (*value) & 0xFF;
         break;
     case 2:
-        *value = tmc7300_get_slave(motorToIC(motor));
+        *value = TMC7300.slaveAddress;
         break;
     case 3:
         restore();
@@ -366,17 +394,46 @@ static void setStandby(uint8_t enableStandby)
         wait(10);
     }
     // Update the APIs internal standby state
-    tmc7300_setStandby(&TMC7300, enableStandby);
+    if (TMC7300.standbyEnabled && !enableStandby)
+    {
+        // Just exited standby -> call the restore
+        restore();
+    }
+    TMC7300.standbyEnabled = enableStandby;
 }
 
 static uint8_t reset()
 {
-    return tmc7300_reset(&TMC7300);
+    // A reset can always happen - even during another reset or restore
+
+    // Reset the dirty bits and wipe the shadow registers
+    size_t i;
+    for(i = 0; i < TMC7300_REGISTER_COUNT; i++)
+    {
+        tmc7300_setDirtyBit(DEFAULT_ICID, i, false);
+        tmc7300_shadowRegister[DEFAULT_ICID][i] = 0;
+    }
+    tmc7300_initCache();
+
+    // Activate the reset config mechanism
+    TMC7300.config->state        = CONFIG_RESET;
+    TMC7300.config->configIndex  = 0;
+
+    return 1;
 }
 
 static uint8_t restore()
 {
-    return tmc7300_restore(&TMC7300);
+    // Do not interrupt a reset
+    // A reset will transition into a restore anyways
+    if(TMC7300.config->state == CONFIG_RESET)
+    {
+        return 0;
+    }
+
+    TMC7300.config->state        = CONFIG_RESTORE;
+    TMC7300.config->configIndex  = 0;
+    return 1;
 }
 
 static void enableDriver(DriverState state)
@@ -389,43 +446,111 @@ static void enableDriver(DriverState state)
     else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE))
         HAL.IOs->config->setHigh(Pins.DRV_EN);
 }
+static void writeConfiguration()
+{
+    uint8_t *ptr = &TMC7300.config->configIndex;
+    const int32_t *settings;
+
+    if(TMC7300.config->state == CONFIG_RESTORE)
+    {
+        // Do not restore while in standby
+        if (TMC7300.standbyEnabled)
+            return;
+
+        settings = *(tmc7300_shadowRegister+0);
+        // Find the next restorable register
+        while(*ptr < TMC7300_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc7300_registerAccess[*ptr]) && tmc7300_getDirtyBit(DEFAULT_ICID,*ptr))
+            {
+                break;
+            }
+
+            // Otherwise, check next register
+            (*ptr)++;
+        }
+        // Configuration restore complete
+        // The driver may only be enabled once the configuration is done
+        enableDriver(DRIVER_USE_GLOBAL_ENABLE);
+    }
+    else
+    {
+        settings = tmc7300_sampleRegisterPreset;
+        // Find the next resettable register
+        while((*ptr < TMC7300_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc7300_registerAccess[*ptr]))
+        {
+            (*ptr)++;
+        }
+    }
+
+    if(*ptr < TMC7300_REGISTER_COUNT)
+    {
+        // Reset/restore the found register
+        tmc7300_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else
+    {
+
+        if (TMC7300.config->state == CONFIG_RESET)
+        {
+            // Reset done -> Perform a restore
+            TMC7300.config->state        = CONFIG_RESTORE;
+            TMC7300.config->configIndex  = 0;
+            tmc7300_initCache();
+        }
+        else
+        {
+            // Restore done -> configuration complete
+            TMC7300.config->state = CONFIG_READY;
+        }
+    }
+}
 
 static void periodicJob(uint32_t tick)
 {
     // Call the periodic API function of the TMC7300
-    tmc7300_periodicJob(&TMC7300, tick);
-}
-
-static void configCallback(TMC7300TypeDef *tmc7300, ConfigState state)
-{
-    UNUSED(tmc7300);
-
-    if (state == CONFIG_RESET)
+    if(TMC7300.config->state != CONFIG_READY)
     {
-        // Configuration reset completed
-        // Change hardware preset registers here
+        writeConfiguration();
     }
-    else
-    {
-        // Configuration restore complete
 
-        // The driver may only be enabled once the configuration is done
-        enableDriver(DRIVER_USE_GLOBAL_ENABLE);
+
+    // check if IC is brownout
+    //Is the IC in an active state an is ready?
+    if ((TMC7300.standbyEnabled == 0) && (Evalboards.driverEnable == DRIVER_ENABLE) && (TMC7300.config->state == CONFIG_READY) && (tick - TMC7300.oldTick >= 100))
+    {
+        //Check if the IOIN register is like expected filled with data
+        uint32_t ioin = tmc7300_readRegister(DEFAULT_ICID,  TMC7300_IOIN);
+        if (ioin == 0)
+        {
+            TMC7300.brownout = 1;
+            enableDriver(DRIVER_DISABLE);
+        }
+
+        // If IC is in bownout and comes back. Go in restore
+        else if ((TMC7300.brownout == 1) && (ioin != 0))
+        {
+            TMC7300.brownout = 0;
+            restore();
+        }
+        TMC7300.oldTick = tick;
     }
+
 }
 
 void TMC7300_init(void)
 {
-    tmc_fillCRC8Table(0x07, true, 1);
-
-    tmc7300_init(&TMC7300, 0, Evalboards.ch2.config, &tmc7300_defaultRegisterResetState[0]);
-    tmc7300_setCallback(&TMC7300, configCallback);
+    TMC7300.config   = Evalboards.ch2.config;
 
     Pins.DRV_EN   = &HAL.IOs->pins->DIO0;
     Pins.MS1      = &HAL.IOs->pins->DIO3;
     Pins.MS2      = &HAL.IOs->pins->DIO4;
     Pins.DIAG     = &HAL.IOs->pins->DIO1;
     Pins.STDBY    = &HAL.IOs->pins->DIO2;
+
+    TMC7300.oldTick      = 0;
 
 
     HAL.IOs->config->toOutput(Pins.DRV_EN);
@@ -447,6 +572,16 @@ void TMC7300_init(void)
     Evalboards.ch2.config->restore      = restore;
     Evalboards.ch2.config->state        = CONFIG_RESET;
     Evalboards.ch2.config->configIndex  = 0;
+    Evalboards.ch2.config->callback     = NULL;
+    Evalboards.ch2.config->channel      = 0;
+    Evalboards.ch2.config->configIndex  = 0;
+
+
+    // Default slave address: 0
+    TMC7300.slaveAddress = 0;
+
+    // Start in standby
+    TMC7300.standbyEnabled = 1;
 
     Evalboards.ch2.rotate               = rotate;
     Evalboards.ch2.right                = right;
