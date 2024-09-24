@@ -2,10 +2,20 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
+/*
+ * WARNING: Currently the TMC7300-Eval will send current through the motor for
+ * approximately 23ms when the Landungsbruecke is powered on and the TMC7300 has
+ * connected supply voltage. This is due to the default driver enable polarity
+ * turning the TMC7300 on before the ID detection calls the TMC7300_init()
+ * function.
+ * Either disconnect the power or the motor prior to startup if your motor is
+ * small to prevent damage to it.
+ *
+ */
 
 #include "boards/Board.h"
 #include "tmc/ic/TMC7300/TMC7300.h"
@@ -13,7 +23,9 @@
 #define VM_MIN  18   // VM[V/10] min
 #define VM_MAX  110  // VM[V/10] max
 
-#define MOTORS 1
+#define MOTORS          1
+#define DEFAULT_MOTOR   0
+#define DEFAULT_ICID    0
 
 #define TIMEOUT_VALUE 10 // 10 ms
 
@@ -42,13 +54,8 @@ static void periodicJob(uint32_t tick);
 static uint8_t reset(void);
 static void enableDriver(DriverState state);
 
+static uint8_t nodeAddress = 0;
 static UART_Config *TMC7300_UARTChannel;
-
-// Helper macro - Access the chip object in the driver boards union
-#define TMC7300 (driverBoards.tmc7300)
-
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define TMC7300_CRC(data, length) tmc_CRC8(data, length, 1)
 
 typedef struct
 {
@@ -63,46 +70,45 @@ static PinsTypeDef Pins;
 
 static uint8_t restore(void);
 
-static inline TMC7300TypeDef *motorToIC(uint8_t motor)
+
+
+bool tmc7300_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+
+    // When we are in standby or in the reset procedure we do not actually write
+    // to the IC - we only update the shadow registers. After exiting standby or
+    // completing a reset we transition into a restore, which pushes the shadow
+    // register contents into the chip.
+    if (TMC7300.standbyEnabled)
+        return false;
+    if (TMC7300.config->state == CONFIG_RESET && readLength== 0 )
+                return false;
+
+    UNUSED(icID);
+
+    int32_t status = UART_readWrite(TMC7300_UARTChannel, data, writeLength, readLength);
+    if(status == -1)
+        return false;
+    return true;
+}
+
+uint8_t tmc7300_getNodeAddress(uint16_t icID)
+{
+    UNUSED(icID);
+
+    return nodeAddress;
+}
+
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
-
-    return &TMC7300;
+    tmc7300_writeRegister(DEFAULT_ICID, (uint8_t) address, value );
 }
 
-static inline UART_Config *channelToUART(uint8_t channel)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-    UNUSED(channel);
-
-    return TMC7300_UARTChannel;
-}
-
-// => UART wrapper
-// Write [writeLength] bytes from the [data] array.
-// If [readLength] is greater than zero, read [readLength] bytes from the
-// [data] array.
-void tmc7300_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
-{
-    UART_readWrite(channelToUART(channel), data, writeLength, readLength);
-}
-// <= UART wrapper
-
-// => CRC wrapper
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t tmc7300_CRC8(uint8_t *data, size_t length)
-{
-    return TMC7300_CRC(data, length);
-}
-// <= CRC wrapper
-
-void tmc7300_writeRegister(uint8_t motor, uint16_t address, int32_t value)
-{
-    tmc7300_writeInt(motorToIC(motor), (uint8_t) address, value);
-}
-
-void tmc7300_readRegister(uint8_t motor, uint16_t address, int32_t *value)
-{
-    *value = tmc7300_readInt(motorToIC(motor), (uint8_t) address);
+    UNUSED(motor);
+    *value = tmc7300_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -160,7 +166,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 0:
         // Target PWM A duty cycle (in %)
         if (readWrite == READ) {
-            int32_t tmp = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_A_MASK, TMC7300_PWM_A_SHIFT);
+            int32_t tmp = tmc7300_fieldRead(DEFAULT_ICID, TMC7300_PWM_A_FIELD);
 
             // Change the unsigned read to a signed value
             tmp = CAST_Sn_TO_S32(tmp, 9);
@@ -178,7 +184,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             if (abs(*value) <= 100) {
                 // Scale the duty cycle in percent [-100% ; +100%] to internal values [-255 ; +255]
                 *value = *value * 255 / 100;
-                TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_A_MASK, TMC7300_PWM_A_SHIFT, *value);
+                tmc7300_fieldWrite(DEFAULT_ICID, TMC7300_PWM_A_FIELD, *value);
             } else {
                 errors |= TMC_ERROR_VALUE;
             }
@@ -187,7 +193,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 1:
         // Target PWM B duty cycle (in %)
         if (readWrite == READ) {
-            int32_t tmp = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_B_MASK, TMC7300_PWM_B_SHIFT);
+            int32_t tmp = tmc7300_fieldRead(DEFAULT_ICID, TMC7300_PWM_B_FIELD);
 
             // Change the unsigned read to a signed value
             tmp = CAST_Sn_TO_S32(tmp, 9);
@@ -205,7 +211,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             if (abs(*value) <= 100) {
                 // Scale the duty cycle in percent [-100% ; +100%] to internal values [-255 ; +255]
                 *value = *value * 255 / 100;
-                TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_PWM_AB, TMC7300_PWM_B_MASK, TMC7300_PWM_B_SHIFT, *value);
+                tmc7300_fieldWrite(DEFAULT_ICID,TMC7300_PWM_B_FIELD, *value);
             } else {
                 errors |= TMC_ERROR_VALUE;
             }
@@ -214,9 +220,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 6:
         // Maximum current
         if(readWrite == READ) {
-            *value = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_IRUN_MASK, TMC7300_IRUN_SHIFT);
+            *value = tmc7300_fieldRead(DEFAULT_ICID, TMC7300_IRUN_FIELD);
         } else if(readWrite == WRITE) {
-            TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_IRUN_MASK, TMC7300_IRUN_SHIFT, *value);
+            tmc7300_fieldWrite(DEFAULT_ICID, TMC7300_IRUN_FIELD, *value);
         }
         break;
     case 7:
@@ -230,27 +236,27 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 8:
         // Double motor mode
         if (readWrite == READ) {
-            *value = !TMC7300_FIELD_READ(motorToIC(motor), TMC7300_GCONF, TMC7300_PAR_MODE_MASK, TMC7300_PAR_MODE_SHIFT);
+            *value = !tmc7300_fieldRead(DEFAULT_ICID, TMC7300_PAR_MODE_FIELD);
         } else if (readWrite == WRITE) {
-            TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_GCONF, TMC7300_PAR_MODE_MASK, TMC7300_PAR_MODE_SHIFT, (*value)? 0:1);
+            tmc7300_fieldWrite(DEFAULT_ICID, TMC7300_PAR_MODE_FIELD, (*value)? 0:1);
         }
         break;
     case 162:
         // Chopper blank time
         if(readWrite == READ) {
-            *value = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_CHOPCONF, TMC7300_TBL_MASK, TMC7300_TBL_SHIFT);
+            *value = tmc7300_fieldRead(DEFAULT_ICID, TMC7300_TBL_FIELD);
         } else if(readWrite == WRITE) {
-            TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_CHOPCONF, TMC7300_TBL_MASK, TMC7300_TBL_SHIFT, *value);
+            tmc7300_fieldWrite(DEFAULT_ICID, TMC7300_TBL_FIELD, *value);
         }
         break;
     case 191:
         // PWM frequency
         if(readWrite == READ) {
-            *value = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_PWMCONF, TMC7300_PWM_FREQ_MASK, TMC7300_PWM_FREQ_SHIFT);
+            *value = tmc7300_fieldRead(DEFAULT_ICID, TMC7300_PWM_FREQ_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 4)
             {
-                TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_PWMCONF, TMC7300_PWM_FREQ_MASK, TMC7300_PWM_FREQ_SHIFT, *value);
+                tmc7300_fieldWrite(DEFAULT_ICID, TMC7300_PWM_FREQ_FIELD, *value);
             }
             else
             {
@@ -261,7 +267,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 204:
         // Freewheeling mode
         if(readWrite == READ) {
-            if (TMC7300_FIELD_READ(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_MOTORRUN_MASK, TMC7300_MOTORRUN_SHIFT) == 0)
+            if (tmc7300_fieldRead(DEFAULT_ICID, TMC7300_MOTORRUN_FIELD) == 0)
             {
                 // Motorrun == 0 -> Freewheeling is locked to normal mode (0)
                 *value = 0;
@@ -269,13 +275,13 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             else
             {
                 // Motorrun == 1 -> Freewheeling controlled by the freewheel field
-                *value = TMC7300_FIELD_READ(motorToIC(motor), TMC7300_PWMCONF, TMC7300_FREEWHEEL_MASK, TMC7300_FREEWHEEL_SHIFT);
+                *value = tmc7300_fieldRead(DEFAULT_ICID,TMC7300_FREEWHEEL_FIELD);
             }
         } else if(readWrite == WRITE) {
             // Unlock the freewheeling options by setting motorrun to 1
-            TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_CURRENT_LIMIT, TMC7300_MOTORRUN_MASK, TMC7300_MOTORRUN_SHIFT, 1);
+            tmc7300_fieldWrite(DEFAULT_ICID, TMC7300_MOTORRUN_FIELD, 1);
             // Set the freewheeling option
-            TMC7300_FIELD_WRITE(motorToIC(motor), TMC7300_PWMCONF, TMC7300_FREEWHEEL_MASK, TMC7300_FREEWHEEL_SHIFT, *value);
+            tmc7300_fieldWrite(DEFAULT_ICID, TMC7300_FREEWHEEL_FIELD, *value);
         }
         break;
     default:
@@ -434,6 +440,7 @@ void TMC7300_init(void)
 
     TMC7300_UARTChannel = HAL.UART;
     TMC7300_UARTChannel->pinout = UART_PINS_2;
+    TMC7300_UARTChannel->rxtx.baudRate = 57600;
     TMC7300_UARTChannel->rxtx.init();
 
     Evalboards.ch2.config->reset        = reset;
@@ -449,8 +456,8 @@ void TMC7300_init(void)
     Evalboards.ch2.SAP                  = SAP;
     Evalboards.ch2.moveTo               = moveTo;
     Evalboards.ch2.moveBy               = moveBy;
-    Evalboards.ch2.writeRegister        = tmc7300_writeRegister;
-    Evalboards.ch2.readRegister         = tmc7300_readRegister;
+    Evalboards.ch2.writeRegister        = writeRegister;
+    Evalboards.ch2.readRegister         = readRegister;
     Evalboards.ch2.userFunction         = userFunction;
     Evalboards.ch2.enableDriver         = enableDriver;
     Evalboards.ch2.checkErrors          = checkErrors;
