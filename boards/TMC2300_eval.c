@@ -715,7 +715,7 @@ static void periodicJob(uint32_t tick)
     if ((TMC2300.standbyEnabled == 0) && (Evalboards.driverEnable == DRIVER_ENABLE) && (TMC2300.config->state == CONFIG_READY) && (tick - TMC2300.oldTick >= 100))
     {
         //Check if the IOIN register is like expected filled with data
-        uint32_t ioin = tmc2300_readRegister(DEFAULT_ICID,  TMC7300_IOIN);
+        uint32_t ioin = tmc2300_readRegister(DEFAULT_ICID,  TMC2300_IOIN);
         if (ioin == 0)
         {
             TMC2300.brownout = 1;
