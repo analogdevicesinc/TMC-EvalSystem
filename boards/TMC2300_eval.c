@@ -606,7 +606,6 @@ static uint8_t reset()
         tmc2300_setDirtyBit(DEFAULT_ICID, i, false);
         tmc2300_shadowRegister[DEFAULT_ICID][i] = 0;
     }
-    tmc2300_initCache();
 
     // Activate the reset config mechanism
     TMC2300.config->state        = CONFIG_RESET;
