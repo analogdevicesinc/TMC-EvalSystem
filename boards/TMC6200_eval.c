@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -13,7 +13,8 @@
 #define VM_MIN         50   // VM[V/10] min
 #define VM_MAX         660  // VM[V/10] max
 
-#define TMC6200_DEFAULT_MOTOR 0
+#define DEFAULT_MOTOR 0
+#define DEFAULT_ICID  0
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -35,17 +36,13 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
-SPIChannelTypeDef *TMC6200_SPIChannel;
+static SPIChannelTypeDef *TMC6200_SPIChannel;
 
-// => SPI wrapper
-uint8_t tmc6200_readwriteByte(uint8_t motor, uint8_t data, uint8_t lastTransfer)
+void tmc6200_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-	if (motor == TMC6200_DEFAULT_MOTOR)
-		return TMC6200_SPIChannel->readWrite(data, lastTransfer);
-	else
-		return 0;
+   UNUSED(icID);
+   TMC6200_SPIChannel->readWriteArray(data, dataLength);
 }
-// <= SPI wrapper
 
 typedef struct
 {
@@ -146,13 +143,13 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
 	UNUSED(motor);
-	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, (uint8_t) address, value);
+	tmc6200_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
 	UNUSED(motor);
-	*value = tmc6200_readInt(TMC6200_DEFAULT_MOTOR, (uint8_t) address);
+	*value = tmc6200_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -182,7 +179,7 @@ static void deInit(void)
 static uint8_t reset()
 {
 	// set default PWM configuration for evaluation board use with TMC467x-EVAL
-	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, TMC6200_GCONF, 0x0);
+    tmc6200_writeRegister(DEFAULT_ICID, TMC6200_GCONF, 0x0);
 
 	return 1;
 }
@@ -190,7 +187,7 @@ static uint8_t reset()
 static uint8_t restore()
 {
 	// set default PWM configuration for evaluation board use with TMC467x-EVAL
-	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, TMC6200_GCONF, 0x0);
+    tmc6200_writeRegister(DEFAULT_ICID, TMC6200_GCONF, 0x0);
 
 	return 1;
 }
@@ -231,7 +228,7 @@ void TMC6200_init(void)
 	Evalboards.ch2.deInit               = deInit;
 
 	// set default PWM configuration for evaluation board use with TMC467x-EVAL
-	tmc6200_writeInt(TMC6200_DEFAULT_MOTOR, TMC6200_GCONF, 0x0);
+	tmc6200_writeRegister(DEFAULT_ICID, TMC6200_GCONF, 0x0);
 
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 }
