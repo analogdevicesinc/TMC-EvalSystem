@@ -228,14 +228,14 @@ static void readRegister(uint8_t motor, uint16_t type, int32_t *value)
 static void initTunnel(void)
 {
     //Deinit SPI
-    HAL.IOs->config->reset(Pins.SPI1_SCK);
-    HAL.IOs->config->reset(Pins.SPI1_MOSI);
-    HAL.IOs->config->reset(Pins.SPI1_MISO);
-    HAL.IOs->config->reset(Pins.SPI1_CSN);
-    HAL.IOs->config->toInput(Pins.SPI1_SCK);
-    HAL.IOs->config->toInput(Pins.SPI1_MOSI);
-    HAL.IOs->config->toInput(Pins.SPI1_MISO);
-    HAL.IOs->config->toInput(Pins.SPI1_CSN);
+//    HAL.IOs->config->reset(Pins.SPI1_SCK);
+//    HAL.IOs->config->reset(Pins.SPI1_MOSI);
+//    HAL.IOs->config->reset(Pins.SPI1_MISO);
+//    HAL.IOs->config->reset(Pins.SPI1_CSN);
+//    HAL.IOs->config->toInput(Pins.SPI1_SCK);
+//    HAL.IOs->config->toInput(Pins.SPI1_MOSI);
+//    HAL.IOs->config->toInput(Pins.SPI1_MISO);
+//    HAL.IOs->config->toInput(Pins.SPI1_CSN);
 
     TMC9660_3PH_UARTChannel = HAL.UART;
     TMC9660_3PH_UARTChannel->pinout = UART_PINS_2;
@@ -256,7 +256,6 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     {
     case 0:
     	// Process Tunnel Commands
-        initTunnel();
     	*value = processTunnelBL(motor, *value);
     	break;
     case 1:
@@ -299,16 +298,16 @@ void TMC9660_3PH_init(void)
     Pins.UART_TX               = &HAL.IOs->pins->DIO11; //Pin22
 #endif
 
-    HAL.IOs->config->toOutput(Pins.HOLDN_FLASH);
-    HAL.IOs->config->toOutput(Pins.WAKEN_LB);
-    HAL.IOs->config->toOutput(Pins.RESET_LB);
-    HAL.IOs->config->toOutput(Pins.DRV_ENABLE);
+//    HAL.IOs->config->toOutput(Pins.HOLDN_FLASH);
+//    HAL.IOs->config->toOutput(Pins.WAKEN_LB);
+//    HAL.IOs->config->toOutput(Pins.RESET_LB);
+//    HAL.IOs->config->toOutput(Pins.DRV_ENABLE);
 
-    SPI.init();
-    TMC9660_3PH_SPIChannel = &HAL.SPI->ch1;
-    TMC9660_3PH_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+//    SPI.init();
+//    TMC9660_3PH_SPIChannel = &HAL.SPI->ch1;
+//    TMC9660_3PH_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
 
-   // initTunnel();
+    initTunnel();
 
 	Evalboards.ch1.GAP                  = GAP;
 	Evalboards.ch1.SAP                  = SAP;
