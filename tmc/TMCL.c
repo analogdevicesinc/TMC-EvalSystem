@@ -320,18 +320,40 @@ void ExecuteActualCommand()
 		}
 		break;
 	case TMCL_SAP:
-		// if function doesn't exist for ch1 try ch2
-		if(setTMCLStatus(Evalboards.ch1.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
-		{
-			setTMCLStatus(Evalboards.ch2.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32));
-		}
+        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+        {
+            ActualReply.Status =  Evalboards.ch1.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+        }
+        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+        {
+            ActualReply.Status = Evalboards.ch2.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+        }
+        else
+        {
+            // if function doesn't exist for ch1 try ch2
+            if(setTMCLStatus(Evalboards.ch1.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
+            {
+                setTMCLStatus(Evalboards.ch2.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32));
+            }
+        }
 		break;
 	case TMCL_GAP:
-		// if function doesn't exist for ch1 try ch2
-		if(setTMCLStatus(Evalboards.ch1.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
-		{
-			setTMCLStatus(Evalboards.ch2.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32));
-		}
+	    if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+	    {
+	        ActualReply.Status =  Evalboards.ch1.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+	    }
+	    else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+	    {
+	        ActualReply.Status = Evalboards.ch2.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+	    }
+	    else
+	    {
+	        // if function doesn't exist for ch1 try ch2
+	        if(setTMCLStatus(Evalboards.ch1.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
+	        {
+	            setTMCLStatus(Evalboards.ch2.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32));
+	        }
+	    }
 		break;
 	case TMCL_SGP:
 		SetGlobalParameter();
@@ -469,12 +491,12 @@ void ExecuteActualCommand()
 	case TMCL_GetInfo:
         if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
         {
-            Evalboards.ch1.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+            ActualReply.Status = Evalboards.ch1.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
 
         }
         else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
 		{
-			Evalboards.ch2.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+            ActualReply.Status = Evalboards.ch2.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
 
 		}
 		break;
@@ -732,12 +754,12 @@ static void SetGlobalParameter()
     {
         if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
         {
-            Evalboards.ch1.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+            ActualReply.Status = Evalboards.ch1.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
             return;
         }
         else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
         {
-            Evalboards.ch2.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+            ActualReply.Status = Evalboards.ch2.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
             return;
         }
     }
@@ -802,13 +824,13 @@ static void GetGlobalParameter()
     {
         if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
         {
-            Evalboards.ch1.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-         return;
+            ActualReply.Status = Evalboards.ch1.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+            return;
         }
         else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
         {
-            Evalboards.ch2.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-         return;
+            ActualReply.Status = Evalboards.ch2.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+            return;
         }
     }
 
