@@ -190,29 +190,30 @@ static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
 
 static uint32_t SGP(uint8_t type, uint8_t motor, int32_t value)
 {
-	uint8_t status;
-	processTunnelApp(9, type, motor, value, &status);
-	return ((uint32_t)status);
+    uint8_t status;
+    processTunnelApp(9, type, motor, value, &status);
+    return ((uint32_t)status);
 }
 
 static uint32_t GGP(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint8_t status;
-	*value = processTunnelApp(10, type, motor, *value, &status);
-	return ((uint32_t)status);
+    uint8_t status;
+    *value = processTunnelApp(10, type, motor, *value, &status);
+    return ((uint32_t)status);
 }
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
     uint8_t status;
-	processTunnelApp(5, type, motor, value, &status);
+    processTunnelApp(5, type, motor, value, &status);
     return ((uint32_t)status);
+
 }
 
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
     uint8_t status;
-	*value = processTunnelApp(6, type, motor, *value, &status);
+    *value = processTunnelApp(6, type, motor, *value, &status);
     return ((uint32_t)status);
 }
 
