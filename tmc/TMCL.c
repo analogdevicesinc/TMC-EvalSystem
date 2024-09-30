@@ -998,24 +998,120 @@ static void setDriversEnable()
 
 static void checkIDs(void)
 {
-	IdAssignmentTypeDef ids = { 0 };
+    IdAssignmentTypeDef ids = { 0 };
 
-	if(IDDetection_detect(&ids))
-	{
-		Board_assign(&ids);
+    switch(Evalboards.ch1.id){
 
-		ActualReply.Value.Int32	= (uint32_t)
-		(
-			(ids.ch1.id)
-			| (ids.ch1.state << 8)
-			| (ids.ch2.id    << 16)
-			| (ids.ch2.state << 24)
-		);
-	}
-	else
-	{
-		ActualReply.Status = REPLY_DELAYED;
-	}
+    case ID_TMC9660_3PH_BL_EVAL:
+    case ID_TMC9660_STEPPER_BL_EVAL:
+    {
+        int32_t val = 0;
+        Evalboards.ch1.userFunction(0,0,&val);
+        if(val != TM01)
+        {
+            val = 0;
+            Evalboards.ch1.userFunction(2,0,&val);
+            switch(val){
+            case 51:
+                ids.ch1.id = Evalboards.ch1.id + 2;
+                break;
+            case 17:
+                ids.ch1.id = Evalboards.ch1.id + 1;
+                break;
+            default:
+                //handle unknown case
+                break;
+            }
+            Evalboards.ch1.id = ids.ch1.id;
+        }
+        ids.ch1.state = ID_STATE_DONE;
+        ActualReply.Value.Int32 = (uint32_t)(
+                (Evalboards.ch1.id)
+                | (ids.ch1.state << 8)
+                | (ids.ch2.id    << 16)
+                | (ids.ch2.state << 24)
+        );
+        return;
+        break;
+    }
+    case ID_TMC9660_3PH_PARAM_EVAL:
+    case ID_TMC9660_STEPPER_PARAM_EVAL:
+    case ID_TMC9660_3PH_REG_EVAL:
+    case ID_TMC9660_STEPPER_REG_EVAL:
+    {
+        ids.ch1.state = ID_STATE_DONE;
+        ActualReply.Value.Int32 = (uint32_t)(
+                (Evalboards.ch1.id)
+                | (ids.ch1.state << 8)
+                | (ids.ch2.id << 16)
+                | (ids.ch2.state << 24)
+        );
+        return;
+        break;
+    }
+    }
+
+    switch(Evalboards.ch2.id){
+
+    case ID_TMC9660_BL_EVAL:
+    {
+        int32_t val = 0;
+        Evalboards.ch2.userFunction(0,0,&val);
+        if(val != TM01){
+            val = 0;
+            Evalboards.ch2.userFunction(2,0,&val);
+            switch(val){
+            case 51:
+                ids.ch2.id = ID_TMC9660_PARAM_EVAL;
+                break;
+            case 17:
+                ids.ch2.id = ID_TMC9660_REG_EVAL;
+                break;
+            default:
+                //handle unknown case
+                break;
+            }
+            Evalboards.ch2.id = ids.ch2.id;
+        }
+        ids.ch2.state = ID_STATE_DONE;
+        ActualReply.Value.Int32 = (uint32_t)(
+                (ids.ch1.id)
+                | (ids.ch1.state << 8)
+                | (Evalboards.ch2.id    << 16)
+                | (ids.ch2.state << 24)
+        );
+        return;
+        break;
+    }
+    case ID_TMC9660_REG_EVAL:
+    case ID_TMC9660_PARAM_EVAL:
+    {
+        ids.ch2.state = ID_STATE_DONE;
+        ActualReply.Value.Int32 = (uint32_t)(
+                (ids.ch1.id)
+                | (ids.ch1.state << 8)
+                | (Evalboards.ch2.id << 16)
+                | (ids.ch2.state << 24)
+        );
+        return;
+        break;
+    }
+
+    }
+
+    if(IDDetection_detect(&ids)){
+        Board_assign(&ids);
+        ActualReply.Value.Int32 = (uint32_t)(
+                (ids.ch1.id)
+                | (ids.ch1.state << 8)
+                | (ids.ch2.id    << 16)
+                | (ids.ch2.state << 24)
+        );
+    }
+    else{
+        ActualReply.Status = REPLY_DELAYED;
+    }
+
 }
 
 static void SoftwareReset(void)
