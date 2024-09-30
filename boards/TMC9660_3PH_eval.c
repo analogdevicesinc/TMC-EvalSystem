@@ -116,7 +116,15 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
 	data[7] = (value      ) & 0xFF;
 	data[8] = calcCheckSum(data, 8);
 
-	UART_readWrite(TMC9660_3PH_UARTChannel, &data[0], 9, 9);
+	int32_t uartStatus = UART_readWrite(TMC9660_3PH_UARTChannel, &data[0], 9, 9);
+
+	// Timeout?
+	if(uartStatus == -1)
+        return 0;
+
+    // Byte 8: CRC correct?
+    if (data[8] != calcCheckSum(data, 8))
+        return 0;
 
 	*status = data[2];
 	return ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | ((uint32_t)data[6] << 8) | data[7];
