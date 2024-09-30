@@ -237,14 +237,14 @@ static void readRegister(uint8_t motor, uint16_t type, int32_t *value)
 static void initTunnel(void)
 {
     //Deinit SPI
-//    HAL.IOs->config->reset(Pins.SPI1_SCK);
-//    HAL.IOs->config->reset(Pins.SPI1_MOSI);
-//    HAL.IOs->config->reset(Pins.SPI1_MISO);
-//    HAL.IOs->config->reset(Pins.SPI1_CSN);
-//    HAL.IOs->config->toInput(Pins.SPI1_SCK);
-//    HAL.IOs->config->toInput(Pins.SPI1_MOSI);
-//    HAL.IOs->config->toInput(Pins.SPI1_MISO);
-//    HAL.IOs->config->toInput(Pins.SPI1_CSN);
+    HAL.IOs->config->reset(Pins.SPI1_SCK);
+    HAL.IOs->config->reset(Pins.SPI1_MOSI);
+    HAL.IOs->config->reset(Pins.SPI1_MISO);
+    HAL.IOs->config->reset(Pins.SPI1_CSN);
+    HAL.IOs->config->toInput(Pins.SPI1_SCK);
+    HAL.IOs->config->toInput(Pins.SPI1_MOSI);
+    HAL.IOs->config->toInput(Pins.SPI1_MISO);
+    HAL.IOs->config->toInput(Pins.SPI1_CSN);
 
     TMC9660_3PH_UARTChannel = HAL.UART;
     TMC9660_3PH_UARTChannel->pinout = UART_PINS_2;
