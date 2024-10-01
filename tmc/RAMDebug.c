@@ -307,6 +307,7 @@ void debug_init()
 	}
 	debug_read_index   = 0;
 	debug_write_index  = 0;
+	pre_index = 0;
 
 	// Set default values for the capture configuration
 	prescaler   = 1;
