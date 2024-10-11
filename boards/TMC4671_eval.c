@@ -74,12 +74,12 @@ static int32_t linearVelocityToInternalVelocity(int32_t velocity, int32_t scaler
 static int32_t internalVelocityToLinearVelocity(int32_t velocity, int32_t scaler);
 
 // => SPI wrapper
-uint8_t tmc4671_readwriteByte(uint16_t motor, uint8_t data, uint8_t lastTransfer)
+void tmc4671_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-	if (motor == DEFAULT_MOTOR)
-		return TMC4671_SPIChannel->readWrite(data, lastTransfer);
-	else
-		return 0;
+	if (icID == DEFAULT_MOTOR)
+	{
+		TMC4671_SPIChannel->readWriteArray(data, dataLength);
+	}
 }
 // <= SPI wrapper
 
@@ -980,7 +980,6 @@ static uint8_t restore()
 		tmc4671_writeRegister(motor, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 	}
 
-	//enableDriver(DRIVER_DISABLE);
 	return 1;
 }
 
@@ -996,7 +995,7 @@ void TMC4671_init(void)
 	PIN_DRV_ENN = &HAL.IOs->pins->DIO0;
 	HAL.IOs->config->toOutput(PIN_DRV_ENN);
 
-	// Setting SD_STP (DIO6) and SD_DIR (DIO7) to High-Z
+	// setting SD_STP (DIO6) and SD_DIR (DIO7) to High-Z
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO6);
 	HAL.IOs->config->reset(&HAL.IOs->pins->DIO7);
 
@@ -1054,24 +1053,21 @@ void TMC4671_init(void)
 		motorConfig[motor].positionScaler				= POSITION_SCALE_MAX;
 		motorConfig[motor].enableVelocityFeedForward 	= true;
 		motorConfig[motor].linearScaler             	= 30000; // µm / rotation
-	}
 
-	// set default polarity for evaluation board's power stage on init
-	tmc4671_writeRegister(DEFAULT_MOTOR, TMC4671_PWM_POLARITIES, 0x0);
-	tmc4671_writeRegister(DEFAULT_MOTOR, TMC4671_PWM_SV_CHOP, TMC4671_PWM_SV_MASK);	// enable space vector PWM by default
-	tmc4671_writeRegister(DEFAULT_MOTOR, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
+		// set default polarity for evaluation board's power stage on init
+		tmc4671_writeRegister(motor, TMC4671_PWM_POLARITIES, 0x0);
+		tmc4671_writeRegister(motor, TMC4671_PWM_SV_CHOP, TMC4671_PWM_SV_MASK);	// enable space vector PWM by default
+		tmc4671_writeRegister(motor, TMC4671_PWM_BBM_H_BBM_L, 0x00001919);
 
-	tmc4671_writeRegister(DEFAULT_MOTOR, TMC4671_DSADC_MCLK_B, 0x0);
+		tmc4671_writeRegister(motor, TMC4671_DSADC_MCLK_B, 0x0);
 
-	// set default acceleration and max velocity
-	tmc4671_writeRegister(DEFAULT_MOTOR, TMC4671_PID_VELOCITY_LIMIT, 4000);
+		// set default acceleration and max velocity
+		tmc4671_writeRegister(motor, TMC4671_PID_VELOCITY_LIMIT, 4000);
 
-	// set default max torque/flux
-	tmc4671_setTorqueFluxLimit_mA(DEFAULT_MOTOR, motorConfig[DEFAULT_MOTOR].torqueMeasurementFactor, motorConfig[DEFAULT_MOTOR].maximumCurrent);
+		// set default max torque/flux
+		tmc4671_setTorqueFluxLimit_mA(motor, motorConfig[motor].torqueMeasurementFactor, motorConfig[motor].maximumCurrent);
 
-	// init ramp generator
-	for (motor = 0; motor < TMC4671_MOTORS; motor++)
-	{
+		// init ramp generator
 		tmc_linearRamp_init(&rampGenerator[motor]);
 		actualMotionMode[motor] = TMC4671_MOTION_MODE_STOPPED;
 		lastRampTargetPosition[motor] = 0;
