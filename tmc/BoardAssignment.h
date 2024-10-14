@@ -143,6 +143,7 @@ extern void TMC8462_init_ch2();
 extern void TMC2262_init();
 extern void TMC9660_init();
 extern void TMC9660_3PH_init();
+extern void TMC9660_STEPPER_init();
 extern void SelfTest_init();
 
 #if defined(LandungsbrueckeV3)
@@ -173,6 +174,9 @@ static const init_assignment init_ch1[] =
     { .id = ID_TMC9660_3PH_BL_EVAL,     .init = TMC9660_3PH_init     },
     { .id = ID_TMC9660_3PH_REG_EVAL,    .init = TMC9660_3PH_init     },
     { .id = ID_TMC9660_3PH_PARAM_EVAL,  .init = TMC9660_3PH_init     },
+    { .id = ID_TMC9660_STEPPER_BL_EVAL, .init = TMC9660_STEPPER_init },
+    { .id = ID_TMC9660_STEPPER_REG_EVAL, .init = TMC9660_STEPPER_init },
+    { .id = ID_TMC9660_STEPPER_PARAM_EVAL, .init = TMC9660_STEPPER_init },
 	{ .id = ID_SELFTEST,    .init = SelfTest_init    }
 };
 
