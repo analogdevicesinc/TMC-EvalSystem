@@ -12,8 +12,13 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
+### Version 3.10.4: (Released)
+ * Finished the API rework for TMC5160, TMC5130, TMC5062, TMC5072, TMC5240, TMC2224, TMC2225, TMC2226, TMC2130, TMC2160, TMC5031, TMC2208, TMC5041, TMC2300, TMC2240, TMC7300, TMC6100, TMC6200 and TMC4671. For further information click [here](https://github.com/analogdevicesinc/TMC-API/issues/53).
+ * Various bugfixes for MAX22204 and MAX22210.
+ * Code cleanup.
+ 
 ### Version 3.10.3: (Released)
- * .Added functionality in the userFunction (UF) of TMC8100-Eval.
+ * Added functionality in the userFunction (UF) of TMC8100-Eval.
  * Completed the API rework for TMC2209 (both phase-1 & 2). For further information click [here](https://github.com/analogdevicesinc/TMC-API/blob/e58c4df79796d2d25a27583a5c59e88415263111/tmc/ic/TMC2209/README.md)
  * Various bugfixes for TMC2262-Eval.
  
