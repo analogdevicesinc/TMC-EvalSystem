@@ -15,7 +15,6 @@
 // Specific functions
 static void USBSendData(uint8_t *Buffer, uint32_t Size);
 static uint32_t USBGetData(uint8_t *Buffer, size_t amount);
-static uint8_t GetUSBCmd(uint8_t *Cmd);
 static void InitUSB(void);
 static void DetachUSB(void);
 
@@ -33,29 +32,12 @@ static usb_core_driver cdc_acm;
 static uint8_t USBDataTxBuffer[256];
 static volatile uint32_t available = 0;
 
-// static RXTXBufferingTypeDef buffers =
-// {
-// 	.rx =
-// 	{
-// 		.read    = 0,
-// 		.wrote   = 0,
-// 		.buffer  = rxBuffer
-// 	},
-
-// 	.tx =
-// 	{
-// 		.read    = 0,
-// 		.wrote   = 0,
-// 		.buffer  = APP_Rx_Buffer
-// 	}
-// };
-
 RXTXTypeDef USB =
 {
 	.init            = init,
 	.deInit          = deInit,
-	.rx              = NULL,
-	.tx              = NULL,
+	.rx              = rx,
+	.tx              = tx,
 	.rxN             = rxN,
 	.txN             = txN,
 	.clearBuffers    = clearBuffers,
@@ -139,39 +121,6 @@ static uint32_t USBGetData(uint8_t *Buffer, size_t amount)
   return flag;
 }
 
-
-/*******************************************************************
-   Funktion: GetUSBCmd()
-   Parameter: Cmd: Array (9 Bytes) f�r den TMCL-Befehl.
-
-   R�ckgabewert:  TRUE bei Erfolg
-                  FALSE wenn kein Befehl vorhanden
-
-   Zweck: Abholen eines TMCL-Befehls �ber USB.
-********************************************************************/
-static uint8_t GetUSBCmd(uint8_t *Cmd)
-{
-  uint8_t flag;
-  uint32_t i;
-  usb_cdc_handler *cdc = (usb_cdc_handler *) (&cdc_acm)->dev.class_data[CDC_COM_INTERFACE];
-
-  flag=FALSE;
-  if(USBD_CONFIGURED == cdc_acm.dev.cur_status)
-  {
-  	if(cdc->packet_receive)
-  	{
-    	if(cdc->receive_length>=9)
-    	{
-      	for(i=0; i<9; i++) Cmd[i]=cdc->data[i];
-      	flag=TRUE;
-    	}
-    	cdc->packet_receive=0;
-    	usbd_ep_recev((usb_dev *) &cdc_acm, CDC_DATA_OUT_EP, (uint8_t *)(cdc->data), USB_CDC_DATA_PACKET_SIZE);
-    }
-  }
-  return flag;
-}
-
 static void init(void)
 {
 	HAL.IOs->config->reset(&HAL.IOs->pins->USB_V_DM);
@@ -182,32 +131,12 @@ static void init(void)
 
 static void tx(uint8_t ch)
 {
-	//buffers.tx.buffer[buffers.tx.wrote] = ch;
-	//buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
-  usbd_ep_send((usb_dev *) &cdc_acm, CDC_DATA_IN_EP, &ch, 1);
+    txN(&ch, 1);
 }
 
 static uint8_t rx(uint8_t *ch)
 {
-  uint8_t data = 0;
-  uint8_t i = 0;
-  usb_cdc_handler *cdc = (usb_cdc_handler *) (&cdc_acm)->dev.class_data[CDC_COM_INTERFACE];
-
-  if(USBD_CONFIGURED == cdc_acm.dev.cur_status)
-  {
-  	if(cdc->packet_receive)
-  	{
-	  	if(cdc->receive_length > 0)
-  		{
-			data = cdc->data[0];
-			i = 1;
-  		}
-  		cdc->packet_receive--;
-    	usbd_ep_recev((usb_dev *) &cdc_acm, CDC_DATA_OUT_EP, (uint8_t *)(cdc->data), USB_CDC_DATA_PACKET_SIZE);
-    }
-  }
-
-  return i;
+  return rxN(ch, 1);
 }
 
 static void txN(uint8_t *str, unsigned char number)
@@ -241,5 +170,5 @@ static uint32_t bytesAvailable(void)
 
 static void deInit(void)
 {
-
+    DetachUSB();
 }

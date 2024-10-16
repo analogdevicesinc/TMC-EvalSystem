@@ -178,23 +178,23 @@ void IDDetection_init(void)
 
 
 
-	timer_ic_parameter_struct *icpara_rising;
-	timer_ic_parameter_struct *icpara_falling;
+	timer_ic_parameter_struct icpara_rising;
+	timer_ic_parameter_struct icpara_falling;
 
-	icpara_rising->icpolarity  = TIMER_IC_POLARITY_RISING;
-	icpara_rising->icselection = TIMER_IC_SELECTION_DIRECTTI;
-	icpara_rising->icprescaler = TIMER_IC_PSC_DIV1;
-	icpara_rising->icfilter    = 0U;
+	icpara_rising.icpolarity  = TIMER_IC_POLARITY_RISING;
+	icpara_rising.icselection = TIMER_IC_SELECTION_DIRECTTI;
+	icpara_rising.icprescaler = TIMER_IC_PSC_DIV1;
+	icpara_rising.icfilter    = 0U;
 
-	icpara_falling->icpolarity  = TIMER_IC_POLARITY_FALLING;
-	icpara_falling->icselection = TIMER_IC_SELECTION_DIRECTTI;
-	icpara_falling->icprescaler = TIMER_IC_PSC_DIV1;
-	icpara_falling->icfilter    = 0U;
+	icpara_falling.icpolarity  = TIMER_IC_POLARITY_FALLING;
+	icpara_falling.icselection = TIMER_IC_SELECTION_DIRECTTI;
+	icpara_falling.icprescaler = TIMER_IC_PSC_DIV1;
+	icpara_falling.icfilter    = 0U;
 
-	timer_input_capture_config(TIMER1, TIMER_CH_0, icpara_rising);
-	timer_input_capture_config(TIMER1, TIMER_CH_1, icpara_falling);
-	timer_input_capture_config(TIMER1, TIMER_CH_2, icpara_rising);
-	timer_input_capture_config(TIMER1, TIMER_CH_3, icpara_falling);
+	timer_input_capture_config(TIMER1, TIMER_CH_0, &icpara_rising);
+	timer_input_capture_config(TIMER1, TIMER_CH_1, &icpara_falling);
+	timer_input_capture_config(TIMER1, TIMER_CH_2, &icpara_rising);
+	timer_input_capture_config(TIMER1, TIMER_CH_3, &icpara_falling);
 
 	// Setting the prescaler i.e 11
 	timer_prescaler_config(TIMER1, 11, TIMER_PSC_RELOAD_NOW); // Divides the timer freq by (prescaler + 1)

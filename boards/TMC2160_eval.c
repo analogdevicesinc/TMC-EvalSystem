@@ -753,7 +753,7 @@ static void periodicJob(uint32_t tick)
         return;
 
     // Check stallGuard
-    if(tmc2160_readRegister(&TMC2160, TMC2160_DRV_STATUS) & TMC2160_STALLGUARD_MASK)
+    if(tmc2160_readRegister(DEFAULT_ICID, TMC2160_DRV_STATUS) & TMC2160_STALLGUARD_MASK)
         StepDir_stop(0, STOP_STALL);
 }
 

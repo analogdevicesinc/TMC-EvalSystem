@@ -358,6 +358,7 @@ static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
+    UNUSED(tick);
 	StepDir_periodicJob(MAX22210_DEFAULT_MOTOR);
 }
 
@@ -410,6 +411,14 @@ static uint8_t reset()
 static uint8_t restore()
 {
 	return 1;
+}
+
+static void timer_overflow(timer_channel channel)
+{
+    UNUSED(channel);
+
+    // RAMDebug
+    debug_nextProcess();
 }
 
 void MAX22210_init(void)
@@ -496,7 +505,7 @@ void MAX22210_init(void)
 #endif
 
 	HAL.IOs->config->set(Pins.REF_PWM);
-	Timer.overflow_callback = debug_nextProcess;
+	Timer.overflow_callback = timer_overflow;
 	Timer.init();
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	Timer.setPeriodMin(TIMER_CHANNEL_1, 1000);

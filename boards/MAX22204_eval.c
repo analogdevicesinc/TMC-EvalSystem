@@ -417,6 +417,14 @@ static void enableDriver(DriverState state)
 		HAL.IOs->config->setHigh(Pins.EN_N);
 }
 
+static void timer_overflow(timer_channel channel)
+{
+    UNUSED(channel);
+
+    // RAMDebug
+    debug_nextProcess();
+}
+
 void MAX22204_init(void)
 {
 	// Initialize the hardware pins
@@ -505,7 +513,7 @@ void MAX22204_init(void)
 #endif
 
 	HAL.IOs->config->set(Pins.REF_PWM);
-	Timer.overflow_callback = debug_nextProcess;
+	Timer.overflow_callback = timer_overflow;
 	Timer.init();
 	Timer.setPeriodMin(MAX22204_RAMDEBUG_TIMER, 1000);
 	Timer.setFrequencyMin(MAX22204_RAMDEBUG_TIMER, 1000);

@@ -39,8 +39,6 @@ typedef struct {
 } TMC5041TypeDef;
 
 static TMC5041TypeDef TMC5041;
-static uint8_t nodeAddress = 0;
-static SPIChannelTypeDef *TMC5041_SPIChannel;
 static SPIChannelTypeDef *TMC5041_SPIChannel;
 static ConfigurationTypeDef *TMC5041_config;
 

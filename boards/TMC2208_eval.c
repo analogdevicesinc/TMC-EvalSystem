@@ -366,6 +366,7 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
+    UNUSED(tick);
     if(TMC2208.config->state != CONFIG_READY)
         writeConfiguration();
 

@@ -46,8 +46,6 @@ typedef struct
 } PinsTypeDef;
 static PinsTypeDef Pins;
 
-
-static bool vMaxModified = false;
 static uint32_t vmax_position;
 //static uint32_t vMax		   = 1;
 
@@ -766,11 +764,13 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
+    UNUSED(motor);
 	tmc2262_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
+    UNUSED(motor);
 	*value = tmc2262_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 

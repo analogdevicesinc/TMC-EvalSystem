@@ -11,7 +11,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" description="" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146" name="Release" optionalBuildProperties="">
+				<configuration artifactName="${ProjName}" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" description="" id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146" name="Release" optionalBuildProperties="" parent="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146">
 					<folderInfo id="org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.release.1943319146." name="/" resourcePath="">
 						<toolChain id="org.eclipse.cdt.cross.arm.gnu.windows.toolchain.base.921470886" name="ARM Windows GCC (GNUARM, WinARM)" resourceTypeBasedDiscovery="true">
 							<option id="org.eclipse.cdt.cross.arm.gnu.windows.option.target.processor.1617960696" name="Processor" superClass="org.eclipse.cdt.cross.arm.gnu.windows.option.target.processor"/>
@@ -26,7 +26,7 @@
 							<option id="org.eclipse.cdt.cross.arm.gnu.windows.option.addtools.createlisting.1147777756" name="Create Extended Listing" superClass="org.eclipse.cdt.cross.arm.gnu.windows.option.addtools.createlisting"/>
 							<option id="org.eclipse.cdt.cross.arm.gnu.windows.option.addtools.printsize.1207208653" name="Print Size" superClass="org.eclipse.cdt.cross.arm.gnu.windows.option.addtools.printsize"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.GNU_ELF" id="org.eclipse.cdt.cross.arm.gnu.windows.platform.base.1478093953" isAbstract="false" name="Linux Platform" osList="win32"/>
-							<builder arguments="-s" autoBuildTarget="all" buildPath="${workspace_loc:/TMCEvalSystem_v30}" cleanBuildTarget="clean" command="cs-make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="cdt.managedbuild.target.gnu.builder.base.910474788" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="8" superClass="cdt.managedbuild.target.gnu.builder.base">
+							<builder arguments="-s -j" autoBuildTarget="all" buildPath="${workspace_loc:/TMCEvalSystem_v30}" cleanBuildTarget="clean" command="cs-make" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="cdt.managedbuild.target.gnu.builder.base.910474788" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="8" superClass="cdt.managedbuild.target.gnu.builder.base">
 								<outputEntries>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
 								</outputEntries>

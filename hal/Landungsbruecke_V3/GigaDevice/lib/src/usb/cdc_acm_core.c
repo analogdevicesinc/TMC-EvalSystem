@@ -243,15 +243,15 @@ static __ALIGN_BEGIN usb_desc_str serial_string __ALIGN_END =
 };
 
 /* USB string descriptor set */
-void *const usbd_cdc_strings[] = 
+const void *const usbd_cdc_strings[] =
 {
-    [STR_IDX_LANGID]  = (uint8_t *) &usbd_language_id_desc,
-    [STR_IDX_MFC]     = (uint8_t *) &manufacturer_string,
-    [STR_IDX_PRODUCT] = (uint8_t *) &product_string,
-    [STR_IDX_SERIAL]  = (uint8_t *) &serial_string
+    [STR_IDX_LANGID]  = (const uint8_t *) &usbd_language_id_desc,
+    [STR_IDX_MFC]     = (const uint8_t *) &manufacturer_string,
+    [STR_IDX_PRODUCT] = (const uint8_t *) &product_string,
+    [STR_IDX_SERIAL]  = (const uint8_t *) &serial_string
 };
 
-usb_desc cdc_desc = 
+usb_desc cdc_desc =
 {
     .dev_desc    = (uint8_t *) &cdc_dev_desc,
     .config_desc = (uint8_t *) &cdc_config_desc,

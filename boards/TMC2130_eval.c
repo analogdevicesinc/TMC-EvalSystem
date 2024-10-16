@@ -733,41 +733,14 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-//    static int32_t m_velocity = 0;
-//    static uint32_t old_tick = 0;
-//
-//    m_velocity += (int32_t)((StepDir_getFrequency(0) * 12) / TMC2130_tmc2130_field_read(DEFAULT_ICID, TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
-//
-//    if(tick - old_tick > 10)
-//    {
-//        measured_velocity = m_velocity / (tick - old_tick);
-//        m_velocity = 0;
-//        old_tick = tick;
-//    }
-
-
+    UNUSED(tick);
     if(TMC2130.config->state != CONFIG_READY)
     {
         writeConfiguration();
-           return;
+        return;
     }
-
     StepDir_periodicJob(DEFAULT_MOTOR);
-
     StepDir_stallGuard(DEFAULT_MOTOR, tmc2130_fieldRead(DEFAULT_MOTOR, TMC2130_STALLGUARD_FIELD) == 1);
-
-//    uint8_t status = StepDir_getStatus(0);
-//    // Already stalled -> skip stallGuard check
-//    if(status & STATUS_STALLED)
-//        return;
-//
-//    // Stallguard not enabled -> skip stallGuard check
-//    if(!(status & STATUS_STALLGUARD_ACTIVE))
-//        return;
-//
-//    // Check stallGuard
-//    if(tmc2130_readRegister(DEFAULT_ICID, TMC2130_DRV_STATUS) & TMC2130_STALLGUARD_MASK)
-//        StepDir_stop(0, STOP_STALL);
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)

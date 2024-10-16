@@ -60,8 +60,8 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static void checkErrors(uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
@@ -619,13 +619,15 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     return errors;
 }
 
-void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
+    UNUSED(motor);
     tmc2225_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
-void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
+    UNUSED(motor);
     *value = tmc2225_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
@@ -690,6 +692,7 @@ static void enableDriver(DriverState state)
 
 static void periodicJob(uint32_t tick)
 {
+    UNUSED(tick);
     if (TMC2225.config->state != CONFIG_READY)
         writeConfiguration();
 

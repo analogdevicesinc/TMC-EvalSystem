@@ -29,15 +29,15 @@ void SysTick_Handler(void)
 	systick++;
 }
 
-uint32_t systick_getMicrosecondTick()
-{
-	// 240 MHz CYCCNT / 240 -> µs counter
-	return DWT->CYCCNT / 240;
-}
-
 uint32_t systick_getTick(void)
 {
 	return systick;
+}
+
+uint32_t systick_getMicrosecondTick()
+{
+    // 240 MHz CYCCNT / 240 -> µs counter
+    return DWT->CYCCNT / 240;
 }
 
 void wait(uint32_t delay)	// wait for [delay] ms/systicks

@@ -226,7 +226,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 			*value = vmax_position;
 		} else if(readWrite == WRITE) {
 			vmax_position = abs(*value);
-			readRegister(DEFAULT_ICID, TMC5262_RAMPMODE, &buffer);
+			readRegister(DEFAULT_ICID, TMC5262_RAMPMODE, (int32_t *)&buffer);
 			if(buffer == TMC5262_MODE_POSITION)
 				writeRegister(DEFAULT_ICID, TMC5262_VMAX, abs(*value));
 		}

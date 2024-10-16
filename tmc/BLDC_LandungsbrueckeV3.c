@@ -21,7 +21,7 @@
 	 *   Prescaler        3
 	 *
 	 */
-#define PWM_PERIOD 		    (80000000 / PWM_FREQ)-1
+#define PWM_PERIOD 		    ((80000000 / PWM_FREQ)-1)
 
 typedef enum {
 	PWM_PHASE_U = TIMER_CH_0,

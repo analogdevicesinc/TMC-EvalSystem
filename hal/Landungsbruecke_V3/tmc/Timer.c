@@ -181,6 +181,8 @@ static float getDuty(timer_channel channel)
 		return (((float) timer_channel_capture_value_register_read(TIMER0, TIMER_CH_1)) / TIMER_CAR(TIMER0));
 	case TIMER_CHANNEL_5:
 		return (((float) timer_channel_capture_value_register_read(TIMER0, TIMER_CH_0)) / TIMER_CAR(TIMER0));
+	default:
+	    return 0.5;
 	}
 }
 
@@ -212,6 +214,8 @@ static uint16_t getPeriod(timer_channel channel)
 		return TIMER_CAR(TIMER3);
 	case TIMER_CHANNEL_3:
 		return TIMER_CAR(TIMER4);
+	default:
+	    return 0xFFFF;
 	}
 }
 
@@ -254,55 +258,45 @@ static void setFrequency(timer_channel channel, float freq)
 	float freq_min;
 	uint16_t period_min;
 	uint32_t timer;
-	uint32_t timer_ch;
-	IRQn_Type irq;
 
 	switch(channel) {
 	case TIMER_CHANNEL_1:
 		freq_min = freq_min_buf[0];
 		period_min = period_min_buf[0];
 		timer = TIMER0;
-		timer_ch = TIMER_CH_2;
-		irq = TIMER0_Channel_IRQn;
 		timerBaseClk = 240000000;
 		break;
 	case TIMER_CHANNEL_2:
 		freq_min = freq_min_buf[1];
 		period_min = period_min_buf[1];
 		timer = TIMER3;
-		timer_ch = TIMER_CH_0;
-		irq = TIMER3_IRQn;
 		timerBaseClk = 120000000;
 		break;
 	case TIMER_CHANNEL_3:
 		freq_min = freq_min_buf[2];
 		period_min = period_min_buf[2];
 		timer = TIMER4;
-		timer_ch = TIMER_CH_0;
-		irq = TIMER4_IRQn;
 		timerBaseClk = 120000000;
 		break;
 	case TIMER_CHANNEL_4:
 		freq_min = freq_min_buf[0];
 		period_min = period_min_buf[0];
 		timer = TIMER0;
-		timer_ch = TIMER_CH_1;
-		irq = TIMER0_Channel_IRQn;
 		timerBaseClk = 240000000;
 		break;
 	case TIMER_CHANNEL_5:
 		freq_min = freq_min_buf[0];
 		period_min = period_min_buf[0];
 		timer = TIMER0;
-		timer_ch = TIMER_CH_0;
-		irq = TIMER0_Channel_IRQn;
 		timerBaseClk = 240000000;
 		break;
+	default:
+	    return;
 	}
 
 	uint16_t prescaler = 0;
 	uint16_t period = 0xFFFF;
-	if(freq < ((float)timerBaseClk / (0x0000FFFF * 0x0000FFFF)))
+	if(freq < ((float)timerBaseClk / (0x0000FFFFu * 0x0000FFFFu)))
 		return;
 
 	if(freq > (float)timerBaseClk)

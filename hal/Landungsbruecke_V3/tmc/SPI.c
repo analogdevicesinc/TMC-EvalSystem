@@ -158,7 +158,7 @@ uint32_t spi_setFrequency(SPIChannelTypeDef *SPIChannel, uint32_t desiredFrequen
 	else if(prescaler>1)
 	{
 		// Find the highest frequency that is lower or equal to the desired frequency
-		for(int32_t i=0; i<ARRAY_SIZE(SPI_PSC_Factor); i++){
+		for(uint32_t i=0; i<ARRAY_SIZE(SPI_PSC_Factor); i++){
 
 			if(prescaler <= SPI_PSC_Factor[i]){
 				prescaler = SPI_PSC_Factor[i];
