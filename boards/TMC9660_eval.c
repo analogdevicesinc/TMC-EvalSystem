@@ -122,6 +122,27 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
 	return ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | (data[6] << 8) | data[7];
 }
 
+static uint8_t ramDebug(uint8_t type, uint8_t motor, int32_t *value)
+{
+	uint8_t status;
+	*value = processTunnelApp(142, type, motor, *value, &status);
+	return status;
+}
+
+static uint32_t SGP(uint8_t type, uint8_t motor, int32_t value)
+{
+	uint8_t status;
+	processTunnelApp(9, type, motor, value, &status);
+	return ((uint32_t)status);
+}
+
+static uint32_t GGP(uint8_t type, uint8_t motor, int32_t *value)
+{
+	uint8_t status;
+	*value = processTunnelApp(10, type, motor, *value, &status);
+	return ((uint32_t)status);
+}
+
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
     uint8_t status;
@@ -134,6 +155,23 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     uint8_t status;
 	*value = processTunnelApp(6, type, motor, *value, &status);
     return ((uint32_t)status);
+}
+
+static uint32_t getInfo(uint8_t type, uint8_t motor, int32_t *value)
+{
+	uint8_t status;
+	*value = processTunnelApp(157, type, motor, *value, &status);
+	return ((uint32_t)status);
+}
+
+static void writeRegister(uint8_t motor, uint16_t type, int32_t value)
+{
+	processTunnelApp(146, (uint8_t)type, motor, value, 0);
+}
+
+static void readRegister(uint8_t motor, uint16_t type, int32_t *value)
+{
+	*value = processTunnelApp(148, (uint8_t)type, motor, *value, 0);
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
@@ -217,5 +255,13 @@ void TMC9660_init(void)
 
 	Evalboards.ch2.GAP                  = GAP;
 	Evalboards.ch2.SAP                  = SAP;
-    Evalboards.ch2.userFunction    = userFunction;
+	Evalboards.ch2.GGP                  = GGP;
+	Evalboards.ch2.SGP                  = SGP;
+    Evalboards.ch2.userFunction         = userFunction;
+    Evalboards.ch2. ramDebug            = ramDebug;
+	Evalboards.ch2.writeRegister        = writeRegister;
+	Evalboards.ch2.readRegister         = readRegister;
+	Evalboards.ch2.getInfo              = getInfo;
+
+
 }

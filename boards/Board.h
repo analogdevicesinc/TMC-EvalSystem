@@ -64,6 +64,10 @@ typedef struct
 	uint32_t (*moveProfile)         (uint8_t motor, int32_t position);            // move profile <position>
 	uint32_t (*SAP)                 (uint8_t type, uint8_t motor, int32_t value);   // set axis parameter -> TMCL conformance
 	uint32_t (*GAP)                 (uint8_t type, uint8_t motor, int32_t *value);  // get axis parameter -> TMCL conformance
+	uint32_t (*SGP)                 (uint8_t type, uint8_t motor, int32_t value);   // set global parameter
+	uint32_t (*GGP)                 (uint8_t type, uint8_t motor, int32_t *value);  // get global parameter
+	uint8_t (*ramDebug)            (uint8_t type, uint8_t motor, int32_t *value);  // ram debug
+	uint32_t (*getInfo)            (uint8_t type, uint8_t motor, int32_t *value);  // get Info
 	uint32_t (*STAP)                (uint8_t type, uint8_t motor, int32_t value);   // store axis parameter -> TMCL conformance
 	uint32_t (*RSAP)                (uint8_t type, uint8_t motor, int32_t value);   // restore axis parameter -> TMCL conformance
 	uint32_t (*SIO)                 (uint8_t type, uint8_t motor, int32_t value);
