@@ -398,7 +398,14 @@ void ExecuteActualCommand()
 		Evalboards.ch1.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
 		break;
 	case TMCL_writeRegisterChannel_2:
-		Evalboards.ch2.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
+		if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+		{
+			Evalboards.ch2.writeRegister(ActualCommand.Motor,(uint16_t)ActualCommand.Type, ActualCommand.Value.Int32);
+		}
+		else
+		{
+			Evalboards.ch2.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
+		}
 		break;
 	case TMCL_readRegisterChannel_1:
 		// Do not allow reads during brownout to prevent garbage data being used
@@ -418,8 +425,17 @@ void ExecuteActualCommand()
 		if ((VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH2) && ActualCommand.Motor != 255)
 			ActualReply.Status = REPLY_CHIP_READ_FAILED;
 		else
-			Evalboards.ch2.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
-		break;
+		{
+			if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+			{
+				Evalboards.ch2.readRegister(ActualCommand.Motor,(uint16_t)ActualCommand.Type, &ActualReply.Value.Int32);
+			}
+			else
+			{
+				Evalboards.ch2.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
+			}
+		}
+	    break;
 	case TMCL_BoardMeasuredSpeed:
 		// measured speed from motionController board or driver board depending on type
 		boardsMeasuredSpeed();
@@ -689,6 +705,12 @@ static void writeIdEeprom(void)
 
 static void SetGlobalParameter()
 {
+	if((Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL) && (ActualCommand.Motor <= 3))
+	{
+		Evalboards.ch2.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+		return;
+	}
+
 	switch(ActualCommand.Type)
 	{
 	case 1:
@@ -745,6 +767,11 @@ static void SetGlobalParameter()
 
 static void GetGlobalParameter()
 {
+	if((Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL) && (ActualCommand.Motor <=3))
+	{
+		Evalboards.ch2.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+     return;
+	}
 	switch(ActualCommand.Type)
 	{
 		case 1:
@@ -913,6 +940,8 @@ static void checkIDs(void)
 
 	if(IDDetection_detect(&ids))
 	{
+		Board_assign(&ids);
+
 		ActualReply.Value.Int32	= (uint32_t)
 		(
 			(ids.ch1.id)
@@ -920,8 +949,6 @@ static void checkIDs(void)
 			| (ids.ch2.id    << 16)
 			| (ids.ch2.state << 24)
 		);
-
-		Board_assign(&ids);
 	}
 	else
 	{
@@ -1049,6 +1076,12 @@ static void HandleWlanCommand(void)
 
 static void handleRamDebug(void)
 {
+	if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+	{
+		ActualReply.Status = Evalboards.ch2.ramDebug(ActualCommand.Type, ActualCommand.Motor, &ActualCommand.Value.Int32);
+		ActualReply.Value.Int32 = ActualCommand.Value.Int32;
+		return;
+	}
 	switch (ActualCommand.Type)
 	{
 	case 0:
