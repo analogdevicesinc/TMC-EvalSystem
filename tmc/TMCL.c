@@ -116,6 +116,7 @@
 #define TMCL_BoardMeasuredSpeed      150
 #define TMCL_BoardError              151
 #define TMCL_BoardReset              152
+#define TMCL_GetInfo                 157
 
 #define TMCL_WLAN                    160
 #define TMCL_WLAN_CMD                160
@@ -430,6 +431,13 @@ void ExecuteActualCommand()
 	case TMCL_BoardReset:
 		// reset of motionController board or driver board depending on type
 		boardsReset();
+		break;
+	case TMCL_GetInfo:
+		if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+		{
+			Evalboards.ch2.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
+
+		}
 		break;
 	case TMCL_WLAN:
 		HandleWlanCommand();
