@@ -92,6 +92,7 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 			}
 			//else id = unknown??
 		}
+		ids->ch2.state = assignCh2(ids->ch2.id, false);
 	}
 
 	Evalboards.ch1.id = ids->ch1.id;
