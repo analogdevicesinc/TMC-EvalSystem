@@ -48,11 +48,11 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC5130         5
 #define ID_TMC5041         6
 #define ID_TMC5072         7
+#define ID_TMC8460         8
 #define ID_TMC4361A        11
 #define ID_TMC4671         13
 #define ID_TMC5160         16
 #define ID_TMC5062         25
-#define ID_TMC8460         8
 #define ID_TMC8461         26
 #define ID_TMC8462         27
 #define ID_TMC5240		   28
@@ -74,23 +74,23 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC2100         4
 #define ID_TMC2208         6
 #define ID_TMC2224         7
+#define ID_TMC2209         8
 #define ID_TMC6200        10
 #define ID_TMC2160        11
-#define ID_TMC2240		  28
 #define ID_TMC7300        12
-#define ID_TMC6100        19
-#define ID_TMC6100_BOB    25 // For the TMC4671+TMC6100-BOB
-#define ID_TMC2210		  29
-#define ID_TMC2209        8
-#define ID_TMC2225        18
 #define ID_TMC2300        14
+#define ID_TMC2225        18
+#define ID_TMC6100        19
+#define ID_TMC6300        21
 #define ID_TMC2226        22
+#define ID_TMC6140        23
+#define ID_TMC6100_BOB    25 // For the TMC4671+TMC6100-BOB
+#define ID_TMC2240        28
+#define ID_TMC2210		  29
 #define ID_MAX22216_EVAL 	30
 #define ID_MAX22216_BOB 	31
 #define ID_MAX22204_EVAL 	32
 #define ID_MAX22210_EVAL 	33
-#define ID_TMC6300        21
-#define ID_TMC6140        23
 #define ID_TMC8100        34
 #define ID_TMC2262        35
 #define ID_TMC9660_BL_EVAL	      37
