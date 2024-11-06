@@ -44,6 +44,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 
 // ids for channel 0
 #define ID_ERROR           0
+#define ID_TMC5241         1
 #define ID_TMC5031         2
 #define ID_TMC5130         5
 #define ID_TMC5041         6
@@ -124,6 +125,7 @@ extern void TMC5072_init();
 extern void TMC5130_init();
 extern void TMC5160_init();
 extern void TMC5240_init();
+extern void TMC5241_init();
 extern void TMC5271_init();
 extern void TMC5272_init();
 extern void TMC5262_init();
@@ -160,6 +162,7 @@ static const init_assignment init_ch1[] =
 	{ .id = ID_TMC4671,     .init = TMC4671_init     },
 	{ .id = ID_TMC5160,     .init = TMC5160_init     },
 	{ .id = ID_TMC5240,     .init = TMC5240_init     },
+    { .id = ID_TMC5241,     .init = TMC5241_init     },
 	{ .id = ID_TMC5271,     .init = TMC5271_init     },
 	{ .id = ID_TMC5272,     .init = TMC5272_init     },
 	{ .id = ID_TMC5062,     .init = TMC5062_init     },
