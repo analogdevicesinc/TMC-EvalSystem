@@ -11,6 +11,7 @@
 #define BOARD_H
 
 #include "tmc/helpers/API_Header.h"
+#include "tmc/TMCL.h"
 
 #include "hal/derivative.h"
 #include "hal/HAL.h"
@@ -75,6 +76,7 @@ typedef struct
 	void (*writeRegister)         (uint8_t motor, uint16_t address, int32_t value);   // Motor needed since some chips utilize it as a switch between low and high values
 	uint32_t (*getMeasuredSpeed)    (uint8_t motor, int32_t *value);
 	uint32_t (*userFunction)        (uint8_t type, uint8_t motor, int32_t *value);
+	bool (*fwdTmclCommand)          (TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *ActualReply);
 
 	void (*periodicJob)           (uint32_t tick);
 	void (*deInit)                (void);

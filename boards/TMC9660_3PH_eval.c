@@ -137,6 +137,7 @@ static uint8_t ramDebug(uint8_t type, uint8_t motor, int32_t *value)
 	return status;
 }
 
+/*
 static uint32_t SIO(uint8_t type, uint8_t motor, int32_t value)
 {
     UNUSED(motor);
@@ -187,7 +188,7 @@ static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
 
     return TMC_ERROR_NONE;
 }
-
+*/
 static uint32_t SGP(uint8_t type, uint8_t motor, int32_t value)
 {
     uint8_t status;
@@ -283,6 +284,46 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     return errors;
 }
 
+static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *ActualReply)
+{
+    switch(ActualCommand->Opcode)
+    {
+    case TMCL_SAP:
+    case TMCL_GAP:
+    case TMCL_SGP:
+    case TMCL_GGP:
+    case TMCL_writeRegisterChannel_1:
+    case TMCL_readRegisterChannel_1:
+    case TMCL_GetInfo:
+    case TMCL_RamDebug:
+    case TMCL_UF0:
+    case TMCL_UF5:
+    case TMCL_UF6:
+    case TMCL_UF7:
+    case TMCL_UF8:
+    case TMCL_SetEvent:
+    case TMCL_SetASCII:
+    case TMCL_GetIds:
+    case TMCL_UF_CH1:
+    case TMCL_UF_CH2:
+    case TMCL_BoardMeasuredSpeed:
+    case TMCL_BoardError:
+    case TMCL_BoardReset:
+    case TMCL_WLAN:
+    case TMCL_WLAN_IS_RTS:
+    case TMCL_WLAN_CMDMODE_EN:
+    case TMCL_WLAN_IS_CMDMODE:
+    case TMCL_MIN:
+    case TMCL_MAX:
+    case TMCL_OTP:
+        return false;
+        break;
+    default:
+        ActualReply->Value.Int32 = processTunnelApp(ActualCommand->Opcode, ActualCommand->Type, ActualCommand->Motor, ActualCommand->Value.Int32, &ActualReply->Status);
+        return true;
+        break;
+    }
+}
 void TMC9660_3PH_init(void)
 {
     Pins.SPI1_SCK              = &HAL.IOs->pins->SPI1_SCK;
@@ -327,9 +368,9 @@ void TMC9660_3PH_init(void)
 	Evalboards.ch1.writeRegister        = writeRegister;
 	Evalboards.ch1.readRegister         = readRegister;
 	Evalboards.ch1.getInfo              = getInfo;
-    Evalboards.ch1.SIO                  = SIO;
-    Evalboards.ch1.GIO                  = GIO;
-
+   // Evalboards.ch1.SIO                  = SIO;
+  //  Evalboards.ch1.GIO                  = GIO;
+    Evalboards.ch1.fwdTmclCommand       = fwdTmclCommand;
 
 
 }
