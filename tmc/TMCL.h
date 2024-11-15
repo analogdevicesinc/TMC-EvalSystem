@@ -115,6 +115,7 @@
 // TMCL request
 typedef struct
 {
+    uint8_t   ModuleId;
     uint8_t   Opcode;
     uint8_t   Type;
     uint8_t   Motor;

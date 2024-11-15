@@ -514,6 +514,7 @@ void rx(RXTXTypeDef *RXTX)
 		return;
 	}
 
+    ActualCommand.ModuleId       = cmd[0];
 	ActualCommand.Opcode         = cmd[1];
 	ActualCommand.Type           = cmd[2];
 	ActualCommand.Motor          = cmd[3];
