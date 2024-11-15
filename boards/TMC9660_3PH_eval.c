@@ -313,13 +313,6 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
         return 1;
     }
 
-    // Byte 8: CRC correct?
-    if (data[8] != calcCheckSum(data, 8))
-    {
-        ActualReply->Status = 1; // REPLY_CHKERR
-        return 1;
-    }
-
     if (ActualCommand->Opcode == 0x88 && ActualCommand->Type == 0)
     {
         // ASCII GetVersion special case
@@ -333,6 +326,15 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
         }
 
         return true;
+    }
+    else
+    {
+        // Byte 8: CRC correct?
+        if (data[8] != calcCheckSum(data, 8))
+        {
+            ActualReply->Status = 1; // REPLY_CHKERR
+            return 1;
+        }
     }
 
     // Normal datagrams: Fix up the adjusted module ID in the reply
