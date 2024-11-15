@@ -147,9 +147,12 @@ void ExecuteActualCommand()
 		return;
 	}
 
-    if(Evalboards.ch1.fwdTmclCommand(&ActualCommand, &ActualReply))
+    if(Evalboards.ch1.fwdTmclCommand)
     {
-        return;
+        if (Evalboards.ch1.fwdTmclCommand(&ActualCommand, &ActualReply))
+        {
+            return;
+        }
     }
 
 	switch(ActualCommand.Opcode)
