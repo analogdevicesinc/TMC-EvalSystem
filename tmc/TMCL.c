@@ -156,6 +156,13 @@ void ExecuteActualCommand()
         }
     }
 
+    if (ActualCommand.ModuleId != SERIAL_MODULE_ADDRESS)
+    {
+        // Datagram is not addressed to us, ignore it
+        ActualCommand.Error = TMCL_RX_ERROR_NODATA;
+        return;
+    }
+
 	switch(ActualCommand.Opcode)
 	{
 	case TMCL_ROR:
