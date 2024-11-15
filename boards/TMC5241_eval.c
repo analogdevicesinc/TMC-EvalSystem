@@ -300,9 +300,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         case 14:
             // SW_MODE Register
             if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5241_SWMODE, value);
+                readRegister(DEFAULT_ICID, TMC5241_SW_MODE, value);
             } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5241_SWMODE, *value);
+                writeRegister(DEFAULT_ICID, TMC5241_SW_MODE, *value);
             }
             break;
         case 15:
@@ -440,9 +440,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         case 34:
             // Internal RSense
             if(readWrite == READ) {
-                *value = tmc5241_fieldRead(DEFAULT_ICID, TMC5241_REFR_DIR_FIELD);
+                *value = tmc5241_fieldRead(DEFAULT_ICID, TMC5241_REFR_FIELD);
             } else if(readWrite == WRITE) {
-                tmc5241_fieldWrite(DEFAULT_ICID, TMC5241_REFR_DIR_FIELD, *value);
+                tmc5241_fieldWrite(DEFAULT_ICID, TMC5241_REFR_FIELD, *value);
             }
             break;
         case 35:
@@ -519,8 +519,8 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
                 }
                 else
                 {
-                    readRegister(DEFAULT_ICID, TMC5241_CHOPCONF >> TMC5241_TFD_ALL_SHIFT, value);
-                    *value = *value & TMC5241_TFD_ALL_MASK;
+                    readRegister(DEFAULT_ICID, TMC5241_CHOPCONF >> TMC5241_HSTRT_TFD210_SHIFT, value);
+                    *value = *value & TMC5241_HSTRT_TFD210_MASK;
                     if(buffer & TMC5241_FD3_SHIFT)
                         *value |= 1<<3; // MSB wird zu value dazugefügt
                 }
@@ -533,7 +533,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
                 else
                 {
                     tmc5241_fieldWrite(DEFAULT_ICID, TMC5241_HEND_OFFSET_FIELD, (*value & (1<<3)));// MSB wird zu value dazugefügt
-                    tmc5241_fieldWrite(DEFAULT_ICID, TMC5241_TFD_ALL_FIELD, *value);
+                    tmc5241_fieldWrite(DEFAULT_ICID, TMC5241_HSTRT_TFD210_FIELD, *value);
                 }
             }
             break;
@@ -543,7 +543,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             if(readWrite == READ) {
                 if(buffer & (1 << TMC5241_CHM_SHIFT))
                 {
-                    *value = (buffer >> TMC5241_TFD_ALL_SHIFT) & TMC5241_TFD_ALL_MASK;
+                    *value = (buffer >> TMC5241_HSTRT_TFD210_SHIFT) & TMC5241_HSTRT_TFD210_MASK;
                 }
                 else
                 {
@@ -554,7 +554,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             } else if(readWrite == WRITE) {
                 if(buffer & (1 << TMC5241_CHM_SHIFT))
                 {
-                    tmc5241_fieldWrite(DEFAULT_ICID, TMC5241_TFD_ALL_FIELD, *value);
+                    tmc5241_fieldWrite(DEFAULT_ICID, TMC5241_HSTRT_TFD210_FIELD, *value);
                 }
                 else
                 {
@@ -817,9 +817,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         case 209:
             // Encoder position
             if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5241_XENC, value);
+                readRegister(DEFAULT_ICID, TMC5241_X_ENC, value);
             } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5241_XENC, *value);
+                writeRegister(DEFAULT_ICID, TMC5241_X_ENC, *value);
             }
             break;
         case 210:
