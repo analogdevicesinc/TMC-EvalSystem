@@ -291,11 +291,58 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
         return false;
     }
 
+    uint8_t data[9] = { 0 };
 
-    ActualReply->Value.Int32 = processTunnelApp(ActualCommand->Opcode, ActualCommand->Type, ActualCommand->Motor, ActualCommand->Value.Int32, &ActualReply->Status);
+    data[0] = 0x01; // Module Address forced to 1 to reach the TMC9660-3PH-EVAL // ToDo: Make configurable
+    data[1] = ActualCommand->Opcode; //Operation
+    data[2] = ActualCommand->Type; //type
+    data[3] = ActualCommand->Motor; //motor
+    data[4] = (ActualCommand->Value.Int32 >> 24) & 0xFF;
+    data[5] = (ActualCommand->Value.Int32 >> 16) & 0xFF;
+    data[6] = (ActualCommand->Value.Int32 >> 8 ) & 0xFF;
+    data[7] = (ActualCommand->Value.Int32      ) & 0xFF;
+    data[8] = calcCheckSum(data, 8);
+
+    int32_t uartStatus = UART_readWrite(TMC9660_3PH_UARTChannel, &data[0], 9, 9);
+
+    // Timeout?
+    if(uartStatus == -1)
+    {
+        // ToDo: Send back a different error code for timeouts?
+        ActualReply->Status = 1; // REPLY_CHKERR
+        return 1;
+    }
+
+    // Byte 8: CRC correct?
+    if (data[8] != calcCheckSum(data, 8))
+    {
+        ActualReply->Status = 1; // REPLY_CHKERR
+        return 1;
+    }
+
+    if (ActualCommand->Opcode == 0x88 && ActualCommand->Type == 0)
+    {
+        // ASCII GetVersion special case
+        // ...
+        ActualReply->IsSpecial   = 1;
+        ActualReply->Special[0]  = 2; // SERIAL_HOST_ADDRESS
+
+        for(uint8_t i = 0; i < 8; i++)
+        {
+            ActualReply->Special[i+1] = data[i+1];
+        }
+
+        return true;
+    }
+
+    // Normal datagrams: Fix up the adjusted module ID in the reply
+    ActualReply->moduleId = 3;
+    ActualReply->Status = data[2];
+    ActualReply->Value.Int32 = ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | ((uint32_t)data[6] << 8) | data[7];
+
     return true;
-
 }
+
 void TMC9660_3PH_init(void)
 {
     Pins.SPI1_SCK              = &HAL.IOs->pins->SPI1_SCK;
