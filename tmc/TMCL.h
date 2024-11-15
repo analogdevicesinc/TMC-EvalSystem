@@ -132,7 +132,7 @@ typedef struct
 // TMCL reply
 typedef struct
 {
-    uint8_t moduleId;
+    uint8_t ModuleId;
     uint8_t Status;
     uint8_t Opcode;
     union

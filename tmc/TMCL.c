@@ -136,7 +136,7 @@ uint8_t setTMCLStatus(uint8_t evalError)
 
 void ExecuteActualCommand()
 {
-    ActualReply.moduleId = ActualCommand.ModuleId;
+    ActualReply.ModuleId = ActualCommand.ModuleId;
 	ActualReply.Opcode = ActualCommand.Opcode;
 	ActualReply.Status = REPLY_OK;
 	ActualReply.Value.Int32 = ActualCommand.Value.Int32;
@@ -481,7 +481,7 @@ void tx(RXTXTypeDef *RXTX)
 	else
 	{
 		checkSum += SERIAL_HOST_ADDRESS;
-		checkSum += ActualReply.moduleId;
+		checkSum += ActualReply.ModuleId;
 		checkSum += ActualReply.Status;
 		checkSum += ActualReply.Opcode;
 		checkSum += ActualReply.Value.Byte[3];
@@ -490,7 +490,7 @@ void tx(RXTXTypeDef *RXTX)
 		checkSum += ActualReply.Value.Byte[0];
 
 		reply[0] = SERIAL_HOST_ADDRESS;
-		reply[1] = ActualReply.moduleId;
+		reply[1] = ActualReply.ModuleId;
 		reply[2] = ActualReply.Status;
 		reply[3] = ActualReply.Opcode;
 		reply[4] = ActualReply.Value.Byte[3];
