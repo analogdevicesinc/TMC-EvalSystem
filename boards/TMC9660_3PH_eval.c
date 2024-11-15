@@ -130,111 +130,6 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
 	return ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | ((uint32_t)data[6] << 8) | data[7];
 }
 
-static uint8_t ramDebug(uint8_t type, uint8_t motor, int32_t *value)
-{
-	uint8_t status;
-	*value = processTunnelApp(142, type, motor, *value, &status);
-	return status;
-}
-
-/*
-static uint32_t SIO(uint8_t type, uint8_t motor, int32_t value)
-{
-    UNUSED(motor);
-
-    switch(type) {
-    case 0: // HOLDN_FLASH
-        HAL.IOs->config->setToState(Pins.HOLDN_FLASH, (value) ? IOS_HIGH : IOS_LOW);
-        break;
-    case 1: // RESET_LB
-        HAL.IOs->config->setToState(Pins.RESET_LB, (value) ? IOS_HIGH : IOS_LOW);
-        break;
-    case 2: // DRV_ENABLE
-        HAL.IOs->config->setToState(Pins.DRV_ENABLE, (value) ? IOS_HIGH : IOS_LOW);
-        break;
-    case 3: // WAKEN_LB
-        HAL.IOs->config->setToState(Pins.WAKEN_LB, (value) ? IOS_HIGH : IOS_LOW);
-        break;
-    default:
-        return TMC_ERROR_TYPE;
-    }
-
-    return TMC_ERROR_NONE;
-}
-
-static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
-{
-    UNUSED(motor);
-
-    switch(type) {
-    case 0: // HOLDN_FLASH
-        *value = HAL.IOs->config->getState(Pins.HOLDN_FLASH);
-        break;
-    case 1: // RESET_LB
-        *value = HAL.IOs->config->getState(Pins.RESET_LB);
-        break;
-    case 2: // DRV_ENABLE
-        *value = HAL.IOs->config->getState(Pins.DRV_ENABLE);
-        break;
-    case 3: // WAKEN_LB
-        *value = HAL.IOs->config->getState(Pins.WAKEN_LB);
-        break;
-    case 4: // FAULTN_LB
-        *value = HAL.IOs->config->getState(Pins.FAULTN_LB);
-        break;
-    default:
-        return TMC_ERROR_TYPE;
-    }
-
-    return TMC_ERROR_NONE;
-}
-*/
-static uint32_t SGP(uint8_t type, uint8_t motor, int32_t value)
-{
-    uint8_t status;
-    processTunnelApp(9, type, motor, value, &status);
-    return ((uint32_t)status);
-}
-
-static uint32_t GGP(uint8_t type, uint8_t motor, int32_t *value)
-{
-    uint8_t status;
-    *value = processTunnelApp(10, type, motor, *value, &status);
-    return ((uint32_t)status);
-}
-
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
-{
-    uint8_t status;
-    processTunnelApp(5, type, motor, value, &status);
-    return ((uint32_t)status);
-
-}
-
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
-{
-    uint8_t status;
-    *value = processTunnelApp(6, type, motor, *value, &status);
-    return ((uint32_t)status);
-}
-
-static uint32_t getInfo(uint8_t type, uint8_t motor, int32_t *value)
-{
-	uint8_t status;
-	*value = processTunnelApp(157, type, motor, *value, &status);
-	return ((uint32_t)status);
-}
-
-static void writeRegister(uint8_t motor, uint16_t type, int32_t value)
-{
-	processTunnelApp(146, (uint8_t)type, motor, value, 0);
-}
-
-static void readRegister(uint8_t motor, uint16_t type, int32_t *value)
-{
-	*value = processTunnelApp(148, (uint8_t)type, motor, *value, 0);
-}
-
 static void initTunnel(void)
 {
     //Deinit SPI
@@ -338,7 +233,7 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
     }
 
     // Normal datagrams: Fix up the adjusted module ID in the reply
-    ActualReply->moduleId = 3;
+    ActualReply->ModuleId = 3;
     ActualReply->Status = data[2];
     ActualReply->Value.Int32 = ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | ((uint32_t)data[6] << 8) | data[7];
 
@@ -380,17 +275,7 @@ void TMC9660_3PH_init(void)
 
     initTunnel();
 
-	Evalboards.ch1.GAP                  = GAP;
-	Evalboards.ch1.SAP                  = SAP;
-	Evalboards.ch1.GGP                  = GGP;
-	Evalboards.ch1.SGP                  = SGP;
     Evalboards.ch1.userFunction         = userFunction;
-    Evalboards.ch1.ramDebug             = ramDebug;
-	Evalboards.ch1.writeRegister        = writeRegister;
-	Evalboards.ch1.readRegister         = readRegister;
-	Evalboards.ch1.getInfo              = getInfo;
-   // Evalboards.ch1.SIO                  = SIO;
-  //  Evalboards.ch1.GIO                  = GIO;
     Evalboards.ch1.fwdTmclCommand       = fwdTmclCommand;
 
 
