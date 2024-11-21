@@ -217,6 +217,13 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     return ((uint32_t)status);
 }
 
+static uint32_t STAP(uint8_t type, uint8_t motor, int32_t value)
+{
+    uint8_t status;
+    processTunnelApp(7, type, motor, value, &status);
+    return ((uint32_t)status);
+}
+
 static uint32_t getInfo(uint8_t type, uint8_t motor, int32_t *value)
 {
 	uint8_t status;
@@ -320,6 +327,7 @@ void TMC9660_3PH_init(void)
 
 	Evalboards.ch1.GAP                  = GAP;
 	Evalboards.ch1.SAP                  = SAP;
+	Evalboards.ch1.STAP                 = STAP;
 	Evalboards.ch1.GGP                  = GGP;
 	Evalboards.ch1.SGP                  = SGP;
     Evalboards.ch1.userFunction         = userFunction;

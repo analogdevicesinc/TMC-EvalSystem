@@ -355,6 +355,24 @@ void ExecuteActualCommand()
 	        }
 	    }
 		break;
+    case TMCL_STAP:
+        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
+        {
+            ActualReply.Status =  Evalboards.ch1.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+        }
+        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+        {
+            ActualReply.Status = Evalboards.ch2.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
+        }
+        else
+        {
+            // if function doesn't exist for ch1 try ch2
+            if(setTMCLStatus(Evalboards.ch1.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
+            {
+                setTMCLStatus(Evalboards.ch2.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32));
+            }
+        }
+        break;
 	case TMCL_SGP:
 		SetGlobalParameter();
 		break;
