@@ -102,7 +102,7 @@ static uint8_t calcCheckSum(uint8_t *data, uint32_t bytes)
 	return checkSum;
 }
 
-static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, int32_t value, uint8_t *status)
+static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, int32_t value)
 {
 	uint8_t data[9] = { 0 };
 
@@ -115,7 +115,6 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
 	data[6] = (value >> 8 ) & 0xFF;
 	data[7] = (value      ) & 0xFF;
 	data[8] = calcCheckSum(data, 8);
-
 	int32_t uartStatus = UART_readWrite(TMC9660_3PH_UARTChannel, &data[0], 9, 9);
 
 	// Timeout?
@@ -126,7 +125,6 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
     if (data[8] != calcCheckSum(data, 8))
         return 0;
 
-	*status = data[2];
 	return ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | ((uint32_t)data[6] << 8) | data[7];
 }
 
@@ -169,8 +167,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         break;
     case 2:
         // Get Module ID of App
-
-        *value = processTunnelApp(157, 0, 0, 0, 0);
+        *value = processTunnelApp(157, 0, 0, 0);
         break;
     default:
         errors |= TMC_ERROR_TYPE;
