@@ -49,6 +49,7 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	else
 	{
 		Evalboards.ch1.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #1
+		Evalboards.ch1.id = ids->ch1.id;
 		if(ids->ch1.state == ID_STATE_DONE)
 			ids->ch1.state = assignCh1(ids->ch1.id, false);
 		Evalboards.ch1.config->reset();
@@ -62,6 +63,7 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	else
 	{
 		Evalboards.ch2.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #2
+		Evalboards.ch2.id = ids->ch2.id;
 		if(ids->ch2.state == ID_STATE_DONE)
 			ids->ch2.state = assignCh2(ids->ch2.id, false);
 		Evalboards.ch2.config->reset();
@@ -74,8 +76,6 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	// This is currently done on completed motion controller reset/restore
 	hookDriverSPI(ids);
 
-	Evalboards.ch1.id = ids->ch1.id;
-	Evalboards.ch2.id = ids->ch2.id;
 
 	out |= (ids->ch2.state  << 24) & 0xFF;
 	out |= (ids->ch2.id     << 16) & 0xFF;
@@ -111,7 +111,11 @@ static uint8_t assignCh1(uint8_t id, uint8_t justCheck)
 		if(init_ch1[i].id == id)
 		{
 			if(!justCheck)
+			{
+				// Reset Evalboard errors, then init
+				Evalboards.ch1.errors = 0;
 				init_ch1[i].init();
+			}
 			ok = ID_STATE_DONE;
 			break;
 		}
@@ -132,7 +136,11 @@ static uint8_t assignCh2(uint8_t id, uint8_t justCheck)
 		if(init_ch2[i].id == id)
 		{
 			if(!justCheck)
+			{
+				// Reset Evalboard errors, then init
+				Evalboards.ch2.errors = 0;
 				init_ch2[i].init();
+			}
 			ok = ID_STATE_DONE;
 			break;
 		}

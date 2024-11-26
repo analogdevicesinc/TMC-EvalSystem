@@ -4,10 +4,16 @@
 *******************************************************************************/
 
 #include "Board.h"
+#include "tmc/BoardAssignment.h" // For the Board IDs
 
 static SPIChannelTypeDef *TMC9660_3PH_SPIChannel;
 static UART_Config *TMC9660_3PH_UARTChannel;
 static uint8_t lastStatus;
+
+// Evalboard errors reported in Evalboards.ch1.errors
+#define EVAL_ERROR_WRONG_MODULE_ID   (1<<0)
+#define EVAL_ERROR_NOT_BOOTSTRAPPED  (1<<1)
+#define EVAL_ERROR_NOT_IN_BOOTLOADER (1<<2)
 
 #ifdef TMC_API_EXTERNAL_CRC_TABLE
 extern const uint8_t tmcCRCTable_Poly7Reflected[256];
@@ -288,6 +294,51 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     return errors;
 }
 
+static void verifyTMC9660Mode()
+{
+    // Check if the TMC9660 bootloader is active
+    if (processTunnelBL(0, 0) == 0x544D0001)
+    {
+        if (Evalboards.ch1.id != ID_TMC9660_3PH_BL_EVAL)
+        {
+            Evalboards.ch1.errors |= EVAL_ERROR_NOT_BOOTSTRAPPED;
+            return;
+        }
+    }
+    // Bootloader did not respond -> Either the chip is inactive (no VM, reset, ...),
+    // or the chip is waiting for TMCL commands
+    uint32_t moduleID = 0;
+    uint8_t status = 0;
+    int32_t tunnelStatus = processTunnelApp(157, 0, 0, &moduleID, &status);
+
+    if (tunnelStatus == -1)
+    {
+        // No response from TMC9660
+    }
+    else if (tunnelStatus == -2)
+    {
+        // Response with checksum error
+        // We ignore this, we only seek to find definite mismatches
+    }
+    else if (tunnelStatus == 0)
+    {
+        // TMC9660 responded -> Check if mode is right
+        if (Evalboards.ch1.id == ID_TMC9660_3PH_BL_EVAL)
+        {
+            // Bootloader mode expected -> Raise an error
+            Evalboards.ch1.errors |= EVAL_ERROR_NOT_IN_BOOTLOADER;
+            return;
+        }
+
+        // Verify correct module ID
+        uint32_t expectedModuleID = (Evalboards.ch1.id == ID_TMC9660_3PH_REG_EVAL)? 17 : 51;
+        if (moduleID != expectedModuleID)
+        {
+            Evalboards.ch1.errors |= EVAL_ERROR_WRONG_MODULE_ID;
+        }
+    }
+}
+
 void TMC9660_3PH_init(void)
 {
     Pins.SPI1_SCK    = &HAL.IOs->pins->SPI1_SCK;
@@ -334,4 +385,7 @@ void TMC9660_3PH_init(void)
     Evalboards.ch1.getInfo       = getInfo;
     Evalboards.ch1.SIO           = SIO;
     Evalboards.ch1.GIO           = GIO;
+
+    // Check if we have a mode mismatch with the running TMC9660 (bootloader or wrong app mode)
+    verifyTMC9660Mode();
 }
