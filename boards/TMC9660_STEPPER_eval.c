@@ -52,7 +52,6 @@ static PinsTypeDef Pins;
 static uint8_t CRC8(uint8_t *data, uint32_t bytes)
 {
     uint8_t result = 0;
-    uint8_t *table;
 
     while (bytes--) result = tmcCRCTable_Poly7Reflected[result ^ *data++];
 
@@ -67,13 +66,13 @@ static uint8_t CRC8(uint8_t *data, uint32_t bytes)
     return result;
 }
 
-static int32_t processTunnelBL(uint8_t motor, int32_t value)
+static int32_t processTunnelBL(uint8_t command, int32_t value)
 {
     uint8_t data[8] = {0};
 
-    data[0] = 0x55;  //Sync byte
-    data[1] = 0x01;  //Device Address
-    data[2] = motor; //Command
+    data[0] = 0x55;    // Sync byte
+    data[1] = 0x01;    // Device Address
+    data[2] = command; // Command
     data[3] = (value >> 24) & 0xFF;
     data[4] = (value >> 16) & 0xFF;
     data[5] = (value >> 8) & 0xFF;
@@ -91,7 +90,7 @@ static uint8_t calcCheckSum(uint8_t *data, uint32_t bytes)
 {
     uint8_t checkSum = 0;
 
-    for (int i = 0; i < bytes; i++) { checkSum += data[i]; }
+    for (uint32_t i = 0; i < bytes; i++) { checkSum += data[i]; }
     return checkSum;
 }
 
