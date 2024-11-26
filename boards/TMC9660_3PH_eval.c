@@ -95,7 +95,7 @@ static uint8_t calcCheckSum(uint8_t *data, uint32_t bytes)
     return checkSum;
 }
 
-static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, int32_t value, uint8_t *status)
+static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, uint32_t *value, uint8_t *status)
 {
     uint8_t data[9] = {0};
 
@@ -103,30 +103,36 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
     data[1] = operation; //Operation
     data[2] = type;      //type
     data[3] = motor;     //motor
-    data[4] = (value >> 24) & 0xFF;
-    data[5] = (value >> 16) & 0xFF;
-    data[6] = (value >> 8) & 0xFF;
-    data[7] = (value) & 0xFF;
+    data[4] = (*value >> 24) & 0xFF;
+    data[5] = (*value >> 16) & 0xFF;
+    data[6] = (*value >> 8) & 0xFF;
+    data[7] = (*value) & 0xFF;
     data[8] = calcCheckSum(data, 8);
 
     int32_t uartStatus = UART_readWrite(TMC9660_3PH_UARTChannel, &data[0], 9, 9);
 
     // Timeout?
     if (uartStatus == -1)
-        return 0;
+        return -1;
 
     // Byte 8: CRC correct?
     if (data[8] != calcCheckSum(data, 8))
-        return 0;
+        return -2;
 
-    *status = data[2];
-    return ((uint32_t) data[4] << 24) | ((uint32_t) data[5] << 16) | ((uint32_t) data[6] << 8) | data[7];
+    if (status != 0)
+    {
+        *status = data[2];
+    }
+
+    *value = ((uint32_t) data[4] << 24) | ((uint32_t) data[5] << 16) | ((uint32_t) data[6] << 8) | data[7];
+
+    return 0;
 }
 
 static uint8_t ramDebug(uint8_t type, uint8_t motor, int32_t *value)
 {
     uint8_t status;
-    *value = processTunnelApp(142, type, motor, *value, &status);
+    processTunnelApp(142, type, motor, (uint32_t *) value, &status);
     return status;
 }
 
@@ -186,53 +192,53 @@ static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
 static uint32_t SGP(uint8_t type, uint8_t motor, int32_t value)
 {
     uint8_t status;
-    processTunnelApp(9, type, motor, value, &status);
+    processTunnelApp(9, type, motor, (uint32_t *) &value, &status);
     return ((uint32_t) status);
 }
 
 static uint32_t GGP(uint8_t type, uint8_t motor, int32_t *value)
 {
     uint8_t status;
-    *value = processTunnelApp(10, type, motor, *value, &status);
+    processTunnelApp(10, type, motor, (uint32_t *) value, &status);
     return ((uint32_t) status);
 }
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
     uint8_t status;
-    processTunnelApp(5, type, motor, value, &status);
+    processTunnelApp(5, type, motor, (uint32_t *) &value, &status);
     return ((uint32_t) status);
 }
 
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
     uint8_t status;
-    *value = processTunnelApp(6, type, motor, *value, &status);
+    processTunnelApp(6, type, motor, (uint32_t *) value, &status);
     return ((uint32_t) status);
 }
 
 static uint32_t STAP(uint8_t type, uint8_t motor, int32_t value)
 {
     uint8_t status;
-    processTunnelApp(7, type, motor, value, &status);
+    processTunnelApp(7, type, motor, (uint32_t *) &value, &status);
     return ((uint32_t) status);
 }
 
 static uint32_t getInfo(uint8_t type, uint8_t motor, int32_t *value)
 {
     uint8_t status;
-    *value = processTunnelApp(157, type, motor, *value, &status);
+    processTunnelApp(157, type, motor, (uint32_t *) value, &status);
     return ((uint32_t) status);
 }
 
 static void writeRegister(uint8_t motor, uint16_t type, int32_t value)
 {
-    processTunnelApp(146, (uint8_t) type, motor, value, 0);
+    processTunnelApp(146, (uint8_t) type, motor, (uint32_t *) &value, 0);
 }
 
 static void readRegister(uint8_t motor, uint16_t type, int32_t *value)
 {
-    *value = processTunnelApp(148, (uint8_t) type, motor, *value, 0);
+    processTunnelApp(148, (uint8_t) type, motor, (uint32_t *) value, 0);
 }
 
 static void initTunnel(void)
@@ -274,8 +280,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         break;
     case 2:
         // Get Module ID of App
-
-        *value = processTunnelApp(157, 0, 0, 0, 0);
+        processTunnelApp(157, 0, 0, (uint32_t *) value, 0);
         break;
     default:
         errors |= TMC_ERROR_TYPE;
