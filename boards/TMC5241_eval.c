@@ -947,7 +947,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             // ADCSupply
             if(readWrite == READ) {
                 int32_t adc = tmc5241_fieldRead(DEFAULT_ICID, TMC5241_ADC_VSUPPLY_FIELD);
-                *value = (int32_t)32*3052*adc/10000;
+                *value = (int32_t)58*3052*adc/10000;
             } else if(readWrite == WRITE) {
                 errors |= TMC_ERROR_TYPE;
             }
@@ -956,9 +956,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             // Overvoltage Limit converted
             if(readWrite == READ) {
                 int32_t val = tmc5241_fieldRead(DEFAULT_ICID, TMC5241_OVERVOLTAGE_VTH_FIELD);
-                *value = (int32_t)32*3052*val/10000;
+                *value = (int32_t)58*3052*val/10000;
             } else if(readWrite == WRITE) {
-                int32_t val = (int32_t)(*value*10000/(3052*32));
+                int32_t val = (int32_t)(*value*10000/(3052*58));
                 tmc5241_fieldWrite(DEFAULT_ICID, TMC5241_OVERVOLTAGE_VTH_FIELD, val);
             }
             break;
@@ -1383,6 +1383,4 @@ void TMC5241_init(void)
     Evalboards.ch1.deInit               = deInit;
 
     enableDriver(DRIVER_USE_GLOBAL_ENABLE);
-
-
 };
