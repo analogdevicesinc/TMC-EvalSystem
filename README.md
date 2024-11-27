@@ -12,6 +12,13 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
+### Version 3.10.7: (Released)
+ * Various bug fixes for TMC9660-3PH-PARAM-Eval and TMC9660-STEPPER-PARAM-Eval.
+ * Removed TMC9660-Eval from the project.
+ 
+### Version 3.10.6: (Pre-release)
+ * Added support for STAP command for TMC9660-3PH-Eval and TMC9660-STEPPER-Eval.
+ 
 ### Version 3.10.5: (Released)
  * Included TMC9660-3PH-Eval and TMC9660-STEPPER-Eval to the project.
  * Removed TMC2590 from both API and TMC-EvalSystem project because the IC is available for last time buy only. Whereas the eval is not available anymore.
