@@ -93,9 +93,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_MAX22210_EVAL 	33
 #define ID_TMC8100        34
 #define ID_TMC2262        35
-#define ID_TMC9660_BL_EVAL	      37
-#define ID_TMC9660_REG_EVAL		  38
-#define ID_TMC9660_PARAM_EVAL     39
+
 
 
 #define TM01       1414332417
@@ -139,7 +137,6 @@ extern void TMC8461_init_ch2();
 extern void TMC8462_init_ch1();
 extern void TMC8462_init_ch2();
 extern void TMC2262_init();
-extern void TMC9660_init();
 extern void TMC9660_3PH_init();
 extern void TMC9660_STEPPER_init();
 extern void SelfTest_init();
@@ -204,9 +201,6 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC6140,     .init = TMC6140_init     },
 	{ .id = ID_TMC8100,     .init = TMC8100_init     },
 	{ .id = ID_TMC2262,     .init = TMC2262_init     },
-    { .id = ID_TMC9660_BL_EVAL,     .init = TMC9660_init     },
-    { .id = ID_TMC9660_REG_EVAL,    .init = TMC9660_init     },
-    { .id = ID_TMC9660_PARAM_EVAL,  .init = TMC9660_init     },
 };
 
 #endif /* BOARD_ASSIGNMENT_H */

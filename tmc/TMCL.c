@@ -214,52 +214,27 @@ void ExecuteActualCommand()
 			break;
 		}
 		break;
-	case TMCL_SAP:
-        if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
-        {
-            ActualReply.Status = Evalboards.ch2.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
-        }
-        else
-        {
-            // if function doesn't exist for ch1 try ch2
-            if(setTMCLStatus(Evalboards.ch1.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
-            {
-                setTMCLStatus(Evalboards.ch2.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32));
-            }
-        }
-		break;
-	case TMCL_GAP:
-	    if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
-	    {
-	        ActualReply.Status = Evalboards.ch2.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-	    }
-	    else
-	    {
-	        // if function doesn't exist for ch1 try ch2
-	        if(setTMCLStatus(Evalboards.ch1.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
-	        {
-	            setTMCLStatus(Evalboards.ch2.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32));
-	        }
-	    }
-		break;
-    case TMCL_STAP:
-        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-        {
-            ActualReply.Status =  Evalboards.ch1.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
-        }
-        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
-        {
-            ActualReply.Status = Evalboards.ch2.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
-        }
-        else
-        {
-            // if function doesn't exist for ch1 try ch2
-            if(setTMCLStatus(Evalboards.ch1.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
-            {
-                setTMCLStatus(Evalboards.ch2.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32));
-            }
-        }
-        break;
+		case TMCL_SAP:
+		    // if function doesn't exist for ch1 try ch2
+		    if(setTMCLStatus(Evalboards.ch1.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
+		    {
+		        setTMCLStatus(Evalboards.ch2.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32));
+		    }
+		    break;
+		case TMCL_GAP:
+		    // if function doesn't exist for ch1 try ch2
+		    if(setTMCLStatus(Evalboards.ch1.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
+		    {
+		        setTMCLStatus(Evalboards.ch2.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32));
+		    }
+		    break;
+		case TMCL_STAP:
+		    // if function doesn't exist for ch1 try ch2
+		    if(setTMCLStatus(Evalboards.ch1.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32)) & (TMC_ERROR_TYPE | TMC_ERROR_FUNCTION))
+		    {
+		        setTMCLStatus(Evalboards.ch2.STAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32));
+		    }
+		    break;
 	case TMCL_SGP:
 		SetGlobalParameter();
 		break;
@@ -329,15 +304,8 @@ void ExecuteActualCommand()
             Evalboards.ch1.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
 		break;
 	case TMCL_writeRegisterChannel_2:
-		if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
-		{
-			Evalboards.ch2.writeRegister(ActualCommand.Motor,(uint16_t)ActualCommand.Type, ActualCommand.Value.Int32);
-		}
-		else
-		{
-			Evalboards.ch2.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
-		}
-		break;
+	    Evalboards.ch2.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
+	    break;
 	case TMCL_readRegisterChannel_1:
 		// Do not allow reads during brownout to prevent garbage data being used
 		// in read-modify-write operations. Bypass this safety with motor = 255
@@ -351,21 +319,15 @@ void ExecuteActualCommand()
 		}
 		break;
 	case TMCL_readRegisterChannel_2:
-		// Do not allow reads during brownout to prevent garbage data being used
-		// in read-modify-write operations. Bypass this safety with motor = 255
-		if ((VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH2) && ActualCommand.Motor != 255)
-			ActualReply.Status = REPLY_CHIP_READ_FAILED;
-		else
-		{
-			if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
-			{
-				Evalboards.ch2.readRegister(ActualCommand.Motor,(uint16_t)ActualCommand.Type, &ActualReply.Value.Int32);
-			}
-			else
-			{
-				Evalboards.ch2.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
-			}
-		}
+	    // Do not allow reads during brownout to prevent garbage data being used
+	    // in read-modify-write operations. Bypass this safety with motor = 255
+	    if ((VitalSignsMonitor.brownOut & VSM_ERRORS_BROWNOUT_CH2) && ActualCommand.Motor != 255)
+	        ActualReply.Status = REPLY_CHIP_READ_FAILED;
+	    else
+	    {
+
+	        Evalboards.ch2.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
+	    }
 	    break;
 	case TMCL_BoardMeasuredSpeed:
 		// measured speed from motionController board or driver board depending on type
@@ -380,11 +342,6 @@ void ExecuteActualCommand()
 		boardsReset();
 		break;
 	case TMCL_GetInfo:
-	    if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
-		{
-            ActualReply.Status = Evalboards.ch2.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-
-		}
 		break;
 	case TMCL_WLAN:
 		HandleWlanCommand();
@@ -637,121 +594,103 @@ static void writeIdEeprom(void)
 
 static void SetGlobalParameter()
 {
-    if(ActualCommand.Motor <= 3)
+    switch(ActualCommand.Type)
     {
-        if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+    case 1:
+        VitalSignsMonitor.errorMask = ActualCommand.Value.Int32;
+        break;
+    case 2:
+        setDriversEnable();
+        break;
+    case 3:
+        switch(ActualCommand.Value.Int32)
         {
-            ActualReply.Status = Evalboards.ch2.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
-            return;
+        case 0: // normal operation
+            VitalSignsMonitor.debugMode = 0;
+            break;
+        case 1: // FREE ERROR LED
+            VitalSignsMonitor.debugMode = 1;
+            HAL.LEDs->error.off();
+            break;
+        default:
+            ActualReply.Status = REPLY_INVALID_TYPE;
+            break;
         }
+        break;
+        case 6:
+            if(Evalboards.ch1.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32)
+                    && Evalboards.ch2.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32))
+                HAL.IOs->config->setToState(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32);
+            break;
+        case 7:
+            ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch1, ActualCommand.Value.UInt32);
+            break;
+        case 8:
+            ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch2, ActualCommand.Value.UInt32);
+            break;
+        case 9:
+            if (!spi_setMode(&HAL.SPI->ch1, ActualCommand.Value.UInt32))
+            {
+                ActualReply.Status = REPLY_INVALID_VALUE;
+                break;
+            }
+            break;
+        case 10:
+            if (!spi_setMode(&HAL.SPI->ch2, ActualCommand.Value.UInt32))
+            {
+                ActualReply.Status = REPLY_INVALID_VALUE;
+                break;
+            }
+            break;
+        default:
+            ActualReply.Status = REPLY_INVALID_TYPE;
+            break;
     }
-
-	switch(ActualCommand.Type)
-	{
-	case 1:
-		VitalSignsMonitor.errorMask = ActualCommand.Value.Int32;
-		break;
-	case 2:
-		setDriversEnable();
-		break;
-	case 3:
-		switch(ActualCommand.Value.Int32)
-		{
-		case 0: // normal operation
-			VitalSignsMonitor.debugMode = 0;
-			break;
-		case 1: // FREE ERROR LED
-			VitalSignsMonitor.debugMode = 1;
-			HAL.LEDs->error.off();
-			break;
-		default:
-			ActualReply.Status = REPLY_INVALID_TYPE;
-			break;
-		}
-		break;
-	case 6:
-		if(Evalboards.ch1.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32)
-				&& Evalboards.ch2.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32))
-			HAL.IOs->config->setToState(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32);
-		break;
-	case 7:
-		ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch1, ActualCommand.Value.UInt32);
-		break;
-	case 8:
-		ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch2, ActualCommand.Value.UInt32);
-		break;
-	case 9:
-		if (!spi_setMode(&HAL.SPI->ch1, ActualCommand.Value.UInt32))
-		{
-			ActualReply.Status = REPLY_INVALID_VALUE;
-			break;
-		}
-		break;
-	case 10:
-		if (!spi_setMode(&HAL.SPI->ch2, ActualCommand.Value.UInt32))
-		{
-			ActualReply.Status = REPLY_INVALID_VALUE;
-			break;
-		}
-		break;
-	default:
-		ActualReply.Status = REPLY_INVALID_TYPE;
-		break;
-	}
 }
 
 static void GetGlobalParameter()
 {
-    if(ActualCommand.Motor <=3)
+    switch(ActualCommand.Type)
     {
-        if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
-        {
-            ActualReply.Status = Evalboards.ch2.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-            return;
-        }
+    case 1:
+        ActualReply.Value.Int32 = VitalSignsMonitor.errors;
+        break;
+    case 2:
+        ActualReply.Value.Int32 = (Evalboards.driverEnable == DRIVER_ENABLE)? 1:0;
+        break;
+    case 3:
+        ActualReply.Value.Int32 = VitalSignsMonitor.debugMode;
+        break;
+    case 4:
+    {
+        IdAssignmentTypeDef ids;
+        ids.ch1.id = Evalboards.ch1.id;
+        ids.ch2.id = Evalboards.ch2.id;
+        ActualReply.Value.Int32 = Board_supported(&ids);
     }
-
-	switch(ActualCommand.Type)
-	{
-		case 1:
-			ActualReply.Value.Int32 = VitalSignsMonitor.errors;
-			break;
-		case 2:
-			ActualReply.Value.Int32 = (Evalboards.driverEnable == DRIVER_ENABLE)? 1:0;
-			break;
-		case 3:
-			ActualReply.Value.Int32 = VitalSignsMonitor.debugMode;
-			break;
-		case 4:
-			{
-				IdAssignmentTypeDef ids;
-				ids.ch1.id = Evalboards.ch1.id;
-				ids.ch2.id = Evalboards.ch2.id;
-				ActualReply.Value.Int32 = Board_supported(&ids);
-			}
-			break;
-		case 5: // Get hardware ID
-			ActualReply.Value.Int32 = hwid;
-			break;
-		case 6:
-			ActualReply.Value.UInt32 = HAL.IOs->config->getState(HAL.IOs->pins->pins[ActualCommand.Motor]);
-			break;
-		case 7:
-			ActualReply.Value.UInt32 = spi_getFrequency(&HAL.SPI->ch1);
-			break;
-		case 8:
-			ActualReply.Value.UInt32 = spi_getFrequency(&HAL.SPI->ch2);
-			break;
-		case 9:
-			ActualReply.Value.UInt32 = spi_getMode(&HAL.SPI->ch1);
-			break;
-		case 10:
-			ActualReply.Value.UInt32 = spi_getMode(&HAL.SPI->ch2);
-			break;
-		default:
-			ActualReply.Status = REPLY_INVALID_TYPE;
-			break;
-	}
+    break;
+    case 5: // Get hardware ID
+        ActualReply.Value.Int32 = hwid;
+        break;
+    case 6:
+        ActualReply.Value.UInt32 = HAL.IOs->config->getState(HAL.IOs->pins->pins[ActualCommand.Motor]);
+        break;
+    case 7:
+        ActualReply.Value.UInt32 = spi_getFrequency(&HAL.SPI->ch1);
+        break;
+    case 8:
+        ActualReply.Value.UInt32 = spi_getFrequency(&HAL.SPI->ch2);
+        break;
+    case 9:
+        ActualReply.Value.UInt32 = spi_getMode(&HAL.SPI->ch1);
+        break;
+    case 10:
+        ActualReply.Value.UInt32 = spi_getMode(&HAL.SPI->ch2);
+        break;
+    default:
+        ActualReply.Status = REPLY_INVALID_TYPE;
+        break;
+    }
 }
 
 static void boardAssignment(void)
@@ -928,54 +867,6 @@ static void checkIDs(void)
     }
     }
 
-    switch(Evalboards.ch2.id){
-
-    case ID_TMC9660_BL_EVAL:
-    {
-        int32_t val = 0;
-        Evalboards.ch2.userFunction(0,0,&val);
-        if(val != TM01){
-            val = 0;
-            Evalboards.ch2.userFunction(2,0,&val);
-            switch(val){
-            case 51:
-                ids.ch2.id = ID_TMC9660_PARAM_EVAL;
-                break;
-            case 17:
-                ids.ch2.id = ID_TMC9660_REG_EVAL;
-                break;
-            default:
-                //handle unknown case
-                break;
-            }
-            Evalboards.ch2.id = ids.ch2.id;
-        }
-        ids.ch2.state = ID_STATE_DONE;
-        ActualReply.Value.Int32 = (uint32_t)(
-                (ids.ch1.id)
-                | (ids.ch1.state << 8)
-                | (Evalboards.ch2.id    << 16)
-                | (ids.ch2.state << 24)
-        );
-        return;
-        break;
-    }
-    case ID_TMC9660_REG_EVAL:
-    case ID_TMC9660_PARAM_EVAL:
-    {
-        ids.ch2.state = ID_STATE_DONE;
-        ActualReply.Value.Int32 = (uint32_t)(
-                (ids.ch1.id)
-                | (ids.ch1.state << 8)
-                | (Evalboards.ch2.id << 16)
-                | (ids.ch2.state << 24)
-        );
-        return;
-        break;
-    }
-
-    }
-
     if(IDDetection_detect(&ids)){
         Board_assign(&ids);
         ActualReply.Value.Int32 = (uint32_t)(
@@ -988,7 +879,6 @@ static void checkIDs(void)
     else{
         ActualReply.Status = REPLY_DELAYED;
     }
-
 }
 
 static void SoftwareReset(void)
@@ -1118,12 +1008,6 @@ static void HandleWlanCommand(void)
 
 static void handleRamDebug(void)
 {
-   if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
-	{
-		ActualReply.Status = Evalboards.ch2.ramDebug(ActualCommand.Type, ActualCommand.Motor, &ActualCommand.Value.Int32);
-		ActualReply.Value.Int32 = ActualCommand.Value.Int32;
-		return;
-	}
 	switch (ActualCommand.Type)
 	{
 	case 0:
