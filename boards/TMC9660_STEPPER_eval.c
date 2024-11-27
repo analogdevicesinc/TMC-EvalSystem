@@ -134,118 +134,6 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
     return 0;
 }
 
-static uint8_t ramDebug(uint8_t type, uint8_t motor, int32_t *value)
-{
-    uint8_t status;
-    processTunnelApp(142, type, motor, (uint32_t *) value, &status);
-    return status;
-}
-
-static uint32_t SIO(uint8_t type, uint8_t motor, int32_t value)
-{
-    UNUSED(motor);
-
-    switch (type)
-    {
-    case 0: // HOLDN_FLASH
-        HAL.IOs->config->setToState(Pins.HOLDN_FLASH, (value) ? IOS_HIGH : IOS_LOW);
-        break;
-    case 1: // RESET_LB
-        HAL.IOs->config->setToState(Pins.RESET_LB, (value) ? IOS_HIGH : IOS_LOW);
-        break;
-    case 2: // DRV_ENABLE
-        HAL.IOs->config->setToState(Pins.DRV_ENABLE, (value) ? IOS_HIGH : IOS_LOW);
-        break;
-    case 3: // WAKEN_LB
-        HAL.IOs->config->setToState(Pins.WAKEN_LB, (value) ? IOS_HIGH : IOS_LOW);
-        break;
-    default:
-        return TMC_ERROR_TYPE;
-    }
-
-    return TMC_ERROR_NONE;
-}
-
-static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
-{
-    UNUSED(motor);
-
-    switch (type)
-    {
-    case 0: // HOLDN_FLASH
-        *value = HAL.IOs->config->getState(Pins.HOLDN_FLASH);
-        break;
-    case 1: // RESET_LB
-        *value = HAL.IOs->config->getState(Pins.RESET_LB);
-        break;
-    case 2: // DRV_ENABLE
-        *value = HAL.IOs->config->getState(Pins.DRV_ENABLE);
-        break;
-    case 3: // WAKEN_LB
-        *value = HAL.IOs->config->getState(Pins.WAKEN_LB);
-        break;
-    case 4: // FAULTN_LB
-        *value = HAL.IOs->config->getState(Pins.FAULTN_LB);
-        break;
-    default:
-        return TMC_ERROR_TYPE;
-    }
-
-    return TMC_ERROR_NONE;
-}
-
-static uint32_t SGP(uint8_t type, uint8_t motor, int32_t value)
-{
-    uint8_t status;
-    processTunnelApp(9, type, motor, (uint32_t *) &value, &status);
-    return ((uint32_t) status);
-}
-
-static uint32_t GGP(uint8_t type, uint8_t motor, int32_t *value)
-{
-    uint8_t status;
-    *value = processTunnelApp(10, type, motor, (uint32_t *) value, &status);
-    return ((uint32_t) status);
-}
-
-static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
-{
-    uint8_t status;
-    processTunnelApp(5, type, motor, (uint32_t *) &value, &status);
-    return ((uint32_t) status);
-}
-
-static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
-{
-    uint8_t status;
-    *value = processTunnelApp(6, type, motor, (uint32_t *) *value, &status);
-    return ((uint32_t) status);
-}
-
-static uint32_t STAP(uint8_t type, uint8_t motor, int32_t value)
-{
-    uint8_t status;
-    processTunnelApp(7, type, motor, (uint32_t *) &value, &status);
-    return ((uint32_t) status);
-}
-
-static uint32_t getInfo(uint8_t type, uint8_t motor, int32_t *value)
-{
-    uint8_t status;
-    *value = processTunnelApp(157, type, motor, (uint32_t *) value, &status);
-    return ((uint32_t) status);
-}
-
-static void writeRegister(uint8_t motor, uint16_t type, int32_t value)
-{
-    processTunnelApp(146, (uint8_t) type, motor, (uint32_t *) &value, 0);
-}
-
-static void readRegister(uint8_t motor, uint16_t type, int32_t *value)
-{
-    *value = processTunnelApp(148, (uint8_t) type, motor, (uint32_t *) value, 0);
-}
-
 static void initTunnel(void)
 {
     //Deinit SPI
@@ -285,7 +173,8 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         break;
     case 2:
         // Get Module ID of App
-        *value = processTunnelApp(157, 0, 0, (uint32_t *) value, 0);
+        uint8_t status;
+        processTunnelApp(157, 0, 0, (uint32_t *) value, &status);
         break;
     default:
         errors |= TMC_ERROR_TYPE;
@@ -336,7 +225,65 @@ static void verifyTMC9660Mode()
         {
             Evalboards.ch1.errors |= EVAL_ERROR_WRONG_MODULE_ID;
         }
+}
+
+static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *ActualReply)
+{
+    if(ActualCommand->ModuleId != 3)
+    {
+        return false;
     }
+
+    uint8_t data[9] = { 0 };
+
+    data[0] = 0x01; // Module Address forced to 1 to reach the TMC9660-3PH-EVAL // ToDo: Make configurable
+    data[1] = ActualCommand->Opcode; //Operation
+    data[2] = ActualCommand->Type; //type
+    data[3] = ActualCommand->Motor; //motor
+    data[4] = (ActualCommand->Value.Int32 >> 24) & 0xFF;
+    data[5] = (ActualCommand->Value.Int32 >> 16) & 0xFF;
+    data[6] = (ActualCommand->Value.Int32 >> 8 ) & 0xFF;
+    data[7] = (ActualCommand->Value.Int32      ) & 0xFF;
+    data[8] = calcCheckSum(data, 8);
+
+    int32_t uartStatus = UART_readWrite(TMC9660_STEPPER_UARTChannel, &data[0], 9, 9);
+
+    // Timeout?
+    if(uartStatus == -1)
+    {
+        // ToDo: Send back a different error code for timeouts?
+        ActualReply->Status = 1; // REPLY_CHKERR
+        return 1;
+    }
+
+    // Byte 8: CRC correct?
+    if (data[8] != calcCheckSum(data, 8))
+    {
+        ActualReply->Status = 1; // REPLY_CHKERR
+        return 1;
+    }
+
+    if (ActualCommand->Opcode == 0x88 && ActualCommand->Type == 0)
+    {
+        // ASCII GetVersion special case
+        // ...
+        ActualReply->IsSpecial   = 1;
+        ActualReply->Special[0]  = 2; // SERIAL_HOST_ADDRESS
+
+        for(uint8_t i = 0; i < 8; i++)
+        {
+            ActualReply->Special[i+1] = data[i+1];
+        }
+
+        return true;
+    }
+
+    // Normal datagrams: Fix up the adjusted module ID in the reply
+    ActualReply->ModuleId = 3;
+    ActualReply->Status = data[2];
+    ActualReply->Value.Int32 = ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | ((uint32_t)data[6] << 8) | data[7];
+
+    return true;
 }
 
 void TMC9660_STEPPER_init(void)
@@ -373,18 +320,8 @@ void TMC9660_STEPPER_init(void)
 
     initTunnel();
 
-    Evalboards.ch1.GAP           = GAP;
-    Evalboards.ch1.SAP           = SAP;
-    Evalboards.ch1.STAP          = STAP;
-    Evalboards.ch1.GGP           = GGP;
-    Evalboards.ch1.SGP           = SGP;
-    Evalboards.ch1.userFunction  = userFunction;
-    Evalboards.ch1.ramDebug      = ramDebug;
-    Evalboards.ch1.writeRegister = writeRegister;
-    Evalboards.ch1.readRegister  = readRegister;
-    Evalboards.ch1.getInfo       = getInfo;
-    Evalboards.ch1.SIO           = SIO;
-    Evalboards.ch1.GIO           = GIO;
+    Evalboards.ch1.userFunction         = userFunction;
+    Evalboards.ch1.fwdTmclCommand       = fwdTmclCommand;
 
     // Check if we have a mode mismatch with the running TMC9660 (bootloader or wrong app mode)
     verifyTMC9660Mode();

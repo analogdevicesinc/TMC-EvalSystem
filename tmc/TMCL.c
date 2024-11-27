@@ -42,94 +42,6 @@
 #define TCS_USB_ERROR      8
 #define TCS_MEM            9
 
-// TMCL commands
-#define TMCL_ROR                     1
-#define TMCL_ROL                     2
-#define TMCL_MST                     3
-#define TMCL_MVP                     4
-#define TMCL_SAP                     5
-#define TMCL_GAP                     6
-#define TMCL_STAP                    7
-#define TMCL_RSAP                    8
-#define TMCL_SGP                     9
-#define TMCL_GGP                     10
-#define TMCL_STGP                    11
-#define TMCL_RSGP                    12
-#define TMCL_RFS                     13
-#define TMCL_SIO                     14
-#define TMCL_GIO                     15
-#define TMCL_CALC                    19
-#define TMCL_COMP                    20
-#define TMCL_JC                      21
-#define TMCL_JA                      22
-#define TMCL_CSUB                    23
-#define TMCL_RSUB                    24
-#define TMCL_EI                      25
-#define TMCL_DI                      26
-#define TMCL_WAIT                    27
-#define TMCL_STOP                    28
-#define TMCL_SAC                     29
-#define TMCL_SCO                     30
-#define TMCL_GCO                     31
-#define TMCL_CCO                     32
-#define TMCL_CALCX                   33
-#define TMCL_AAP                     34
-#define TMCL_AGP                     35
-#define TMCL_CLE                     36
-#define TMCL_VECT                    37
-#define TMCL_RETI                    38
-#define TMCL_ACO                     39
-
-#define TMCL_UF0                     64
-#define TMCL_UF1                     65
-#define TMCL_UF2                     66
-#define TMCL_UF3                     67
-#define TMCL_UF4                     68
-#define TMCL_UF5                     69
-#define TMCL_UF6                     70
-#define TMCL_UF7                     71
-#define TMCL_UF8                     72
-
-#define TMCL_ApplStop                128
-#define TMCL_ApplRun                 129
-#define TMCL_ApplStep                130
-#define TMCL_ApplReset               131
-#define TMCL_DownloadStart           132
-#define TMCL_DownloadEnd             133
-#define TMCL_ReadMem                 134
-#define TMCL_GetStatus               135
-#define TMCL_GetVersion              136
-#define TMCL_FactoryDefault          137
-#define TMCL_SetEvent                138
-#define TMCL_SetASCII                139
-#define TMCL_SecurityCode            140
-#define TMCL_Breakpoint              141
-#define TMCL_RamDebug                142
-#define TMCL_GetIds                  143
-#define TMCL_UF_CH1                  144
-#define TMCL_UF_CH2                  145
-#define TMCL_writeRegisterChannel_1  146
-#define TMCL_writeRegisterChannel_2  147
-#define TMCL_readRegisterChannel_1   148
-#define TMCL_readRegisterChannel_2   149
-
-#define TMCL_BoardMeasuredSpeed      150
-#define TMCL_BoardError              151
-#define TMCL_BoardReset              152
-#define TMCL_GetInfo                 157
-
-#define TMCL_WLAN                    160
-#define TMCL_WLAN_CMD                160
-#define TMCL_WLAN_IS_RTS             161
-#define TMCL_WLAN_CMDMODE_EN         162
-#define TMCL_WLAN_IS_CMDMODE         163
-
-#define TMCL_MIN                     170
-#define TMCL_MAX                     171
-#define TMCL_OTP                     172
-
-#define TMCL_Boot                    242
-#define TMCL_SoftwareReset           255
 
 // Command type variants
 #define MVP_ABS  0
@@ -168,39 +80,6 @@
 #define TMCL_RX_ERROR_CHECKSUM  2
 
 extern const char *VersionString;
-
-// TMCL request
-typedef struct
-{
-	uint8_t   Opcode;
-	uint8_t   Type;
-	uint8_t   Motor;
-	uint32_t  Error;
-	union
-	{
-		uint8_t Byte[4];
-		uint32_t UInt32;
-		int32_t Int32;
-		float32_t Float32;
-	} Value;
-} TMCLCommandTypeDef;
-
-// TMCL reply
-typedef struct
-{
-	uint8_t Status;
-	uint8_t Opcode;
-	union
-	{
-		uint8_t Byte[4];
-		uint32_t UInt32;
-		int32_t Int32;
-		float32_t Float32;
-	} Value;
-
-	uint8_t Special[9];
-	uint8_t IsSpecial;  // next transfer will not use the serial address and the checksum bytes - instead the whole datagram is filled with data (used to transmit ASCII version string)
-} TMCLReplyTypeDef;
 
 void ExecuteActualCommand();
 uint8_t setTMCLStatus(uint8_t evalError);
@@ -257,6 +136,7 @@ uint8_t setTMCLStatus(uint8_t evalError)
 
 void ExecuteActualCommand()
 {
+    ActualReply.ModuleId = ActualCommand.ModuleId;
 	ActualReply.Opcode = ActualCommand.Opcode;
 	ActualReply.Status = REPLY_OK;
 	ActualReply.Value.Int32 = ActualCommand.Value.Int32;
@@ -267,6 +147,21 @@ void ExecuteActualCommand()
 		ActualReply.Status       = REPLY_CHKERR;
 		return;
 	}
+
+    if(Evalboards.ch1.fwdTmclCommand)
+    {
+        if (Evalboards.ch1.fwdTmclCommand(&ActualCommand, &ActualReply))
+        {
+            return;
+        }
+    }
+
+    if (ActualCommand.ModuleId != SERIAL_MODULE_ADDRESS)
+    {
+        // Datagram is not addressed to us, ignore it
+        ActualCommand.Error = TMCL_RX_ERROR_NODATA;
+        return;
+    }
 
 	switch(ActualCommand.Opcode)
 	{
@@ -320,11 +215,7 @@ void ExecuteActualCommand()
 		}
 		break;
 	case TMCL_SAP:
-        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-        {
-            ActualReply.Status =  Evalboards.ch1.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
-        }
-        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+        if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
         {
             ActualReply.Status = Evalboards.ch2.SAP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
         }
@@ -338,11 +229,7 @@ void ExecuteActualCommand()
         }
 		break;
 	case TMCL_GAP:
-	    if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-	    {
-	        ActualReply.Status =  Evalboards.ch1.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-	    }
-	    else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+	    if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
 	    {
 	        ActualReply.Status = Evalboards.ch2.GAP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
 	    }
@@ -439,14 +326,7 @@ void ExecuteActualCommand()
 		ActualReply.Value.Int32 = ActualCommand.Value.Int32;
 		break;
 	case TMCL_writeRegisterChannel_1:
-        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-        {
-            Evalboards.ch1.writeRegister(ActualCommand.Motor,(uint16_t)ActualCommand.Type, ActualCommand.Value.Int32);
-        }
-        else
-        {
             Evalboards.ch1.writeRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), ActualCommand.Value.Int32);
-        }
 		break;
 	case TMCL_writeRegisterChannel_2:
 		if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
@@ -467,14 +347,7 @@ void ExecuteActualCommand()
 		}
 		else
 		{
-            if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-            {
-                Evalboards.ch1.readRegister(ActualCommand.Motor,(uint16_t)ActualCommand.Type, &ActualReply.Value.Int32);
-            }
-            else
-            {
                 Evalboards.ch1.readRegister(ActualCommand.Motor & 0x0F, getExtendedAddress(&ActualCommand), &ActualReply.Value.Int32);
-            }
 		}
 		break;
 	case TMCL_readRegisterChannel_2:
@@ -507,12 +380,7 @@ void ExecuteActualCommand()
 		boardsReset();
 		break;
 	case TMCL_GetInfo:
-        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-        {
-            ActualReply.Status = Evalboards.ch1.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-
-        }
-        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+	    if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
 		{
             ActualReply.Status = Evalboards.ch2.getInfo(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
 
@@ -604,7 +472,7 @@ void tx(RXTXTypeDef *RXTX)
 	else
 	{
 		checkSum += SERIAL_HOST_ADDRESS;
-		checkSum += SERIAL_MODULE_ADDRESS;
+		checkSum += ActualReply.ModuleId;
 		checkSum += ActualReply.Status;
 		checkSum += ActualReply.Opcode;
 		checkSum += ActualReply.Value.Byte[3];
@@ -613,7 +481,7 @@ void tx(RXTXTypeDef *RXTX)
 		checkSum += ActualReply.Value.Byte[0];
 
 		reply[0] = SERIAL_HOST_ADDRESS;
-		reply[1] = SERIAL_MODULE_ADDRESS;
+		reply[1] = ActualReply.ModuleId;
 		reply[2] = ActualReply.Status;
 		reply[3] = ActualReply.Opcode;
 		reply[4] = ActualReply.Value.Byte[3];
@@ -648,6 +516,7 @@ void rx(RXTXTypeDef *RXTX)
 		return;
 	}
 
+    ActualCommand.ModuleId       = cmd[0];
 	ActualCommand.Opcode         = cmd[1];
 	ActualCommand.Type           = cmd[2];
 	ActualCommand.Motor          = cmd[3];
@@ -770,12 +639,7 @@ static void SetGlobalParameter()
 {
     if(ActualCommand.Motor <= 3)
     {
-        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-        {
-            ActualReply.Status = Evalboards.ch1.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
-            return;
-        }
-        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+        if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
         {
             ActualReply.Status = Evalboards.ch2.SGP(ActualCommand.Type, ActualCommand.Motor, ActualCommand.Value.Int32);
             return;
@@ -840,12 +704,7 @@ static void GetGlobalParameter()
 {
     if(ActualCommand.Motor <=3)
     {
-        if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-        {
-            ActualReply.Status = Evalboards.ch1.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
-            return;
-        }
-        else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+        if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
         {
             ActualReply.Status = Evalboards.ch2.GGP(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32);
             return;
@@ -1259,13 +1118,7 @@ static void HandleWlanCommand(void)
 
 static void handleRamDebug(void)
 {
-    if(Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL || Evalboards.ch1.id == ID_TMC9660_STEPPER_PARAM_EVAL)
-    {
-        ActualReply.Status = Evalboards.ch1.ramDebug(ActualCommand.Type, ActualCommand.Motor, &ActualCommand.Value.Int32);
-        ActualReply.Value.Int32 = ActualCommand.Value.Int32;
-        return;
-    }
-    else if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
+   if(Evalboards.ch2.id == ID_TMC9660_PARAM_EVAL)
 	{
 		ActualReply.Status = Evalboards.ch2.ramDebug(ActualCommand.Type, ActualCommand.Motor, &ActualCommand.Value.Int32);
 		ActualReply.Value.Int32 = ActualCommand.Value.Int32;

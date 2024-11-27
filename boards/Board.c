@@ -152,6 +152,7 @@ void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel)
 	channel->getMeasuredSpeed  = dummy_MotorRef;
 	channel->checkErrors       = periodicJob;
 	channel->enableDriver      = enableDriver;
+	channel->fwdTmclCommand    = NULL;
 
 	channel->fullCover         = NULL;
 	channel->getMin            = dummy_getLimit;
