@@ -225,6 +225,7 @@ static void verifyTMC9660Mode()
         {
             Evalboards.ch1.errors |= EVAL_ERROR_WRONG_MODULE_ID;
         }
+    }
 }
 
 static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *ActualReply)
