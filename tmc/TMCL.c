@@ -999,36 +999,42 @@ static void GetInput(void)
         || (Evalboards.ch2.GIO(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.Int32) == TMC_ERROR_NONE))
         return;
 
-    switch(ActualCommand.Type)
-    {
-    case 0:
-        ActualReply.Value.Int32 = *HAL.ADCs->AIN0;
-        break;
-    case 1:
-        ActualReply.Value.Int32 = *HAL.ADCs->AIN1;
-        break;
-    case 2:
-        ActualReply.Value.Int32 = *HAL.ADCs->AIN2;
-        break;
-    case 3:
-        ActualReply.Value.Int32 = *HAL.ADCs->DIO4;
-        break;
-    case 4:
-        ActualReply.Value.Int32 = *HAL.ADCs->DIO5;
-        break;
-    case 5:
-        ActualReply.Value.Int32 = VitalSignsMonitor.VM;
-        break;
-    case 6:	// Raw VM ADC value, no scaling calculation done // todo QOL 2: Switch this case with case 5? That way we have the raw Values from 0-5, then 6 for scaled VM value. Requires IDE changes (LH)
-        ActualReply.Value.Int32 = *HAL.ADCs->VM;
-        break;
-    case 7:
-        ActualReply.Value.Int32 = *HAL.ADCs->AIN_EXT;
-        break;
-    default:
-        ActualReply.Status = REPLY_INVALID_TYPE;
-        break;
-    }
+	switch(ActualCommand.Type)
+	{
+	case 0:
+		ActualReply.Value.Int32 = *HAL.ADCs->AIN0;
+		break;
+	case 1:
+		ActualReply.Value.Int32 = *HAL.ADCs->AIN1;
+		break;
+	case 2:
+		ActualReply.Value.Int32 = *HAL.ADCs->AIN2;
+		break;
+	case 3:
+		ActualReply.Value.Int32 = *HAL.ADCs->DIO4;
+		break;
+	case 4:
+		ActualReply.Value.Int32 = *HAL.ADCs->DIO5;
+		break;
+	case 5:
+	    if(Evalboards.ch1.id == ID_TMC5241){
+	        ActualReply.Value.Int32 = VitalSignsMonitor.VM + 7; // Rectifier diode lower the voltage to ~700mV
+	    }
+	    else
+	    {
+	        ActualReply.Value.Int32 = VitalSignsMonitor.VM;
+	    }
+		break;
+	case 6:	// Raw VM ADC value, no scaling calculation done // todo QOL 2: Switch this case with case 5? That way we have the raw Values from 0-5, then 6 for scaled VM value. Requires IDE changes (LH)
+		ActualReply.Value.Int32 = *HAL.ADCs->VM;
+		break;
+	case 7:
+		ActualReply.Value.Int32 = *HAL.ADCs->AIN_EXT;
+		break;
+	default:
+		ActualReply.Status = REPLY_INVALID_TYPE;
+		break;
+	}
 }
 
 static void HandleWlanCommand(void)
