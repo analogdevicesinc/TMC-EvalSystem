@@ -149,6 +149,11 @@ static void initTunnel(void)
     TMC9660_3PH_UARTChannel         = HAL.UART;
     TMC9660_3PH_UARTChannel->pinout = UART_PINS_2;
     TMC9660_3PH_UARTChannel->rxtx.init();
+    // Some forwarded commands can take longer than the default 10ms timeout
+    // like the TMCLScript download sequences. For now, we just greatly
+    // increase this timeout, later we should make this a more fine-grained
+    // selection.
+    TMC9660_3PH_UARTChannel->timeout = 250; // [ms]
 
     //    HAL.IOs->config->setHigh(Pins.SPI_EN);
     //    HAL.IOs->config->setLow(Pins.I2C_EN);
