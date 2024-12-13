@@ -27,6 +27,7 @@ typedef enum {
 typedef struct {
 	UART_Pins pinout;
 	UART_Mode mode;
+	uint16_t timeout;
 	RXTXTypeDef rxtx;
 } UART_Config;
 

@@ -11,10 +11,10 @@
 #include "hal/UART.h"
 #include "hal/Landungsbruecke/freescale/Cpu.h"
 
-#define BUFFER_SIZE         32
-#define INTR_PRI            6
-#define UART_TIMEOUT_VALUE  10
-#define WRITE_READ_DELAY    10
+#define BUFFER_SIZE                 32
+#define INTR_PRI                    6
+#define UART_DEFAULT_TIMEOUT_VALUE  10 // [ms]
+#define WRITE_READ_DELAY            10
 
 static void init();
 static void deInit();
@@ -35,6 +35,7 @@ UART_Config UART =
 {
 	.mode = UART_MODE_DUAL_WIRE,
 	.pinout = UART_PINS_1,
+	.timeout = UART_DEFAULT_TIMEOUT_VALUE,
 	.rxtx =
 	{
 		.init            = init,
@@ -274,7 +275,7 @@ int32_t UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uin
 	uint32_t timestamp = systick_getTick();
 	while(uart->rxtx.bytesAvailable() < readLength)
 	{
-		if(timeSince(timestamp) > UART_TIMEOUT_VALUE)
+		if(timeSince(timestamp) > uart->timeout)
 		{
 			// Abort on timeout
 			return -1;
@@ -302,7 +303,7 @@ void UART_readInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t 
 	// Wait for reply with timeout limit
 	timeout = systick_getTick();
 	while(channel->rxtx.bytesAvailable() < ARRAY_SIZE(readData))
-		if(timeSince(timeout) > UART_TIMEOUT_VALUE) // Timeout
+		if(timeSince(timeout) > channel->timeout) // Timeout
 			return;
 
 	channel->rxtx.rxN(readData, ARRAY_SIZE(readData));
