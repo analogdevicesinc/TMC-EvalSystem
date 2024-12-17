@@ -12,6 +12,11 @@ To clone this repository, simply use the following command in order to clone sub
 
 For detailed changelog, see commit history.
 
+### Version 3.10.8: (Released)
+ * TMC9660: Fixed the IC's script storage feature not working due to a too short communication timeout delay.
+ * Removed TMC8461-Eval and TMC8462-Eval from the project.
+ * Corrected ADC factor for LBV3 VM measurement.
+ 
 ### Version 3.10.7: (Released)
  * Various bug fixes for TMC9660-3PH-PARAM-Eval and TMC9660-STEPPER-PARAM-Eval.
  * Removed TMC9660-Eval from the project.
