@@ -64,8 +64,6 @@ static uint32_t rapid_fire_count[4] = { 0, 0, 0, 0 };
 
 static OTP_Status otp_status = OTP_STATUS_IDLE;
 
-// Helper macro - index is always 1 here (channel 1 <-> index 0, channel 2 <-> index 1)
-#define MAX22216_CRC(data, length) tmc_CRC8(data, length, 1)
 
 typedef struct
 {
@@ -89,40 +87,28 @@ static PinsTypeDef Pins;
 
 static uint8_t restore(void);
 
-static inline MAX22216TypeDef *motorToIC(uint8_t motor)
+void max22216_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+    UNUSED(icID);
+    MAX22216_SPIChannel->readWriteArray(data, dataLength);
+}
+
+uint8_t max22216_getCRCEnState(void)
+{
+    return MAX22216.crc_en;
+}
+
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
-    return &MAX22216;
+    //MAX22216 is only supporting 16 Bit instead of 32 and only unsigned
+    max22216_writeRegister(DEFAULT_ICID, (uint8_t) address, value & 0xFFFF);
 }
 
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-    UNUSED(channel);
-
-    return MAX22216_SPIChannel;
-}
-
-void max22216_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
-{
-    channelToSPI(channel)->readWriteArray(data, length);
-}
-
-// => CRC wrapper
-// Return the CRC8 of [length] bytes of data stored in the [data] array.
-uint8_t max22216_CRC8(uint8_t *data, size_t length)
-{
-    return MAX22216_CRC(data, length);
-}
-// <= CRC wrapper
-
-void max22216_writeRegister(uint8_t motor, uint16_t address, int32_t value)
-{
-    max22216_writeInt(motorToIC(motor), (uint8_t) address, value);
-}
-
-void max22216_readRegister(uint8_t motor, uint16_t address, int32_t *value)
-{
-    *value = max22216_readInt(motorToIC(motor), (uint8_t) address);
+    UNUSED(motor);
+    *value = max22216_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -315,11 +301,11 @@ static void OTP_init(void)
     data[0] = 0xFD;
     data[1] = 0x12;
     data[2] = 0xA7;
-    max22216_readWriteArray(MAX22216.channel, data, 3);
+    max22216_readWriteSPI(DEFAULT_ICID, data, 3);
     data[0] = 0xF8;
     data[1] = 0x00;
     data[2] = 0x1B;
-    max22216_readWriteArray(MAX22216.channel, data, 3);
+    max22216_readWriteSPI(DEFAULT_ICID, data, 3);
 }
 
 static void OTP_address(uint32_t address)
