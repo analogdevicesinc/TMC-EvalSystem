@@ -21,6 +21,7 @@
 
 #define VM_MIN  51   // VM[V/10] min
 #define VM_MAX  360  // VM[V/10] max
+#define DEFAULT_ICID  0
 
 #define MOTORS 4
 
@@ -303,7 +304,7 @@ static void periodicJob(uint32_t tick)
 static void OTP_init(void)
 {
     // Activate the part
-    MAX22216_FIELD_WRITE(motorToIC(0), 0x01, 0x8000, 15, 1);
+    max22216_fieldWrite(DEFAULT_ICID, MAX22216_ACTIVE_FIELD, 1);
 
     // Drive CRC Pin low
     HAL.IOs->config->setLow(Pins.CRC_EN);
@@ -323,27 +324,28 @@ static void OTP_init(void)
 
 static void OTP_address(uint32_t address)
 {
-    MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_ADDR, MAX22216_OTP_ADDR_MASK, MAX22216_OTP_ADDR_SHIFT, address);
+    max22216_fieldWrite(DEFAULT_ICID, MAX22216_OTP_ADDR_FIELD, address);
 }
 
 static void OTP_value(uint32_t value)
 {
-    MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_DATA0, MAX22216_OTP_DATA0_MASK, MAX22216_OTP_DATA0_SHIFT, value & 0xFF);
-    MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_DATA1, MAX22216_OTP_DATA1_MASK, MAX22216_OTP_DATA1_SHIFT, (value >> 8) & 0xFF);
+    max22216_fieldWrite(DEFAULT_ICID, MAX22216_OTP_DATA0_FIELD, value & 0xFF);
+    max22216_fieldWrite(DEFAULT_ICID, MAX22216_OTP_DATA1_FIELD, (value >> 8) & 0xFF);
 }
 
 static void OTP_program(void)
 {
-    MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_CONTROL, MAX22216_SRT_PROG_MASK, MAX22216_SRT_PROG_SHIFT, 1);
+    max22216_fieldWrite(DEFAULT_ICID, MAX22216_SRT_PROG_FIELD, 1);
     otp_status = OTP_STATUS_PROGRAMMING;
 }
 
 static OTP_Status OTP_status(void)
 {
-    if(otp_status == OTP_STATUS_PROGRAMMING) {
-        if(MAX22216_FIELD_READ(motorToIC(0), MAX22216_OTP_STATUS, MAX22216_DONE_MASK, MAX22216_DONE_SHIFT) == 1)
+    if (otp_status == OTP_STATUS_PROGRAMMING)
+    {
+        if (max22216_fieldRead(DEFAULT_ICID, MAX22216_DONE_FIELD) == 1)
             otp_status = OTP_STATUS_DONE;
-        if(MAX22216_FIELD_READ(motorToIC(0), MAX22216_OTP_STATUS, ~MAX22216_DONE_MASK, 0) != 0)
+        if (max22216_fieldRead(DEFAULT_ICID, MAX22216_OTP_FAIL_FIELD) != 0)
             otp_status = OTP_STATUS_FAILED;
     }
     return otp_status;
@@ -351,9 +353,9 @@ static OTP_Status OTP_status(void)
 
 static void OTP_lock(void)
 {
-    MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_ADDR, MAX22216_OTP_ADDR_MASK, MAX22216_OTP_ADDR_SHIFT, 0x41);
-    MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_DATA0, MAX22216_OTP_DATA0_MASK, MAX22216_OTP_DATA0_SHIFT, 0xA5);
-    MAX22216_FIELD_WRITE(motorToIC(0), MAX22216_OTP_DATA1, MAX22216_OTP_DATA1_MASK, MAX22216_OTP_DATA1_SHIFT, 0xA5);
+    max22216_fieldWrite(DEFAULT_ICID, MAX22216_OTP_ADDR_FIELD, 0x41);
+    max22216_fieldWrite(DEFAULT_ICID, MAX22216_OTP_DATA0_FIELD, 0xA5);
+    max22216_fieldWrite(DEFAULT_ICID, MAX22216_OTP_DATA1_FIELD, 0xA5);
     OTP_program();
 }
 
