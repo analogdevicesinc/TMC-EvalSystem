@@ -9,6 +9,7 @@
 #include "hal/SysTick.h"
 
 volatile uint32_t systick = 0;
+extern volatile uint32_t IICTimeout;
 
 #define SYSTICK_PRE_EMPTION_PRIORITY 3
 
@@ -27,6 +28,7 @@ void systick_init(void)
 void SysTick_Handler(void)
 {
 	systick++;
+    if(IICTimeout>0) IICTimeout--;
 }
 
 uint32_t systick_getTick(void)

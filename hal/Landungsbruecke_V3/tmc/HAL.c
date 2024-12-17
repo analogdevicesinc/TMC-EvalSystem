@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -34,7 +34,8 @@ const HALTypeDef HAL =
 	.RS232        = &RS232,
 	.WLAN         = &WLAN,
 	.Timer        = &Timer,
-	.UART         = &UART
+	.UART         = &UART,
+    .IIC         = &IIC
 };
 
 static void init(void)
@@ -53,6 +54,7 @@ static void init(void)
 	LEDs.init();
 	ADCs.init();
 	WLAN.init();
+    IIC.init();
 }
 
 static void __attribute((noreturn)) reset(uint8_t ResetPeripherals)
