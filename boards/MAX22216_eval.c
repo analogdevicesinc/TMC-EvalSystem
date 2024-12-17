@@ -403,7 +403,6 @@ static void timer_overflow(timer_channel channel)
 
 void MAX22216_init(void)
 {
-    tmc_fillCRC8Table(0x07, true, 1);
     Pins.CNTL[0] = &HAL.IOs->pins->DIO8;
     Pins.CNTL[1] = &HAL.IOs->pins->DIO9;
     Pins.CNTL[2] = &HAL.IOs->pins->DIO6;
@@ -465,7 +464,9 @@ void MAX22216_init(void)
     Evalboards.ch2.OTP_status           = OTP_status;
     Evalboards.ch2.OTP_lock             = OTP_lock;
 
-    max22216_init(&MAX22216, 0);
+    MAX22216.slaveAddress = 0;
+    MAX22216.channel      = 0;
+    MAX22216.crc_en       = 0;
 
     Timer.overflow_callback = timer_overflow;
     Timer.init();
