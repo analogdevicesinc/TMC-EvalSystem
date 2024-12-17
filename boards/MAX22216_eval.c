@@ -23,6 +23,14 @@
 #define VM_MAX  360  // VM[V/10] max
 #define DEFAULT_ICID  0
 
+// Usage note: use 1 TypeDef per IC
+typedef struct
+{
+    uint8_t channel;
+    uint8_t slaveAddress;
+    uint8_t crc_en;
+} MAX22216TypeDef;
+static MAX22216TypeDef MAX22216;
 #define MOTORS 4
 
 #define TIMEOUT_VALUE 10 // 10 ms
