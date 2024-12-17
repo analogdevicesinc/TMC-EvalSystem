@@ -19,7 +19,7 @@
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 #define VM_FACTOR               713  // ADC reaches limit at VM = 71.3V => VM Factor (in 100mV) = 713
 #elif defined(LandungsbrueckeV3)
-#define VM_FACTOR               744
+#define VM_FACTOR               735
 #endif
 
 
