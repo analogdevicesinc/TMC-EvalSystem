@@ -48,13 +48,11 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC5130         5
 #define ID_TMC5041         6
 #define ID_TMC5072         7
-#define ID_TMC8460         8
 #define ID_TMC4361A        11
 #define ID_TMC4671         13
 #define ID_TMC5160         16
 #define ID_TMC5062         25
-#define ID_TMC8461         26
-#define ID_TMC8462         27
+#define ID_TMC8462         27 // Exists but not in this project.
 #define ID_TMC5240		   28
 #define ID_TMC5272		   29
 #define ID_TMC5262         30
@@ -132,10 +130,6 @@ extern void TMC6200_init();
 extern void TMC6300_init();
 extern void TMC7300_init();
 extern void TMC8100_init();
-extern void TMC8461_init_ch1();
-extern void TMC8461_init_ch2();
-extern void TMC8462_init_ch1();
-extern void TMC8462_init_ch2();
 extern void TMC2262_init();
 extern void TMC9660_3PH_init();
 extern void TMC9660_STEPPER_init();
@@ -163,8 +157,6 @@ static const init_assignment init_ch1[] =
 	{ .id = ID_TMC5271,     .init = TMC5271_init     },
 	{ .id = ID_TMC5272,     .init = TMC5272_init     },
 	{ .id = ID_TMC5062,     .init = TMC5062_init     },
-	{ .id = ID_TMC8461,     .init = TMC8461_init_ch1 },
-	{ .id = ID_TMC8462,     .init = TMC8462_init_ch1 },
     { .id = ID_TMC5262,     .init = TMC5262_init     },
     { .id = ID_TMC9660_3PH_BL_EVAL,     .init = TMC9660_3PH_init     },
     { .id = ID_TMC9660_3PH_REG_EVAL,    .init = TMC9660_3PH_init     },
