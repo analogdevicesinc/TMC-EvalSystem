@@ -14,6 +14,7 @@
 #include "tmc/ic/TMC2130/TMC2130.h"
 #include "tmc/ic/TMC2160/TMC2160.h"
 
+#define DEFAULT_ICID 0
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -33,8 +34,12 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint8_t reset();
 static uint8_t restore();
 
+void tmc4361A_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 typedef struct
 {
+    UNUSED(icID);
+    TMC4361A_SPIChannel->readWriteArray(data, dataLength);
+}
 	IOPinTypeDef  *TARGET_REACHED;
 	IOPinTypeDef  *NRST;
 	IOPinTypeDef  *FREEZE;
@@ -50,6 +55,7 @@ static PinsTypeDef Pins;
 
 static SPIChannelTypeDef *TMC4361A_SPIChannel;
 
+void tmc4361A_setStatus(uint16_t icID, uint8_t *data)
 static uint32_t vmax_position = 0;
 
 // Helper macro - Access the chip object in the motion controller boards union
@@ -59,7 +65,9 @@ static uint32_t vmax_position = 0;
 // When using multiple ICs you can map them here
 static inline TMC4361ATypeDef *motorToIC(uint8_t motor)
 {
-	UNUSED(motor);
+    UNUSED(icID);
+    TMC4361A.status = data[0];
+}
 
 	return &TMC4361A;
 }
@@ -187,570 +195,752 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
-	uint32_t errors = TMC_ERROR_NONE;
-	uint32_t uvalue;
+    uint32_t errors = TMC_ERROR_NONE;
+    int32_t uvalue;
+    int32_t buffer;
 
-	if(motor >= TMC4361A_MOTORS)
-		return TMC_ERROR_MOTOR;
+    if (motor >= TMC4361A_MOTORS)
+        return TMC_ERROR_MOTOR;
 
-	switch(type)
-	{
-	case 0:
-		// Target position
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_X_TARGET);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_X_TARGET, *value);
-		}
-		break;
-	case 1:
-		// Actual position
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_XACTUAL);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_XACTUAL, *value);
-		}
-		break;
-	case 2:
-		// Target speed
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VMAX) >> 8;
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(*value));
-		}
-		break;
-	case 3:
-		// Actual speed
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VACTUAL);
-		} else if(readWrite == WRITE) {
-			errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 4:
-		// Maximum speed
-		if(readWrite == READ) {
-			*value = vmax_position;
-			//*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VMAX) >> 8;
-		} else if(readWrite == WRITE) {
-			vmax_position = *value;
-			// Write VMAX if already in position mode
-			if(tmc4361A_readInt(motorToIC(motor), TMC4361A_RAMPMODE) & TMC4361A_RAMP_POSITION)
-				tmc4361A_writeInt(motorToIC(motor), TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(vmax_position));
-		}
-		break;
-	case 5:
-		// Maximum acceleration
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_AMAX)>>2;
-		} else if(readWrite == WRITE) {
-			if(*value & ~0x3FFFFF)
-			{
-				errors |= TMC_ERROR_VALUE;
-			}
-			else
-			{
-				tmc4361A_writeInt(motorToIC(motor), TMC4361A_AMAX, *value<<2);
-			}
-		}
-		break;
-	case 8:
-		// Position reached flag
-		if(readWrite == READ) {
-			*value = (tmc4361A_readInt(motorToIC(motor), TMC4361A_STATUS) & (1<<0))? 1:0;
-		} else if(readWrite == WRITE)
-			errors |= TMC_ERROR_TYPE;
-		break;
-	case 14:
-		// Ramp type
-		if(readWrite == READ) {
-			uint32_t rampmode = TMC4361A_FIELD_READ(motorToIC(motor), TMC4361A_RAMPMODE, TMC4361A_RAMP_PROFILE_MASK, TMC4361A_RAMP_PROFILE_SHIFT);
-			*value = (rampmode == TMC4361A_RAMP_SSHAPE);
-		} else if(readWrite == WRITE) {
-			uint32_t rampmode = (*value) ? TMC4361A_RAMP_SSHAPE : TMC4361A_RAMP_TRAPEZ;
-			TMC4361A_FIELD_WRITE(motorToIC(motor), TMC4361A_RAMPMODE, TMC4361A_RAMP_PROFILE_MASK, TMC4361A_RAMP_PROFILE_SHIFT, rampmode);
-		}
-		break;
-	case 15:
-		// Velocity VSTART
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VSTART) * 256;
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VSTART, (*value) / 256);
-		}
-		break;
-	case 16:
-		// Acceleration AStart
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_ASTART)>>2;
-		} else if(readWrite == WRITE) {
-			if(*value & ~0x3FFFFF)
-			{
-				errors |= TMC_ERROR_VALUE;
-			}
-			else
-			{
-				tmc4361A_writeInt(motorToIC(motor), TMC4361A_ASTART, *value<<2);
-			}
-		}
-		break;
-	case 17:
-		// Maximum Deceleration
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_DMAX)>>2;
-		} else if(readWrite == WRITE) {
-			if(*value & ~0x3FFFFF)
-			{
-				errors |= TMC_ERROR_VALUE;
-			}
-			else
-			{
-				tmc4361A_writeInt(motorToIC(motor), TMC4361A_DMAX, *value<<2);
-			}
-		}
-		break;
-	case 18:
-		// Velocity VBreak
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VBREAK) * 256;
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VBREAK, (*value) / 256);
-		}
-		break;
-	case 19:
-		// Deceleration DFinal
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_DFINAL) >> 2;
-		} else if(readWrite == WRITE) {
-			if(*value & ~0x3FFFFF)
-			{
-				errors |= TMC_ERROR_VALUE;
-			}
-			else
-			{
-				tmc4361A_writeInt(motorToIC(motor), TMC4361A_DFINAL, *value<<2);
-			}
-		}
-		break;
-	case 20:
-		// Velocity VSTOP
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VSTOP) * 256;
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VSTOP, (*value) / 256);
-		}
-		break;
-	case 21:
-		// Deceleration DStop
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_DSTOP) * 4;
-		} else if(readWrite == WRITE) {
-			if(*value & ~0x3FFFFF)
-			{
-				errors |= TMC_ERROR_VALUE;
-			}
-			else
-			{
-				tmc4361A_writeInt(motorToIC(motor), TMC4361A_DSTOP, (*value) / 4);
-			}
-		}
-		break;
-	case 22:
-		// Bow 1
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_BOW1);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_BOW1, *value);
-		}
-		break;
-	case 23:
-		// Bow 2
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_BOW2);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_BOW2, *value);
-		}
-		break;
-	case 24:
-		// Bow 3
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_BOW3);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_BOW3, *value);
-		}
-		break;
-	case 25:
-		// Bow 4
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_BOW4);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_BOW4, *value);
-		}
-		break;
-	case 26:
-		// Virtual stop left
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VIRT_STOP_LEFT);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VIRT_STOP_LEFT, *value);
-		}
-		break;
-	case 27:
-		// Virtual stop right
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_VIRT_STOP_RIGHT);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_VIRT_STOP_RIGHT, *value);
-		}
-		break;
-	case 108:
-		// CL Gamma VMin
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_VMIN_EMF_WR);		// read from shadow register
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_VMIN_EMF_WR, *value);
-		}
-		break;
-	case 109:
-		// CL Gamma VMax
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_VADD_EMF); 	// read from shadow register
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_VADD_EMF, *value);
-		}
-		break;
-	case 110:
-		// CL maximum Gamma
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_BETA) >> 16;
-		} else if(readWrite == WRITE) {
-			uvalue = tmc4361A_readInt(motorToIC(motor),  TMC4361A_CL_BETA) & 0x000001FF;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_BETA, uvalue | (*value<<16));
-		}
-		break;
-	case 111:
-		// CL beta
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_BETA) & 0xFF;
-		} else if(readWrite == WRITE) {
-			uvalue = tmc4361A_readInt(motorToIC(motor),  TMC4361A_CL_BETA) & 0x00FF0000;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_BETA, uvalue | (*value & 0x1FF));
-		}
-		break;
-	case 112:
-		// CL offset
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_OFFSET);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_OFFSET, *value);
-		}
-		break;
-	case 113:
-		// CL current minimum
-		if(readWrite == READ) {
-			*value = (tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) >> 0) & 0xFF;
-		} else if(readWrite == WRITE) {
-
-			uint32_t spiOutFormat = tmc4361A_readInt(motorToIC(motor), TMC4361A_SPIOUT_CONF) & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
-			int32_t minLimit, maxLimit;
-			switch(spiOutFormat)
-			{//S/D Mode:
-			case 0x0B:
-			case 0x0C:
-			case 0x0F:
-				minLimit = 0;
-				maxLimit = 31;
-				break;
-			//SPI Mode:
-			case 0x08:
-			case 0x09:
-			case 0x0A:
-			case 0x0D:
-				minLimit = 0;
-				maxLimit = 255;
-				break;
-			default:
+    switch (type)
+    {
+    case 0:
+        // Target position
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_XTARGET, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_XTARGET, *value);
+        }
+        break;
+    case 1:
+        // Actual position
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_XACTUAL, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_XACTUAL, *value);
+        }
+        break;
+    case 2:
+        // Target speed
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_VMAX, &buffer);
+            *value = buffer >> 8;
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(*value));
+        }
+        break;
+    case 3:
+        // Actual speed
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_VACTUAL, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            errors |= TMC_ERROR_TYPE;
+        }
+        break;
+    case 4:
+        // Maximum speed
+        if (readWrite == READ)
+        {
+            *value = vmax_position;
+            //*value = readRegister(DEFAULT_ICID, TMC4361A_VMAX, &buffer);
+            //*value = buffer >> 8;
+        }
+        else if (readWrite == WRITE)
+        {
+            vmax_position = *value;
+            // Write VMAX if already in position mode
+            readRegister(DEFAULT_ICID, TMC4361A_RAMPMODE, &buffer);
+            if (buffer & TMC4361A_RAMP_POSITION)
+                writeRegister(DEFAULT_ICID, TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(vmax_position));
+        }
+        break;
+    case 5:
+        // Maximum acceleration
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_AMAX, &buffer);
+            *value = buffer >> 2;
+        }
+        else if (readWrite == WRITE)
+        {
+            if (*value & ~0x3FFFFF)
+            {
+                errors |= TMC_ERROR_VALUE;
+            }
+            else
+            {
+                writeRegister(DEFAULT_ICID, TMC4361A_AMAX, *value << 2);
+            }
+        }
+        break;
+    case 8:
+        // Position reached flag
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_STATUS, &buffer);
+            *value = (buffer & (1 << 0)) ? 1 : 0;
+        }
+        else if (readWrite == WRITE)
+            errors |= TMC_ERROR_TYPE;
+        break;
+    case 14:
+        // Ramp type
+        if (readWrite == READ)
+        {
+            uint32_t rampmode = tmc4361A_fieldRead(DEFAULT_ICID, TMC4361A_RAMP_PROFILE_FIELD);
+            *value            = (rampmode == TMC4361A_RAMP_SSHAPE);
+        }
+        else if (readWrite == WRITE)
+        {
+            uint32_t rampmode = (*value) ? TMC4361A_RAMP_SSHAPE : TMC4361A_RAMP_TRAPEZ;
+            tmc4361A_fieldWrite(DEFAULT_ICID, TMC4361A_RAMP_PROFILE_FIELD, rampmode);
+        }
+        break;
+    case 15:
+        // Velocity VSTART
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_VSTART, &buffer);
+            *value = buffer * 256;
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_VSTART, (*value) / 256);
+        }
+        break;
+    case 16:
+        // Acceleration AStart
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ASTART, &buffer);
+            *value = buffer >> 2;
+        }
+        else if (readWrite == WRITE)
+        {
+            if (*value & ~0x3FFFFF)
+            {
+                errors |= TMC_ERROR_VALUE;
+            }
+            else
+            {
+                writeRegister(DEFAULT_ICID, TMC4361A_ASTART, *value << 2);
+            }
+        }
+        break;
+    case 17:
+        // Maximum Deceleration
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_DMAX, &buffer);
+            *value = buffer >> 2;
+        }
+        else if (readWrite == WRITE)
+        {
+            if (*value & ~0x3FFFFF)
+            {
+                errors |= TMC_ERROR_VALUE;
+            }
+            else
+            {
+                writeRegister(DEFAULT_ICID, TMC4361A_DMAX, *value << 2);
+            }
+        }
+        break;
+    case 18:
+        // Velocity VBreak
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_VBREAK, &buffer);
+            *value = buffer * 256;
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_VBREAK, (*value) / 256);
+        }
+        break;
+    case 19:
+        // Deceleration DFinal
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_DFINAL, &buffer);
+            *value = buffer >> 2;
+        }
+        else if (readWrite == WRITE)
+        {
+            if (*value & ~0x3FFFFF)
+            {
+                errors |= TMC_ERROR_VALUE;
+            }
+            else
+            {
+                writeRegister(DEFAULT_ICID, TMC4361A_DFINAL, *value << 2);
+            }
+        }
+        break;
+    case 20:
+        // Velocity VSTOP
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_VSTOP, &buffer);
+            *value = buffer * 256;
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_VSTOP, (*value) / 256);
+        }
+        break;
+    case 21:
+        // Deceleration DStop
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_DSTOP, &buffer);
+            *value = buffer * 4;
+        }
+        else if (readWrite == WRITE)
+        {
+            if (*value & ~0x3FFFFF)
+            {
+                errors |= TMC_ERROR_VALUE;
+            }
+            else
+            {
+                writeRegister(DEFAULT_ICID, TMC4361A_DSTOP, (*value) / 4);
+            }
+        }
+        break;
+    case 22:
+        // Bow 1
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_BOW1, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_BOW1, *value);
+        }
+        break;
+    case 23:
+        // Bow 2
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_BOW2, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_BOW2, *value);
+        }
+        break;
+    case 24:
+        // Bow 3
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_BOW3, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_BOW3, *value);
+        }
+        break;
+    case 25:
+        // Bow 4
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_BOW4, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_BOW4, *value);
+        }
+        break;
+    case 26:
+        // Virtual stop left
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_VIRT_STOP_LEFT, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_VIRT_STOP_LEFT, *value);
+        }
+        break;
+    case 27:
+        // Virtual stop right
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_VIRT_STOP_RIGHT, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_VIRT_STOP_RIGHT, *value);
+        }
+        break;
+    case 108:
+        // CL Gamma VMin
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_VMIN_EMF, value); // read from shadow register
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_VMIN_EMF, *value);
+        }
+        break;
+    case 109:
+        // CL Gamma VMax
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_VADD_EMF, value); // read from shadow register
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_VADD_EMF, *value);
+        }
+        break;
+    case 110:
+        // CL maximum Gamma
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, &buffer);
+            *value = buffer >> 16;
+        }
+        else if (readWrite == WRITE)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, &buffer);
+            uvalue = buffer & 0x000001FF;
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, uvalue | (*value << 16));
+        }
+        break;
+    case 111:
+        readRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, &buffer);
+        // CL beta
+        if (readWrite == READ)
+        {
+            *value = buffer & 0xFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            uvalue = buffer & 0x00FF0000;
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, uvalue | (*value & 0x1FF));
+        }
+        break;
+    case 112:
+        // CL offset
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_OFFSET, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_OFFSET, *value);
+        }
+        break;
+    case 113:
+        // CL current minimum
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, &buffer);
+            *value = (buffer >> 0) & 0xFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_SPI_OUT_CONF, &buffer);
+            uint32_t spiOutFormat = buffer & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
+            int32_t minLimit, maxLimit;
+            switch (spiOutFormat)
+            { //S/D Mode:
+            case 0x0B:
+            case 0x0C:
+            case 0x0F:
+                minLimit = 0;
+                maxLimit = 31;
+                break;
+            //SPI Mode:
+            case 0x08:
+            case 0x09:
+            case 0x0A:
+            case 0x0D:
+                minLimit = 0;
+                maxLimit = 255;
+                break;
+            default:
                 minLimit = 0;
                 maxLimit = 0;
-				break;
-			}
+                break;
+            }
 
-			if (*value < minLimit){
-				*value = minLimit;
-			}
-			else if (*value > maxLimit){
-				*value = maxLimit;
-			}
-			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<0);
-			uvalue |= (*value & 0xFF) << 0;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_SCALE_VALUES, uvalue);
-		}
-		break;
-	case 114:
-		// CL current maximum
-		if(readWrite == READ) {
-			*value = (tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) >> 8) & 0xFF;
-		} else if(readWrite == WRITE) {
+            if (*value < minLimit)
+            {
+                *value = minLimit;
+            }
+            else if (*value > maxLimit)
+            {
+                *value = maxLimit;
+            }
+            readRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, &buffer);
+            uvalue = buffer & ~(0xFF << 0);
+            uvalue |= (*value & 0xFF) << 0;
+            writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
+        }
+        break;
+    case 114:
+        // CL current maximum
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, &buffer);
+            *value = (buffer >> 8) & 0xFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_SPI_OUT_CONF, &buffer);
+            uint32_t spiOutFormat = buffer & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
+            int32_t minLimit, maxLimit;
+            switch (spiOutFormat)
+            { //S/D Mode:
+            case 0x0B:
+            case 0x0C:
+            case 0x0F:
+                minLimit = 0;
+                maxLimit = 31;
+                break;
+            //SPI Mode:
+            case 0x08:
+            case 0x09:
+            case 0x0A:
+            case 0x0D:
+                minLimit = 0;
+                maxLimit = 255;
+                break;
+            default:
+                minLimit = 0;
+                maxLimit = 0;
+                break;
+            }
 
-			uint32_t spiOutFormat = tmc4361A_readInt(motorToIC(motor), TMC4361A_SPIOUT_CONF) & TMC4361A_SPI_OUTPUT_FORMAT_MASK;
-			int32_t minLimit, maxLimit;
-			switch(spiOutFormat)
-			{//S/D Mode:
-			case 0x0B:
-			case 0x0C:
-			case 0x0F:
-				minLimit = 0;
-				maxLimit = 31;
-				break;
-			//SPI Mode:
-			case 0x08:
-			case 0x09:
-			case 0x0A:
-			case 0x0D:
-				minLimit = 0;
-				maxLimit = 255;
-				break;
-			default:
-			    minLimit = 0;
-			    maxLimit = 0;
-				break;
-			}
-
-			if (*value < minLimit){
-				*value = minLimit;
-			}
-			else if (*value > maxLimit){
-				*value = maxLimit;
-			}
-			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<8);
-			uvalue |= (*value & 0xFF) << 8;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_SCALE_VALUES, uvalue);
-		}
-		break;
-	case 115:
-		// CL correction velocity P
-		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_CL_VMAX_CALC_P_WR];
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_VMAX_CALC_P_WR, *value);
-		}
-		break;
-	case 116:
-		// CL correction velocity I
-		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_CL_VMAX_CALC_I_WR];
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_VMAX_CALC_I_WR, *value);
-		}
-		break;
-	case 117:
-		// CL correction velocity I clipping
-		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_PID_I_CLIP_WR] >> 0;
-			*value &= 0x7FFF;
-		} else if(readWrite == WRITE) {
-			uvalue = TMC4361A.config->shadowRegister[TMC4361A_PID_I_CLIP_WR];
-			uvalue &= ~(0x7FFF << 0);
-			uvalue |= (*value & 0x7FFF) << 0;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_PID_I_CLIP_WR, uvalue);
-		}
-		break;
-	case 118:
-		// CL correction velocity DV clock
-		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_PID_D_CLKDIV_WR] >> 16;
-			*value &= 0xFF;
-		} else if(readWrite == WRITE) {
-			uvalue = TMC4361A.config->shadowRegister[TMC4361A_PID_D_CLKDIV_WR];
-			uvalue &= ~(0xFF << 16);
-			uvalue |= (*value & 0xFF) << 16;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_PID_D_CLKDIV_WR, uvalue);
-		}
-		break;
-	case 119:
-		// CL correction velocity DV clipping
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_PID_DV_CLIP_WR);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_PID_DV_CLIP_WR, *value);
-		}
-		break;
-	case 120:
-		// CL upscale delay
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_UPSCALE_DELAY);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_UPSCALE_DELAY, *value);
-		}
-		break;
-	case 121:
-		// CL Downscale delay
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_DOWNSCALE_DELAY);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_DOWNSCALE_DELAY, *value);
-		}
-		break;
-	case 123:
-		// Actual Scalar Value
-		if(readWrite == READ) {
-			// Read-only
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_PARAM_RD);
-		} else if(readWrite == WRITE) {
+            if (*value < minLimit)
+            {
+                *value = minLimit;
+            }
+            else if (*value > maxLimit)
+            {
+                *value = maxLimit;
+            }
+            readRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, &buffer);
+            uvalue = buffer & ~(0xFF << 8);
+            uvalue |= (*value & 0xFF) << 8;
+            writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
+        }
+        break;
+    case 115:
+        // CL correction velocity P
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_P, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_P, *value);
+        }
+        break;
+    case 116:
+        // CL correction velocity I
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_I, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_I, *value);
+        }
+        break;
+    case 117:
+        // CL correction velocity I clipping
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, &buffer);
+            *value = buffer & 0x7FFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, &uvalue);
+            uvalue &= ~(0x7FFF << 0);
+            uvalue |= (*value & 0x7FFF) << 0;
+            writeRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, uvalue);
+        }
+        break;
+    case 118:
+        // CL correction velocity DV clock
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, &buffer);
+            *value = buffer >> 16;
+            *value &= 0xFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, &uvalue);
+            uvalue &= ~(0xFF << 16);
+            uvalue |= (*value & 0xFF) << 16;
+            writeRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, uvalue);
+        }
+        break;
+    case 119:
+        // CL correction velocity DV clipping
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_PID_DV_CLIP, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_PID_DV_CLIP, *value);
+        }
+        break;
+    case 120:
+        // CL upscale delay
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_UPSCALE_DELAY, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_UPSCALE_DELAY, *value);
+        }
+        break;
+    case 121:
+        // CL Downscale delay
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_DNSCALE_DELAY, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_DNSCALE_DELAY, *value);
+        }
+        break;
+    case 123:
+        // Actual Scalar Value
+        if (readWrite == READ)
+        {
+            // Read-only
+            readRegister(DEFAULT_ICID, TMC4361A_SCALE_PARAM, value);
+        }
+        else if (readWrite == WRITE)
+        {
             errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 124:
-		// CL Correction Position P
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_DELTA_P_WR);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_DELTA_P_WR, *value);
-		}
-		break;
-	case 125:
-		// CL max. correction tolerance
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_CL_TOLERANCE_WR);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_TOLERANCE_WR, *value);
-		}
-		break;
-	case 126:
-		// CL start up
-		if(readWrite == READ) {
-			*value = (tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) >> 16) & 0xFF;
-		} else if(readWrite == WRITE) {
-			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<16);
-			uvalue |= (*value & 0xFF) << 16;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_SCALE_VALUES, uvalue);
-		}
-		break;
-	case 129: // todo AP 2: merge AP 129 with AP 133? #1
-		// Closed Loop Flag
-		if(readWrite == READ) {
-			// Read for closed loop flag is implemented as AP 133
-		} else if(readWrite == WRITE) {
-			//Closed loop on/off
-			if(*value)
-			{
-				*value = tmc4361A_calibrateClosedLoop(motorToIC(motor), 1);
-				if(!*value)
-					errors |= TMC_ERROR_NOT_DONE;
-			}
-			else
-			{
-				uvalue 	= tmc4361A_readInt(motorToIC(motor), TMC4361A_ENC_IN_CONF);
-				uvalue 	&= ~(1<<22); // closed loop
-				tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_IN_CONF, uvalue);
-			}
-		}
-		break;
-	case 132:
-		// Measured Encoder Speed
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_V_ENC_RD);
-		} else if(readWrite == WRITE)
-			errors |= TMC_ERROR_TYPE;
-		break;
-	case 133: // todo AP 2: merge AP 129 with AP 133? #2
-		// Closed Loop Init Flag
-		if(readWrite == READ) {
-			uvalue 	= tmc4361A_readInt(motorToIC(motor), TMC4361A_ENC_IN_CONF);
-			*value = (((uvalue >> 22) & 3) == 1) ? 1 : 0;
-		} else if(readWrite == WRITE) {
-			// Write for closed loop flag is implemented as AP 129
-		}
-		break;
-	case 134:
-		// Encoder deviation
-		if(readWrite == READ) {
-			// Read-only encoder deviation
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_ENC_POS_DEV_RD);
-		} else if(readWrite == WRITE) {
+        }
+        break;
+    case 124:
+        // CL Correction Position P
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_DELTA_P, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_DELTA_P, *value);
+        }
+        break;
+    case 125:
+        // CL max. correction tolerance
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_TOLERANCE, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_TOLERANCE, *value);
+        }
+        break;
+    case 126:
+        // CL start up
+        readRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, &buffer);
+        if (readWrite == READ)
+        {
+            *value = (buffer >> 16) & 0xFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            uvalue = buffer & ~(0xFF << 16);
+            uvalue |= (*value & 0xFF) << 16;
+            writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
+        }
+        break;
+    case 129: // todo AP 2: merge AP 129 with AP 133? #1
+        // Closed Loop Flag
+        if (readWrite == READ)
+        {
+            // Read for closed loop flag is implemented as AP 133
+        }
+        else if (readWrite == WRITE)
+        {
+            //Closed loop on/off
+            if (*value)
+            {
+                *value = tmc4361A_calibrateClosedLoop(1);
+                if (!*value)
+                    errors |= TMC_ERROR_NOT_DONE;
+            }
+            else
+            {
+                readRegister(DEFAULT_ICID, TMC4361A_ENC_IN_CONF, &buffer);
+                buffer &= ~(1 << 22); // closed loop
+                writeRegister(DEFAULT_ICID, TMC4361A_ENC_IN_CONF, buffer);
+            }
+        }
+        break;
+    case 132:
+        // Measured Encoder Speed
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_V_ENC, value);
+        }
+        else if (readWrite == WRITE)
             errors |= TMC_ERROR_TYPE;
-		}
-		break;
-	case 135:
-		// Closed loop target reached tolerance
-		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_CL_TR_TOLERANCE_WR];
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_CL_TR_TOLERANCE_WR, *value);
-		}
-		break;
-	case 136:
-		// Encoder Velocity Delay
-		if(readWrite == READ) {
-			*value = (TMC4361A.config->shadowRegister[TMC4361A_ENC_VMEAN_WAIT_WR] >> 0) &  0xFF;
-		} else if(readWrite == WRITE) {
-			uvalue = TMC4361A.config->shadowRegister[TMC4361A_ENC_VMEAN_WAIT_WR];
-			uvalue &= ~(0xFF << 0);
-			uvalue |= (*value & 0x0F) << 0;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_VMEAN_WAIT_WR, uvalue);
-		}
-		break;
-	case 137:
-		// Encoder Velocity Filter
-		if(readWrite == READ) {
-			*value = (TMC4361A.config->shadowRegister[TMC4361A_ENC_VMEAN_WAIT_WR] >> 8) &  0xF;
-		} else if(readWrite == WRITE) {
-			uvalue = TMC4361A.config->shadowRegister[TMC4361A_ENC_VMEAN_WAIT_WR];
-			uvalue &= ~(0xF << 8);
-			uvalue |= (*value & 0x0F) << 8;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_VMEAN_WAIT_WR, uvalue);
-		}
-		break;
-	case 138:
-		// Filter Update Time
-		if(readWrite == READ) {
-			*value = (TMC4361A.config->shadowRegister[TMC4361A_ENC_VMEAN_WAIT_WR] >> 16) &  0xFF;
-		} else if(readWrite == WRITE) {
-			uvalue = TMC4361A.config->shadowRegister[TMC4361A_ENC_VMEAN_WAIT_WR];
-			uvalue &= ~(0xFF << 16);
-			uvalue |= (*value & 0x0FF) << 16;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_VMEAN_WAIT_WR, uvalue);
-		}
-		break;
-	case 200:
-		// Boost current
-		if(readWrite == READ) {
-			*value = (tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) >> 0) & 0xFF;
-		} else if(readWrite == WRITE) {
-			uvalue = tmc4361A_readInt(motorToIC(motor), TMC4361A_SCALE_VALUES) & ~(0xFF<<0);
-			uvalue |= (*value & 0xFF) << 0;
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_SCALE_VALUES, uvalue);
-		}
-		break;
-	case 209:
-		// Encoder position
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_ENC_POS);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_POS, *value);
-		}
-		break;
-	case 214:
-		// Power Down Delay
-		if(readWrite == READ) {
-			*value = tmc4361A_readInt(motorToIC(motor), TMC4361A_STDBY_DELAY);
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_STDBY_DELAY, *value*160000);
-		}
-		break;
-	case 225:
-		// Maximum encoder deviation
-		if(readWrite == READ) {
-			*value = TMC4361A.config->shadowRegister[TMC4361A_ENC_POS_DEV_TOL_WR];
-		} else if(readWrite == WRITE) {
-			tmc4361A_writeInt(motorToIC(motor), TMC4361A_ENC_POS_DEV_TOL_WR, *value);
-		}
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
-	}
-	return errors;
+        break;
+    case 133: // todo AP 2: merge AP 129 with AP 133? #2
+        // Closed Loop Init Flag
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_IN_CONF, &buffer);
+            *value = (((buffer >> 22) & 3) == 1) ? 1 : 0;
+        }
+        else if (readWrite == WRITE)
+        {
+            // Write for closed loop flag is implemented as AP 129
+        }
+        break;
+    case 134:
+        // Encoder deviation
+        if (readWrite == READ)
+        {
+            // Read-only encoder deviation
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_POS_DEV, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            errors |= TMC_ERROR_TYPE;
+        }
+        break;
+    case 135:
+        // Closed loop target reached tolerance
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_CL_TR_TOLERANCE, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_CL_TR_TOLERANCE, *value);
+        }
+        break;
+    case 136:
+        // Encoder Velocity Delay
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &buffer);
+            *value = (buffer >> 0) & 0xFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &uvalue);
+            uvalue &= ~(0xFF << 0);
+            uvalue |= (*value & 0x0F) << 0;
+            writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
+        }
+        break;
+    case 137:
+        // Encoder Velocity Filter
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &buffer);
+            *value = (buffer >> 8) & 0xF;
+        }
+        else if (readWrite == WRITE)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &uvalue);
+            ;
+            uvalue &= ~(0xF << 8);
+            uvalue |= (*value & 0x0F) << 8;
+            writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
+        }
+        break;
+    case 138:
+        // Filter Update Time
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &buffer);
+            *value = (buffer >> 16) & 0xFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &uvalue);
+            uvalue &= ~(0xFF << 16);
+            uvalue |= (*value & 0x0FF) << 16;
+            writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
+        }
+        break;
+    case 200:
+        // Boost current
+        readRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, &buffer);
+        if (readWrite == READ)
+        {
+            *value = (buffer >> 0) & 0xFF;
+        }
+        else if (readWrite == WRITE)
+        {
+            uvalue = buffer & ~(0xFF << 0);
+            uvalue |= (*value & 0xFF) << 0;
+            writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
+        }
+        break;
+    case 209:
+        // Encoder position
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_POS, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_ENC_POS, *value);
+        }
+        break;
+    case 214:
+        // Power Down Delay
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_STDBY_DELAY, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_STDBY_DELAY, (*value) * 160000);
+        }
+        break;
+    case 225:
+        // Maximum encoder deviation
+        if (readWrite == READ)
+        {
+            readRegister(DEFAULT_ICID, TMC4361A_ENC_POS_DEV_TOL, value);
+        }
+        else if (readWrite == WRITE)
+        {
+            writeRegister(DEFAULT_ICID, TMC4361A_ENC_POS_DEV_TOL, *value);
+        }
+        break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
+    }
+    return errors;
 }
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
