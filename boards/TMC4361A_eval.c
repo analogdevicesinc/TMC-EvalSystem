@@ -15,6 +15,18 @@
 #include "tmc/ic/TMC2160/TMC2160.h"
 
 #define DEFAULT_ICID 0
+
+// Typedefs
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t velocity;
+    int32_t oldX;
+    uint32_t oldTick;
+    uint8_t status;
+    ConfigurationTypeDef *cover;
+} TMC4361ATypeDef;
+static TMC4361ATypeDef TMC4361A;
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
