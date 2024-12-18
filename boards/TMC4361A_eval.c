@@ -6,7 +6,6 @@
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
-
 #include "tmc/BoardAssignment.h"
 #include "tmc/ic/TMC4361A/TMC4361A.h"
 #include "tmc/ic/TMC2660/TMC2660_Macros.h"
@@ -26,7 +25,26 @@ typedef struct
     ConfigurationTypeDef *cover;
 } TMC4361ATypeDef;
 static TMC4361ATypeDef TMC4361A;
+
+typedef struct
+{
+    IOPinTypeDef *TARGET_REACHED;
+    IOPinTypeDef *NRST;
+    IOPinTypeDef *FREEZE;
+    IOPinTypeDef *START;
+    IOPinTypeDef *HOME_REF;
+    IOPinTypeDef *STOP_R;
+    IOPinTypeDef *STOP_L;
+    IOPinTypeDef *INTR;
+    IOPinTypeDef *STANDBY_CLK;
+} PinsTypeDef;
+static PinsTypeDef Pins;
+
 typedef void (*tmc4361A_callback)(TMC4361ATypeDef *, ConfigState);
+
+static SPIChannelTypeDef *TMC4361A_SPIChannel;
+static uint32_t vmax_position = 0;
+
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -35,10 +53,8 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
-
 static void periodicJob(uint32_t tick);
 static void checkErrors(uint32_t tick);
 static void deInit(void);
@@ -47,35 +63,12 @@ static uint8_t reset();
 static uint8_t restore();
 
 void tmc4361A_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
-typedef struct
 {
     UNUSED(icID);
     TMC4361A_SPIChannel->readWriteArray(data, dataLength);
 }
-	IOPinTypeDef  *TARGET_REACHED;
-	IOPinTypeDef  *NRST;
-	IOPinTypeDef  *FREEZE;
-	IOPinTypeDef  *START;
-	IOPinTypeDef  *HOME_REF;
-	IOPinTypeDef  *STOP_R;
-	IOPinTypeDef  *STOP_L;
-	IOPinTypeDef  *INTR;
-	IOPinTypeDef  *STANDBY_CLK;
-} PinsTypeDef;
-
-static PinsTypeDef Pins;
-
-static SPIChannelTypeDef *TMC4361A_SPIChannel;
 
 void tmc4361A_setStatus(uint16_t icID, uint8_t *data)
-static uint32_t vmax_position = 0;
-
-// Helper macro - Access the chip object in the motion controller boards union
-#define TMC4361A (motionControllerBoards.tmc4361A)
-
-// Translate motor number to TMC4361ATypeDef
-// When using multiple ICs you can map them here
-static inline TMC4361ATypeDef *motorToIC(uint8_t motor)
 {
     UNUSED(icID);
     TMC4361A.status = data[0];
@@ -121,7 +114,6 @@ static void tmc4361A_writeConfiguration()
 
         TMC4361A.config->state = CONFIG_READY;
     }
-	return &TMC4361A;
 }
 
 int32_t tmc4361A_discardVelocityDecimals(int32_t value)
@@ -1153,48 +1145,55 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value)
 {
-	return handleParameter(WRITE, motor, type, &value);
+    return handleParameter(WRITE, motor, type, &value);
 }
 
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 {
-	return handleParameter(READ, motor, type, value);
+    return handleParameter(READ, motor, type, value);
 }
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-	// Notify driver shadows about register changes made via cover
-	static int32_t high;
-	switch((uint8_t) address) {
-	case TMC4361A_COVER_HIGH_WR:
-		high = value;
-		break;
-	case TMC4361A_COVER_LOW_WR:
-		if(Evalboards.ch2.id == ID_TMC2660) // TMC2660 -> 20 bit registers, 8 bit address
-			Evalboards.ch2.writeRegister(motor, TMC2660_ADDRESS(value), TMC2660_VALUE(value));
-		else // All other drivers -> 32 bit registers, 8 bit address
-			Evalboards.ch2.writeRegister(motor, TMC_ADDRESS(high), value);
-		break;
-	case TMC4361A_SCALE_VALUES:
-		/* Only possible with IHOLD and only with TMC2130 and TMC2160, since write-only registers changed actively by
+    // Notify driver shadows about register changes made via cover
+    static int32_t high;
+
+    switch ((uint8_t) address)
+    {
+
+    case TMC4361A_COVER_HIGH:
+        high = value;
+        break;
+    case TMC4361A_COVER_LOW:
+        if (Evalboards.ch2.id == ID_TMC2660) // TMC2660 -> 20 bit registers, 8 bit address
+            Evalboards.ch2.writeRegister(motor, TMC2660_ADDRESS(value), TMC2660_VALUE(value));
+        else // All other drivers -> 32 bit registers, 8 bit address
+            Evalboards.ch2.writeRegister(motor, TMC_ADDRESS(high), value);
+        break;
+    case TMC4361A_SCALE_VALUES:
+        /* Only possible with IHOLD and only with TMC2130 and TMC2160, since write-only registers changed actively by
 		 * the TMC43XX (not via cover datagrams) are impossible to track.
 		 */
-		switch(Evalboards.ch2.id) {
-		case ID_TMC2130:
-			tmc2130_fieldWrite(DEFAULT_MOTOR, TMC2130_IHOLD_FIELD, FIELD_GET(value, TMC4361A_HOLD_SCALE_VAL_MASK, TMC4361A_HOLD_SCALE_VAL_SHIFT));
-			break;
-		case ID_TMC2160:
-			tmc2160_fieldWrite(motor, TMC2160_IHOLD_FIELD, FIELD_GET(value, TMC4361A_HOLD_SCALE_VAL_MASK, TMC4361A_HOLD_SCALE_VAL_SHIFT));
-			break;
-		}
-		break;
-	}
-	tmc4361A_writeInt(motorToIC(motor), (uint8_t) address, value);
+        uint32_t temp;
+        temp = tmc4361A_fieldExtract(value, TMC4361A_HOLD_SCALE_VAL_FIELD);
+        switch (Evalboards.ch2.id)
+        {
+        case ID_TMC2130:
+            tmc2130_fieldWrite(DEFAULT_ICID, TMC2130_IHOLD_FIELD, temp);
+            break;
+        case ID_TMC2160:
+            tmc2160_fieldWrite(DEFAULT_ICID, TMC2160_IHOLD_FIELD, temp);
+            break;
+        }
+        break;
+    }
+    tmc4361A_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-	*value	= tmc4361A_readInt(motorToIC(motor), (uint8_t) address);
+    UNUSED(motor);
+    *value = tmc4361A_readRegister(DEFAULT_ICID, (uint8_t) address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -1214,107 +1213,108 @@ static void periodicJob(uint32_t tick)
 
 static void checkErrors(uint32_t tick)
 {
-	UNUSED(tick);
-	Evalboards.ch1.errors = 0;
+    UNUSED(tick);
+    Evalboards.ch1.errors = 0;
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
-	uint32_t errors = 0;
+    UNUSED(motor);
+    uint32_t errors = 0;
 
-	switch(type)
-	{
-	case 0:	// simulate left/right reference switches, set high to support external ref swiches
-		/*
+    switch (type)
+    {
+    case 0: // simulate left/right reference switches, set high to support external ref swiches
+        /*
 		 * The the TMC4361 ref switch input is pulled high by external resistor an can be pulled low either by
 		 * this µC or external signal. To use external signal make sure the signals from µC are high or floating.
 		 */
-		if(!(*value & ~3))
-		{
-			if(*value & (1<<0))
-			{
-				HAL.IOs->config->toInput(Pins.STOP_R); // pull up -> set it to floating causes high
-			}
-			else
-			{
-				HAL.IOs->config->toOutput(Pins.STOP_R);
-				HAL.IOs->config->setLow(Pins.STOP_R);
-			}
+        if (!(*value & ~3))
+        {
+            if (*value & (1 << 0))
+            {
+                HAL.IOs->config->toInput(Pins.STOP_R); // pull up -> set it to floating causes high
+            }
+            else
+            {
+                HAL.IOs->config->toOutput(Pins.STOP_R);
+                HAL.IOs->config->setLow(Pins.STOP_R);
+            }
 
-			if(*value & (1<<1))
-			{
-				HAL.IOs->config->toInput(Pins.STOP_L); // pull up -> set it to floating causes high
-			}
-			else
-			{
-				HAL.IOs->config->toOutput(Pins.STOP_L);
-				HAL.IOs->config->setLow(Pins.STOP_L);
-			}
-		}
-		//else TMCL.reply->Status = REPLY_INVALID_VALUE;
-		break;
-	case 1:	// simulate reference switche HOME_REF, set high to support external ref swiches
-		/*
+            if (*value & (1 << 1))
+            {
+                HAL.IOs->config->toInput(Pins.STOP_L); // pull up -> set it to floating causes high
+            }
+            else
+            {
+                HAL.IOs->config->toOutput(Pins.STOP_L);
+                HAL.IOs->config->setLow(Pins.STOP_L);
+            }
+        }
+        //else TMCL.reply->Status = REPLY_INVALID_VALUE;
+        break;
+    case 1: // simulate reference switche HOME_REF, set high to support external ref swiches
+        /*
 		 * The the TMC43x1 ref switch input is pulled high by external resistor an can be pulled low either by
 		 * this µC or external signal. To use external signal make sure the signals from µC are high or floating.
 		 */
-		if(*value)
-		{
-			HAL.IOs->config->toInput(Pins.HOME_REF); // pull up -> set it to floating causes high
-		}
-		else
-		{
-			HAL.IOs->config->toOutput(Pins.HOME_REF);
-			HAL.IOs->config->setLow(Pins.HOME_REF);
-		}
-		break;
-	case 2:	// simulate reference switche FREEZE, set high to support external ref swiches
-		/*
+        if (*value)
+        {
+            HAL.IOs->config->toInput(Pins.HOME_REF); // pull up -> set it to floating causes high
+        }
+        else
+        {
+            HAL.IOs->config->toOutput(Pins.HOME_REF);
+            HAL.IOs->config->setLow(Pins.HOME_REF);
+        }
+        break;
+    case 2: // simulate reference switche FREEZE, set high to support external ref swiches
+        /*
 		 * The the TMC43x1 ref switch input is pulled high by external resistor an can be pulled low either by
 		 * this µC or external signal. To use external signal make sure the signals from µC are high or floating.
 		 */
 
-		if(*value)
-		{
-			HAL.IOs->config->toInput(Pins.FREEZE); // pull up -> set it to floating causes high
-		}
-		else
-		{
-			HAL.IOs->config->toOutput(Pins.FREEZE);
-			HAL.IOs->config->setLow(Pins.FREEZE);
-		}
-		break;
-	case 3:
-		*value = tmc4361A_calibrateClosedLoop(motorToIC(motor), 1);
-		if(!*value)
-			errors |= TMC_ERROR_NOT_DONE;
-		break;
-	case 255:
-		Evalboards.ch2.config->reset();
-		Evalboards.ch1.config->reset();
-		break;
-	default:
-		errors |= TMC_ERROR_TYPE;
-		break;
-	}
-	return errors;
+        if (*value)
+        {
+            HAL.IOs->config->toInput(Pins.FREEZE); // pull up -> set it to floating causes high
+        }
+        else
+        {
+            HAL.IOs->config->toOutput(Pins.FREEZE);
+            HAL.IOs->config->setLow(Pins.FREEZE);
+        }
+        break;
+    case 3:
+        *value = tmc4361A_calibrateClosedLoop(1);
+        if (!*value)
+            errors |= TMC_ERROR_NOT_DONE;
+        break;
+    case 255:
+        Evalboards.ch2.config->reset();
+        Evalboards.ch1.config->reset();
+        break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
+    }
+    return errors;
 }
 
 static void deInit(void)
 {
-	HAL.IOs->config->setLow(Pins.NRST);
+    HAL.IOs->config->setLow(Pins.NRST);
 
-	HAL.IOs->config->reset(Pins.STOP_L);
-	HAL.IOs->config->reset(Pins.STOP_R);
-	HAL.IOs->config->reset(Pins.HOME_REF);
-	HAL.IOs->config->reset(Pins.START);
-	HAL.IOs->config->reset(Pins.FREEZE);
-	HAL.IOs->config->reset(Pins.STANDBY_CLK);
-	HAL.IOs->config->reset(Pins.INTR);
-	HAL.IOs->config->reset(Pins.TARGET_REACHED);
-	HAL.IOs->config->reset(Pins.NRST);
+    HAL.IOs->config->reset(Pins.STOP_L);
+    HAL.IOs->config->reset(Pins.STOP_R);
+    HAL.IOs->config->reset(Pins.HOME_REF);
+    HAL.IOs->config->reset(Pins.START);
+    HAL.IOs->config->reset(Pins.FREEZE);
+    HAL.IOs->config->reset(Pins.STANDBY_CLK);
+    HAL.IOs->config->reset(Pins.INTR);
+    HAL.IOs->config->reset(Pins.TARGET_REACHED);
+    HAL.IOs->config->reset(Pins.NRST);
 
-	HAL.SPI->ch2.reset();
+    HAL.SPI->ch2.reset();
 }
 
 static uint8_t reset()
@@ -1360,45 +1360,45 @@ static uint8_t restore()
 
 static void configCallback(TMC4361ATypeDef *tmc4361A, ConfigState state)
 {
-	uint8_t driver, dataLength;
-	uint32_t value;
+    UNUSED(tmc4361A);
+    uint8_t driver, dataLength;
+    uint32_t value;
 
-	// Setup SPI
-	switch(Evalboards.ch2.id)
-	{
-	case ID_TMC2130:
-	case ID_TMC2160:
-		driver = 0x0C;
-		dataLength = 0;
-		break;
-	case ID_TMC2660:
-		driver = 0x0B;
-		dataLength = 0;
-		break;
-	default:
-		driver = 0x0F;
-		dataLength = 40;
-		break;
-	}
-	value = 0x44400040 | (dataLength << 13) | (driver << 0);
-	tmc4361A_writeInt(tmc4361A, TMC4361A_SPIOUT_CONF, value);
+    // Setup SPI
+    switch (Evalboards.ch2.id)
+    {
+    case ID_TMC2130:
+    case ID_TMC2160:
+        driver     = 0x0C;
+        dataLength = 0;
+        break;
+    case ID_TMC2660:
+        driver     = 0x0B;
+        dataLength = 0;
+        break;
+    default:
+        driver     = 0x0F;
+        dataLength = 40;
+        break;
+    }
+    value = 0x44400040 | (dataLength << 13) | (driver << 0);
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_SPI_OUT_CONF, value);
 
-	if(Evalboards.ch2.id == ID_TMC2160)
-	{
-		Evalboards.ch1.writeRegister(0, TMC4361A_STP_LENGTH_ADD, 0x60002);
-	}
+    if (Evalboards.ch2.id == ID_TMC2160)
+    {
+        Evalboards.ch1.writeRegister(DEFAULT_ICID, TMC4361A_STP_LENGTH_ADD, 0x60002);
+    }
 
-	// Reset/Restore driver
-	if(state == CONFIG_RESET)
-	{
-		tmc4361A_writeInt(tmc4361A, TMC4361A_CURRENT_CONF, 0x00000003);
-		tmc4361A_writeInt(tmc4361A, TMC4361A_SCALE_VALUES, 0x00000000);
-		tmc4361A_fillShadowRegisters(tmc4361A);
-		Evalboards.ch2.config->reset();
-	}
-	else
-		Evalboards.ch2.config->restore();
-
+    // Reset/Restore driver
+    if (state == CONFIG_RESET)
+    {
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CURRENT_CONF, 0x00000003);
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, 0x00000000);
+        tmc4361A_initCache();
+        Evalboards.ch2.config->reset();
+    }
+    else
+        Evalboards.ch2.config->restore();
 }
 
 void TMC4361A_init(void)
@@ -1412,62 +1412,61 @@ void TMC4361A_init(void)
     TMC4361A.config->configIndex = 0;
     TMC4361A.config->state       = CONFIG_READY;
     TMC4361A.config->callback    = (tmc_callback_config) configCallback;
-	tmc4361A_setCallback(&TMC4361A, configCallback);
 
-	Pins.STANDBY_CLK     = &HAL.IOs->pins->DIO4;
-	Pins.INTR            = &HAL.IOs->pins->DIO5;
-	Pins.STOP_L          = &HAL.IOs->pins->DIO12;
-	Pins.STOP_R          = &HAL.IOs->pins->DIO13;
-	Pins.HOME_REF        = &HAL.IOs->pins->DIO14;
-	Pins.START           = &HAL.IOs->pins->DIO15;
-	Pins.FREEZE          = &HAL.IOs->pins->DIO16;
-	Pins.NRST            = &HAL.IOs->pins->DIO17;
-	Pins.TARGET_REACHED  = &HAL.IOs->pins->DIO18;
+    Pins.STANDBY_CLK    = &HAL.IOs->pins->DIO4;
+    Pins.INTR           = &HAL.IOs->pins->DIO5;
+    Pins.STOP_L         = &HAL.IOs->pins->DIO12;
+    Pins.STOP_R         = &HAL.IOs->pins->DIO13;
+    Pins.HOME_REF       = &HAL.IOs->pins->DIO14;
+    Pins.START          = &HAL.IOs->pins->DIO15;
+    Pins.FREEZE         = &HAL.IOs->pins->DIO16;
+    Pins.NRST           = &HAL.IOs->pins->DIO17;
+    Pins.TARGET_REACHED = &HAL.IOs->pins->DIO18;
 
-	HAL.IOs->config->toOutput(Pins.NRST);
-	HAL.IOs->config->toOutput(Pins.STOP_L);
-	HAL.IOs->config->toOutput(Pins.STOP_R);
-	HAL.IOs->config->toOutput(Pins.HOME_REF);
-	HAL.IOs->config->toOutput(Pins.START);
-	HAL.IOs->config->toOutput(Pins.FREEZE);
+    HAL.IOs->config->toOutput(Pins.NRST);
+    HAL.IOs->config->toOutput(Pins.STOP_L);
+    HAL.IOs->config->toOutput(Pins.STOP_R);
+    HAL.IOs->config->toOutput(Pins.HOME_REF);
+    HAL.IOs->config->toOutput(Pins.START);
+    HAL.IOs->config->toOutput(Pins.FREEZE);
 
-	HAL.IOs->config->setHigh(Pins.NRST);
+    HAL.IOs->config->setHigh(Pins.NRST);
 
-	HAL.IOs->config->setHigh(Pins.STOP_L);
-	HAL.IOs->config->setHigh(Pins.STOP_R);
-	HAL.IOs->config->setHigh(Pins.HOME_REF);
-	HAL.IOs->config->setHigh(Pins.START);
-	HAL.IOs->config->setHigh(Pins.FREEZE);
+    HAL.IOs->config->setHigh(Pins.STOP_L);
+    HAL.IOs->config->setHigh(Pins.STOP_R);
+    HAL.IOs->config->setHigh(Pins.HOME_REF);
+    HAL.IOs->config->setHigh(Pins.START);
+    HAL.IOs->config->setHigh(Pins.FREEZE);
 
-	HAL.IOs->config->toInput(Pins.STANDBY_CLK);
-	HAL.IOs->config->toInput(Pins.INTR);
-	HAL.IOs->config->toInput(Pins.TARGET_REACHED);
+    HAL.IOs->config->toInput(Pins.STANDBY_CLK);
+    HAL.IOs->config->toInput(Pins.INTR);
+    HAL.IOs->config->toInput(Pins.TARGET_REACHED);
 
-	TMC4361A_SPIChannel = &HAL.SPI->ch1;
-	TMC4361A_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+    TMC4361A_SPIChannel      = &HAL.SPI->ch1;
+    TMC4361A_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
 
-	Evalboards.ch1.config->state        = CONFIG_RESET;
-	Evalboards.ch1.config->configIndex  = 0;
-	Evalboards.ch1.config->reset        = reset;
-	Evalboards.ch1.config->restore      = restore;
+    Evalboards.ch1.config->state       = CONFIG_RESET;
+    Evalboards.ch1.config->configIndex = 0;
+    Evalboards.ch1.config->reset       = reset;
+    Evalboards.ch1.config->restore     = restore;
 
-	Evalboards.ch1.cover                = tmc4361A_cover;
-	Evalboards.ch1.rotate               = rotate;
-	Evalboards.ch1.right                = right;
-	Evalboards.ch1.left                 = left;
-	Evalboards.ch1.stop                 = stop;
-	Evalboards.ch1.GAP                  = GAP;
-	Evalboards.ch1.SAP                  = SAP;
-	Evalboards.ch1.moveTo               = moveTo;
-	Evalboards.ch1.moveBy               = moveBy;
-	Evalboards.ch1.writeRegister        = writeRegister;
-	Evalboards.ch1.readRegister         = readRegister;
-	Evalboards.ch1.periodicJob          = periodicJob;
-	Evalboards.ch1.userFunction         = userFunction;
-	Evalboards.ch1.checkErrors          = checkErrors;
-	Evalboards.ch1.numberOfMotors       = TMC4361A_MOTORS;
-	Evalboards.ch1.deInit               = deInit;
+    Evalboards.ch1.cover          = tmc4361A_cover;
+    Evalboards.ch1.rotate         = rotate;
+    Evalboards.ch1.right          = right;
+    Evalboards.ch1.left           = left;
+    Evalboards.ch1.stop           = stop;
+    Evalboards.ch1.GAP            = GAP;
+    Evalboards.ch1.SAP            = SAP;
+    Evalboards.ch1.moveTo         = moveTo;
+    Evalboards.ch1.moveBy         = moveBy;
+    Evalboards.ch1.writeRegister  = writeRegister;
+    Evalboards.ch1.readRegister   = readRegister;
+    Evalboards.ch1.periodicJob    = periodicJob;
+    Evalboards.ch1.userFunction   = userFunction;
+    Evalboards.ch1.checkErrors    = checkErrors;
+    Evalboards.ch1.numberOfMotors = TMC4361A_MOTORS;
+    Evalboards.ch1.deInit         = deInit;
 
-	// Provide the cover function to the driver channel
-	Evalboards.ch1.fullCover            = tmc4361A_fullCover;
+    // Provide the cover function to the driver channel
+    Evalboards.ch1.fullCover = tmc4361A_fullCover;
 };
