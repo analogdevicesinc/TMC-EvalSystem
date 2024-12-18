@@ -18,7 +18,6 @@
 
 #include "tmc/ic/TMC2660/TMC2660.h"
 #include "tmc/ic/MAX22216/MAX22216.h"
-#include "tmc/ic/TMC4361A/TMC4361A.h"
 #include "tmc/ic/TMC8461/TMC8461.h"
 #include "tmc/ic/TMC8462/TMC8462.h"
 
@@ -142,7 +141,6 @@ typedef enum {
 // Group all the motion controller chip objects into a single union to save memory,
 // since we will only ever use one driver at a time
 typedef union {
-    TMC4361ATypeDef tmc4361A;
     TMC8461TypeDef tmc8461;
     TMC8462TypeDef tmc8462;
 } MotionControllerBoards;

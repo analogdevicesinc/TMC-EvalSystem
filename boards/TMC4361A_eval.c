@@ -7,7 +7,6 @@
 *******************************************************************************/
 
 
-#include "Board.h"
 #include "tmc/BoardAssignment.h"
 #include "tmc/ic/TMC4361A/TMC4361A.h"
 #include "tmc/ic/TMC2660/TMC2660_Macros.h"
