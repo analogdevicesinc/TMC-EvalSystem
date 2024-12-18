@@ -27,6 +27,7 @@ typedef struct
     ConfigurationTypeDef *cover;
 } TMC4361ATypeDef;
 static TMC4361ATypeDef TMC4361A;
+typedef void (*tmc4361A_callback)(TMC4361ATypeDef *, ConfigState);
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
 static uint32_t rotate(uint8_t motor, int32_t velocity);
@@ -81,127 +82,323 @@ static inline TMC4361ATypeDef *motorToIC(uint8_t motor)
     TMC4361A.status = data[0];
 }
 
+static void tmc4361A_writeConfiguration()
+{
+    uint8_t *ptr = &TMC4361A.config->configIndex;
+    const int32_t *settings;
+
+    if (TMC4361A.config->state == CONFIG_RESTORE)
+    {
+        settings = *(tmc4361A_shadowRegister + 0);
+        // Find the next restorable register
+        while (*ptr < TMC4361A_REGISTER_COUNT)
+        {
+            // If the register is writable and has been written to, restore it
+            if (TMC_IS_WRITABLE(tmc4361A_registerAccess[*ptr]) && tmc4361A_getDirtyBit(DEFAULT_ICID, *ptr))
+            {
+                break;
+            }
+            (*ptr)++;
+        }
+    }
+    else
+    {
+        settings = tmc4361A_sampleRegisterPreset;
+        // Find the next resettable register
+        while ((*ptr < TMC4361A_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc4361A_registerAccess[*ptr])) (*ptr)++;
+    }
+
+    if (*ptr < TMC4361A_REGISTER_COUNT)
+    {
+        tmc4361A_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else
+    {
+        if (TMC4361A.config->callback)
+        {
+            ((tmc4361A_callback) TMC4361A.config->callback)(&TMC4361A, TMC4361A.config->state);
+        }
+
+        TMC4361A.config->state = CONFIG_READY;
+    }
 	return &TMC4361A;
 }
 
-// Translate channel number to SPI channel
-// When using multiple ICs you can map them here
-static inline SPIChannelTypeDef *channelToSPI(uint8_t channel)
+int32_t tmc4361A_discardVelocityDecimals(int32_t value)
 {
-	UNUSED(channel);
-
-	return TMC4361A_SPIChannel;
+    if (abs(value) > 8000000)
+    {
+        value = (value < 0) ? -8000000 : 8000000;
+    }
+    return value << 8;
 }
 
-// => SPI Wrapper
-void tmc4361A_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
+static uint8_t tmc4361A_moveToNextFullstep()
 {
-	channelToSPI(channel)->readWriteArray(data, length);
+    int32_t stepCount;
+
+    // Motor must be stopped
+    if (tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_VACTUAL) != 0)
+    {
+        // Not stopped
+        return 0;
+    }
+
+    // Position mode, hold mode, low velocity
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_RAMPMODE, 4);
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VMAX, 10000 << 8);
+
+    // Current step count
+    stepCount = tmc4361A_fieldRead(DEFAULT_ICID, TMC4361A_MSCNT_FIELD);
+    // Get microstep value of step count (lowest 8 bits)
+    stepCount = stepCount % 256;
+    // Assume: 256 microsteps -> Fullsteps are at 128 + n*256
+    stepCount = 128 - stepCount;
+
+    if (stepCount == 0)
+    {
+        // Fullstep reached
+        return 1;
+    }
+
+    // Fullstep not reached -> calculate next fullstep position
+    stepCount += tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_XACTUAL);
+    // Move to next fullstep position
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_XTARGET, stepCount);
+
+    return 0;
 }
-// <= SPI Wrapper
+
+uint8_t tmc4361A_calibrateClosedLoop(uint8_t worker0master1)
+{
+    static uint8_t state = 0;
+    static uint32_t oldRamp;
+
+    uint32_t amax = 0;
+    uint32_t dmax = 0;
+
+    if (worker0master1 && state == 0)
+        state = 1;
+
+    switch (state)
+    {
+    case 1:
+        amax = tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_AMAX);
+        dmax = tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_DMAX);
+
+        // Set ramp and motion parameters
+        oldRamp = tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_RAMPMODE);
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_RAMPMODE, TMC4361A_RAMP_POSITION | TMC4361A_RAMP_HOLD);
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_AMAX, MAX(amax, 1000));
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_DMAX, MAX(dmax, 1000));
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VMAX, 0);
+
+        state = 2;
+        break;
+    case 2:
+        // Clear encoder calibration bit
+        tmc4361A_fieldWrite(DEFAULT_ICID, TMC4361A_CL_CALIBRATION_EN_FIELD, 0);
+
+        // Disable internal data regulation for closed loop operation in encoder config
+        tmc4361A_fieldWrite(DEFAULT_ICID, TMC4361A_REGULATION_MODUS_FIELD, 1);
+
+        if (tmc4361A_moveToNextFullstep()) // move to next fullstep, motor must be stopped, poll until finished
+            state = 3;
+        break;
+    case 3:
+        // Start encoder calibration
+        tmc4361A_fieldWrite(DEFAULT_ICID, TMC4361A_CL_CALIBRATION_EN_FIELD, 1);
+
+        state = 4;
+        break;
+    case 4:
+        if (worker0master1)
+            break;
+
+        // Stop encoder calibration
+        tmc4361A_fieldWrite(DEFAULT_ICID, TMC4361A_CL_CALIBRATION_EN_FIELD, 0);
+        // Enable closed loop in encoder config
+        tmc4361A_fieldWrite(DEFAULT_ICID, TMC4361A_REGULATION_MODUS_FIELD, 1);
+        // Restore old ramp mode, enable position mode
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_RAMPMODE, TMC4361A_RAMP_POSITION | oldRamp);
+
+        state = 5;
+        break;
+    case 5:
+        state = 0;
+        return 1;
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
 
 // Route the generic cover function to the TMC4361A function
 // This also provides the TMC4361ATypeDef, which the generic
 // cover function doesn't know.
 static void tmc4361A_fullCover(uint8_t *data, size_t length)
 {
-	tmc4361A_readWriteCover(&TMC4361A, data, length);
+    // Buffering old values to not interrupt manual covering
+    uint32_t old_high = 0;
+    uint32_t old_low  = 0;
+    tmc4361A_cache(DEFAULT_ICID, TMC4361A_CACHE_READ, TMC4361A_COVER_HIGH, &old_high);
+    tmc4361A_cache(DEFAULT_ICID, TMC4361A_CACHE_READ, TMC4361A_COVER_LOW, &old_low);
+
+    // Check if datagram length is valid
+    if (length == 0 || length > 8)
+        return;
+
+    uint8_t bytes[8] = {0};
+    uint32_t tmp;
+    size_t i;
+    uint32_t dataMSB = 0;
+    uint32_t dataLSB = 0;
+
+    // Copy data into buffer of maximum cover datagram length (8 bytes)
+    for (i = 0; i < length; i++) bytes[i] = data[length - i - 1];
+
+    // Send the datagram
+    if (length > 4)
+    {
+        dataMSB = (bytes[7] << 24) | (bytes[6] << 16) | (bytes[5] << 8) | bytes[4];
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_COVER_HIGH, dataMSB);
+    }
+
+    dataLSB = (bytes[3] << 24) | (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_COVER_LOW, dataLSB);
+
+    // Wait for datagram completion
+    // TODO CHECK 3: Get the waiting for cover completion done properly (LH)
+    for (i = 0; i < 100; i++) tmp = ACCESS_ONCE(i);
+
+    // Read the reply
+    if (length > 4)
+    {
+        tmp      = tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_COVER_DRV_HIGH);
+        bytes[4] = 0XFF & (tmp >> 0);
+        bytes[5] = 0XFF & (tmp >> 8);
+        bytes[6] = 0XFF & (tmp >> 16);
+        bytes[7] = 0XFF & (tmp >> 24);
+    }
+
+    tmp      = tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_COVER_DRV_LOW);
+    bytes[0] = 0XFF & (tmp >> 0);
+    bytes[1] = 0XFF & (tmp >> 8);
+    bytes[2] = 0XFF & (tmp >> 16);
+    bytes[3] = 0XFF & (tmp >> 24);
+
+    // Write the reply to the data array
+    for (i = 0; i < length; i++) { data[length - i - 1] = bytes[i]; }
+
+    // Rewriting old values to prevent interrupting manual covering. Imitating unchanged values and state.
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_COVER_HIGH, old_high);
+    tmc4361A_cache(DEFAULT_ICID, TMC4361A_CACHE_WRITE, TMC4361A_COVER_LOW, &old_low);
 }
 
 // The cover function emulates the SPI readWrite function
 static uint8_t tmc4361A_cover(uint8_t data, uint8_t lastTransfer)
 {
-	static uint64_t coverIn = 0;     // read from squirrel
-	static uint64_t coverOut = 0;    // write to squirrel
-	static uint8_t coverLength = 0;  // data to be written
+    static uint64_t coverIn    = 0; // read from squirrel
+    static uint64_t coverOut   = 0; // write to squirrel
+    static uint8_t coverLength = 0; // data to be written
 
-	uint8_t out = 0; // return value of this function
+    uint8_t out = 0; // return value of this function
 
-	// buffer outgoing data
-	coverOut <<= 8;    // shift left by one byte to make room for the next byte
-	coverOut |= data;  // add new byte to be written
-	coverLength++;     // count outgoing bytes
+    // buffer outgoing data
+    coverOut <<= 8;   // shift left by one byte to make room for the next byte
+    coverOut |= data; // add new byte to be written
+    coverLength++;    // count outgoing bytes
 
-	// return read and buffered byte to be returned
-	out = coverIn >> 56;  // output last received byte
-	coverIn <<= 8;        // shift by one byte to read this next time
+    // return read and buffered byte to be returned
+    out = coverIn >> 56; // output last received byte
+    coverIn <<= 8;       // shift by one byte to read this next time
 
-	if(lastTransfer)
-	{
-		/* Write data to cover register(s). The lower 4 bytes go into the cover low register,
+    if (lastTransfer)
+    {
+        /* Write data to cover register(s). The lower 4 bytes go into the cover low register,
 		 * the higher 4 bytes, if present, go into the cover high register.
 		 * The datagram needs to be sent twice, otherwise the read buffer will be delayed by
 		 * one read/write datagram.
 		 */
 
-		// Send the buffered datagram & wait a bit before continuing so the 4361 can complete the datagram to the driver
-		// measured delay between COVER_LOW transmission and COVER_DONE flag: ~90µs -> 1 ms more than enough
-		// todo CHECK 3: Delay measurement only done on TMC4361, not 4361A - make sure the required delay didnt change (LH) #1
-		if(coverLength > 4)
-			tmc4361A_writeInt(&TMC4361A, TMC4361A_COVER_HIGH_WR, coverOut >> 32);
-		tmc4361A_writeInt(&TMC4361A, TMC4361A_COVER_LOW_WR, coverOut & 0xFFFFFFFF);
-		wait(1);
+        // Send the buffered datagram & wait a bit before continuing so the 4361 can complete the datagram to the driver
+        // measured delay between COVER_LOW transmission and COVER_DONE flag: ~90µs -> 1 ms more than enough
+        // todo CHECK 3: Delay measurement only done on TMC4361, not 4361A - make sure the required delay didnt change (LH) #1
+        if (coverLength > 4)
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_COVER_HIGH, coverOut >> 32);
 
-		// Trigger a re-send by writing the low register again
-		tmc4361A_writeInt(&TMC4361A, TMC4361A_COVER_LOW_WR, coverOut & 0xFFFFFFFF);
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_COVER_LOW, coverOut & 0xFFFFFFFF);
 
-		// Read the reply
-		coverIn = 0;
-		if(coverLength > 4)
-			coverIn |= (uint64_t) tmc4361A_readInt(&TMC4361A, TMC4361A_COVER_DRV_HIGH_RD) << 32;
-		coverIn |= tmc4361A_readInt(&TMC4361A, TMC4361A_COVER_DRV_LOW_RD);
-		coverIn <<= (8-coverLength) * 8; // Shift the highest byte of the reply to the highest byte of the buffer uint64_t
+        wait(1);
 
-		// Clear write buffer
-		coverOut = 0;
-		coverLength=0;
-	}
+        // Trigger a re-send by writing the low register again
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_COVER_LOW, coverOut & 0xFFFFFFFF);
 
-	return out; // return buffered read byte
+        // Read the reply
+        coverIn = 0;
+        if (coverLength > 4)
+            coverIn |= (uint64_t) tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_COVER_DRV_HIGH) << 32;
+
+        coverIn |= tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_COVER_DRV_LOW);
+        coverIn <<=
+            (8 - coverLength) * 8; // Shift the highest byte of the reply to the highest byte of the buffer uint64_t
+
+        // Clear write buffer
+        coverOut    = 0;
+        coverLength = 0;
+    }
+
+    return out; // return buffered read byte
 }
 
 // => Functions forwarded to API
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-	UNUSED(motor);
-	tmc4361A_rotate(motorToIC(motor), velocity);
+    UNUSED(motor);
 
-	return 0;
+    // Disable Position Mode
+    tmc4361A_fieldWrite(DEFAULT_ICID, TMC4361A_OPERATION_MODE_FIELD, 0);
+
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(velocity));
+
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t right(uint8_t motor, int32_t velocity)
 {
-	rotate(motor, velocity);
-
-	return 0;
+    return rotate(motor, velocity);
 }
 
 static uint32_t left(uint8_t motor, int32_t velocity)
 {
-	rotate(motor, -velocity);
-
-	return 0;
+    return rotate(motor, -velocity);
 }
 
 static uint32_t stop(uint8_t motor)
 {
-	rotate(motor, 0);
-
-	return 0;
+    return rotate(motor, 0);
 }
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-	tmc4361A_moveTo(motorToIC(motor), position, vmax_position);
+    UNUSED(motor);
 
-	return 0;
+    // Enable Position Mode
+    tmc4361A_fieldWrite(DEFAULT_ICID, TMC4361A_OPERATION_MODE_FIELD, 1);
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(vmax_position));
+    tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_XTARGET, position);
+
+    return TMC_ERROR_NONE;
 }
 
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
-	tmc4361A_moveBy(motorToIC(motor), ticks, vmax_position);
+    // determine actual position and add numbers of ticks to move
+    *ticks += tmc4361A_readRegister(DEFAULT_ICID, TMC4361A_XACTUAL);
 
-	return 0;
+    return moveTo(motor, *ticks);
 }
 // <= Functions forwarded to API
 
@@ -1003,7 +1200,17 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-	tmc4361A_periodicJob(&TMC4361A, tick);
+    if (TMC4361A.config->state != CONFIG_READY)
+    {
+        tmc4361A_writeConfiguration();
+        return;
+    }
+
+    if ((tick - TMC4361A.oldTick) != 0)
+    {
+        tmc4361A_calibrateClosedLoop(0);
+        TMC4361A.oldTick = tick;
+    }
 }
 
 static void checkErrors(uint32_t tick)
@@ -1113,26 +1320,43 @@ static void deInit(void)
 
 static uint8_t reset()
 {
-	// Pulse the low-active hardware reset pin
-	HAL.IOs->config->setLow(Pins.NRST);
-	wait(1);
-	HAL.IOs->config->setHigh(Pins.NRST);
+    // Pulse the low-active hardware reset pin
+    HAL.IOs->config->setLow(Pins.NRST);
+    wait(1);
+    HAL.IOs->config->setHigh(Pins.NRST);
 
-	tmc4361A_reset(&TMC4361A);
+    if (TMC4361A.config->state != CONFIG_READY)
+        return 0;
 
-	return 1;
+    int32_t i;
+
+    // Reset the dirty bits and wipe shadow registers
+    for (i = 0; i < TMC4361A_REGISTER_COUNT; i++)
+    {
+        tmc4361A_setDirtyBit(DEFAULT_ICID, i, false);
+        tmc4361A_shadowRegister[DEFAULT_ICID][i] = 0;
+    }
+
+    TMC4361A.config->state       = CONFIG_RESET;
+    TMC4361A.config->configIndex = 0;
+
+    return 1;
 }
 
 static uint8_t restore()
 {
-	// Pulse the low-active hardware reset pin
-	HAL.IOs->config->setLow(Pins.NRST);
-	wait(1);
-	HAL.IOs->config->setHigh(Pins.NRST);
+    // Pulse the low-active hardware reset pin
+    HAL.IOs->config->setLow(Pins.NRST);
+    wait(1);
+    HAL.IOs->config->setHigh(Pins.NRST);
 
-	tmc4361A_restore(&TMC4361A);
+    if (TMC4361A.config->state != CONFIG_READY)
+        return 0;
 
-	return 1;
+    TMC4361A.config->state       = CONFIG_RESTORE;
+    TMC4361A.config->configIndex = 0;
+
+    return 1;
 }
 
 static void configCallback(TMC4361ATypeDef *tmc4361A, ConfigState state)
@@ -1180,7 +1404,15 @@ static void configCallback(TMC4361ATypeDef *tmc4361A, ConfigState state)
 
 void TMC4361A_init(void)
 {
-	tmc4361A_init(&TMC4361A, 0, Evalboards.ch1.config, &tmc4361A_defaultRegisterResetState[0]);
+    TMC4361A.velocity = 0;
+    TMC4361A.oldTick  = 0;
+    TMC4361A.oldX     = 0;
+    TMC4361A.config   = Evalboards.ch1.config;
+
+    TMC4361A.config->channel     = 0;
+    TMC4361A.config->configIndex = 0;
+    TMC4361A.config->state       = CONFIG_READY;
+    TMC4361A.config->callback    = (tmc_callback_config) configCallback;
 	tmc4361A_setCallback(&TMC4361A, configCallback);
 
 	Pins.STANDBY_CLK     = &HAL.IOs->pins->DIO4;
