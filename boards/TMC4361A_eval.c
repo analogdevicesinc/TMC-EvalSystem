@@ -22,7 +22,6 @@ typedef struct
     int32_t oldX;
     uint32_t oldTick;
     uint8_t status;
-    ConfigurationTypeDef *cover;
 } TMC4361ATypeDef;
 static TMC4361ATypeDef TMC4361A;
 
@@ -412,7 +411,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_XTARGET, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_XTARGET, *value);
         }
         break;
     case 1:
@@ -423,7 +422,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_XACTUAL, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_XACTUAL, *value);
         }
         break;
     case 2:
@@ -435,7 +434,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(*value));
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(*value));
         }
         break;
     case 3:
@@ -463,7 +462,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             // Write VMAX if already in position mode
             readRegister(DEFAULT_ICID, TMC4361A_RAMPMODE, &buffer);
             if (buffer & TMC4361A_RAMP_POSITION)
-                writeRegister(DEFAULT_ICID, TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(vmax_position));
+                tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VMAX, tmc4361A_discardVelocityDecimals(vmax_position));
         }
         break;
     case 5:
@@ -481,7 +480,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             }
             else
             {
-                writeRegister(DEFAULT_ICID, TMC4361A_AMAX, *value << 2);
+                tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_AMAX, *value << 2);
             }
         }
         break;
@@ -517,7 +516,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_VSTART, (*value) / 256);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VSTART, (*value) / 256);
         }
         break;
     case 16:
@@ -535,7 +534,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             }
             else
             {
-                writeRegister(DEFAULT_ICID, TMC4361A_ASTART, *value << 2);
+                tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ASTART, *value << 2);
             }
         }
         break;
@@ -554,7 +553,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             }
             else
             {
-                writeRegister(DEFAULT_ICID, TMC4361A_DMAX, *value << 2);
+                tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_DMAX, *value << 2);
             }
         }
         break;
@@ -567,7 +566,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_VBREAK, (*value) / 256);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VBREAK, (*value) / 256);
         }
         break;
     case 19:
@@ -585,7 +584,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             }
             else
             {
-                writeRegister(DEFAULT_ICID, TMC4361A_DFINAL, *value << 2);
+                tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_DFINAL, *value << 2);
             }
         }
         break;
@@ -598,7 +597,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_VSTOP, (*value) / 256);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VSTOP, (*value) / 256);
         }
         break;
     case 21:
@@ -616,7 +615,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             }
             else
             {
-                writeRegister(DEFAULT_ICID, TMC4361A_DSTOP, (*value) / 4);
+                tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_DSTOP, (*value) / 4);
             }
         }
         break;
@@ -628,7 +627,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_BOW1, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_BOW1, *value);
         }
         break;
     case 23:
@@ -639,7 +638,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_BOW2, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_BOW2, *value);
         }
         break;
     case 24:
@@ -650,7 +649,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_BOW3, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_BOW3, *value);
         }
         break;
     case 25:
@@ -661,7 +660,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_BOW4, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_BOW4, *value);
         }
         break;
     case 26:
@@ -672,7 +671,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_VIRT_STOP_LEFT, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VIRT_STOP_LEFT, *value);
         }
         break;
     case 27:
@@ -683,7 +682,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_VIRT_STOP_RIGHT, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_VIRT_STOP_RIGHT, *value);
         }
         break;
     case 108:
@@ -694,7 +693,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_VMIN_EMF, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_VMIN_EMF, *value);
         }
         break;
     case 109:
@@ -705,7 +704,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_VADD_EMF, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_VADD_EMF, *value);
         }
         break;
     case 110:
@@ -719,7 +718,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         {
             readRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, &buffer);
             uvalue = buffer & 0x000001FF;
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, uvalue | (*value << 16));
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, uvalue | (*value << 16));
         }
         break;
     case 111:
@@ -732,7 +731,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         else if (readWrite == WRITE)
         {
             uvalue = buffer & 0x00FF0000;
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, uvalue | (*value & 0x1FF));
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_ANGLES, uvalue | (*value & 0x1FF));
         }
         break;
     case 112:
@@ -743,7 +742,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_OFFSET, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_OFFSET, *value);
         }
         break;
     case 113:
@@ -791,7 +790,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             readRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, &buffer);
             uvalue = buffer & ~(0xFF << 0);
             uvalue |= (*value & 0xFF) << 0;
-            writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
         }
         break;
     case 114:
@@ -839,7 +838,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             readRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, &buffer);
             uvalue = buffer & ~(0xFF << 8);
             uvalue |= (*value & 0xFF) << 8;
-            writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
         }
         break;
     case 115:
@@ -850,7 +849,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_P, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_P, *value);
         }
         break;
     case 116:
@@ -861,7 +860,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_I, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_I, *value);
         }
         break;
     case 117:
@@ -876,7 +875,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             readRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, &uvalue);
             uvalue &= ~(0x7FFF << 0);
             uvalue |= (*value & 0x7FFF) << 0;
-            writeRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, uvalue);
         }
         break;
     case 118:
@@ -892,7 +891,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             readRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, &uvalue);
             uvalue &= ~(0xFF << 16);
             uvalue |= (*value & 0xFF) << 16;
-            writeRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, uvalue);
         }
         break;
     case 119:
@@ -903,7 +902,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_PID_DV_CLIP, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_PID_DV_CLIP, *value);
         }
         break;
     case 120:
@@ -914,7 +913,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_UPSCALE_DELAY, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_UPSCALE_DELAY, *value);
         }
         break;
     case 121:
@@ -925,7 +924,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_DNSCALE_DELAY, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_DNSCALE_DELAY, *value);
         }
         break;
     case 123:
@@ -948,7 +947,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_DELTA_P, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_DELTA_P, *value);
         }
         break;
     case 125:
@@ -959,7 +958,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_TOLERANCE, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_TOLERANCE, *value);
         }
         break;
     case 126:
@@ -973,7 +972,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         {
             uvalue = buffer & ~(0xFF << 16);
             uvalue |= (*value & 0xFF) << 16;
-            writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
         }
         break;
     case 129: // todo AP 2: merge AP 129 with AP 133? #1
@@ -995,7 +994,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             {
                 readRegister(DEFAULT_ICID, TMC4361A_ENC_IN_CONF, &buffer);
                 buffer &= ~(1 << 22); // closed loop
-                writeRegister(DEFAULT_ICID, TMC4361A_ENC_IN_CONF, buffer);
+                tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_IN_CONF, buffer);
             }
         }
         break;
@@ -1040,7 +1039,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_CL_TR_TOLERANCE, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_CL_TR_TOLERANCE, *value);
         }
         break;
     case 136:
@@ -1055,7 +1054,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &uvalue);
             uvalue &= ~(0xFF << 0);
             uvalue |= (*value & 0x0F) << 0;
-            writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
         }
         break;
     case 137:
@@ -1071,7 +1070,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             ;
             uvalue &= ~(0xF << 8);
             uvalue |= (*value & 0x0F) << 8;
-            writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
         }
         break;
     case 138:
@@ -1086,7 +1085,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &uvalue);
             uvalue &= ~(0xFF << 16);
             uvalue |= (*value & 0x0FF) << 16;
-            writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
         }
         break;
     case 200:
@@ -1100,7 +1099,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         {
             uvalue = buffer & ~(0xFF << 0);
             uvalue |= (*value & 0xFF) << 0;
-            writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_SCALE_VALUES, uvalue);
         }
         break;
     case 209:
@@ -1111,7 +1110,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_ENC_POS, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_POS, *value);
         }
         break;
     case 214:
@@ -1122,7 +1121,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_STDBY_DELAY, (*value) * 160000);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_STDBY_DELAY, (*value) * 160000);
         }
         break;
     case 225:
@@ -1133,7 +1132,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if (readWrite == WRITE)
         {
-            writeRegister(DEFAULT_ICID, TMC4361A_ENC_POS_DEV_TOL, *value);
+            tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_POS_DEV_TOL, *value);
         }
         break;
     default:
@@ -1325,7 +1324,7 @@ static uint8_t reset()
     HAL.IOs->config->setHigh(Pins.NRST);
 
     if (TMC4361A.config->state != CONFIG_READY)
-        return 0;
+        return false;
 
     int32_t i;
 
@@ -1339,7 +1338,7 @@ static uint8_t reset()
     TMC4361A.config->state       = CONFIG_RESET;
     TMC4361A.config->configIndex = 0;
 
-    return 1;
+    return true;
 }
 
 static uint8_t restore()
