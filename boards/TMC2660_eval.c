@@ -52,16 +52,16 @@ static void enableDriver(DriverState state);
 
 static void on_standstill_changed(uint8_t newStandstill);
 
-void tmc2660_writeInt(uint8_t motor, uint8_t address, int value);
-uint32_t tmc2660_readInt(uint8_t motor, uint8_t address);
+//void tmc2660_writeInt(uint8_t motor, uint8_t address, int value);
+//uint32_t tmc2660_readInt(uint8_t motor, uint8_t address);
 
 static uint32_t compatibilityMode = 1;
 
 static SPIChannelTypeDef *TMC2660_SPIChannel;
-static ConfigurationTypeDef *TMC2660_config;
+//static ConfigurationTypeDef *TMC2660.config;
 
 // Helper macro - Access the chip object in the driver boards union
-#define TMC2660 (driverBoards.tmc2660)
+//#define TMC2660 (driverBoards.tmc2660)
 
 typedef struct
 {
@@ -75,100 +75,18 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-void readWrite(uint32_t datagram)
-{	// sending data (value) via spi to TMC262, coping written and received data to shadow register
-	static uint8_t rdsel = 0; // number of expected read response
+//-----------------------------------------------------------NEW CODE--------------------------------------
 
-// if SGCONF should be written, check whether stand still, or run current should be used
-//	if(TMC2660_GET_ADDRESS(datagram) == TMC2660_SGCSCONF)
-//	{
-//		datagram &= ~TMC2660_SET_CS(-1); // clear CS field
-//		datagram |= (TMC2660.isStandStillCurrentLimit) ?  TMC2660_SET_CS(TMC2660.standStillCurrentScale) : TMC2660_SET_CS(TMC2660.runCurrentScale); // set current
-//	}
-
-// write value and read reply to shadow register
-	TMC2660_config->shadowRegister[rdsel]  = TMC2660_SPIChannel->readWrite(datagram>>16, 0);
-	TMC2660_config->shadowRegister[rdsel]  <<= 8;
-	TMC2660_config->shadowRegister[rdsel]  |= TMC2660_SPIChannel->readWrite(datagram>>8, 0);
-	TMC2660_config->shadowRegister[rdsel]  <<= 8;
-	TMC2660_config->shadowRegister[rdsel]  |= TMC2660_SPIChannel->readWrite(datagram & 0xFF, 1);
-	TMC2660_config->shadowRegister[rdsel]  >>= 4;
-
-	TMC2660_config->shadowRegister[TMC2660_RESPONSE_LATEST] = TMC2660_config->shadowRegister[rdsel]; // copy value to latest field
-
-// set virtual read address for next reply given by RDSEL, can only change by setting RDSEL in DRVCONF
-	if(TMC2660_GET_ADDRESS(datagram) == TMC2660_DRVCONF)
-		rdsel = TMC2660_GET_RDSEL(datagram);
-
-// write store written value to shadow register
-	TMC2660_config->shadowRegister[TMC2660_GET_ADDRESS(datagram) | TMC2660_WRITE_BIT ] = datagram;
-}
-
-void readImmediately(uint8_t rdsel)
-{ // sets desired reply in DRVCONF register, resets it to previous settings whilst reading desired reply
-	uint32_t value, drvConf;
-
-// additional reading to keep all replies up to date
-	value = tmc2660_readInt(0, TMC2660_WRITE_BIT | TMC2660_DRVCONF);  // buffer value amd  drvConf to write back later
-	drvConf = value;
-	value &= ~TMC2660_SET_RDSEL(-1);                              // clear RDSEL bits
-	value |= TMC2660_SET_RDSEL(rdsel%3);                          // set rdsel
-	readWrite(value);                                             // write to chip and readout reply
-	readWrite(drvConf);                                           // write to chip and return desired reply
-}
-
-// => SPI wrapper
-void tmc2660_writeInt(uint8_t motor, uint8_t address, int value)
+unsigned char tmc2660_readWriteSPI(uint16_t icID, uint8_t data, uint8_t lastTransfer)
 {
-	UNUSED(motor);
-
-	// tmc2660_writeDatagram(address, 0xFF & (value>>24), 0xFF & (value>>16), 0xFF & (value>>8), 0xFF & (value>>0));
-	value &= 0x0FFFFF;
-
-	TMC2660_config->shadowRegister[0x7F & (address | TMC2660_WRITE_BIT)] = value;
-	if(!TMC2660.continuousModeEnable)
-		readWrite(TMC2660_DATAGRAM(address, value));
+    UNUSED(icID);
+    return TMC2660_SPIChannel->readWrite(data, lastTransfer);
 }
 
-uint32_t tmc2660_readInt(uint8_t motor, uint8_t address)
-{
-	UNUSED(motor);
-
-	if(!TMC2660.continuousModeEnable && !(address & TMC2660_WRITE_BIT))
-		readImmediately(address);
-
-	return TMC2660_config->shadowRegister[0x7F & address];
 }
 
-void tmc2660_readWrite(uint8_t motor, uint32_t value)
 {
-	UNUSED(motor);
-
-	static uint8_t rdsel = 0; // number of expected read response
-
-	// if SGCONF should be written, check whether stand still, or run current should be used
-//	if(TMC2660_GET_ADDRESS(value) == TMC2660_SGCSCONF)
-//	{
-//		value &= ~TMC2660_SET_CS(-1); // clear CS field
-//		value |= (TMC2660.isStandStillCurrentLimit) ?  TMC2660_SET_CS(TMC2660.standStillCurrentScale) : TMC2660_SET_CS(TMC2660.runCurrentScale); // set current
-//	}
-
-	// write value and read reply to shadow register
-	TMC2660_config->shadowRegister[rdsel] = TMC2660_SPIChannel->readWrite(value>>16, 0);
-	TMC2660_config->shadowRegister[rdsel] <<= 8;
-	TMC2660_config->shadowRegister[rdsel] |= TMC2660_SPIChannel->readWrite(value>>8, 0);
-	TMC2660_config->shadowRegister[rdsel] <<= 8;
-	TMC2660_config->shadowRegister[rdsel] |= TMC2660_SPIChannel->readWrite(value & 0xFF, 1);
-	TMC2660_config->shadowRegister[rdsel] >>= 4;
-
-	TMC2660_config->shadowRegister[TMC2660_RESPONSE_LATEST] = TMC2660_config->shadowRegister[rdsel]; // copy value to latest field
-
-	// set virtual read address for next reply given by RDSEL, can only change by setting RDSEL in DRVCONF
-	if(TMC2660_GET_ADDRESS(value) == TMC2660_DRVCONF)
-		rdsel = TMC2660_GET_RDSEL(value);
-
-	// write store written value to shadow register
-	TMC2660_config->shadowRegister[TMC2660_GET_ADDRESS(value) | TMC2660_WRITE_BIT ] = value;
+    // refreshes settings to prevent chip from loosing settings on brownout
 }
 
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
@@ -790,7 +708,7 @@ void TMC2660_init(void)
 	StepDir_init(STEPDIR_PRECISION);
 	StepDir_setPins(0, Pins.STEP, Pins.DIR, Pins.SG_TST);
 
-	TMC2660_config = Evalboards.ch2.config;
+	TMC2660.config = Evalboards.ch2.config;
 
 	Evalboards.ch2.config->restore      = restore;
 	Evalboards.ch2.config->reset        = reset;
