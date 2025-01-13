@@ -40,7 +40,7 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
-static void readRegister(uint8_t motor, uint16_t address,	int32_t *value);
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
 
@@ -53,8 +53,7 @@ static void enableDriver(DriverState state);
 
 static void on_standstill_changed(uint8_t newStandstill);
 
-//void tmc2660_writeInt(uint8_t motor, uint8_t address, int value);
-//uint32_t tmc2660_readInt(uint8_t motor, uint8_t address);
+void tmc2660_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 
 static uint32_t compatibilityMode = 1;
 
@@ -66,6 +65,9 @@ static SPIChannelTypeDef *TMC2660_SPIChannel;
 
 typedef struct
 {
+    UNUSED(icID);
+    TMC2660_SPIChannel->readWriteArray(data, dataLength);
+}
 	IOPinTypeDef  *CSN;
 	IOPinTypeDef  *STEP;
 	IOPinTypeDef  *DIR;
@@ -78,10 +80,11 @@ static PinsTypeDef Pins;
 
 //-----------------------------------------------------------NEW CODE--------------------------------------
 
-unsigned char tmc2660_readWriteSPI(uint16_t icID, uint8_t data, uint8_t lastTransfer)
+uint8_t tmc2660_getcontinuousModeEnable(uint8_t icID)
 {
     UNUSED(icID);
-    return TMC2660_SPIChannel->readWrite(data, lastTransfer);
+
+    return TMC2660.continuousModeEnable;
 }
 
 static void standStillCurrentLimitation()
@@ -116,26 +119,17 @@ static void standStillCurrentLimitation()
 static void continousSync()
 {
     // refreshes settings to prevent chip from loosing settings on brownout
-    static uint8_t write  = TMC2660_DRVCTRL;
-    static uint8_t read   = 0;
-    static uint8_t rdsel  = 0;
+    static uint8_t write = TMC2660_DRVCTRL;
+    static uint8_t read  = 0;
+    static uint8_t rdsel = 0;
 
-    // rotational reading all replies to keep values up to date
-    uint32_t value, drvConf;
-
-    // additional reading to keep all replies up to date
-    value = drvConf = tmc2660_readInt(0, TMC2660_DRVCONF);  // buffer value and  drvConf to write back later
-    value &= ~TMC2660_SET_RDSEL(-1);                        // clear RDSEL bits
-    value |= TMC2660_SET_RDSEL(rdsel % 3);                  // clear set rdsel
-    tmc2660_readWrite(0, value);
-    tmc2660_readWrite(0, drvConf);
+    readImmediately(DEFAULT_ICID, rdsel);
 
     // determine next read address
     read = (read + 1) % 3;
 
     // write settings from shadow register to chip.
-    // readWrite(TMC2660.config->shadowRegister[TMC2660_WRITE | write]);
-    tmc2660_readWrite(0, TMC2660.config->shadowRegister[write]);
+    readWrite(DEFAULT_ICID, tmc2660_shadowRegister[DEFAULT_ICID][write]);
 
     // determine next write address - skip unused addresses
     if (write == TMC2660_DRVCTRL)
