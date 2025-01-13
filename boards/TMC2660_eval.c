@@ -83,12 +83,77 @@ unsigned char tmc2660_readWriteSPI(uint16_t icID, uint8_t data, uint8_t lastTran
     return TMC2660_SPIChannel->readWrite(data, lastTransfer);
 }
 
+static void standStillCurrentLimitation()
+{ // mark if current should be reduced in stand still if too high
+    static uint32_t errorTimer = 0;
+
+    // check the standstill flag
+    if(TMC2660_GET_STST(tmc2660_getStatusBits()))
+    {
+        // check if current reduction is neccessary
+        if(TMC2660.runCurrentScale > TMC2660.standStillCurrentScale)
+        {
+            TMC2660.isStandStillOverCurrent = 1;
+
+            // count timeout
+            if(errorTimer++ > TMC2660.standStillTimeout/10)
+            {
+                // set current limitation flag
+                TMC2660.isStandStillCurrentLimit = 1;
+                errorTimer = 0;
+            }
+            return;
+        }
+    }
+
+    // No standstill or overcurrent -> reset flags & error timer
+    TMC2660.isStandStillOverCurrent  = 0;
+    TMC2660.isStandStillCurrentLimit = 0;
+    errorTimer = 0;
 }
 
+static void continousSync()
 {
     // refreshes settings to prevent chip from loosing settings on brownout
-}
+    static uint8_t write  = TMC2660_DRVCTRL;
+    static uint8_t read   = 0;
+    static uint8_t rdsel  = 0;
 
+    // rotational reading all replies to keep values up to date
+    uint32_t value, drvConf;
+
+    // additional reading to keep all replies up to date
+    value = drvConf = tmc2660_readInt(0, TMC2660_DRVCONF);  // buffer value and  drvConf to write back later
+    value &= ~TMC2660_SET_RDSEL(-1);                        // clear RDSEL bits
+    value |= TMC2660_SET_RDSEL(rdsel % 3);                  // clear set rdsel
+    tmc2660_readWrite(0, value);
+    tmc2660_readWrite(0, drvConf);
+
+    // determine next read address
+    read = (read + 1) % 3;
+
+    // write settings from shadow register to chip.
+    // readWrite(TMC2660.config->shadowRegister[TMC2660_WRITE | write]);
+    tmc2660_readWrite(0, TMC2660.config->shadowRegister[write]);
+
+    // determine next write address - skip unused addresses
+    if (write == TMC2660_DRVCTRL)
+    {
+        // Jump over the gap in address space
+        write = TMC2660_CHOPCONF;
+    }
+    else if (write == TMC2660_DRVCONF)
+    {
+        // From the last register, jump back to the first
+        write = TMC2660_DRVCTRL;
+    }
+    else
+    {
+        // Otherwise, jump to the subsequent register
+        write++;
+    }
+}
+//-----------------------------------------------------------NEW CODE--------------------------------------
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
 	uint32_t errors = 0;
@@ -646,7 +711,17 @@ static void periodicJob(uint32_t tick)
 		lastCoolStepState = currCoolStepState;
 	}
 
-	tmc2660_periodicJob(DEFAULT_MOTOR, tick, &TMC2660, TMC2660_config);
+//	tmc2660_periodicJob(tick);
+    if(tick - TMC2660.oldTick >= 10)
+    {
+        standStillCurrentLimitation();
+        TMC2660.oldTick = tick;
+    }
+
+    if(TMC2660.continuousModeEnable)
+    { // continuously write settings to chip and rotate through all reply types to keep data up to date
+        continousSync();
+    }
 	StepDir_periodicJob(DEFAULT_MOTOR);
 }
 
@@ -655,7 +730,13 @@ static uint8_t reset()
 	if(StepDir_getActualVelocity(0) != 0)
 		return 0;
 
-	tmc2660_reset(&TMC2660, TMC2660_config);
+//	tmc2660_reset();
+    tmc2660_writeInt(0, TMC2660_DRVCONF,  TMC2660.registerResetState[TMC2660_DRVCONF]);
+    tmc2660_writeInt(0, TMC2660_DRVCTRL,  TMC2660.registerResetState[TMC2660_DRVCTRL]);
+    tmc2660_writeInt(0, TMC2660_CHOPCONF, TMC2660.registerResetState[TMC2660_CHOPCONF]);
+    tmc2660_writeInt(0, TMC2660_SMARTEN,  TMC2660.registerResetState[TMC2660_SMARTEN]);
+    tmc2660_writeInt(0, TMC2660_SGCSCONF, TMC2660.registerResetState[TMC2660_SGCSCONF]);
+
 	compatibilityMode = 1;
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 
@@ -667,7 +748,13 @@ static uint8_t reset()
 
 static uint8_t restore()
 {
-	return tmc2660_restore(TMC2660_config);
+//	return tmc2660_restore();
+    tmc2660_writeInt(0, TMC2660_DRVCONF,  TMC2660.config->shadowRegister[TMC2660_DRVCONF]);
+    tmc2660_writeInt(0, TMC2660_DRVCTRL,  TMC2660.config->shadowRegister[TMC2660_DRVCTRL]);
+    tmc2660_writeInt(0, TMC2660_CHOPCONF, TMC2660.config->shadowRegister[TMC2660_CHOPCONF]);
+    tmc2660_writeInt(0, TMC2660_SMARTEN,  TMC2660.config->shadowRegister[TMC2660_SMARTEN]);
+    tmc2660_writeInt(0, TMC2660_SGCSCONF, TMC2660.config->shadowRegister[TMC2660_SGCSCONF]);
+
 }
 
 static void enableDriver(DriverState state)
@@ -685,7 +772,25 @@ void TMC2660_init(void)
 {
 	compatibilityMode = 1;
 
-	tmc2660_initConfig(&TMC2660);
+//	tmc2660_initConfig();
+    TMC2660.velocity                  = 0;
+    TMC2660.oldTick                   = 0;
+    TMC2660.oldX                      = 0;
+    TMC2660.continuousModeEnable      = 0;
+    TMC2660.isStandStillCurrentLimit  = 0;
+    TMC2660.isStandStillOverCurrent   = 0;
+    TMC2660.runCurrentScale           = 5;
+    TMC2660.coolStepActiveValue       = 0;
+    TMC2660.coolStepInactiveValue     = 0;
+    TMC2660.coolStepThreshold         = 0;
+    TMC2660.standStillCurrentScale    = 5;
+    TMC2660.standStillTimeout         = 0;
+
+    int32_t i;
+    for(i = 0; i < TMC2660_REGISTER_COUNT; i++)
+    {
+        TMC2660.registerAccess[i]      = tmc2660_defaultRegisterAccess[i];
+        TMC2660.registerResetState[i]  = tmc2660_defaultRegisterResetState[i];
 
 	Pins.ENN     = &HAL.IOs->pins->DIO0;
 	Pins.SG_TST  = &HAL.IOs->pins->DIO1;
