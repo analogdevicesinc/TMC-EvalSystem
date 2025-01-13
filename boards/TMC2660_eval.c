@@ -22,6 +22,24 @@
 #define ERRORS_I_STS          (1<<0)  // stand still current too high
 #define ERRORS_I_TIMEOUT_STS  (1<<1)  // current limited in stand still to prevent driver from demage
 
+// Usage note: use 1 TypeDef per IC
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    uint8_t standStillCurrentScale;
+    uint32_t standStillTimeout;
+    uint8_t isStandStillOverCurrent;
+    uint8_t isStandStillCurrentLimit;
+    uint8_t continuousModeEnable;
+    uint8_t runCurrentScale;
+    uint8_t coolStepInactiveValue;
+    uint8_t coolStepActiveValue;
+    uint32_t coolStepThreshold;
+    int32_t velocity;
+    int32_t oldX;
+    uint32_t oldTick;
+} TMC2660TypeDef;
+TMC2660TypeDef TMC2660;
 #define VM_MIN  50   // VM[V/10] min
 #define VM_MAX  600  // VM[V/10] max +10%
 
@@ -30,7 +48,6 @@
 #define I_STAND_STILL 5
 #define T_STAND_STILL 1000
 
-#define DEFAULT_MOTOR 0
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -57,11 +74,6 @@ void tmc2660_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 
 static uint32_t compatibilityMode = 1;
 
-static SPIChannelTypeDef *TMC2660_SPIChannel;
-//static ConfigurationTypeDef *TMC2660.config;
-
-// Helper macro - Access the chip object in the driver boards union
-//#define TMC2660 (driverBoards.tmc2660)
 
 typedef struct
 {
