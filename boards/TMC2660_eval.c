@@ -12,6 +12,7 @@
 #include "Board.h"
 #include "tmc/ic/TMC2660/TMC2660.h"
 
+
 #undef  TMC2660_MAX_VELOCITY
 #define TMC2660_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
@@ -352,7 +353,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 140:
 		// Microstep Resolution
 		if(readWrite == READ) {
-			*value = 8 - TMC2660_FIELD_READ(0, TMC2660_DRVCTRL  | TMC2660_WRITE_BIT, TMC2660_MRES_MASK, TMC2660_MRES_SHIFT);
+			*value = 8 - TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_MRES_MASK, TMC2660_MRES_SHIFT);
 		} else if(readWrite == WRITE) {
 			switch(*value)
 			{
@@ -381,7 +382,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 160:
 		// Microstep Interpolation
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCTRL  | TMC2660_WRITE_BIT, TMC2660_INTPOL_MASK, TMC2660_INTPOL_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_INTPOL_MASK, TMC2660_INTPOL_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCTRL, TMC2660_INTPOL_MASK, TMC2660_INTPOL_SHIFT, *value);
 		}
@@ -389,7 +390,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 161:
 		// Double Edge Steps
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCTRL  | TMC2660_WRITE_BIT, TMC2660_DEDGE_MASK, TMC2660_DEDGE_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCTRL, TMC2660_DEDGE_MASK, TMC2660_DEDGE_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCTRL, TMC2660_DEDGE_MASK, TMC2660_DEDGE_SHIFT, *value);
 		}
@@ -397,7 +398,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 162:
 		// Chopper blank time
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF  | TMC2660_WRITE_BIT, TMC2660_TBL_MASK, TMC2660_TBL_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF, TMC2660_TBL_MASK, TMC2660_TBL_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_CHOPCONF, TMC2660_TBL_MASK, TMC2660_TBL_SHIFT, *value);
 		}
@@ -405,7 +406,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 163:
 		// Constant TOff Mode
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF  | TMC2660_WRITE_BIT, TMC2660_CHM_MASK, TMC2660_CHM_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF, TMC2660_CHM_MASK, TMC2660_CHM_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_CHOPCONF, TMC2660_CHM_MASK, TMC2660_CHM_SHIFT, *value);
 		}
@@ -413,7 +414,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 164:
 		// Disable fast decay comparator
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF  | TMC2660_WRITE_BIT, TMC2660_HDEC_MASK, TMC2660_HDEC_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF, TMC2660_HDEC_MASK, TMC2660_HDEC_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_CHOPCONF, TMC2660_HDEC_MASK, TMC2660_HDEC_SHIFT, *value);
 		}
@@ -421,7 +422,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 165:
 		// Chopper hysteresis end / fast decay time
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF  | TMC2660_WRITE_BIT, TMC2660_HEND_MASK, TMC2660_HEND_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF, TMC2660_HEND_MASK, TMC2660_HEND_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_CHOPCONF, TMC2660_HEND_MASK, TMC2660_HEND_SHIFT, *value);
 		}
@@ -429,7 +430,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 166:
 		// Chopper hysteresis start / sine wave offset
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF  | TMC2660_WRITE_BIT, TMC2660_HSTRT_MASK, TMC2660_HSTRT_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF, TMC2660_HSTRT_MASK, TMC2660_HSTRT_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_CHOPCONF, TMC2660_HSTRT_MASK, TMC2660_HSTRT_SHIFT, *value);
 		}
@@ -437,7 +438,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 167:
 		// Chopper off time
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF  | TMC2660_WRITE_BIT, TMC2660_TOFF_MASK, TMC2660_TOFF_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF, TMC2660_TOFF_MASK, TMC2660_TOFF_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_CHOPCONF, TMC2660_TOFF_MASK, TMC2660_TOFF_SHIFT, *value);
 		}
@@ -445,7 +446,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 168:
 		// smartEnergy current minimum (SEIMIN)
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN | TMC2660_WRITE_BIT, TMC2660_SEIMIN_MASK, TMC2660_SEIMIN_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN, TMC2660_SEIMIN_MASK, TMC2660_SEIMIN_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_SMARTEN, TMC2660_SEIMIN_MASK, TMC2660_SEIMIN_SHIFT, *value);
 		}
@@ -453,7 +454,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 169:
 		// smartEnergy current down step
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN | TMC2660_WRITE_BIT, TMC2660_SEDN_MASK, TMC2660_SEDN_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN, TMC2660_SEDN_MASK, TMC2660_SEDN_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_SMARTEN, TMC2660_SEDN_MASK, TMC2660_SEDN_SHIFT, *value);
 		}
@@ -461,7 +462,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 170:
 		// smartEnergy hysteresis
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN | TMC2660_WRITE_BIT, TMC2660_SEMAX_MASK, TMC2660_SEMAX_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN, TMC2660_SEMAX_MASK, TMC2660_SEMAX_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_SMARTEN, TMC2660_SEMAX_MASK, TMC2660_SEMAX_SHIFT, *value);
 		}
@@ -469,7 +470,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 171:
 		// smartEnergy current up step
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN | TMC2660_WRITE_BIT, TMC2660_SEUP_MASK, TMC2660_SEUP_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN, TMC2660_SEUP_MASK, TMC2660_SEUP_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_SMARTEN, TMC2660_SEUP_MASK, TMC2660_SEUP_SHIFT, *value);
 		}
@@ -477,7 +478,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 172:
 		// smartEnergy hysteresis start
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN | TMC2660_WRITE_BIT, TMC2660_SEMIN_MASK, TMC2660_SEMIN_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_SMARTEN, TMC2660_SEMIN_MASK, TMC2660_SEMIN_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_SMARTEN, TMC2660_SEMIN_MASK, TMC2660_SEMIN_SHIFT, *value);
 		}
@@ -485,7 +486,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 173:
 		// stallGuard2 filter enable
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_SGCSCONF | TMC2660_WRITE_BIT, TMC2660_SFILT_MASK, TMC2660_SFILT_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_SGCSCONF, TMC2660_SFILT_MASK, TMC2660_SFILT_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_SFILT_MASK, TMC2660_SFILT_SHIFT, *value);
 		}
@@ -493,7 +494,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 174:
 		// stallGuard2 threshold
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_SGCSCONF | TMC2660_WRITE_BIT, TMC2660_SGT_MASK, TMC2660_SGT_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_SGCSCONF , TMC2660_SGT_MASK, TMC2660_SGT_SHIFT);
 			*value = CAST_Sn_TO_S32(*value, 7);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_SGT_MASK, TMC2660_SGT_SHIFT, *value);
@@ -502,7 +503,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 175:
 		// Slope control, high side
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF | TMC2660_WRITE_BIT, TMC2660_SLPH_MASK, TMC2660_SLPH_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF, TMC2660_SLPH_MASK, TMC2660_SLPH_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCONF, TMC2660_SLPH_MASK, TMC2660_SLPH_SHIFT, *value);
 		}
@@ -510,7 +511,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 176:
 		// Slope control, low side
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF | TMC2660_WRITE_BIT, TMC2660_SLPL_MASK, TMC2660_SLPL_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF, TMC2660_SLPL_MASK, TMC2660_SLPL_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCONF, TMC2660_SLPL_MASK, TMC2660_SLPL_SHIFT, *value);
 		}
@@ -518,7 +519,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 177:
 		// Short to Ground Protection
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF | TMC2660_WRITE_BIT, TMC2660_DISS2G_MASK, TMC2660_DISS2G_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF, TMC2660_DISS2G_MASK, TMC2660_DISS2G_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCONF, TMC2660_DISS2G_MASK, TMC2660_DISS2G_SHIFT, *value);
 		}
@@ -526,7 +527,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 178:
 		// Short-to-ground detection timer
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF | TMC2660_WRITE_BIT, TMC2660_TS2G_MASK, TMC2660_TS2G_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF, TMC2660_TS2G_MASK, TMC2660_TS2G_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCONF, TMC2660_TS2G_MASK, TMC2660_TS2G_SHIFT, *value);
 		}
@@ -534,7 +535,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 179:
 		// VSense
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF | TMC2660_WRITE_BIT, TMC2660_VSENSE_MASK, TMC2660_VSENSE_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF, TMC2660_VSENSE_MASK, TMC2660_VSENSE_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCONF, TMC2660_VSENSE_MASK, TMC2660_VSENSE_SHIFT, *value);
 		}
@@ -566,7 +567,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 183:
 		// Disable step/dir interface
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF | TMC2660_WRITE_BIT, TMC2660_SDOFF_MASK, TMC2660_SDOFF_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF, TMC2660_SDOFF_MASK, TMC2660_SDOFF_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCONF, TMC2660_SDOFF_MASK, TMC2660_SDOFF_SHIFT, *value);
 		}
@@ -574,7 +575,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 184:
 		// Random TOff mode
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF | TMC2660_WRITE_BIT, TMC2660_RNDTF_MASK, TMC2660_RNDTF_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_CHOPCONF, TMC2660_RNDTF_MASK, TMC2660_RNDTF_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_CHOPCONF, TMC2660_RNDTF_MASK, TMC2660_RNDTF_SHIFT, *value);
 		}
@@ -582,7 +583,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 185:
 		// Reserved test mode: leave undocumented?
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF | TMC2660_WRITE_BIT, TMC2660_TST_MASK, TMC2660_TST_SHIFT);
+			*value = TMC2660_FIELD_READ(0, TMC2660_DRVCONF, TMC2660_TST_MASK, TMC2660_TST_SHIFT);
 		} else if(readWrite == WRITE) {
 			TMC2660_FIELD_UPDATE(0, TMC2660_DRVCONF, TMC2660_TST_MASK, TMC2660_TST_SHIFT, *value);
 		}
@@ -600,7 +601,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 208:
 		// Status Flags
 		if(readWrite == READ) {
-			*value = TMC2660_FIELD_READ(0, TMC2660_RESPONSE_LATEST, TMC2660_STATUS_MASK, TMC2660_STATUS_SHIFT);
+			*value = tmc2660_getStatusBits();
 		} else if(readWrite == WRITE) {
 			errors |= TMC_ERROR_TYPE;
 		}
@@ -677,10 +678,10 @@ static void deInit(void)
 static void on_standstill_changed(uint8_t newStandstill)
 {
 	if(newStandstill == true) {
-		TMC2660.runCurrentScale = TMC2660_FIELD_READ(0, TMC2660_SGCSCONF | TMC2660_WRITE_BIT, TMC2660_CS_MASK, TMC2660_CS_SHIFT);
+		TMC2660.runCurrentScale = TMC2660_FIELD_READ(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT);
 		TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.standStillCurrentScale);
 	} else if(newStandstill == false) {
-		TMC2660.standStillCurrentScale = TMC2660_FIELD_READ(0, TMC2660_SGCSCONF | TMC2660_WRITE_BIT, TMC2660_CS_MASK, TMC2660_CS_SHIFT);
+		TMC2660.standStillCurrentScale = TMC2660_FIELD_READ(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT);
 		TMC2660_FIELD_UPDATE(0, TMC2660_SGCSCONF, TMC2660_CS_MASK, TMC2660_CS_SHIFT, TMC2660.runCurrentScale);
 	}
 }
@@ -755,6 +756,7 @@ static uint8_t restore()
     tmc2660_writeInt(0, TMC2660_SMARTEN,  TMC2660.config->shadowRegister[TMC2660_SMARTEN]);
     tmc2660_writeInt(0, TMC2660_SGCSCONF, TMC2660.config->shadowRegister[TMC2660_SGCSCONF]);
 
+    return 1;
 }
 
 static void enableDriver(DriverState state)
@@ -791,6 +793,7 @@ void TMC2660_init(void)
     {
         TMC2660.registerAccess[i]      = tmc2660_defaultRegisterAccess[i];
         TMC2660.registerResetState[i]  = tmc2660_defaultRegisterResetState[i];
+    }
 
 	Pins.ENN     = &HAL.IOs->pins->DIO0;
 	Pins.SG_TST  = &HAL.IOs->pins->DIO1;
