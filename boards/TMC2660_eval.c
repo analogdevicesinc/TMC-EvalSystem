@@ -725,12 +725,11 @@ static uint8_t reset()
 	if(StepDir_getActualVelocity(0) != 0)
 		return 0;
 
-//	tmc2660_reset();
-    tmc2660_writeInt(0, TMC2660_DRVCONF,  TMC2660.registerResetState[TMC2660_DRVCONF]);
-    tmc2660_writeInt(0, TMC2660_DRVCTRL,  TMC2660.registerResetState[TMC2660_DRVCTRL]);
-    tmc2660_writeInt(0, TMC2660_CHOPCONF, TMC2660.registerResetState[TMC2660_CHOPCONF]);
-    tmc2660_writeInt(0, TMC2660_SMARTEN,  TMC2660.registerResetState[TMC2660_SMARTEN]);
-    tmc2660_writeInt(0, TMC2660_SGCSCONF, TMC2660.registerResetState[TMC2660_SGCSCONF]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_DRVCONF, tmc2660_sampleRegisterPreset[TMC2660_DRVCONF]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_DRVCTRL, tmc2660_sampleRegisterPreset[TMC2660_DRVCTRL]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_CHOPCONF, tmc2660_sampleRegisterPreset[TMC2660_CHOPCONF]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_SMARTEN, tmc2660_sampleRegisterPreset[TMC2660_SMARTEN]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_SGCSCONF, tmc2660_sampleRegisterPreset[TMC2660_SGCSCONF]);
 
 	compatibilityMode = 1;
 	enableDriver(DRIVER_USE_GLOBAL_ENABLE);
@@ -743,12 +742,11 @@ static uint8_t reset()
 
 static uint8_t restore()
 {
-//	return tmc2660_restore();
-    tmc2660_writeInt(0, TMC2660_DRVCONF,  TMC2660.config->shadowRegister[TMC2660_DRVCONF]);
-    tmc2660_writeInt(0, TMC2660_DRVCTRL,  TMC2660.config->shadowRegister[TMC2660_DRVCTRL]);
-    tmc2660_writeInt(0, TMC2660_CHOPCONF, TMC2660.config->shadowRegister[TMC2660_CHOPCONF]);
-    tmc2660_writeInt(0, TMC2660_SMARTEN,  TMC2660.config->shadowRegister[TMC2660_SMARTEN]);
-    tmc2660_writeInt(0, TMC2660_SGCSCONF, TMC2660.config->shadowRegister[TMC2660_SGCSCONF]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_DRVCONF, tmc2660_shadowRegister[DEFAULT_ICID][TMC2660_DRVCONF]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_DRVCTRL, tmc2660_shadowRegister[DEFAULT_ICID][TMC2660_DRVCTRL]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_CHOPCONF, tmc2660_shadowRegister[DEFAULT_ICID][TMC2660_CHOPCONF]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_SMARTEN, tmc2660_shadowRegister[DEFAULT_ICID][TMC2660_SMARTEN]);
+    tmc2660_writeRegister(DEFAULT_ICID, TMC2660_SGCSCONF, tmc2660_shadowRegister[DEFAULT_ICID][TMC2660_SGCSCONF]);
 
     return 1;
 }
@@ -782,12 +780,6 @@ void TMC2660_init(void)
     TMC2660.standStillCurrentScale    = 5;
     TMC2660.standStillTimeout         = 0;
 
-    int32_t i;
-    for(i = 0; i < TMC2660_REGISTER_COUNT; i++)
-    {
-        TMC2660.registerAccess[i]      = tmc2660_defaultRegisterAccess[i];
-        TMC2660.registerResetState[i]  = tmc2660_defaultRegisterResetState[i];
-    }
 
 	Pins.ENN     = &HAL.IOs->pins->DIO0;
 	Pins.SG_TST  = &HAL.IOs->pins->DIO1;
