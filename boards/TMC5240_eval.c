@@ -1025,14 +1025,16 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
     return TMC_ERROR_NONE;
 }
 
-static void writeRegister(uint8_t icID, uint16_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
-    tmc5240_writeRegister(icID, address, value);
+    UNUSED(motor);
+    tmc5240_writeRegister(DEFAULT_ICID, address, value);
 }
 
-static void readRegister(uint8_t icID, uint16_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
-    *value = tmc5240_readRegister(icID, address);
+    UNUSED(motor);
+    *value = tmc5240_readRegister(DEFAULT_ICID, address);
 }
 
 static void periodicJob(uint32_t tick)

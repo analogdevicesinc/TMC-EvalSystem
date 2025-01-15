@@ -619,13 +619,13 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     return errors;
 }
 
-void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
     tmc2225_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
-void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
     UNUSED(motor);
     *value = tmc2225_readRegister(DEFAULT_ICID, (uint8_t) address);

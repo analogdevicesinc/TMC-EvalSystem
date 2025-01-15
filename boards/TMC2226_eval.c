@@ -61,6 +61,8 @@ static uint32_t moveTo(uint8_t motor, int32_t position);
 static uint32_t moveBy(uint8_t motor, int32_t *ticks);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
+static void readRegister(uint8_t motor, uint16_t address,   int32_t *value);
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static void checkErrors(uint32_t tick);
 static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
@@ -130,13 +132,13 @@ uint8_t tmc2226_getNodeAddress(uint16_t icID)
     return nodeAddress;
 }
 
-void writeRegister(uint8_t motor, uint16_t address, int32_t value)
+static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
     tmc2226_writeRegister(DEFAULT_ICID, (uint8_t) address, value);
 }
 
-void readRegister(uint8_t motor, uint16_t address, int32_t *value)
+static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
     UNUSED(motor);
     *value = tmc2226_readRegister(DEFAULT_ICID, (uint8_t) address);
