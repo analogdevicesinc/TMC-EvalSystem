@@ -103,6 +103,7 @@ static void boardsReset(void);
 static void boardsMeasuredSpeed(void);
 static void setDriversEnable(void);
 static void checkIDs(void);
+static bool checkBoardTypes();
 static void SoftwareReset(void);
 static void GetVersion(void);
 static void GetInput(void);
@@ -729,6 +730,10 @@ static void boardAssignment(void)
 			ids.ch2.id = Evalboards.ch2.id;
 		}
 		break;
+	case 5:  // Re-Check board types - but do not [de]init any boards
+	    checkBoardTypes();
+	    return;
+	    break;
 	default:
 		ActualReply.Status = REPLY_INVALID_TYPE;
 		return;
@@ -816,7 +821,41 @@ static void checkIDs(void)
 {
     IdAssignmentTypeDef ids = { 0 };
 
-    // Backwards compatibility - to be deprecated in the next version
+    // Backwards compatibility:
+    // For now we do this *before* scanning the bus since TMCL-IDE <= 4.6.0 will
+    // use this command (TMCL_GetIDs type 0) to switch the ID from TMC9660
+    // bootloader to param/reg. Later this will change to always do the generic
+    // ID detection first followed by identifying the board type here and using
+    // a different command (TMCL_GetIDs type 5) - but that change will break the
+    // old TMCL-IDE mechanism.
+    if (checkBoardTypes())
+        return;
+
+    Evalboards.ch1.id = 0;
+    Evalboards.ch2.id = 0;
+
+    // Try detecting the IDs
+    if (!IDDetection_detect(&ids))
+    {
+        // Monoflop detection not yet finished
+        ActualReply.Status = REPLY_DELAYED;
+        return;
+    }
+
+    // ID detection completed -> Assign the board
+    Board_assign(&ids);
+    ActualReply.Value.UInt32 = (uint32_t)(
+            (ids.ch1.id)
+            | (ids.ch1.state << 8)
+            | (ids.ch2.id    << 16)
+            | (ids.ch2.state << 24)
+    );
+}
+
+static bool checkBoardTypes()
+{
+    IdAssignmentTypeDef ids = { 0 };
+
     switch(Evalboards.ch1.id)
     {
     case ID_TMC9660_3PH_BL_EVAL:
@@ -850,8 +889,8 @@ static void checkIDs(void)
             }
             else
             {
-                // Fall back to scanning IDs
-                break;
+                // Unknown
+                return false;
             }
         }
 
@@ -863,30 +902,12 @@ static void checkIDs(void)
                 | (ids.ch2.id    << 16)
                 | (ids.ch2.state << 24)
         );
-        return;
+        return true;
         break;
     }
+    default:
+        return false;
     }
-
-    Evalboards.ch1.id = 0;
-    Evalboards.ch2.id = 0;
-
-    // Try detecting the IDs
-    if (!IDDetection_detect(&ids))
-    {
-        // Monoflop detection not yet finished
-        ActualReply.Status = REPLY_DELAYED;
-        return;
-    }
-
-    // ID detection completed -> Assign the board
-    Board_assign(&ids);
-    ActualReply.Value.UInt32 = (uint32_t)(
-            (ids.ch1.id)
-            | (ids.ch1.state << 8)
-            | (ids.ch2.id    << 16)
-            | (ids.ch2.state << 24)
-    );
 }
 
 static void SoftwareReset(void)
