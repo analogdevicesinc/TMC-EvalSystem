@@ -137,14 +137,7 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
 static void initTunnel(void)
 {
     //Deinit SPI
-    HAL.IOs->config->reset(Pins.SPI1_SCK);
-    HAL.IOs->config->reset(Pins.SPI1_MOSI);
-    HAL.IOs->config->reset(Pins.SPI1_MISO);
-    HAL.IOs->config->reset(Pins.SPI1_CSN);
-    HAL.IOs->config->toInput(Pins.SPI1_SCK);
-    HAL.IOs->config->toInput(Pins.SPI1_MOSI);
-    HAL.IOs->config->toInput(Pins.SPI1_MISO);
-    HAL.IOs->config->toInput(Pins.SPI1_CSN);
+    TMC9660_STEPPER_SPIChannel->setEnabled(0);
 
     TMC9660_STEPPER_UARTChannel         = HAL.UART;
     TMC9660_STEPPER_UARTChannel->pinout = UART_PINS_2;
@@ -155,9 +148,10 @@ static void initTunnel(void)
     // selection.
     TMC9660_STEPPER_UARTChannel->timeout = 250; // [ms]
 
+    HAL.IOs->config->setHigh(Pins.HOLDN_FLASH);
+
     //    HAL.IOs->config->setHigh(Pins.SPI_EN);
     //    HAL.IOs->config->setLow(Pins.I2C_EN);
-    //    HAL.IOs->config->setHigh(Pins.HOLD_FLASHN);
     //    HAL.IOs->config->setLow(Pins.RESETN);
 }
 
@@ -317,14 +311,14 @@ void TMC9660_STEPPER_init(void)
     Pins.UART_TX = &HAL.IOs->pins->DIO11; //Pin22
 #endif
 
-    //    HAL.IOs->config->toOutput(Pins.HOLDN_FLASH);
+    HAL.IOs->config->toOutput(Pins.HOLDN_FLASH);
     //    HAL.IOs->config->toOutput(Pins.WAKEN_LB);
     //    HAL.IOs->config->toOutput(Pins.RESET_LB);
     //    HAL.IOs->config->toOutput(Pins.DRV_ENABLE);
 
     //    SPI.init();
-    //    TMC9660_STEPPER_SPIChannel = &HAL.SPI->ch1;
-    //    TMC9660_STEPPER_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+        TMC9660_STEPPER_SPIChannel = &HAL.SPI->ch1;
+        TMC9660_STEPPER_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
 
     initTunnel();
 
