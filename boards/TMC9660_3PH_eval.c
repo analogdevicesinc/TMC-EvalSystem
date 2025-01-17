@@ -179,7 +179,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     case 2:
         // Get Module ID of App
         uint8_t status;
-        processTunnelApp(157, 0, 0, (uint32_t *) value, &status);
+        processTunnelApp(136, 1, 0, (uint32_t *) value, &status);
+        // The module ID is the upper 16 bits of the reply
+        *(uint32_t *)value >>= 16;
         break;
     default:
         errors |= TMC_ERROR_TYPE;
