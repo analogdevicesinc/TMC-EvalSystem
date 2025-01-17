@@ -831,6 +831,8 @@ static void checkIDs(void)
     if (checkBoardTypes())
         return;
 
+    Evalboards.ch1.deInit();
+    Evalboards.ch2.deInit();
     Evalboards.ch1.id = 0;
     Evalboards.ch2.id = 0;
 
