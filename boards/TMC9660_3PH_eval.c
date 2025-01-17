@@ -134,6 +134,12 @@ static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, 
     return 0;
 }
 
+static void deInit(void)
+{
+    HAL.IOs->config->setHigh(Pins.RESET_LB);
+    TMC9660_3PH_SPIChannel->setEnabled(1);
+}
+
 static void initTunnel(void)
 {
     //Deinit SPI
@@ -313,8 +319,8 @@ void TMC9660_3PH_init(void)
 #endif
 
     HAL.IOs->config->toOutput(Pins.HOLDN_FLASH);
+    HAL.IOs->config->toOutput(Pins.RESET_LB);
     //    HAL.IOs->config->toOutput(Pins.WAKEN_LB);
-    //    HAL.IOs->config->toOutput(Pins.RESET_LB);
     //    HAL.IOs->config->toOutput(Pins.DRV_ENABLE);
 
     //    SPI.init();
@@ -325,6 +331,7 @@ void TMC9660_3PH_init(void)
 
     Evalboards.ch1.userFunction         = userFunction;
     Evalboards.ch1.fwdTmclCommand       = fwdTmclCommand;
+    Evalboards.ch1.deInit               = deInit;
 
     // Check if we have a mode mismatch with the running TMC9660 (bootloader or wrong app mode)
     verifyTMC9660Mode();
