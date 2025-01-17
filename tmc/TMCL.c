@@ -867,18 +867,22 @@ static void checkIDs(void)
     }
     }
 
-    if(IDDetection_detect(&ids)){
-        Board_assign(&ids);
-        ActualReply.Value.Int32 = (uint32_t)(
-                (ids.ch1.id)
-                | (ids.ch1.state << 8)
-                | (ids.ch2.id    << 16)
-                | (ids.ch2.state << 24)
-        );
-    }
-    else{
+    // Try detecting the IDs
+    if (!IDDetection_detect(&ids))
+    {
+        // Monoflop detection not yet finished
         ActualReply.Status = REPLY_DELAYED;
+        return;
     }
+
+    // ID detection completed -> Assign the board
+    Board_assign(&ids);
+    ActualReply.Value.UInt32 = (uint32_t)(
+            (ids.ch1.id)
+            | (ids.ch1.state << 8)
+            | (ids.ch2.id    << 16)
+            | (ids.ch2.state << 24)
+    );
 }
 
 static void SoftwareReset(void)
