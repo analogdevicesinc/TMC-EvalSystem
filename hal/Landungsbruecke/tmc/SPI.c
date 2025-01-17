@@ -21,6 +21,8 @@ static uint8_t spi_ch1_readWrite(uint8_t data, uint8_t lastTransfer);
 static uint8_t spi_ch2_readWrite(uint8_t data, uint8_t lastTransfer);
 static void spi_ch1_readWriteArray(uint8_t *data, size_t length);
 static void spi_ch2_readWriteArray(uint8_t *data, size_t length);
+static void spi_ch1_setEnabled(uint8_t enabled);
+static void spi_ch2_setEnabled(uint8_t enabled);
 
 SPIChannelTypeDef *SPIChannel_1_default;
 SPIChannelTypeDef *SPIChannel_2_default;
@@ -35,7 +37,8 @@ SPITypeDef SPI=
 		.CSN             = &IODummy,
 		.readWrite       = spi_ch1_readWrite,
 		.readWriteArray  = spi_ch1_readWriteArray,
-		.reset           = reset_ch1
+		.reset           = reset_ch1,
+		.setEnabled      = spi_ch1_setEnabled
 	},
 	.ch2 =
 	{
@@ -43,7 +46,8 @@ SPITypeDef SPI=
 		.CSN             = &IODummy,
 		.readWrite       = spi_ch2_readWrite,
 		.readWriteArray  = spi_ch2_readWriteArray,
-		.reset           = reset_ch2
+		.reset           = reset_ch2,
+        .setEnabled      = spi_ch2_setEnabled
 	},
 	.init = init
 };
@@ -423,4 +427,75 @@ uint8_t readWrite(SPIChannelTypeDef *SPIChannel, uint8_t writeData, uint8_t last
 	}
 
 	return readData;
+}
+
+void spi_ch1_setEnabled(uint8_t enabled)
+{
+    if (enabled)
+    {
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI1_SCK);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI1_SDI);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI1_SDO);
+
+        HAL.IOs->pins->SPI1_SCK.configuration.GPIO_Mode = GPIO_Mode_AF2;
+        HAL.IOs->pins->SPI1_SDI.configuration.GPIO_Mode = GPIO_Mode_AF2;
+        HAL.IOs->pins->SPI1_SDO.configuration.GPIO_Mode = GPIO_Mode_AF2;
+
+        HAL.IOs->config->set(&HAL.IOs->pins->SPI1_SCK);
+        HAL.IOs->config->set(&HAL.IOs->pins->SPI1_SDI);
+        HAL.IOs->config->set(&HAL.IOs->pins->SPI1_SDO);
+        HAL.IOs->config->toOutput(&HAL.IOs->pins->SPI1_CSN);
+        HAL.IOs->config->setHigh(&HAL.IOs->pins->SPI1_CSN);
+    }
+    else{
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI1_SCK);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI1_SDI);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI1_SDO);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI1_CSN);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI1_SCK);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI1_SDI);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI1_SDO);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI1_CSN);
+    }
+}
+
+void spi_ch2_setEnabled(uint8_t enabled)
+{
+    if (enabled)
+    {
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_SCK);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_SDI);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_SDO);
+        HAL.IOs->pins->SPI2_SCK.configuration.GPIO_Mode = GPIO_Mode_AF2;
+        HAL.IOs->pins->SPI2_SDI.configuration.GPIO_Mode = GPIO_Mode_AF2;
+        HAL.IOs->pins->SPI2_SDO.configuration.GPIO_Mode = GPIO_Mode_AF2;
+
+        HAL.IOs->config->set(&HAL.IOs->pins->SPI2_SCK);
+        HAL.IOs->config->set(&HAL.IOs->pins->SPI2_SDI);
+        HAL.IOs->config->set(&HAL.IOs->pins->SPI2_SDO);
+
+        HAL.IOs->config->toOutput(&HAL.IOs->pins->SPI2_CSN0);
+        HAL.IOs->config->toOutput(&HAL.IOs->pins->SPI2_CSN1);
+        HAL.IOs->config->toOutput(&HAL.IOs->pins->SPI2_CSN2);
+
+        HAL.IOs->config->setHigh(&HAL.IOs->pins->SPI2_CSN0);
+        HAL.IOs->config->setHigh(&HAL.IOs->pins->SPI2_CSN1);
+        HAL.IOs->config->setHigh(&HAL.IOs->pins->SPI2_CSN2);
+
+    }
+    else{
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_SCK);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_SDI);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_SDO);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN0);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN1);
+        HAL.IOs->config->reset(&HAL.IOs->pins->SPI2_CSN2);
+
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI2_SCK);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI2_SDI);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI2_SDO);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI2_CSN0);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI2_CSN1);
+        HAL.IOs->config->toInput(&HAL.IOs->pins->SPI2_CSN2);
+    }
 }

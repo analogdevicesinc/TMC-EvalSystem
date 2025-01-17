@@ -25,6 +25,7 @@
 		unsigned char (*readWrite) (unsigned char data, unsigned char lastTransfer);
 		void (*readWriteArray) (uint8_t *data, size_t length);
 		void (*reset) (void);
+		void (*setEnabled) (uint8_t enabled);
 	} SPIChannelTypeDef;
 
 	typedef struct
