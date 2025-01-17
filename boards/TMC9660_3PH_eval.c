@@ -204,7 +204,8 @@ static void verifyTMC9660Mode()
     // or the chip is waiting for TMCL commands
     uint32_t moduleID = 0;
     uint8_t status = 0;
-    int32_t tunnelStatus = processTunnelApp(157, 0, 0, &moduleID, &status);
+    int32_t tunnelStatus = processTunnelApp(136, 1, 0, &moduleID, &status);
+    moduleID >>= 16;
 
     if (tunnelStatus == -1)
     {
