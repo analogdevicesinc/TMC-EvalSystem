@@ -816,30 +816,46 @@ static void checkIDs(void)
 {
     IdAssignmentTypeDef ids = { 0 };
 
-    switch(Evalboards.ch1.id){
-
+    // Backwards compatibility - to be deprecated in the next version
+    switch(Evalboards.ch1.id)
+    {
     case ID_TMC9660_3PH_BL_EVAL:
     case ID_TMC9660_STEPPER_BL_EVAL:
+    case ID_TMC9660_3PH_PARAM_EVAL:
+    case ID_TMC9660_STEPPER_PARAM_EVAL:
+    case ID_TMC9660_3PH_REG_EVAL:
+    case ID_TMC9660_STEPPER_REG_EVAL:
     {
         int32_t val = 0;
+        bool isStepper = Evalboards.ch1.id >= ID_TMC9660_STEPPER_BL_EVAL;
+
         Evalboards.ch1.userFunction(0,0,&val);
-        if(val != TM01)
+        if(val == TM01)
+        {
+            // Bootloader responded -> Chip is in bootloader mode
+            ids.ch1.id = (isStepper) ? ID_TMC9660_STEPPER_BL_EVAL : ID_TMC9660_3PH_BL_EVAL;
+        }
+        else
         {
             val = 0;
             Evalboards.ch1.userFunction(2,0,&val);
-            switch(val){
-            case 51:
-                ids.ch1.id = Evalboards.ch1.id + 2;
-                break;
-            case 17:
-                ids.ch1.id = Evalboards.ch1.id + 1;
-                break;
-            default:
-                //handle unknown case
+            if (val == 51)
+            {
+                // Chip responded with parameter mode ID -> Chip is in parameter mode
+                ids.ch1.id = (isStepper) ? ID_TMC9660_STEPPER_PARAM_EVAL : ID_TMC9660_3PH_PARAM_EVAL;
+            }
+            else if (val == 17)
+            {
+                ids.ch1.id = (isStepper) ? ID_TMC9660_STEPPER_REG_EVAL : ID_TMC9660_3PH_REG_EVAL;
+            }
+            else
+            {
+                // Fall back to scanning IDs
                 break;
             }
-            Evalboards.ch1.id = ids.ch1.id;
         }
+
+        Evalboards.ch1.id = ids.ch1.id;
         ids.ch1.state = ID_STATE_DONE;
         ActualReply.Value.Int32 = (uint32_t)(
                 (Evalboards.ch1.id)
@@ -850,22 +866,10 @@ static void checkIDs(void)
         return;
         break;
     }
-    case ID_TMC9660_3PH_PARAM_EVAL:
-    case ID_TMC9660_STEPPER_PARAM_EVAL:
-    case ID_TMC9660_3PH_REG_EVAL:
-    case ID_TMC9660_STEPPER_REG_EVAL:
-    {
-        ids.ch1.state = ID_STATE_DONE;
-        ActualReply.Value.Int32 = (uint32_t)(
-                (Evalboards.ch1.id)
-                | (ids.ch1.state << 8)
-                | (ids.ch2.id << 16)
-                | (ids.ch2.state << 24)
-        );
-        return;
-        break;
     }
-    }
+
+    Evalboards.ch1.id = 0;
+    Evalboards.ch2.id = 0;
 
     // Try detecting the IDs
     if (!IDDetection_detect(&ids))
