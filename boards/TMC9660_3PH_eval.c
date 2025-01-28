@@ -14,7 +14,6 @@ static uint8_t lastStatus;
 #define EVAL_ERROR_WRONG_MODULE_ID   (1<<0)
 #define EVAL_ERROR_NOT_BOOTSTRAPPED  (1<<1)
 #define EVAL_ERROR_NOT_IN_BOOTLOADER (1<<2)
-#define EVAL_ERROR_FAULT_DURING_BOOT (1<<3)
 
 #ifdef TMC_API_EXTERNAL_CRC_TABLE
 extern const uint8_t tmcCRCTable_Poly7Reflected[256];
@@ -339,22 +338,7 @@ void TMC9660_3PH_init(void)
     HAL.IOs->config->setLow(Pins.RESET_LB);
 
     // Wait a bit - letting the fault pin assert as part of the TMC9660 boot sequence
-    wait(1);
-
-    // Wait for the fault pin to deassert, signaling a finished boot
-    uint32_t timestamp = systick_getTick();
-    while (!HAL.IOs->config->isHigh(Pins.FAULTN_LB))
-    {
-        if (timeSince(timestamp) > 100)
-        {
-            Evalboards.ch1.errors |= EVAL_ERROR_FAULT_DURING_BOOT;
-            break;
-        }
-    }
-
-    if (Evalboards.ch1.errors == 0)
-    {
-        // Check if we have a mode mismatch with the running TMC9660 (bootloader or wrong app mode)
-        verifyTMC9660Mode();
-    }
+    wait(100);
+    // Check if we have a mode mismatch with the running TMC9660 (bootloader or wrong app mode)
+    verifyTMC9660Mode();
 }
