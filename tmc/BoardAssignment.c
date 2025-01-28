@@ -48,11 +48,13 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	}
 	else
 	{
-		Evalboards.ch1.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #1
-		Evalboards.ch1.id = ids->ch1.id;
-		if(ids->ch1.state == ID_STATE_DONE)
-			ids->ch1.state = assignCh1(ids->ch1.id, false);
-		Evalboards.ch1.config->reset();
+	    if(!ID_GROUP_TMC9660_STEPPER(Evalboards.ch1.id) && !ID_GROUP_TMC9660_3PH(Evalboards.ch1.id))
+	        Evalboards.ch1.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #1
+
+	    Evalboards.ch1.id = ids->ch1.id;
+	    if(ids->ch1.state == ID_STATE_DONE)
+	        ids->ch1.state = assignCh1(ids->ch1.id, false);
+	    Evalboards.ch1.config->reset();
 	}
 
 	// Assign driver
