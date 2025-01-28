@@ -895,6 +895,7 @@ static bool checkBoardTypes()
                 return false;
             }
         }
+        Evalboards.ch1.errors &= ~0x07;
 
         Evalboards.ch1.id = ids.ch1.id;
         ids.ch1.state = ID_STATE_DONE;
