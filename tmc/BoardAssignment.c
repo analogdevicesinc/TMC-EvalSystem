@@ -42,9 +42,9 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	// Assign motion controller
 	if((Evalboards.ch1.id == ids->ch1.id) && (ids->ch1.id != 0))
 	{	// todo CHECK 2: Evalboards.ch_.id only gets written at the end of this function - so the only way we can reach this case by calling this function multiple times.
-		//               Therefor, the else case always runs before, which means any information returned by the justCheck = true call here would have already been
-		//               given by the previous call of this function. This entire ID detection procedure is kinda messy, maybe we can actually completely rework it (LH)
-		ids->ch1.state = assignCh1(ids->ch1.id, true);
+	    //               Therefor, the else case always runs before, which means any information returned by the justCheck = true call here would have already been
+	    //               given by the previous call of this function. This entire ID detection procedure is kinda messy, maybe we can actually completely rework it (LH)
+	    ids->ch1.state = assignCh1(ids->ch1.id, true);
 	}
 	else
 	{
@@ -60,15 +60,15 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
 	// Assign driver
 	if((Evalboards.ch2.id == ids->ch2.id) && (ids->ch2.id != 0))
 	{
-		ids->ch2.state = assignCh2(ids->ch2.id, true);
+	    ids->ch2.state = assignCh2(ids->ch2.id, true);
 	}
 	else
 	{
-		Evalboards.ch2.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #2
-		Evalboards.ch2.id = ids->ch2.id;
-		if(ids->ch2.state == ID_STATE_DONE)
-			ids->ch2.state = assignCh2(ids->ch2.id, false);
-		Evalboards.ch2.config->reset();
+	    Evalboards.ch2.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #2
+	    Evalboards.ch2.id = ids->ch2.id;
+	    if(ids->ch2.state == ID_STATE_DONE)
+	        ids->ch2.state = assignCh2(ids->ch2.id, false);
+	    Evalboards.ch2.config->reset();
 	}
 
 	// Reroute SPI 2 (that the driver uses) to run through the motion controller if required
