@@ -92,9 +92,11 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC8100        34
 #define ID_TMC2262        35
 
-
-
 #define TM01       1414332417
+
+#define ID_GROUP_TMC9660_STEPPER(id) ((id) >= ID_TMC9660_STEPPER_BL_EVAL && (id) <= ID_TMC9660_STEPPER_PARAM_EVAL)
+#define ID_GROUP_TMC9660_3PH(id) ((id) >= ID_TMC9660_3PH_BL_EVAL && (id) <= ID_TMC9660_3PH_PARAM_EVAL)
+
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
 extern void MAX22216_init();
 extern void MAX22204_init();
