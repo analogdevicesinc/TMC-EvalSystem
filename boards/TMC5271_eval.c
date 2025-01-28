@@ -325,9 +325,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 19:
         // Deceleration D1
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5271_V1, value);
+            readRegister(DEFAULT_ICID, TMC5271_D1, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5271_V1, *value);
+            writeRegister(DEFAULT_ICID, TMC5271_D1, *value);
         }
         break;
     case 20:
