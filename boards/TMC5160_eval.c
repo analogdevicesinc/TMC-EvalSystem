@@ -842,7 +842,7 @@ static void periodicJob(uint32_t tick)
     {
         XActual = tmc5160_readRegister(DEFAULT_ICID, TMC5160_XACTUAL);
         // ToDo CHECK 2: API Compatibility - write alternative algorithm w/o floating point? (LH)
-        TMC5160.velocity = (uint32_t) ((float32_t) ((XActual - TMC5160.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+        TMC5160.velocity = (int32_t) ((float32_t) ((XActual - TMC5160.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
 
         TMC5160.oldX     = XActual;
         TMC5160.oldTick  = tick;
