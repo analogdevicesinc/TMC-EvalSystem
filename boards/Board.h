@@ -17,7 +17,6 @@
 #include "hal/HAL.h"
 #include "tmc/VitalSignsMonitor.h"
 
-#include "tmc/ic/TMC2660/TMC2660.h"
 #include "tmc/ic/TMC4361A/TMC4361A.h"
 
 // parameter access (for axis parameters)
@@ -144,13 +143,6 @@ typedef union {
     TMC4361ATypeDef tmc4361A;
 } MotionControllerBoards;
 extern MotionControllerBoards motionControllerBoards;
-
-// Group all the driver chip objects into a single union to save memory,
-// since we will only ever use one motion controller at a time
-typedef union {
-    TMC2660TypeDef tmc2660;
-} DriverBoards;
-extern DriverBoards driverBoards;
 
 void periodicJobDummy(uint32_t tick);
 void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel);

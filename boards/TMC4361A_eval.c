@@ -10,7 +10,7 @@
 #include "Board.h"
 #include "tmc/BoardAssignment.h"
 #include "tmc/ic/TMC4361A/TMC4361A.h"
-#include "tmc/ic/TMC2660/TMC2660_Macros.h"
+#include "tmc/ic/TMC2660/TMC2660.h"
 #include "tmc/ic/TMC2130/TMC2130.h"
 #include "tmc/ic/TMC2160/TMC2160.h"
 
