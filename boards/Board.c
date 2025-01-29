@@ -10,7 +10,6 @@
 #include "Board.h"
 
 MotionControllerBoards motionControllerBoards;
-DriverBoards driverBoards;
 
 static void deInit(void) {}
 
