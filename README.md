@@ -5,12 +5,24 @@ Trinamic Evaluation System ([home page](https://www.analog.com/en/resources/eval
 [AN038: Using TRINAMIC’s IC Software API and Examples](https://www.analog.com/media/en/technical-documentation/app-notes/an-038.pdf)
 
 ## Setup
-To clone this repository, simply use the following command in order to clone submodules recursively:  
+To clone this repository, use SSH or HTTPS in the following way to clone submodules recursively:  
+
+Via SSH:
+
 `git clone --recurse-submodules git@github.com:analogdevicesinc/TMC-EvalSystem.git`
+
+Via HTTPS:
+
+`git clone --recurse-submodules https://github.com/analogdevicesinc/TMC-EvalSystem.git`
 
 ## Changelog
 
 For detailed changelog, see commit history.
+
+### Version 3.10.9: (Released)
+ * TMC9660: Fixed the ID detection issue.
+ * Released API rework for TMC2660 and MAX22216.
+ * Bug fix for TMC5271.
 
 ### Version 3.10.8: (Released)
  * TMC9660: Fixed the IC's script storage feature not working due to a too short communication timeout delay.
