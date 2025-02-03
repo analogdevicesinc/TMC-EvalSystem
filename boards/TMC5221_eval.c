@@ -1163,6 +1163,7 @@ static void init_comm(TMC5221BusType mode)
         HAL.IOs->config->setHigh(Pins.SEL_I2CN);
         TMC5221_SPIChannel = &HAL.SPI->ch1;
         TMC5221_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
+        spi_setFrequency(TMC5221_SPIChannel,10000000); //~7,5MHz
         activeBus = IC_BUS_SPI;
         break;
     }
