@@ -1146,11 +1146,11 @@ static void enableDriver(DriverState state)
 
     if(state ==  DRIVER_DISABLE){
         HAL.IOs->config->setLow(Pins.DRV_EN_LB);
-        tmc5221_fieldWrite(DEFAULT_ICID, TMC5221_DRV_EN_SW_FIELD, 1);
+        tmc5221_fieldWrite(DEFAULT_ICID, TMC5221_DRV_EN_SW_FIELD, 0);
     }
     else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
         HAL.IOs->config->setHigh(Pins.DRV_EN_LB);
-        tmc5221_fieldWrite(DEFAULT_ICID, TMC5221_DRV_EN_SW_FIELD, 0);
+        tmc5221_fieldWrite(DEFAULT_ICID, TMC5221_DRV_EN_SW_FIELD, 1);
     }
 }
 
