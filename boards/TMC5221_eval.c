@@ -980,12 +980,16 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
+    if(tmc5221_fieldRead(DEFAULT_ICID, TMC5221_QSC_FIELD))
+        wait(1);
     tmc5221_writeRegister(DEFAULT_ICID, address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
     UNUSED(motor);
+    if(tmc5221_fieldRead(DEFAULT_ICID, TMC5221_QSC_FIELD))
+        wait(1);
     *value = tmc5221_readRegister(DEFAULT_ICID, address);
 }
 
