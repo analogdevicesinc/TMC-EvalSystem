@@ -20,12 +20,12 @@ Following build commands could be used for generating hex file for different Lan
  * `make -s clean LINK=<BL version> DEVICE=<Landungsbruecke version>`
  * `make -s all LINK=<BL version> DEVICE=<Landungsbruecke version>`
 
-| **<BL version>** |
+| **\<BL version\>** |
 |:----------------:|
 |        BL        |
 |       NOBL       |
 
-| **<Landungsbruecke version>** |
+| **\<Landungsbruecke version\>** |
 |:-----------------------------:|
 |        Landungsbruecke        |
 |      LandungsbrueckeSmall     |
