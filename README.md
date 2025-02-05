@@ -15,6 +15,22 @@ Via HTTPS:
 
 `git clone --recurse-submodules https://github.com/analogdevicesinc/TMC-EvalSystem.git`
 
+## Build Commands
+Following build commands could be used for generating hex file for different Landungsbruecke board versions:
+ * `make -s clean LINK=<BL version> DEVICE=<Landungsbruecke version>`
+ * `make -s all LINK=<BL version> DEVICE=<Landungsbruecke version>`
+
+| **<BL version>** |
+|:----------------:|
+|        BL        |
+|       NOBL       |
+
+| **<Landungsbruecke version>** |
+|:-----------------------------:|
+|        Landungsbruecke        |
+|      LandungsbrueckeSmall     |
+|       LandungsbrueckeV3       |
+
 ## Changelog
 
 For detailed changelog, see commit history.
