@@ -44,6 +44,7 @@ static bool vMaxModified = false;
 static uint32_t vmax_position[TMC5221_MOTORS];
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
+static bool qscMode = false;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -68,6 +69,11 @@ static void enableDriver(DriverState state);
 void tmc5221_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
     UNUSED(icID);
+    if(qscMode)
+    {
+        uint32_t startTime = systick_getMicrosecondTick();
+        while(timeDiff(systick_getMicrosecondTick(), startTime)<=10);
+    }
     TMC5221_SPIChannel->readWriteArray(data, dataLength);
 }
 
@@ -980,16 +986,21 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
-    if(tmc5221_fieldRead(DEFAULT_ICID, TMC5221_QSC_FIELD))
-        wait(1);
+    /* Checking if QSC mode is enabled, if yes->delay of ~10us b/w datagrams
+     * But this could be cleared via interrupt as well.
+     * ToDo: Take care of the latter scenario when interrupt wakeup tool is ready! (AS)
+     */
+    if((address == 0) && (value & TMC5221_QSC_STS_ENA_MASK))
+        qscMode=true;
+    else if((address == 0) && !(value & TMC5221_QSC_STS_ENA_MASK))
+        qscMode=false;
+
     tmc5221_writeRegister(DEFAULT_ICID, address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
     UNUSED(motor);
-    if(tmc5221_fieldRead(DEFAULT_ICID, TMC5221_QSC_FIELD))
-        wait(1);
     *value = tmc5221_readRegister(DEFAULT_ICID, address);
 }
 
@@ -1013,7 +1024,7 @@ static void periodicJob(uint32_t tick)
         {
             for(uint8_t motor = 0; motor < TMC5221_MOTORS; motor++)
             {
-                x = tmc5221_readRegister(DEFAULT_ICID, TMC5221_RGR_XACTUAL);
+                readRegister(DEFAULT_ICID, TMC5221_RGR_XACTUAL, &x);
                 TMC5221.velocity = (uint32_t) ((float32_t) ((x - TMC5221.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
                 TMC5221.oldX = x;
             }
