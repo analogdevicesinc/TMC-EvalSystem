@@ -17,7 +17,6 @@ Via HTTPS:
 
 ## Build Commands
 Following build commands could be used for generating hex file for different Landungsbruecke board versions:
- * `make -s clean LINK=<BL version> DEVICE=<Landungsbruecke version>`
  * `make -s all LINK=<BL version> DEVICE=<Landungsbruecke version>`
 
 | **\<BL version\>** |
@@ -30,6 +29,9 @@ Following build commands could be used for generating hex file for different Lan
 |        Landungsbruecke        |
 |      LandungsbrueckeSmall     |
 |       LandungsbrueckeV3       |
+
+The clean command deletes the whole build directory:
+ * `make clean`
 
 ## Changelog
 

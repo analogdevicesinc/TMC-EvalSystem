@@ -6,14 +6,13 @@ include version.txt
 #DEVICE			= LandungsbrueckeV3
 LINK			= BL
 #LINK			= NOBL
-OUTDIR 			= _build_$(DEVICE)
+BUILD_DIR       = _build
+DEVICE_DIR 	    = $(BUILD_DIR)/_build_$(DEVICE)
 TARGET 			= $(DEVICE)_v$(VERSION)_$(LINK)
 
 ### Build output configuration #################################################
-DEP_SUBDIR  := dep
-OBJ_SUBDIR  := obj
-DEP_DIR     := $(OUTDIR)/$(DEP_SUBDIR)
-OBJ_DIR     := $(OUTDIR)/$(OBJ_SUBDIR)
+DEP_DIR     := $(DEVICE_DIR)/dep
+OBJ_DIR     := $(DEVICE_DIR)/obj
 
 # Force IDs (IDs found in tmc/BoardAssignment.h)
 # If OVERRIDE is set, any autodetected ID will be discarded
@@ -285,7 +284,9 @@ else ifeq ($(DEVICE),LandungsbrueckeV3)
 	endif
 	LDFLAGS += -specs=nosys.specs
 else
-    $(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall" or "LandungsbrueckeV3". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeV3 or DEVICE=LandungsbrueckeSmall to the commandline)
+	ifeq (,$(filter clean,$(MAKECMDGOALS)))
+		$(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall" or "LandungsbrueckeV3". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeV3 or DEVICE=LandungsbrueckeSmall to the commandline)
+	endif
 endif
 
 # System and hardware abstraction layer
@@ -363,8 +364,6 @@ LINKERSCRIPTPATH = .
 #TCHAIN_PREFIX 			= arm-eabi-
 #TCHAIN_PREFIX 			= arm-elf-
 TCHAIN_PREFIX 			= arm-none-eabi-
-REMOVE_CMD				= rm
-FLASH_TOOL 				= OPENOCD
 USE_THUMB_MODE 			= YES
 #USE_THUMB_MODE 		= NO
 RUN_MODE				= ROM_RUN
@@ -485,7 +484,6 @@ LDFLAGS += -lc -lgcc
 LDFLAGS += $(INCLUDE_DIRS)
 
 # Define programs and commands.
-SHELL   = sh
 CC      = $(TCHAIN_PREFIX)gcc
 CPP     = $(TCHAIN_PREFIX)g++
 AR      = $(TCHAIN_PREFIX)ar
@@ -493,7 +491,6 @@ OBJCOPY = $(TCHAIN_PREFIX)objcopy
 OBJDUMP = $(TCHAIN_PREFIX)objdump
 SIZE    = $(TCHAIN_PREFIX)size
 NM      = $(TCHAIN_PREFIX)nm
-REMOVE  = $(REMOVE_CMD) -f
 
 # Define Messages
 # English
@@ -538,11 +535,11 @@ all: begin gccversion build size end
 clean: begin clean_list end
 
 # Helper targets: This makes selecting all output types easier (see build target below)
-elf: $(OUTDIR)/$(TARGET).elf
-lss: $(OUTDIR)/$(TARGET).lss
-sym: $(OUTDIR)/$(TARGET).sym
-hex: $(OUTDIR)/$(TARGET).hex
-bin: $(OUTDIR)/$(TARGET).bin
+elf: $(DEVICE_DIR)/$(TARGET).elf
+lss: $(DEVICE_DIR)/$(TARGET).lss
+sym: $(DEVICE_DIR)/$(TARGET).sym
+hex: $(DEVICE_DIR)/$(TARGET).hex
+bin: $(DEVICE_DIR)/$(TARGET).bin
 
 build: elf hex bin lss sym
 
@@ -554,7 +551,7 @@ end:
 	@echo $(MSG_END)
 
 # Display sizes of sections.
-ELFSIZE = $(SIZE) -A -x  $(OUTDIR)/$(TARGET).elf
+ELFSIZE = $(SIZE) -A -x  $(DEVICE_DIR)/$(TARGET).elf
 
 size : elf
 	@echo $(MSG_SIZE_AFTER)
@@ -596,19 +593,7 @@ gccversion :
 
 clean_list :
 	@echo $(MSG_CLEANING)
-	$(REMOVE) $(OUTDIR)/$(TARGET).map
-	$(REMOVE) $(OUTDIR)/$(TARGET).elf
-	$(REMOVE) $(OUTDIR)/$(TARGET).hex
-	$(REMOVE) $(OUTDIR)/$(TARGET).bin
-	$(REMOVE) $(OUTDIR)/$(TARGET).sym
-	$(REMOVE) $(OUTDIR)/$(TARGET).lss
-	$(REMOVE) $(ALLOBJ)
-	$(REMOVE) $(LSTFILES)
-	$(REMOVE) $(DEPFILES)
-	$(REMOVE) $(SRC:.c=.s)
-	$(REMOVE) $(SRCARM:.c=.s)
-	$(REMOVE) $(CPPSRC:.cpp=.s)
-	$(REMOVE) $(CPPSRCARM:.cpp=.s)
+	rm -rf $(BUILD_DIR)
 
 ### Make recipe templates for all source file types ###
 # Assemble: create object files from assembler source files.
@@ -671,9 +656,10 @@ $(SRCARM:.c=.s) : %.s : %.c
 
 # Create output directories
 # Store the result to avoid printing warning messages
-tmp := $(shell mkdir $(OUTDIR) 2>&1)
-tmp := $(shell cd $(OUTDIR) && mkdir $(OBJ_SUBDIR)  2>&1)
-tmp := $(shell cd $(OUTDIR) && mkdir $(DEP_SUBDIR)  2>&1)
+tmp := $(shell mkdir -p $(BUILD_DIR) 2>&1)
+tmp := $(shell mkdir -p $(DEVICE_DIR) 2>&1)
+tmp := $(shell mkdir -p $(OBJ_DIR) 2>&1)
+tmp := $(shell mkdir -p $(DEP_DIR) 2>&1)
 
 # Include the dependency files.
 -include $(wildcard $(DEP_DIR)/*)
