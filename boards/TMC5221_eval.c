@@ -1103,6 +1103,25 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 //            activeBus = IC_BUS_SPI;
 //        init_comm(activeBus);
 //        break;
+    case 9: // Use internal clock
+        /*
+         * Internal clock will be enabled by calling this function with a value != 0 and power cycle the motor supply while keeping usb connected.
+         */
+        if(*value)
+        {
+            // Use Internal clock of 12MHz
+            HAL.IOs->config->toOutput(&HAL.IOs->pins->CLK16);
+            HAL.IOs->config->setToState(&HAL.IOs->pins->CLK16, IOS_LOW);
+        }
+        else
+        {
+            // Use external clock of 16MHz
+            HAL.IOs->config->reset(&HAL.IOs->pins->CLK16);
+#if defined(LandungsbrueckeV3)
+            gpio_af_set(HAL.IOs->pins->CLK16.port, GPIO_AF_0, HAL.IOs->pins->CLK16.bitWeight);
+#endif
+        }
+        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
@@ -1202,19 +1221,16 @@ void TMC5221_init(void)
     HAL.IOs->config->setLow(Pins.DRV_EN_LB);
     HAL.IOs->config->setHigh(Pins.SEL_I2CN);
 
-    // use internal clock of the IC and not from LB
+    // use internal clock of the IC and not from LB -> 12 MHz clock
+    // Switchable via user function
     HAL.IOs->config->toOutput(&HAL.IOs->pins->CLK16);
     HAL.IOs->config->setLow(&HAL.IOs->pins->CLK16);
 
     noRegResetnSLEEP = true;
     nSLEEPTick = systick_getTick();
 
-
     HAL.IOs->config->toInput(Pins.REFLN_LB);
     HAL.IOs->config->toInput(Pins.REFRN_LB);
-
-    // Disable CLK output -> use internal 12 MHz clock
-    //  Switchable via user function
 
     init_comm(activeBus);
 
