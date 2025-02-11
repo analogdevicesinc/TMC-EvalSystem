@@ -169,6 +169,7 @@ static void hookDriverSPI(IdAssignmentTypeDef *ids)
 		else if(ids->ch2.id == ID_TMC2130)
 		{
 			Evalboards.ch2.userFunction(6, 0, NULL);
+			Evalboards.ch1.config->reset();
 		}
 		else if((ids->ch2.id == ID_TMC2160) || (ids->ch2.id == ID_TMC2262))
 		{

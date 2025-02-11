@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2025 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -16,8 +16,6 @@
 #include "hal/derivative.h"
 #include "hal/HAL.h"
 #include "tmc/VitalSignsMonitor.h"
-
-#include "tmc/ic/TMC4361A/TMC4361A.h"
 
 // parameter access (for axis parameters)
 #define READ   0
@@ -136,13 +134,6 @@ typedef enum {
 	TMC_BOARD_COMM_UART,
 	TMC_BOARD_COMM_WLAN
 } TMC_Board_Comm_Mode;
-
-// Group all the motion controller chip objects into a single union to save memory,
-// since we will only ever use one driver at a time
-typedef union {
-    TMC4361ATypeDef tmc4361A;
-} MotionControllerBoards;
-extern MotionControllerBoards motionControllerBoards;
 
 void periodicJobDummy(uint32_t tick);
 void board_setDummyFunctions(EvalboardFunctionsTypeDef *channel);
