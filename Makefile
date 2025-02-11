@@ -341,7 +341,6 @@ ASRCARM =
 # List any extra directories to look for include files here.
 #    Each directory must be separated by a space.
 EXTRAINCDIRS  += TMC-API
-# EXTRAINCDIRS  += "${GCC_HOME}/lib/gcc/arm-none-eabi/6.3.1/include"
 
 # List any extra directories to look for library files here.
 # Also add directories where the linker should search for
@@ -366,8 +365,6 @@ LINKERSCRIPTPATH = .
 TCHAIN_PREFIX 			= arm-none-eabi-
 REMOVE_CMD				= rm
 FLASH_TOOL 				= OPENOCD
-#FLASH_TOOL 			= LPC21ISP
-#FLASH_TOOL 			= UVISION
 USE_THUMB_MODE 			= YES
 #USE_THUMB_MODE 		= NO
 RUN_MODE				= ROM_RUN
@@ -383,34 +380,11 @@ LOADFORMAT 		= both
 
 # Optimization level, can be [0, 1, 2, 3, s].
 # 0 = turn off optimization. s = optimize for size.
-# (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
 OPT = s
-#OPT = 2
-#OPT = 3
-#OPT = 0
-
-# Using the Atmel AT91_lib produces warnings with
-# the default warning-levels.
-#  yes - disable these warnings
-#  no  - keep default settings
-#AT91LIBNOWARN = yes
-AT91LIBNOWARN = no
 
 # Debugging format.
 #DEBUG = stabs
 DEBUG = dwarf-2
-
-# Place project-specific -D (define) and/or
-# -U options for C here.
-#CDEFS = -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER
-#CDEFS += -DUSE_EK_STM32F -DSTARTUP_DELAY
-#CDEFS += -DSTM32_USE_DMA
-# enable modifications in STM's libraries
-#CDEFS += -DMOD_MTHOMAS_STMLIB
-# enable modifications in ChaN's FAT-module
-##CDEFS += -DMOD_MTHOMAS_FFAT
-# enable debug-support in STM's library
-#CDEFS += -DUSE_FULL_ASSERT
 
 ifeq ($(LINK),BL)
 	CDEFS += -DBOOTLOADER
@@ -481,15 +455,6 @@ CFLAGS += -MMD -MP -MF $(DEP_DIR)/$(@F).d
 CONLYFLAGS += -Wnested-externs
 CONLYFLAGS += $(CSTANDARD)
 
-ifeq ($(AT91LIBNOWARN),yes)
-# compiling the AT91-lib thows warnings with the followins settings
-# so they are enabled only if AT91LIBNOWARN is set to "no"
-CFLAGS += -Wno-cast-qual
-CONLYFLAGS += -Wno-missing-prototypes
-CONLYFLAGS += -Wno-strict-prototypes
-CONLYFLAGS += -Wno-missing-declarations
-endif
-
 # flags only for C++ (arm-elf-g++)
 CPPFLAGS = -fno-rtti -fno-exceptions
 CPPFLAGS =
@@ -525,51 +490,6 @@ LDFLAGS += $(CPLUSPLUS_LIB)
 LDFLAGS += -lc -lgcc
 LDFLAGS += $(INCLUDE_DIRS)
 
-# ---------------------------------------------------------------------------
-# Options for lpc21isp by Martin Maurer
-# lpc21isp only supports NXP LPC and Analog ADuC ARMs though the
-# integrated uart-bootloader (ISP)
-#
-# Settings and variables:
-LPC21ISP = lpc21isp
-LPC21ISP_FLASHFILE = $(OUTDIR)/$(TARGET).hex
-LPC21ISP_PORT = com1
-LPC21ISP_BAUD = 57600
-LPC21ISP_XTAL = 14746
-# other options:
-# -debug: verbose output
-# -control: enter bootloader via RS232 DTR/RTS (only if hardware
-#           supports this feature - see NXP AppNote)
-#LPC21ISP_OPTIONS = -control
-#LPC21ISP_OPTIONS += -debug
-# ---------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------
-# Options for OpenOCD flash-programming
-# see openocd.pdf/openocd.texi for further information
-#
-OOCD_LOADFILE+=$(OUTDIR)/$(TARGET).elf
-# if OpenOCD is in the $PATH just set OPENOCDEXE=openocd
-OOCD_EXE=OpenOCD/bin/openocd
-# debug level
-OOCD_CL=-d0
-#OOCD_CL=-d3
-# interface and board/target settings (using the OOCD target-library here)
-## OOCD_CL+=-c "fast enable"
-OOCD_CL+=-f interface/jtagkey.cfg -f board/stm32f10x_128k_eval.cfg
-OOCD_CL+=-c init -c targets
-# commands to prepare flash-write
-OOCD_CL+=-c "halt"
-# flash-write and -verify
-OOCD_CL+=-c "flash write_image erase $(OOCD_LOADFILE)" -c "verify_image $(OOCD_LOADFILE)"
-# reset target
-OOCD_CL+=-c "reset run"
-# terminate OOCD after programming
-OOCD_CL+=-c shutdown
-# ---------------------------------------------------------------------------
-
-
 # Define programs and commands.
 SHELL   = sh
 CC      = $(TCHAIN_PREFIX)gcc
@@ -579,7 +499,6 @@ OBJCOPY = $(TCHAIN_PREFIX)objcopy
 OBJDUMP = $(TCHAIN_PREFIX)objdump
 SIZE    = $(TCHAIN_PREFIX)size
 NM      = $(TCHAIN_PREFIX)nm
-##COPY    = cp
 REMOVE  = $(REMOVE_CMD) -f
 
 # Define Messages
@@ -664,51 +583,24 @@ size : elf
 gccversion :
 	@$(CC) --version
 
-# Program the device.
-ifeq ($(FLASH_TOOL),UVISION)
-# Program the device with Keil's uVision (needs configured uVision-workspace).
-program: hex
-##  @echo
-	@echo "Programming with uVision"
-	C:\Keil\uv3\Uv3.exe -f uvisionflash.Uv2 -ouvisionflash.txt
-else
-ifeq ($(FLASH_TOOL),OPENOCD)
-# Program the device with Dominic Rath's OPENOCD in "batch-mode", needs cfg and "reset-script".
-program: elf
-	@echo "Programming with OPENOCD"
-	$(OOCD_EXE) $(OOCD_CL)
-else
-# Program the device using lpc21isp (for NXP2k and ADuC UART bootloader)
-program: hex
-##  @echo
-	@echo $(MSG_LPC21_RESETREMINDER)
-	-$(LPC21ISP) $(LPC21ISP_OPTIONS) $(LPC21ISP_FLASHFILE) $(LPC21ISP_PORT) $(LPC21ISP_BAUD) $(LPC21ISP_XTAL)
-endif
-endif
-
 # Create final output file (.hex) from ELF output file.
 %.hex: %.elf
-##  @echo
 	@echo $(MSG_LOAD_FILE) $@
 	$(OBJCOPY) -O ihex $< $@
 
 # Create final output file (.bin) from ELF output file.
 %.bin: %.elf
-##  @echo
 	@echo $(MSG_LOAD_FILE) $@
 	$(OBJCOPY) -O binary $< $@
 
 # Create extended listing file/disassambly from ELF output file.
 # using objdump testing: option -C
 %.lss: %.elf
-##  @echo
 	@echo $(MSG_EXTENDED_LISTING) $@
 	$(OBJDUMP) -h -S -C -r $< > $@
-# $(OBJDUMP) -x -S $< > $@
 
 # Create a symbol table from ELF output file.
 %.sym: %.elf
-##  @echo
 	@echo $(MSG_SYMBOL_TABLE) $@
 	$(NM) -n $< > $@
 
@@ -737,12 +629,10 @@ clean_list :
 	$(REMOVE) $(CPPSRC:.cpp=.s)
 	$(REMOVE) $(CPPSRCARM:.cpp=.s)
 
-
 ### Make recipe templates for all source file types ###
 # Assemble: create object files from assembler source files.
 define ASSEMBLE_TEMPLATE
 $(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
-##  @echo
 	@echo $(MSG_ASSEMBLING) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(ASFLAGS) $$< -o $$@
 endef
@@ -751,17 +641,14 @@ $(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src))))
 # Assemble: create object files from assembler source files. ARM-only
 define ASSEMBLE_ARM_TEMPLATE
 $(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
-##  @echo
 	@echo $(MSG_ASSEMBLING_ARM) $$< "->" $$@
 	$(CC) -c $$(ASFLAGS) $$< -o $$@
 endef
 $(foreach src, $(ASRCARM), $(eval $(call ASSEMBLE_ARM_TEMPLATE, $(src))))
 
-
 # Compile: create object files from C source files.
 define COMPILE_C_TEMPLATE
 $(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
-##  @echo
 	@echo $(MSG_COMPILING) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
 endef
@@ -770,17 +657,14 @@ $(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src))))
 # Compile: create object files from C source files. ARM-only
 define COMPILE_C_ARM_TEMPLATE
 $(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
-##  @echo
 	@echo $(MSG_COMPILING_ARM) $$< "->" $$@
 	$(CC) -c $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
 endef
 $(foreach src, $(SRCARM), $(eval $(call COMPILE_C_ARM_TEMPLATE, $(src))))
 
-
 # Compile: create object files from C++ source files.
 define COMPILE_CPP_TEMPLATE
 $(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
-##  @echo
 	@echo $(MSG_COMPILINGCPP) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@
 endef
@@ -789,12 +673,10 @@ $(foreach src, $(CPPSRC), $(eval $(call COMPILE_CPP_TEMPLATE, $(src))))
 # Compile: create object files from C++ source files. ARM-only
 define COMPILE_CPP_ARM_TEMPLATE
 $(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
-##  @echo
 	@echo $(MSG_COMPILINGCPP_ARM) $$< "->" $$@
 	$(CC) -c $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@
 endef
 $(foreach src, $(CPPSRCARM), $(eval $(call COMPILE_CPP_ARM_TEMPLATE, $(src))))
-
 
 # Compile: create assembler files from C source files. ARM/Thumb
 $(SRC:.c=.s) : %.s : %.c
