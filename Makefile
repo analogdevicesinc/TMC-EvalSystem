@@ -364,6 +364,21 @@ LINKERSCRIPTPATH = .
 #TCHAIN_PREFIX 			= arm-eabi-
 #TCHAIN_PREFIX 			= arm-elf-
 TCHAIN_PREFIX 			= arm-none-eabi-
+ifeq ($(OS),Windows_NT)
+	ifeq ($(shell echo $$COMSPEC),$$COMSPEC)
+#       We are on windows and make is using cmd.exe as shell
+		create_dir = mkdir $(subst /,\,$(1))
+		RM_DIR_CMD = rmdir /S /Q
+	else
+#       We are on windows but make found a sh.exe from a Git Bash or Cygwin
+		create_dir = mkdir -p $(1)
+		RM_DIR_CMD = rm -rf
+	endif
+else
+#   Assueme we are on a linux machine
+	create_dir = mkdir -p $(1)
+	RM_DIR_CMD = rm -rf
+endif
 USE_THUMB_MODE 			= YES
 #USE_THUMB_MODE 		= NO
 RUN_MODE				= ROM_RUN
@@ -593,7 +608,7 @@ gccversion :
 
 clean_list :
 	@echo $(MSG_CLEANING)
-	rm -rf $(BUILD_DIR)
+	$(RM_DIR_CMD) $(BUILD_DIR)
 
 ### Make recipe templates for all source file types ###
 # Assemble: create object files from assembler source files.
@@ -656,10 +671,10 @@ $(SRCARM:.c=.s) : %.s : %.c
 
 # Create output directories
 # Store the result to avoid printing warning messages
-tmp := $(shell mkdir -p $(BUILD_DIR) 2>&1)
-tmp := $(shell mkdir -p $(DEVICE_DIR) 2>&1)
-tmp := $(shell mkdir -p $(OBJ_DIR) 2>&1)
-tmp := $(shell mkdir -p $(DEP_DIR) 2>&1)
+tmp := $(shell $(call create_dir,$(BUILD_DIR)) 2>&1)
+tmp := $(shell $(call create_dir,$(DEVICE_DIR)) 2>&1)
+tmp := $(shell $(call create_dir,$(OBJ_DIR)) 2>&1)
+tmp := $(shell $(call create_dir,$(DEP_DIR)) 2>&1)
 
 # Include the dependency files.
 -include $(wildcard $(DEP_DIR)/*)
