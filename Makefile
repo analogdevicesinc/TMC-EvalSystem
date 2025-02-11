@@ -576,6 +576,14 @@ size : elf
 gccversion :
 	@$(CC) --version
 
+# Upload the firmware using PyTrinamic
+tmclfwupload: hex
+ifeq ($(LINK),BL)
+	tmclfwupload $(DEVICE_DIR)/$(TARGET).hex
+else
+	$(error "tmclfwupload is only supported for bootloader builds (LINK=BL).") 
+endif
+
 # Create final output file (.hex) from ELF output file.
 %.hex: %.elf
 	@echo $(MSG_LOAD_FILE) $@
@@ -681,4 +689,4 @@ tmp := $(shell $(call create_dir,$(DEP_DIR)) 2>&1)
 
 # Listing of phony targets.
 .PHONY : all begin end size gccversion \
-build elf hex bin lss sym clean clean_list program
+build elf hex bin lss sym clean clean_list program tmclfwupload
