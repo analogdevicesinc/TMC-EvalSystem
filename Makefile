@@ -9,6 +9,12 @@ LINK			= BL
 OUTDIR 			= _build_$(DEVICE)
 TARGET 			= $(DEVICE)_v$(VERSION)_$(LINK)
 
+### Build output configuration #################################################
+DEP_SUBDIR  := dep
+OBJ_SUBDIR  := obj
+DEP_DIR     := $(OUTDIR)/$(DEP_SUBDIR)
+OBJ_DIR     := $(OUTDIR)/$(OBJ_SUBDIR)
+
 # Force IDs (IDs found in tmc/BoardAssignment.h)
 # If OVERRIDE is set, any autodetected ID will be discarded
 # Else, autodetected IDs preceed ID_CH1_DEFAULT / ID_CH2_DEFAULT
@@ -467,9 +473,9 @@ CFLAGS += -Wall -Wextra
 CFLAGS += -Wimplicit -Wcast-align -Wpointer-arith
 CFLAGS += -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align
 #CFLAGS += -pedantic
-CFLAGS += -Wa,-adhlns=$(addprefix $(OUTDIR)/, $(notdir $(addsuffix .lst, $(basename $<))))
+CFLAGS += -Wa,-adhlns=$(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .lst, $(basename $<))))
 # Compiler flags to generate dependency files:
-CFLAGS += -MMD -MP -MF $(OUTDIR)/dep/$(@F).d
+CFLAGS += -MMD -MP -MF $(DEP_DIR)/$(@F).d
 
 # flags only for C
 CONLYFLAGS += -Wnested-externs
@@ -494,7 +500,7 @@ CPPFLAGS =
 #  -g$(DEBUG): have the assembler create line number information
 ASFLAGS += -mcpu=$(MCU) $(THUMB_IW) -I. -x assembler-with-cpp
 ASFLAGS += $(ADEFS)
-ASFLAGS += -Wa,-adhlns=$(addprefix $(OUTDIR)/, $(notdir $(addsuffix .lst, $(basename $<))))
+ASFLAGS += -Wa,-adhlns=$(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .lst, $(basename $<))))
 ASFLAGS += -Wa,-g$(DEBUG)
 ASFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 
@@ -604,12 +610,12 @@ ALLSRC     = $(ASRCARM) $(ASRC) $(SRCARM) $(SRC) $(CPPSRCARM) $(CPPSRC)
 ALLSRCBASE = $(notdir $(basename $(ALLSRC)))
 
 # Define all object files.
-ALLOBJ     = $(addprefix $(OUTDIR)/, $(addsuffix .o, $(ALLSRCBASE)))
+ALLOBJ     = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(ALLSRCBASE)))
 
 # Define all listing files (used for make clean).
-LSTFILES   = $(addprefix $(OUTDIR)/, $(addsuffix .lst, $(ALLSRCBASE)))
+LSTFILES   = $(addprefix $(OBJ_DIR)/, $(addsuffix .lst, $(ALLSRCBASE)))
 # Define all depedency-files (used for make clean).
-DEPFILES   = $(addprefix $(OUTDIR)/dep/, $(addsuffix .o.d, $(ALLSRCBASE)))
+DEPFILES   = $(addprefix $(DEP_DIR)/, $(addsuffix .o.d, $(ALLSRCBASE)))
 
 ### Make targets ###
 # Default target. Build everything
@@ -735,7 +741,7 @@ clean_list :
 ### Make recipe templates for all source file types ###
 # Assemble: create object files from assembler source files.
 define ASSEMBLE_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_ASSEMBLING) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(ASFLAGS) $$< -o $$@
@@ -744,7 +750,7 @@ $(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src))))
 
 # Assemble: create object files from assembler source files. ARM-only
 define ASSEMBLE_ARM_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_ASSEMBLING_ARM) $$< "->" $$@
 	$(CC) -c $$(ASFLAGS) $$< -o $$@
@@ -754,7 +760,7 @@ $(foreach src, $(ASRCARM), $(eval $(call ASSEMBLE_ARM_TEMPLATE, $(src))))
 
 # Compile: create object files from C source files.
 define COMPILE_C_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_COMPILING) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
@@ -763,7 +769,7 @@ $(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src))))
 
 # Compile: create object files from C source files. ARM-only
 define COMPILE_C_ARM_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_COMPILING_ARM) $$< "->" $$@
 	$(CC) -c $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
@@ -773,7 +779,7 @@ $(foreach src, $(SRCARM), $(eval $(call COMPILE_C_ARM_TEMPLATE, $(src))))
 
 # Compile: create object files from C++ source files.
 define COMPILE_CPP_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_COMPILINGCPP) $$< "->" $$@
 	$(CC) -c $(THUMB) $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@
@@ -782,7 +788,7 @@ $(foreach src, $(CPPSRC), $(eval $(call COMPILE_CPP_TEMPLATE, $(src))))
 
 # Compile: create object files from C++ source files. ARM-only
 define COMPILE_CPP_ARM_TEMPLATE
-$(OUTDIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
 ##  @echo
 	@echo $(MSG_COMPILINGCPP_ARM) $$< "->" $$@
 	$(CC) -c $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@
@@ -803,10 +809,11 @@ $(SRCARM:.c=.s) : %.s : %.c
 # Create output directories
 # Store the result to avoid printing warning messages
 tmp := $(shell mkdir $(OUTDIR) 2>&1)
-tmp := $(shell cd $(OUTDIR) && mkdir dep 2>&1)
+tmp := $(shell cd $(OUTDIR) && mkdir $(OBJ_SUBDIR)  2>&1)
+tmp := $(shell cd $(OUTDIR) && mkdir $(DEP_SUBDIR)  2>&1)
 
 # Include the dependency files.
--include $(wildcard $(OUTDIR)/dep/*)
+-include $(wildcard $(DEP_DIR)/*)
 
 # Listing of phony targets.
 .PHONY : all begin end size gccversion \
