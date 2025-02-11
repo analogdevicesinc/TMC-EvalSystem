@@ -372,12 +372,6 @@ RUN_MODE				= ROM_RUN
 VECTOR_TABLE_LOCATION	= VECT_TAB_ROM
 #VECTOR_TABLE_LOCATION	= VECT_TAB_RAM
 
-### Build Settings ###
-# Output selection
-#LOADFORMAT 	= ihex
-#LOADFORMAT 	= binary
-LOADFORMAT 		= both
-
 # Optimization level, can be [0, 1, 2, 3, s].
 # 0 = turn off optimization. s = optimize for size.
 OPT = s
@@ -550,20 +544,7 @@ sym: $(OUTDIR)/$(TARGET).sym
 hex: $(OUTDIR)/$(TARGET).hex
 bin: $(OUTDIR)/$(TARGET).bin
 
-# Select output file types
-ifeq ($(LOADFORMAT),ihex)
-build: elf hex lss sym
-else
-ifeq ($(LOADFORMAT),binary)
-build: elf bin lss sym
-else
-ifeq ($(LOADFORMAT),both)
 build: elf hex bin lss sym
-else
-$(error "$(MSG_FORMATERROR) $(FORMAT)")
-endif
-endif
-endif
 
 # Eye candy.
 begin:
