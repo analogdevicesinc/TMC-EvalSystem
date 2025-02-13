@@ -159,12 +159,15 @@ static void hookDriverSPI(IdAssignmentTypeDef *ids)
 	{
 		// Redirect ch2 SPI to the SPI cover function of the TMC43XX Board
 		HAL.SPI->ch2.readWrite = Evalboards.ch1.cover;
+		HAL.SPI->ch2.readWriteArray = Evalboards.ch1.fullCover;
+
 //		Evalboards.ch1.config->state        = CONFIG_RESET;
 		if(ids->ch2.id == ID_TMC2660)
 		{
 			// TMC2660: Disable the continuous mode via userFunction
 			int32_t value = 1;
 			Evalboards.ch2.userFunction(0, 0, &value);
+			Evalboards.ch1.config->reset();
 		}
 		else if(ids->ch2.id == ID_TMC2130)
 		{

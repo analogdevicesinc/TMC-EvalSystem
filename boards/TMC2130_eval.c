@@ -78,19 +78,11 @@ static TMC2130TypeDef TMC2130;
 
 static uint16_t vref; // mV
 
-// => SPI wrapper (also takes care of cover mode)
+// => SPI wrapper
 void tmc2130_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
     UNUSED(icID);
-    if(Evalboards.ch1.fullCover != NULL)
-    {
-        Evalboards.ch1.fullCover(&data[0], dataLength);
-    }
-    else
-    {
-        // Map the channel to the corresponding SPI channel
-        TMC2130_SPIChannel-> readWriteArray(data, dataLength);
-    }
+    TMC2130_SPIChannel-> readWriteArray(data, dataLength);
 }
 // <= SPI wrapper
 
