@@ -1367,6 +1367,7 @@ static void configCallback(TMC4361ATypeDef *tmc4361A, ConfigState state)
     switch (Evalboards.ch2.id)
     {
     case ID_TMC2130:
+    case ID_TMC2240:
     case ID_TMC2160:
         driver     = 0x0C;
         dataLength = 0;
