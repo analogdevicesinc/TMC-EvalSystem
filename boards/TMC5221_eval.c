@@ -785,7 +785,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // ADCTemperatur Converted
         if(readWrite == READ) {
             int32_t adc = tmc5221_fieldRead(DEFAULT_ICID, TMC5221_TEMPERATURE_FIELD);
-            *value = (int32_t)((2.03*adc)-259);
+            *value = (int32_t)((1.017*adc)-259.2);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
