@@ -149,6 +149,5 @@ typedef struct
 
 void tmcl_init();
 void tmcl_process();
-void tmcl_boot();
 
 #endif /* TMCL_H */

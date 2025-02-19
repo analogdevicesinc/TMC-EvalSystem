@@ -71,7 +71,7 @@ void shallForceBoot()
 		return;
 
 	// not returned, this means pins are tied together
-	tmcl_boot();
+	enterBootloader();
 }
 
 /* Call all standard initialization routines. */
@@ -146,4 +146,48 @@ int main(void)
 	}
 
 	return 0;
+}
+
+void enterBootloader()
+{
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
+    if(Evalboards.ch1.id == ID_TMC4671)
+    {
+        // Driver Enable has to be set low by the bootloader for these ICs
+        BLConfig.drvEnableResetValue = 0;
+    }
+    else
+    {
+        // Default: Driver Enable is set to high
+        BLConfig.drvEnableResetValue = 1;
+    }
+#endif
+    Evalboards.driverEnable = DRIVER_DISABLE;
+    Evalboards.ch1.enableDriver(DRIVER_DISABLE); // todo CHECK 2: the ch1/2 deInit() calls should already disable the drivers - keep this driver disabling to be sure or remove it and leave the disabling to deInit? (LH)
+    Evalboards.ch2.enableDriver(DRIVER_DISABLE);
+
+    Evalboards.ch1.deInit();
+    Evalboards.ch2.deInit();
+
+    HAL.USB->deInit();
+
+    wait(500);
+
+    HAL.Timer->deInit();
+    HAL.RS232->deInit();
+    HAL.WLAN->deInit();
+    HAL.ADCs->deInit();
+
+    // todo: CHECK 2: Muss api_deInit hier dazu? (ED)
+    StepDir_deInit();
+
+    IDDetection_deInit();
+
+    HAL.NVIC_DeInit();
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
+    bool isBLNew = (BLConfig.BLMagic == BL_MAGIC_VALUE_BL_NEW);
+    BLConfig.BLMagic = isBLNew ? BL_MAGIC_VALUE_APP_NEW : BL_MAGIC_VALUE_OLD;
+    HAL.reset(true);
+#endif
 }
