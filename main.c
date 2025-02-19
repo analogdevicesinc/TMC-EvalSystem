@@ -20,6 +20,9 @@ const char *VersionString = MODULE_ID "V310"; // module id and version of the fi
 
 EvalboardsTypeDef Evalboards;
 
+// Forward declaration
+void enterBootloader();
+
 /* Keep as is! This lines are important for the update functionality. */
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 	const uint8_t Protection[] __attribute__ ((section(".cfmconfig")))=
@@ -78,12 +81,20 @@ void shallForceBoot()
 static void init()
 {
 	HAL.init();                  // Initialize Hardware Abstraction Layer
-	IDDetection_init();          // Initialize board detection
-	tmcl_init();                 // Initialize TMCL communication
 
 	tmcdriver_init();            // Initialize dummy driver board --> preset EvalBoards.ch2
 	tmcmotioncontroller_init();  // Initialize dummy motion controller board  --> preset EvalBoards.ch1
 
+#if defined(LandungsbrueckeV3)
+	// Check for the button-based return-to-bootloader request
+	if (HAL.IOs->config->isHigh(&HAL.IOs->pins->BUTTON))
+	{
+		enterBootloader();
+	}
+#endif
+
+	IDDetection_init();          // Initialize board detection
+	tmcl_init();                 // Initialize TMCL communication
 	VitalSignsMonitor.busy = 1;  // Put state to busy
 	Evalboards.driverEnable = DRIVER_ENABLE;
 	Evalboards.ch1.id = 0;       // preset id for driver board to 0 --> error/not found
