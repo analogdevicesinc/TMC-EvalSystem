@@ -42,7 +42,7 @@ static PinsTypeDef Pins;
 typedef void (*tmc4361A_callback)(TMC4361ATypeDef *, ConfigState);
 
 static SPIChannelTypeDef *TMC4361A_SPIChannel;
-static uint32_t vmax_position = 0;
+static uint32_t vmax_position = 51200;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -110,6 +110,9 @@ static void tmc4361A_writeConfiguration()
         {
             ((tmc4361A_callback) TMC4361A.config->callback)(&TMC4361A, TMC4361A.config->state);
         }
+
+        // Clear pol_dir_out bit in GCONF
+        tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_GENERAL_CONF, 0x00006000);
 
         TMC4361A.config->state = CONFIG_READY;
     }
