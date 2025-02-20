@@ -642,8 +642,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 192:
 		// target velocity (PIDIN_TARGET_VELOCITY)
 		if(readWrite == READ) {
-			tmc4671_writeRegister(DEFAULT_ICID, TMC4671_INTERIM_ADDR, 2);
-			*value = tmc4671_readRegister(DEFAULT_ICID, TMC4671_INTERIM_DATA);
+            *value = rampGenerator[motor].targetVelocity;
 		}
 		else if(readWrite == WRITE)
 		{
