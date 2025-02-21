@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2025 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -9,6 +9,7 @@
 #include "hal/SysTick.h"
 
 volatile uint32_t systick = 0;
+extern volatile uint32_t IICTimeout;
 
 #define SYSTICK_PRE_EMPTION_PRIORITY 3
 
@@ -27,6 +28,7 @@ void systick_init(void)
 void SysTick_Handler(void)
 {
 	systick++;
+	if(IICTimeout>0) IICTimeout--;
 }
 
 uint32_t systick_getMicrosecondTick()
