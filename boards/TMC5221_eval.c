@@ -48,7 +48,7 @@ static uint32_t vmax_position[TMC5221_MOTORS];
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
 static bool qscMode = false;
-static uint8_t deviceAddress = 0xC0;
+static uint8_t deviceAddress = 0xC6;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -1141,6 +1141,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
             gpio_af_set(HAL.IOs->pins->CLK16.port, GPIO_AF_0, HAL.IOs->pins->CLK16.bitWeight);
 #endif
         }
+        break;
+    case 10:  // Change device address
+        deviceAddress = *value & 0xFF;
         break;
     default:
         errors |= TMC_ERROR_TYPE;
