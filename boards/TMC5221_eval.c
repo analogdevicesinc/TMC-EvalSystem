@@ -1006,15 +1006,16 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
-    /* Checking if QSC mode is enabled, if yes->delay of ~10us b/w datagrams
-     * But this could be cleared via interrupt as well.
-     * ToDo: Take care of the latter scenario when interrupt wakeup tool is ready! (AS)
-     */
-    if((address == 0) && (value & TMC5221_QSC_STS_ENA_MASK))
-        qscMode=true;
-    else if((address == 0) && !(value & TMC5221_QSC_STS_ENA_MASK))
-        qscMode=false;
-
+    if(activeBus==IC_BUS_SPI){
+        /* Checking if QSC mode is enabled, if yes->delay of ~10us b/w datagrams
+         * But this could be cleared via interrupt as well.
+         * ToDo: Take care of the latter scenario when interrupt wakeup tool is ready! (AS)
+         */
+        if((address == 0) && (value & TMC5221_QSC_STS_ENA_MASK))
+            qscMode=true;
+        else if((address == 0) && !(value & TMC5221_QSC_STS_ENA_MASK))
+            qscMode=false;
+    }
     tmc5221_writeRegister(DEFAULT_ICID, address, value);
 }
 
