@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2025 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -36,7 +36,8 @@ const HALTypeDef HAL =
 	.RS232        = &RS232,
 	.WLAN         = &WLAN,
 	.Timer        = &Timer,
-	.UART         = &UART
+	.UART         = &UART,
+    .IIC         = &IIC
 };
 
 static void init(void)
@@ -57,6 +58,7 @@ static void init(void)
 	WLAN.init();
 	RS232.init();
 	USB.init();
+    IIC.init();
 
 	// Determine HW version
 	get_hwid();
