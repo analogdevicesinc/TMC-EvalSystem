@@ -48,7 +48,7 @@ static uint32_t vmax_position[TMC5221_MOTORS];
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
 static bool qscMode = false;
-static uint8_t deviceAddress = 0xC6;
+static uint8_t deviceAddress = 0xC0;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
