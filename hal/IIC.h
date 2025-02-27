@@ -13,10 +13,8 @@ typedef struct
 } IICTypeDef;
 
 extern IICTypeDef IIC;
-
-void InitIIC(void);
-uint8_t IICMasterWrite(uint8_t Address, uint8_t *Data, uint8_t Size);
-uint8_t IICMasterRead(uint8_t Address, uint8_t *Data, uint8_t Size);
-uint8_t IICMasterWriteRead(uint8_t Address, uint8_t *WriteData, uint8_t WriteLength, uint8_t *ReadData, uint8_t ReadLength);
+uint8_t IICMasterWrite(uint8_t address, uint8_t *data, uint8_t size);
+uint8_t IICMasterRead(uint8_t address, uint8_t *data, uint8_t size);
+uint8_t IICMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLength, uint8_t *readData, uint8_t readLength);
 
 #endif /*IIC_H */
