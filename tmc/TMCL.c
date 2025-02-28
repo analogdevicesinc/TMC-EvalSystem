@@ -126,7 +126,7 @@ static void GetVersion(void);
 static void GetInput(void);
 static void SetOutput(void);
 static void HandleWlanCommand(void);
-static void handleRamDebug(void);
+static int handleRamDebug(uint8_t type, uint8_t motor, uint32_t *data);
 static void handleGetInfo(void);
 static void handleOTP(void);
 
@@ -367,7 +367,7 @@ void ExecuteActualCommand()
         HandleWlanCommand();
         break;
     case TMCL_RamDebug:
-        handleRamDebug();
+        ActualReply.Status = handleRamDebug(ActualCommand.Type, ActualCommand.Motor, &ActualReply.Value.UInt32);
         break;
     case TMCL_OTP:
         handleOTP();
@@ -1079,100 +1079,102 @@ static void HandleWlanCommand(void)
     }
 }
 
-static void handleRamDebug(void)
+static int handleRamDebug(uint8_t type, uint8_t motor, uint32_t *data)
 {
-    switch (ActualCommand.Type)
+    switch (type)
     {
     case 0:
         debug_init();
         break;
     case 1:
-        debug_setSampleCount(ActualCommand.Value.Int32);
+        debug_setSampleCount(*data);
         break;
     case 2:
         /* Placeholder: Set sampling time reference*/
-        if (ActualCommand.Value.Int32 != 0)
-            ActualReply.Status = REPLY_INVALID_VALUE;
+        if (*data != 0)
+            return REPLY_INVALID_VALUE;
         break;
     case 3:
         // RAMDebug expects a divisor value where 1 is original capture frequency,
         // 2 is halved capture frequency etc.
         // The TMCL-IDE sends prescaling values that are one lower than that.
-        debug_setPrescaler(ActualCommand.Value.Int32 + 1);
+        debug_setPrescaler(*data + 1);
         break;
     case 4:
-        if (!debug_setChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_setChannel(motor, *data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 5:
-        if (!debug_setTriggerChannel(ActualCommand.Motor, ActualCommand.Value.Int32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_setTriggerChannel(motor, *data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 6:
-        debug_setTriggerMaskShift(ActualCommand.Value.Int32, ActualCommand.Motor);
+        debug_setTriggerMaskShift(*data, motor);
         break;
     case 7:
-        debug_enableTrigger(ActualCommand.Motor, ActualCommand.Value.Int32);
+        debug_enableTrigger(motor, *data);
         break;
     case 8:
-        ActualReply.Value.Int32 = debug_getState();
+        *data = debug_getState();
         break;
     case 9:
-        if (!debug_getSample(ActualCommand.Value.Int32, (uint32_t *)&ActualReply.Value.Int32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_getSample(*data, data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 10:
-        if (!debug_getInfo(ActualCommand.Value.UInt32, &ActualCommand.Value.UInt32))
+        if (!debug_getInfo(*data, data))
             ActualReply.Status = REPLY_MAX_EXCEEDED;
         break;
     case 11:
-        if (!debug_getChannelType(ActualCommand.Motor, (uint8_t *) &ActualReply.Value.Int32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_getChannelType(motor, (uint8_t *) data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 12:
-        if (!debug_getChannelAddress(ActualCommand.Motor, (uint32_t *) &ActualReply.Value.Int32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_getChannelAddress(motor, data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 13:
-        debug_setPretriggerSampleCount(ActualCommand.Value.UInt32);
+        debug_setPretriggerSampleCount(*data);
         break;
     case 14:
-        ActualReply.Value.UInt32 = debug_getPretriggerSampleCount();
+        *data = debug_getPretriggerSampleCount();
         break;
     case 15:
         if(Timer.initialized) {
-            Timer.setFrequency(TIMER_CHANNEL_2, ActualCommand.Value.UInt32);
-            ActualReply.Value.UInt32 = Timer.getPeriod(TIMER_CHANNEL_2);
+            Timer.setFrequency(TIMER_CHANNEL_2, *data);
+            *data = Timer.getPeriod(TIMER_CHANNEL_2);
         }
         break;
     case 16:
-        if (!debug_setType(ActualCommand.Value.UInt32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_setType(*data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 17:
-        if (!debug_setEvalChannel(ActualCommand.Value.UInt32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_setEvalChannel(*data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 18:
-        if (!debug_setAddress(ActualCommand.Value.UInt32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_setAddress(*data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 19:
-        if (!debug_setTriggerType(ActualCommand.Value.UInt32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_setTriggerType(*data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 20:
-        if (!debug_setTriggerEvalChannel(ActualCommand.Value.UInt32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_setTriggerEvalChannel(*data))
+            return REPLY_MAX_EXCEEDED;
         break;
     case 21:
-        if (!debug_setTriggerAddress(ActualCommand.Value.UInt32))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+        if (!debug_setTriggerAddress(*data))
+            return REPLY_MAX_EXCEEDED;
         break;
     default:
-        ActualReply.Status = REPLY_INVALID_TYPE;
+        return REPLY_INVALID_TYPE;
         break;
     }
+
+    return REPLY_OK;
 }
 
 static void handleOTP(void)
