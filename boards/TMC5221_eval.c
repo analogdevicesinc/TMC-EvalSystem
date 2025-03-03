@@ -27,8 +27,6 @@ static TMC5221TypeDef TMC5221;
 
 typedef struct
 {
-//    IOPinTypeDef  *AD0;
-//    IOPinTypeDef  *AD1;
     IOPinTypeDef  *SEL_I2CN;
     IOPinTypeDef  *CLK_LB;
     IOPinTypeDef  *DIAG0_LB;
@@ -40,15 +38,13 @@ typedef struct
 } PinsTypeDef;
 static PinsTypeDef Pins;
 
-static TMC5221BusType activeBus = IC_BUS_IIC;
+static TMC5221BusType activeBus = IC_BUS_SPI;
 static SPIChannelTypeDef *TMC5221_SPIChannel;
-static IICTypeDef *TMC5221_IIC;
 static bool vMaxModified = false;
 static uint32_t vmax_position[TMC5221_MOTORS];
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
 static bool qscMode = false;
-static uint8_t deviceAddress = 0xC0;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -81,27 +77,11 @@ void tmc5221_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
     TMC5221_SPIChannel->readWriteArray(data, dataLength);
 }
 
-bool tmc5221_readWriteIIC(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
-{
-    UNUSED(icID);
-   if(IICMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))//Device address = 0b1100000W/R
-       return true;
-
-    return false;
-}
-
 TMC5221BusType tmc5221_getBusType(uint16_t icID)
 {
     UNUSED(icID);
 
     return activeBus;
-}
-
-uint8_t tmc5221_getDeviceAddress(uint16_t icID)
-{
-    UNUSED(icID);
-
-    return deviceAddress;
 }
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
@@ -975,7 +955,6 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             spi_setFrequency(TMC5221_SPIChannel, *value);
         }
         break;
-
     default:
         errors |= TMC_ERROR_TYPE;
         break;
@@ -1143,9 +1122,6 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 #endif
         }
         break;
-    case 10:  // Change device address
-        deviceAddress = *value & 0xFF;
-        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
@@ -1215,15 +1191,6 @@ static void enableDriver(DriverState state)
 static void init_comm(TMC5221BusType mode)
 {
     switch(mode) {
-    case IC_BUS_IIC:
-//        HAL.IOs->config->toOutput(Pins.AD0);
-//        HAL.IOs->config->toOutput(Pins.AD1);
-//        HAL.IOs->config->setLow(Pins.AD0);
-//        HAL.IOs->config->setLow(Pins.AD1);
-        IIC.init();
-        HAL.IOs->config->setLow(Pins.SEL_I2CN);
-        TMC5221_IIC = HAL.IIC;
-        break;
     case IC_BUS_SPI:
     default:
         SPI.init();
@@ -1245,8 +1212,6 @@ void TMC5221_init(void)
     Pins.SEL_I2CN       = &HAL.IOs->pins->DIO9;//Pin20
     Pins.DIAG1_LB       = &HAL.IOs->pins->DIO15; //Pin37
     Pins.DIAG0_LB       = &HAL.IOs->pins->DIO16; //Pin38
-//    Pins.AD0            = &HAL.IOs->pins->SPI1_CSN; //Pin30
-//    Pins.AD1            = &HAL.IOs->pins->SPI1_SDI; //Pin32
 
     HAL.IOs->config->toOutput(Pins.DRV_EN_LB);
     HAL.IOs->config->toOutput(Pins.SEL_I2CN);
