@@ -111,6 +111,7 @@ static void GetInput(void);
 static void SetOutput(void);
 static void HandleWlanCommand(void);
 static void handleRamDebug(void);
+static void handleGetInfo(void);
 static void handleOTP(void);
 
 TMCLCommandTypeDef ActualCommand;
@@ -344,6 +345,7 @@ void ExecuteActualCommand()
         boardsReset();
         break;
     case TMCL_GetInfo:
+        handleGetInfo();
         break;
     case TMCL_WLAN:
         HandleWlanCommand();
@@ -923,6 +925,48 @@ static void GetVersion(void)
     }
     else if(ActualCommand.Type == NUMBER_OF_MOTORS){
         ActualReply.Value.UInt32 = Evalboards.ch1.numberOfMotors + Evalboards.ch2.numberOfMotors;
+    }
+}
+
+static void handleGetInfo(void)
+{
+    uint32_t tmpVal;
+
+    switch (ActualCommand.Type)
+    {
+    case 0: // FWModuleID
+        tmpVal = (uint8_t) VersionString[0] - '0';  // Ascii digit - '0' = digit value
+        tmpVal *= 10;
+        tmpVal += (uint8_t) VersionString[1] - '0';
+        tmpVal *= 10;
+        tmpVal += (uint8_t) VersionString[2] - '0';
+        tmpVal *= 10;
+        tmpVal += (uint8_t) VersionString[3] - '0';
+        ActualReply.Value.Int32 = tmpVal;
+        break;
+
+    case 1: // FWVersion
+        // Major version
+        ActualReply.Value.Byte[2] = (uint8_t) VersionString[5] - '0';
+
+        // Minor version
+        tmpVal = (uint8_t) VersionString[6] - '0';
+        tmpVal *= 10;
+        tmpVal += (uint8_t) VersionString[7] - '0';
+        ActualReply.Value.Byte[0] = tmpVal;
+        break;
+
+    case 2: // FWCapability
+        ActualReply.Value.Int32 = (GETINFO_FW_CAPABILITY_BITMASK_TMCL); // TMCL only firmware
+        break;
+
+    case 3: // FWReleaseType
+        ActualReply.Value.Int32 = GETINFO_FW_RELEASE_TYPE_PUBLIC; // Public
+        break;
+
+    default:
+        ActualReply.Status = REPLY_INVALID_TYPE;
+        break;
     }
 }
 

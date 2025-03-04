@@ -105,6 +105,19 @@
 #define TMCL_Boot                    242
 #define TMCL_SoftwareReset           255
 
+
+// TMCL GetInfo firmware capabilities
+#define GETINFO_FW_CAPABILITY_BITMASK_BOOTLOADER 0x00000001
+#define GETINFO_FW_CAPABILITY_BITMASK_TMCL       0x00000002
+#define GETINFO_FW_CAPABILITY_BITMASK_CANOPEN    0x00000004
+#define GETINFO_FW_CAPABILITY_BITMASK_COE        0x00000008
+#define GETINFO_FW_CAPABILITY_BITMASK_IOLINK     0x00000010
+
+// TMCL GetInfo firmware release type
+#define GETINFO_FW_RELEASE_TYPE_PUBLIC   0
+#define GETINFO_FW_RELEASE_TYPE_INTERNAL 1
+#define GETINFO_FW_RELEASE_TYPE_CUSTOM   2
+
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
     struct BootloaderConfig {
         uint32_t BLMagic;
