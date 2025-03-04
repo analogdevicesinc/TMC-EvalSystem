@@ -488,7 +488,7 @@ MATH_LIB = -lm
 #    --cref:    add cross reference to  map file
 LDFLAGS += -T $(LD_SCRIPT)
 LDFLAGS += -nostdlib
-LDFLAGS += -Wl,--gc-sections,-Map=$(OUTDIR)/$(TARGET).map,-cref
+LDFLAGS += -Wl,--gc-sections,-Map=$(DEVICE_DIR)/$(TARGET).map,-cref
 LDFLAGS += -u,Reset_Handler
 LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
 LDFLAGS += -lc
