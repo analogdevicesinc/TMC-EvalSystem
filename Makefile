@@ -311,6 +311,9 @@ CDEFS += -DID_CH2_DEFAULT=$(ID_CH2_DEFAULT) -DID_CH2_OVERRIDE=$(ID_CH2_OVERRIDE)
 CDEFS += -DUSB_USE_UNIQUE_SERIAL_NUMBER=$(USB_USE_UNIQUE_SERIAL_NUMBER)
 
 CDEFS += -DBUILD_VERSION=$(subst .,,$(VERSION))
+CDEFS += -DVERSION_MAJOR=$(word 1, $(subst ., ,$(VERSION)))
+CDEFS += -DVERSION_MINOR=$(word 2, $(subst ., ,$(VERSION)))
+CDEFS += -DVERSION_PATCH=$(word 3, $(subst ., ,$(VERSION)))
 
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).
 # use file-extension c for "c-only"-files

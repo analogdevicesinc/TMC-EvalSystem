@@ -964,6 +964,10 @@ static void handleGetInfo(void)
         ActualReply.Value.Int32 = GETINFO_FW_RELEASE_TYPE_PUBLIC; // Public
         break;
 
+    case 200: // DeviceSpecificArea: Patch version
+        ActualReply.Value.UInt32 = VERSION_PATCH;
+        break;
+
     default:
         ActualReply.Status = REPLY_INVALID_TYPE;
         break;
