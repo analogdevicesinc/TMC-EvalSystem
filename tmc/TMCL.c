@@ -964,6 +964,14 @@ static void handleGetInfo(void)
         ActualReply.Value.Int32 = GETINFO_FW_RELEASE_TYPE_PUBLIC; // Public
         break;
 
+    case 20: // APIndexBitWidth
+        ActualReply.Value.Int32 = 8;
+        break;
+
+    case 21: // RegAddrBitWidth
+        ActualReply.Value.UInt32 = 12;
+        break;
+
     case 200: // DeviceSpecificArea: Patch version
         ActualReply.Value.UInt32 = VERSION_PATCH;
         break;
