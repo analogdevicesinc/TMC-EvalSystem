@@ -1,14 +1,14 @@
 ### Generic settings ###
-#VERSION			= 3.06
+#VERSION        = 3.06
 include version.txt
-#DEVICE			= Landungsbruecke
-#DEVICE			= LandungsbrueckeSmall
-#DEVICE			= LandungsbrueckeV3
-LINK			= BL
-#LINK			= NOBL
+#DEVICE         = Landungsbruecke
+#DEVICE         = LandungsbrueckeSmall
+#DEVICE         = LandungsbrueckeV3
+LINK            = BL
+#LINK           = NOBL
 BUILD_DIR       = _build
-DEVICE_DIR 	    = $(BUILD_DIR)/_build_$(DEVICE)
-TARGET 			= $(DEVICE)_v$(VERSION)_$(LINK)
+DEVICE_DIR      = $(BUILD_DIR)/_build_$(DEVICE)
+TARGET          = $(DEVICE)_v$(VERSION)_$(LINK)
 
 ### Build output configuration #################################################
 DEP_DIR     := $(DEVICE_DIR)/dep
@@ -17,10 +17,10 @@ OBJ_DIR     := $(DEVICE_DIR)/obj
 # Force IDs (IDs found in tmc/BoardAssignment.h)
 # If OVERRIDE is set, any autodetected ID will be discarded
 # Else, autodetected IDs preceed ID_CH1_DEFAULT / ID_CH2_DEFAULT
-ID_CH1_DEFAULT	?= 0
-ID_CH1_OVERRIDE	?= false
-ID_CH2_DEFAULT	?= 0
-ID_CH2_OVERRIDE	?= false
+ID_CH1_DEFAULT  ?= 0
+ID_CH1_OVERRIDE ?= false
+ID_CH2_DEFAULT  ?= 0
+ID_CH2_OVERRIDE ?= false
 
 # Select whether USB should report a unique serial number or not
 # Legacy behaviour for the Landungsbruecke <= v2 is to not have a serial string.
@@ -31,59 +31,59 @@ USB_USE_UNIQUE_SERIAL_NUMBER ?= false
 
 ### Source File Selection ###
 # Evalboards
-SRC 			+= boards/Board.c
-SRC 			+= boards/TMCDriver.c
-SRC 			+= boards/TMCMotionController.c
+SRC             += boards/Board.c
+SRC             += boards/TMCDriver.c
+SRC             += boards/TMCMotionController.c
 
-SRC 			+= boards/Rhino_standalone.c
-SRC				+= boards/TMC2100_eval.c
-SRC				+= boards/TMC2130_eval.c
-SRC				+= boards/TMC2160_eval.c
-SRC				+= boards/TMC2208_eval.c
-SRC				+= boards/TMC2210_eval.c
-SRC				+= boards/TMC2224_eval.c
-SRC				+= boards/TMC2240_eval.c
-SRC				+= boards/TMC2660_eval.c
-SRC				+= boards/TMC4361A_eval.c
-SRC				+= boards/TMC4671_eval.c
-SRC				+= boards/TMC5031_eval.c
-SRC				+= boards/TMC5041_eval.c
-SRC				+= boards/TMC5062_eval.c
-SRC				+= boards/TMC5072_eval.c
-SRC 			+= boards/TMC5130_eval.c
-SRC 			+= boards/TMC5160_eval.c
-SRC 			+= boards/TMC5240_eval.c
-SRC 			+= boards/TMC5271_eval.c
-SRC 			+= boards/TMC5272_eval.c
-SRC 			+= boards/TMC6100_eval.c
-SRC 			+= boards/TMC6200_eval.c
-SRC				+= boards/TMC7300_eval.c
+SRC             += boards/Rhino_standalone.c
+SRC             += boards/TMC2100_eval.c
+SRC             += boards/TMC2130_eval.c
+SRC             += boards/TMC2160_eval.c
+SRC             += boards/TMC2208_eval.c
+SRC             += boards/TMC2210_eval.c
+SRC             += boards/TMC2224_eval.c
+SRC             += boards/TMC2240_eval.c
+SRC             += boards/TMC2660_eval.c
+SRC             += boards/TMC4361A_eval.c
+SRC             += boards/TMC4671_eval.c
+SRC             += boards/TMC5031_eval.c
+SRC             += boards/TMC5041_eval.c
+SRC             += boards/TMC5062_eval.c
+SRC             += boards/TMC5072_eval.c
+SRC             += boards/TMC5130_eval.c
+SRC             += boards/TMC5160_eval.c
+SRC             += boards/TMC5240_eval.c
+SRC             += boards/TMC5271_eval.c
+SRC             += boards/TMC5272_eval.c
+SRC             += boards/TMC6100_eval.c
+SRC             += boards/TMC6200_eval.c
+SRC             += boards/TMC7300_eval.c
 ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall LandungsbrueckeV3))
-SRC				+= boards/MAX22216_eval.c
-SRC				+= boards/MAX22204_eval.c
-SRC				+= boards/MAX22210_eval.c
-SRC				+= boards/TMC2209_eval.c
-SRC				+= boards/TMC2225_eval.c
+SRC             += boards/MAX22216_eval.c
+SRC             += boards/MAX22204_eval.c
+SRC             += boards/MAX22210_eval.c
+SRC             += boards/TMC2209_eval.c
+SRC             += boards/TMC2225_eval.c
 SRC             += boards/TMC2226_eval.c
-SRC				+= boards/TMC2300_eval.c
+SRC             += boards/TMC2300_eval.c
 SRC             += boards/TMC6300_eval.c
 SRC             += boards/TMC6140_eval.c
 SRC             += boards/TMC8100_eval.c
-SRC				+= boards/TMC5262_eval.c
-SRC				+= boards/TMC2262_eval.c
+SRC             += boards/TMC5262_eval.c
+SRC             += boards/TMC2262_eval.c
 SRC             += boards/TMC9660_3PH_eval.c
 SRC             += boards/TMC9660_STEPPER_eval.c
 
 endif
 
 # Control
-SRC 			+= main.c
-SRC 			+= tmc/TMCL.c
-SRC 			+= tmc/RAMDebug.c
-SRC				+= tmc/EEPROM.c
-SRC 			+= tmc/BoardAssignment.c
-SRC 			+= tmc/VitalSignsMonitor.c
-SRC 			+= tmc/StepDir.c
+SRC             += main.c
+SRC             += tmc/TMCL.c
+SRC             += tmc/RAMDebug.c
+SRC             += tmc/EEPROM.c
+SRC             += tmc/BoardAssignment.c
+SRC             += tmc/VitalSignsMonitor.c
+SRC             += tmc/StepDir.c
 ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall))
 SRC             += tmc/BLDC_Landungsbruecke.c
 endif
@@ -92,217 +92,217 @@ SRC             += tmc/BLDC_LandungsbrueckeV3.c
 endif
 
 # TMC_API
-SRC				+= TMC-API/tmc/helpers/Functions.c
-SRC				+= TMC-API/tmc/helpers/CRC.c
-SRC				+= TMC-API/tmc/ramp/LinearRamp.c
-SRC				+= TMC-API/tmc/ramp/LinearRamp1.c
-SRC				+= TMC-API/tmc/ramp/Ramp.c
-SRC 			+= TMC-API/tmc/ic/MAX22216/MAX22216.c
-SRC 			+= TMC-API/tmc/ic/TMC2130/TMC2130.c
-SRC 			+= TMC-API/tmc/ic/TMC2160/TMC2160.c
-SRC 			+= TMC-API/tmc/ic/TMC2208/TMC2208.c
-SRC 			+= TMC-API/tmc/ic/TMC2209/TMC2209.c
-SRC 			+= TMC-API/tmc/ic/TMC2224/TMC2224.c
-SRC 			+= TMC-API/tmc/ic/TMC2225/TMC2225.c
-SRC 			+= TMC-API/tmc/ic/TMC2226/TMC2226.c
-SRC 			+= TMC-API/tmc/ic/TMC2240/TMC2240.c
-SRC 			+= TMC-API/tmc/ic/TMC2660/TMC2660.c
-SRC 			+= TMC-API/tmc/ic/TMC2300/TMC2300.c
-SRC				+= TMC-API/tmc/ic/TMC4361A/TMC4361A.c
-SRC				+= TMC-API/tmc/ic/TMC4671/TMC4671.c
-SRC				+= TMC-API/tmc/ic/TMC5031/TMC5031.c
-SRC				+= TMC-API/tmc/ic/TMC5041/TMC5041.c
-SRC				+= TMC-API/tmc/ic/TMC5062/TMC5062.c
-SRC				+= TMC-API/tmc/ic/TMC5072/TMC5072.c
-SRC 			+= TMC-API/tmc/ic/TMC5130/TMC5130.c
-SRC 			+= TMC-API/tmc/ic/TMC5160/TMC5160.c
-SRC 			+= TMC-API/tmc/ic/TMC5240/TMC5240.c
-SRC 			+= TMC-API/tmc/ic/TMC5271/TMC5271.c
-SRC 			+= TMC-API/tmc/ic/TMC5272/TMC5272.c
-SRC				+= TMC-API/tmc/ic/TMC6100/TMC6100.c
-SRC				+= TMC-API/tmc/ic/TMC6200/TMC6200.c
-SRC				+= TMC-API/tmc/ic/TMC7300/TMC7300.c
-SRC 			+= TMC-API/tmc/ic/TMC5262/TMC5262.c
-SRC 			+= TMC-API/tmc/ic/TMC2262/TMC2262.c
+SRC             += TMC-API/tmc/helpers/Functions.c
+SRC             += TMC-API/tmc/helpers/CRC.c
+SRC             += TMC-API/tmc/ramp/LinearRamp.c
+SRC             += TMC-API/tmc/ramp/LinearRamp1.c
+SRC             += TMC-API/tmc/ramp/Ramp.c
+SRC             += TMC-API/tmc/ic/MAX22216/MAX22216.c
+SRC             += TMC-API/tmc/ic/TMC2130/TMC2130.c
+SRC             += TMC-API/tmc/ic/TMC2160/TMC2160.c
+SRC             += TMC-API/tmc/ic/TMC2208/TMC2208.c
+SRC             += TMC-API/tmc/ic/TMC2209/TMC2209.c
+SRC             += TMC-API/tmc/ic/TMC2224/TMC2224.c
+SRC             += TMC-API/tmc/ic/TMC2225/TMC2225.c
+SRC             += TMC-API/tmc/ic/TMC2226/TMC2226.c
+SRC             += TMC-API/tmc/ic/TMC2240/TMC2240.c
+SRC             += TMC-API/tmc/ic/TMC2660/TMC2660.c
+SRC             += TMC-API/tmc/ic/TMC2300/TMC2300.c
+SRC             += TMC-API/tmc/ic/TMC4361A/TMC4361A.c
+SRC             += TMC-API/tmc/ic/TMC4671/TMC4671.c
+SRC             += TMC-API/tmc/ic/TMC5031/TMC5031.c
+SRC             += TMC-API/tmc/ic/TMC5041/TMC5041.c
+SRC             += TMC-API/tmc/ic/TMC5062/TMC5062.c
+SRC             += TMC-API/tmc/ic/TMC5072/TMC5072.c
+SRC             += TMC-API/tmc/ic/TMC5130/TMC5130.c
+SRC             += TMC-API/tmc/ic/TMC5160/TMC5160.c
+SRC             += TMC-API/tmc/ic/TMC5240/TMC5240.c
+SRC             += TMC-API/tmc/ic/TMC5271/TMC5271.c
+SRC             += TMC-API/tmc/ic/TMC5272/TMC5272.c
+SRC             += TMC-API/tmc/ic/TMC6100/TMC6100.c
+SRC             += TMC-API/tmc/ic/TMC6200/TMC6200.c
+SRC             += TMC-API/tmc/ic/TMC7300/TMC7300.c
+SRC             += TMC-API/tmc/ic/TMC5262/TMC5262.c
+SRC             += TMC-API/tmc/ic/TMC2262/TMC2262.c
 
-EXTRAINCDIRS 	+= $(TMC_HAL_SRC)
+EXTRAINCDIRS    += $(TMC_HAL_SRC)
 
 ### Chip-specific variables and files ###
 # Landungsbrücke
 ifeq ($(DEVICE),Landungsbruecke)
     CDEFS = -DLandungsbruecke
-    MCU      			= cortex-m4
-    SUBMDL   			= MK20DN512
-    CHIP     			= $(SUBMDL)
-    BOARD    			= LANDUNGSBRUECKE
+    MCU                 = cortex-m4
+    SUBMDL              = MK20DN512
+    CHIP                = $(SUBMDL)
+    BOARD               = LANDUNGSBRUECKE
     TMC_HAL_SRC         = hal/Landungsbruecke
-    LPCLIBDIR 			= $(TMC_HAL_SRC)/freescale
-    INCLUDE_DIRS 		= -I$(LPCLIBDIR)
+    LPCLIBDIR           = $(TMC_HAL_SRC)/freescale
+    INCLUDE_DIRS        = -I$(LPCLIBDIR)
 
     SRC                 += boards/SelfTest_Landungsbruecke.c
 
     SRC                 += tmc/IdDetection_Landungsbruecke.c
 
-    SRC 				+= $(LPCLIBDIR)/Cpu.c
-    SRC 				+= $(LPCLIBDIR)/kinetis_sysinit.c
-    SRC 				+= $(LPCLIBDIR)/nvic-m4.c
+    SRC                 += $(LPCLIBDIR)/Cpu.c
+    SRC                 += $(LPCLIBDIR)/kinetis_sysinit.c
+    SRC                 += $(LPCLIBDIR)/nvic-m4.c
 
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/CDC1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/CS1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/Rx1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/Tx1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_cdc.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_cdc_pstn.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_class.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_dci_kinetis.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_descriptor.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_driver.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_framework.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/USB0.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/USB1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/wdt_kinetis.c
-    ASRC 				+= $(LPCLIBDIR)/startup.S
-    EXTRAINCDIRS  		+= $(LPCLIBDIR)
+    SRC                 += $(LPCLIBDIR)/USB_CDC/CDC1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/CS1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/Rx1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/Tx1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_cdc.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_cdc_pstn.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_class.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_dci_kinetis.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_descriptor.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_driver.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_framework.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/USB0.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/USB1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/wdt_kinetis.c
+    ASRC                += $(LPCLIBDIR)/startup.S
+    EXTRAINCDIRS        += $(LPCLIBDIR)
     
     ifeq ($(LINK),BL)
-		LD_SCRIPT = $(LPCLIBDIR)/MK20DN512-TMCM.ld
-	else
-		LD_SCRIPT = $(LPCLIBDIR)/MK20DN512.ld
-	endif
+        LD_SCRIPT = $(LPCLIBDIR)/MK20DN512-TMCM.ld
+    else
+        LD_SCRIPT = $(LPCLIBDIR)/MK20DN512.ld
+    endif
 # Landungsbrücke (small)
 else ifeq ($(DEVICE),LandungsbrueckeSmall)
     CDEFS = -DLandungsbrueckeSmall
-    MCU      			= cortex-m4
-    SUBMDL   			= MK20DX256
-    CHIP     			= $(SUBMDL)
-    BOARD    			= LANDUNGSBRUECKE
+    MCU                 = cortex-m4
+    SUBMDL              = MK20DX256
+    CHIP                = $(SUBMDL)
+    BOARD               = LANDUNGSBRUECKE
     TMC_HAL_SRC         = hal/Landungsbruecke
-    LPCLIBDIR 			= $(TMC_HAL_SRC)/freescale
-    INCLUDE_DIRS 		= -I$(LPCLIBDIR)
+    LPCLIBDIR           = $(TMC_HAL_SRC)/freescale
+    INCLUDE_DIRS        = -I$(LPCLIBDIR)
 
     SRC                 += boards/SelfTest_Landungsbruecke.c
 
     SRC                 += tmc/IdDetection_Landungsbruecke.c
 
-    SRC 				+= $(LPCLIBDIR)/Cpu.c
-    SRC 				+= $(LPCLIBDIR)/kinetis_sysinit.c
-    SRC 				+= $(LPCLIBDIR)/nvic-m4.c
+    SRC                 += $(LPCLIBDIR)/Cpu.c
+    SRC                 += $(LPCLIBDIR)/kinetis_sysinit.c
+    SRC                 += $(LPCLIBDIR)/nvic-m4.c
 
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/CDC1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/CS1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/Rx1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/Tx1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_cdc.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_cdc_pstn.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_class.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_dci_kinetis.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_descriptor.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_driver.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/usb_framework.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/USB0.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/USB1.c
-    SRC 				+= $(LPCLIBDIR)/USB_CDC/wdt_kinetis.c
-    ASRC 				+= $(LPCLIBDIR)/startup.S
-    EXTRAINCDIRS  		+= $(LPCLIBDIR)
+    SRC                 += $(LPCLIBDIR)/USB_CDC/CDC1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/CS1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/Rx1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/Tx1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_cdc.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_cdc_pstn.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_class.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_dci_kinetis.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_descriptor.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_driver.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/usb_framework.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/USB0.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/USB1.c
+    SRC                 += $(LPCLIBDIR)/USB_CDC/wdt_kinetis.c
+    ASRC                += $(LPCLIBDIR)/startup.S
+    EXTRAINCDIRS        += $(LPCLIBDIR)
 
     ifeq ($(LINK),BL)
-		LD_SCRIPT = $(LPCLIBDIR)/MK20DX256-TMCM.ld
-	else
-		LD_SCRIPT = $(LPCLIBDIR)/MK20DX256.ld
-	endif
+        LD_SCRIPT = $(LPCLIBDIR)/MK20DX256-TMCM.ld
+    else
+        LD_SCRIPT = $(LPCLIBDIR)/MK20DX256.ld
+    endif
 else ifeq ($(DEVICE),LandungsbrueckeV3)
     CDEFS = -DLandungsbrueckeV3
-    MCU      			= cortex-m4
-    SUBMDL   			= GD32F425
-    CHIP     			= $(SUBMDL)
-    BOARD    			= LandungsbrueckeV3
+    MCU                 = cortex-m4
+    SUBMDL              = GD32F425
+    CHIP                = $(SUBMDL)
+    BOARD               = LandungsbrueckeV3
     TMC_HAL_SRC         = hal/Landungsbruecke_V3
-    STMLIBDIR 			= $(TMC_HAL_SRC)/GigaDevice
-    STMSPDDIR 			= $(STMLIBDIR)/lib
-    LIBSRCDIR 			= $(STMSPDDIR)/src
-    STMSPDINCDIR 		= $(STMSPDDIR)/inc
-    #CMSISDIR 			= $(STMLIBDIR)/CMSIS/Core/CM3
-    #STMEEEMULDIR 		= $(STMLIBDIR)/EEPROMEmulation_AN
-    #STMEEEMULSRCDIR 	= $(STMEEEMULDIR)/source
-    #STMEEEMULINCDIR 	= $(STMEEEMULDIR)/include
-    INCLUDE_DIRS 		= -I$(STMSPDINCDIR)
+    STMLIBDIR           = $(TMC_HAL_SRC)/GigaDevice
+    STMSPDDIR           = $(STMLIBDIR)/lib
+    LIBSRCDIR           = $(STMSPDDIR)/src
+    STMSPDINCDIR        = $(STMSPDDIR)/inc
+    #CMSISDIR           = $(STMLIBDIR)/CMSIS/Core/CM3
+    #STMEEEMULDIR       = $(STMLIBDIR)/EEPROMEmulation_AN
+    #STMEEEMULSRCDIR    = $(STMEEEMULDIR)/source
+    #STMEEEMULINCDIR    = $(STMEEEMULDIR)/include
+    INCLUDE_DIRS        = -I$(STMSPDINCDIR)
 
     SRC                 += boards/SelfTest_LandungsbrueckeV3.c
 #
     SRC                 += tmc/IdDetection_LandungsbrueckeV3.c
 
 
-	SRC += $(LIBSRCDIR)/system_gd32f4xx.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_adc.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_can.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_crc.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_ctc.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_dac.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_dbg.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_dci.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_dma.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_enet.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_exmc.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_exti.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_fmc.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_fwdgt.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_gpio.c
+    SRC += $(LIBSRCDIR)/system_gd32f4xx.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_adc.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_can.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_crc.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_ctc.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_dac.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_dbg.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_dci.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_dma.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_enet.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_exmc.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_exti.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_fmc.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_fwdgt.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_gpio.c
     SRC += $(LIBSRCDIR)/gd32f4xx_hw.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_i2c.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_ipa.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_iref.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_misc.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_pmu.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_rcu.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_rtc.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_sdio.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_spi.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_syscfg.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_timer.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_tli.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_trng.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_usart.c
-	SRC += $(LIBSRCDIR)/gd32f4xx_wwdgt.c
-	SRC += $(LIBSRCDIR)/usb/cdc_acm_core.c
-	SRC += $(LIBSRCDIR)/usb/drv_usbd_int.c
-	SRC += $(LIBSRCDIR)/usb/drv_usb_core.c
-	SRC += $(LIBSRCDIR)/usb/drv_usb_dev.c
-	SRC += $(LIBSRCDIR)/usb/usbd_core.c
-	SRC += $(LIBSRCDIR)/usb/usbd_enum.c
-	SRC += $(LIBSRCDIR)/usb/usbd_transc.c
-  	
+    SRC += $(LIBSRCDIR)/gd32f4xx_i2c.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_ipa.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_iref.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_misc.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_pmu.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_rcu.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_rtc.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_sdio.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_spi.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_syscfg.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_timer.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_tli.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_trng.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_usart.c
+    SRC += $(LIBSRCDIR)/gd32f4xx_wwdgt.c
+    SRC += $(LIBSRCDIR)/usb/cdc_acm_core.c
+    SRC += $(LIBSRCDIR)/usb/drv_usbd_int.c
+    SRC += $(LIBSRCDIR)/usb/drv_usb_core.c
+    SRC += $(LIBSRCDIR)/usb/drv_usb_dev.c
+    SRC += $(LIBSRCDIR)/usb/usbd_core.c
+    SRC += $(LIBSRCDIR)/usb/usbd_enum.c
+    SRC += $(LIBSRCDIR)/usb/usbd_transc.c
 
-	ASRC +=  $(LIBSRCDIR)/startup_gd32f405_425_gas.S
-   	EXTRAINCDIRS  		+= $(STMSPDINCDIR)
-    EXTRAINCDIRS  		+= $(STMSPDINCDIR)/usb
-    EXTRAINCDIRS  		+= $(TMC_HAL_SRC)/tmc
 
-   	ifeq ($(LINK),BL)
-		LD_SCRIPT = $(STMLIBDIR)/gd32f425-tmcm.ld
-	else
-		LD_SCRIPT = $(STMLIBDIR)/gd32f425.ld
-	endif
-	LDFLAGS += -specs=nosys.specs
+    ASRC +=  $(LIBSRCDIR)/startup_gd32f405_425_gas.S
+    EXTRAINCDIRS        += $(STMSPDINCDIR)
+    EXTRAINCDIRS        += $(STMSPDINCDIR)/usb
+    EXTRAINCDIRS        += $(TMC_HAL_SRC)/tmc
+
+    ifeq ($(LINK),BL)
+        LD_SCRIPT = $(STMLIBDIR)/gd32f425-tmcm.ld
+    else
+        LD_SCRIPT = $(STMLIBDIR)/gd32f425.ld
+    endif
+    LDFLAGS += -specs=nosys.specs
 else
-	ifeq (,$(filter clean,$(MAKECMDGOALS)))
-		$(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall" or "LandungsbrueckeV3". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeV3 or DEVICE=LandungsbrueckeSmall to the commandline)
-	endif
+    ifeq (,$(filter clean,$(MAKECMDGOALS)))
+        $(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall" or "LandungsbrueckeV3". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeV3 or DEVICE=LandungsbrueckeSmall to the commandline)
+    endif
 endif
 
 # System and hardware abstraction layer
-SRC 			+= $(TMC_HAL_SRC)/tmc/SysTick.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/IOs.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/IOMap.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/HAL.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/SPI.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/USB.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/ADCs.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/LEDs.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/RS232.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/WLAN.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/Timer.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/UART.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/RXTX.c
+SRC             += $(TMC_HAL_SRC)/tmc/SysTick.c
+SRC             += $(TMC_HAL_SRC)/tmc/IOs.c
+SRC             += $(TMC_HAL_SRC)/tmc/IOMap.c
+SRC             += $(TMC_HAL_SRC)/tmc/HAL.c
+SRC             += $(TMC_HAL_SRC)/tmc/SPI.c
+SRC             += $(TMC_HAL_SRC)/tmc/USB.c
+SRC             += $(TMC_HAL_SRC)/tmc/ADCs.c
+SRC             += $(TMC_HAL_SRC)/tmc/LEDs.c
+SRC             += $(TMC_HAL_SRC)/tmc/RS232.c
+SRC             += $(TMC_HAL_SRC)/tmc/WLAN.c
+SRC             += $(TMC_HAL_SRC)/tmc/Timer.c
+SRC             += $(TMC_HAL_SRC)/tmc/UART.c
+SRC             += $(TMC_HAL_SRC)/tmc/RXTX.c
 
 
 CDEFS += -DID_CH1_DEFAULT=$(ID_CH1_DEFAULT) -DID_CH1_OVERRIDE=$(ID_CH1_OVERRIDE)
@@ -364,30 +364,30 @@ EXTRA_LIBS =
 LINKERSCRIPTPATH = .
 
 ### Toolchain ###
-#TCHAIN_PREFIX 			= arm-eabi-
-#TCHAIN_PREFIX 			= arm-elf-
-TCHAIN_PREFIX 			= arm-none-eabi-
+#TCHAIN_PREFIX            = arm-eabi-
+#TCHAIN_PREFIX            = arm-elf-
+TCHAIN_PREFIX             = arm-none-eabi-
 ifeq ($(OS),Windows_NT)
-	ifeq ($(shell echo $$COMSPEC),$$COMSPEC)
+    ifeq ($(shell echo $$COMSPEC),$$COMSPEC)
 #       We are on windows and make is using cmd.exe as shell
-		create_dir = mkdir $(subst /,\,$(1))
-		RM_DIR_CMD = rmdir /S /Q
-	else
+        create_dir = mkdir $(subst /,\,$(1))
+        RM_DIR_CMD = rmdir /S /Q
+    else
 #       We are on windows but make found a sh.exe from a Git Bash or Cygwin
-		create_dir = mkdir -p $(1)
-		RM_DIR_CMD = rm -rf
-	endif
+        create_dir = mkdir -p $(1)
+        RM_DIR_CMD = rm -rf
+    endif
 else
 #   Assueme we are on a linux machine
-	create_dir = mkdir -p $(1)
-	RM_DIR_CMD = rm -rf
+    create_dir = mkdir -p $(1)
+    RM_DIR_CMD = rm -rf
 endif
-USE_THUMB_MODE 			= YES
-#USE_THUMB_MODE 		= NO
-RUN_MODE				= ROM_RUN
-#RUN_MODE				= RAM_RUN
-VECTOR_TABLE_LOCATION	= VECT_TAB_ROM
-#VECTOR_TABLE_LOCATION	= VECT_TAB_RAM
+USE_THUMB_MODE          = YES
+#USE_THUMB_MODE         = NO
+RUN_MODE                = ROM_RUN
+#RUN_MODE               = RAM_RUN
+VECTOR_TABLE_LOCATION   = VECT_TAB_ROM
+#VECTOR_TABLE_LOCATION  = VECT_TAB_RAM
 
 # Optimization level, can be [0, 1, 2, 3, s].
 # 0 = turn off optimization. s = optimize for size.
@@ -398,7 +398,7 @@ OPT = s
 DEBUG = dwarf-2
 
 ifeq ($(LINK),BL)
-	CDEFS += -DBOOTLOADER
+    CDEFS += -DBOOTLOADER
 endif
 
 # Place project-specific -D and/or -U options for
