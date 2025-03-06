@@ -37,6 +37,15 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
+### Version 3.10.10: (Released)
+ * TMC9660: Fixed communication issues with LBV1.2 and LBV2.0.
+ * Finished API rework and released TMC4361A.
+ * LandungsbrueckeV3: Added support to return to bootloader via onboard button.
+ * TMCL: Added support for GET_INFO command.
+ * Bug fixes for TMC2240, TMC2130, TMC4671 and  TMC2262.
+ * Code cleanup.
+
+ 
 ### Version 3.10.9: (Released)
  * TMC9660: Fixed the ID detection issue.
  * Released API rework for TMC2660 and MAX22216.
