@@ -21,6 +21,18 @@
 #include "RAMDebug.h"
 #include "hal/Timer.h"
 
+// Ensure that any non-local release has corresponding
+// version control metadata available and doesn't have
+// any local outstanding changes.
+#if GETINFO_RELEASE_TYPE != GETINFO_FW_RELEASE_TYPE_LOCAL
+#if GIT_VERSION_INFO == 0xFFFFFFFF
+#error "Git info is required for nonlocal builds!"
+#endif
+#if GIT_DIRTY_FLAG != 0
+#error "Dirty builds are not allowed for nonlocal builds!"
+#endif
+#endif
+
 // these addresses are fixed
 #define SERIAL_MODULE_ADDRESS  1
 #define SERIAL_HOST_ADDRESS    2
