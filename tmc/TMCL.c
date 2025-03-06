@@ -8,6 +8,9 @@
 
 
 #include "TMCL.h"
+
+#include "GitInfo.h"
+
 #include "BoardAssignment.h"
 #include "hal/derivative.h"
 #include "IdDetection.h"
@@ -970,6 +973,17 @@ static void handleGetInfo(void)
 
     case 21: // RegAddrBitWidth
         ActualReply.Value.UInt32 = 12;
+        break;
+
+    case 30: // Git info
+        if (GIT_VERSION_INFO == 0xFFFFFFFF)
+        {
+            // Illegal GIT_VERSION_INFO value -> Git info is disabled
+            ActualReply.Status = REPLY_INVALID_TYPE;
+            break;
+        }
+
+        ActualReply.Value.Int32 = GIT_VERSION_INFO;
         break;
 
     case 200: // DeviceSpecificArea: Patch version

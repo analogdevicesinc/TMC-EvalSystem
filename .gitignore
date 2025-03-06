@@ -1,6 +1,7 @@
 /_build*/
 deploy_*.sh
 *~
+GitInfo.h
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,c,linux,windows,macos,eclipse
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudio,c,linux,windows,macos,eclipse
