@@ -1,6 +1,6 @@
 /*******************************************************************************
-* Copyright © 2025 Analog Devices Inc. All Rights Reserved. This software is
-* proprietary & confidential to Analog Devices, Inc. and its licensors.
+* Copyright © 2025 Analog Devices Inc. All Rights Reserved.
+* This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 /*
  * This is an empty placeholder file. It is copied by make if git version
