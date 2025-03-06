@@ -12,6 +12,7 @@ TARGET          = $(DEVICE)_v$(VERSION)_$(LINK)
 
 ### Build output configuration #################################################
 DEP_DIR     := $(DEVICE_DIR)/dep
+MAKE_DIR    := $(DEVICE_DIR)/make
 OBJ_DIR     := $(DEVICE_DIR)/obj
 
 # Force IDs (IDs found in tmc/BoardAssignment.h)
@@ -282,7 +283,7 @@ else ifeq ($(DEVICE),LandungsbrueckeV3)
     else
         LD_SCRIPT = $(STMLIBDIR)/gd32f425.ld
     endif
-    LDFLAGS += -specs=nosys.specs
+    _LDFLAGS += -specs=nosys.specs
 else
     ifeq (,$(filter clean,$(MAKECMDGOALS)))
         $(error You need to set the DEVICE parameter to "Landungsbruecke", "LandungsbrueckeSmall" or "LandungsbrueckeV3". When calling make directly, do this by adding DEVICE=Landungsbruecke, DEVICE=LandungsbrueckeV3 or DEVICE=LandungsbrueckeSmall to the commandline)
@@ -441,26 +442,26 @@ endif
 #    -adhlns...: create assembler listing
 #
 # Flags for C and C++ (arm-elf-gcc/arm-elf-g++)
-CFLAGS =  -g$(DEBUG)
-CFLAGS += -O$(OPT)
-CFLAGS += -mcpu=$(MCU) $(THUMB_IW)
-CFLAGS += $(CDEFS)
-CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
-CFLAGS += -DTMC_API_EXTERNAL_CRC_TABLE=1
+_CFLAGS =  -g$(DEBUG)
+_CFLAGS += -O$(OPT)
+_CFLAGS += -mcpu=$(MCU) $(THUMB_IW)
+_CFLAGS += $(CDEFS)
+_CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
+_CFLAGS += -DTMC_API_EXTERNAL_CRC_TABLE=1
 # when using ".ramfunc"s without longcall:
-##CFLAGS += -mlong-calls
+##_CFLAGS += -mlong-calls
 # -mapcs-frame is important if gcc's interrupt attributes are used
 # (at least from my eabi tests), not needed if assembler-wrapper is used
-##CFLAGS += -mapcs-frame
-##CFLAGS += -fomit-frame-pointer
-#CFLAGS += -ffunction-sections -fdata-sections
-CFLAGS += -Wall -Wextra
-CFLAGS += -Wimplicit -Wcast-align -Wpointer-arith
-CFLAGS += -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align
-#CFLAGS += -pedantic
-CFLAGS += -Wa,-adhlns=$(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .lst, $(basename $<))))
+##_CFLAGS += -mapcs-frame
+##_CFLAGS += -fomit-frame-pointer
+#_CFLAGS += -ffunction-sections -fdata-sections
+_CFLAGS += -Wall -Wextra
+_CFLAGS += -Wimplicit -Wcast-align -Wpointer-arith
+_CFLAGS += -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align
+#_CFLAGS += -pedantic
+_CFLAGS += -Wa,-adhlns=$(addprefix $(OBJ_DIR)/, $(notdir $(addsuffix .lst, $(basename $<))))
 # Compiler flags to generate dependency files:
-CFLAGS += -MMD -MP -MF $(DEP_DIR)/$(@F).d
+_CFLAGS += -MMD -MP -MF $(DEP_DIR)/$(@F).d
 
 # flags only for C
 CONLYFLAGS += -Wnested-externs
@@ -489,17 +490,22 @@ MATH_LIB = -lm
 #  -Wl,...:     tell GCC to pass this to linker.
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
-LDFLAGS += -T $(LD_SCRIPT)
-LDFLAGS += -nostdlib
-LDFLAGS += -Wl,--gc-sections,-Map=$(DEVICE_DIR)/$(TARGET).map,-cref
-LDFLAGS += -u,Reset_Handler
-LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
-LDFLAGS += -lc
-LDFLAGS += $(patsubst %,-l%,$(EXTRA_LIBS))
-LDFLAGS += $(MATH_LIB)
-LDFLAGS += $(CPLUSPLUS_LIB)
-LDFLAGS += -lc -lgcc
-LDFLAGS += $(INCLUDE_DIRS)
+_LDFLAGS += -T $(LD_SCRIPT)
+_LDFLAGS += -nostdlib
+_LDFLAGS += -Wl,--gc-sections,-Map=$(DEVICE_DIR)/$(TARGET).map,-cref
+_LDFLAGS += -u,Reset_Handler
+_LDFLAGS += $(patsubst %,-L%,$(EXTRA_LIBDIRS))
+_LDFLAGS += -lc
+_LDFLAGS += $(patsubst %,-l%,$(EXTRA_LIBS))
+_LDFLAGS += $(MATH_LIB)
+_LDFLAGS += $(CPLUSPLUS_LIB)
+_LDFLAGS += -lc -lgcc
+_LDFLAGS += $(INCLUDE_DIRS)
+
+# Append any flags passed in via commandline last.
+# This ensures that any option set here can be overwritten
+ALL_CFLAGS = $(_CFLAGS) $(CFLAGS)
+ALL_LDFLAGS = $(_LDFLAGS) $(LDFLAGS)
 
 # Define programs and commands.
 CC      = $(TCHAIN_PREFIX)gcc
@@ -610,12 +616,12 @@ endif
 
 # Link: create ELF output file from object files.
 .SECONDARY : $(TARGET).elf $(ALLOBJ)
-%.elf:  $(ALLOBJ) $(LD_SCRIPT)
+%.elf:  $(ALLOBJ) $(LD_SCRIPT) $(MAKE_DIR)/c_flags $(MAKE_DIR)/ld_flags
 	@echo
 	@echo $(MSG_LINKING) $@
 # use $(CC) for C-only projects or $(CPP) for C++-projects:
-	$(CC) $(THUMB) $(CFLAGS) $(ALLOBJ) --output $@ $(LDFLAGS)
-# $(CPP) $(THUMB) $(CFLAGS) $(ALLOBJ) --output $@ $(LDFLAGS)
+	$(CC) $(THUMB) $(ALL_CFLAGS) $(ALLOBJ) --output $@ $(ALL_LDFLAGS)
+# $(CPP) $(THUMB) $(ALL_CFLAGS) $(ALLOBJ) --output $@ $(ALL_LDFLAGS)
 
 clean_list :
 	@echo $(MSG_CLEANING)
@@ -640,55 +646,69 @@ $(foreach src, $(ASRCARM), $(eval $(call ASSEMBLE_ARM_TEMPLATE, $(src))))
 
 # Compile: create object files from C source files.
 define COMPILE_C_TEMPLATE
-$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile $(MAKE_DIR)/c_flags
 	@echo $(MSG_COMPILING) $$< "->" $$@
-	$(CC) -c $(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
+	$(CC) -c $(THUMB) $$(ALL_CFLAGS) $$(CONLYFLAGS) $$< -o $$@
 endef
 $(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src))))
 
 # Compile: create object files from C source files. ARM-only
 define COMPILE_C_ARM_TEMPLATE
-$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile $(MAKE_DIR)/c_flags
 	@echo $(MSG_COMPILING_ARM) $$< "->" $$@
-	$(CC) -c $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
+	$(CC) -c $$(ALL_CFLAGS) $$(CONLYFLAGS) $$< -o $$@
 endef
 $(foreach src, $(SRCARM), $(eval $(call COMPILE_C_ARM_TEMPLATE, $(src))))
 
 # Compile: create object files from C++ source files.
 define COMPILE_CPP_TEMPLATE
-$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile $(MAKE_DIR)/c_flags
 	@echo $(MSG_COMPILINGCPP) $$< "->" $$@
-	$(CC) -c $(THUMB) $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@
+	$(CC) -c $(THUMB) $$(ALL_CFLAGS) $$(CPPFLAGS) $$< -o $$@
 endef
 $(foreach src, $(CPPSRC), $(eval $(call COMPILE_CPP_TEMPLATE, $(src))))
 
 # Compile: create object files from C++ source files. ARM-only
 define COMPILE_CPP_ARM_TEMPLATE
-$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile
+$(OBJ_DIR)/$(notdir $(basename $(1))).o : $(1) Makefile $(MAKE_DIR)/c_flags
 	@echo $(MSG_COMPILINGCPP_ARM) $$< "->" $$@
-	$(CC) -c $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@
+	$(CC) -c $$(ALL_CFLAGS) $$(CPPFLAGS) $$< -o $$@
 endef
 $(foreach src, $(CPPSRCARM), $(eval $(call COMPILE_CPP_ARM_TEMPLATE, $(src))))
 
 # Compile: create assembler files from C source files. ARM/Thumb
-$(SRC:.c=.s) : %.s : %.c
+$(SRC:.c=.s) : %.s : %.c $(MAKE_DIR)/c_flags
 	@echo $(MSG_ASMFROMC) $< to $@
-	$(CC) $(THUMB) -S $(CFLAGS) $(CONLYFLAGS) $< -o $@
+	$(CC) $(THUMB) -S $(ALL_CFLAGS) $(CONLYFLAGS) $< -o $@
 
 # Compile: create assembler files from C source files. ARM only
-$(SRCARM:.c=.s) : %.s : %.c
+$(SRCARM:.c=.s) : %.s : %.c $(MAKE_DIR)/c_flags
 	@echo $(MSG_ASMFROMC_ARM) $< to $@
-	$(CC) -S $(CFLAGS) $(CONLYFLAGS) $< -o $@
+	$(CC) -S $(ALL_CFLAGS) $(CONLYFLAGS) $< -o $@
 
 # Create output directories
 # Store the result to avoid printing warning messages
 tmp := $(shell $(call create_dir,$(BUILD_DIR)) 2>&1)
 tmp := $(shell $(call create_dir,$(DEVICE_DIR)) 2>&1)
+tmp := $(shell $(call create_dir,$(MAKE_DIR)) 2>&1)
 tmp := $(shell $(call create_dir,$(OBJ_DIR)) 2>&1)
 tmp := $(shell $(call create_dir,$(DEP_DIR)) 2>&1)
 
 # Include the dependency files.
 -include $(wildcard $(DEP_DIR)/*)
+
+# Store the C flags so that a change will auto-rebuild.
+# This takes care of rebuilding when we change CFLAGS passed in from the command line
+$(MAKE_DIR)/c_flags: force
+	@echo '$(ALL_CFLAGS)' | cmp -s - $@ && echo "No changes to compiler flags." || (echo "Compiler flags changed." ; echo '$(ALL_CFLAGS)' > $@)
+
+# Store the LD flags so that a change will auto-rebuild.
+# This takes care of rebuilding when we change LDFLAGS passed in from the command line
+$(MAKE_DIR)/ld_flags: force
+	@echo '$(ALL_LDFLAGS)' | cmp -s - $@ && echo "No changes to linker flags." || (echo "Linker flags changed." ; echo '$(ALL_LDFLAGS)' > $@)
+
+# Empty target to force rebuilding for targets with this as dependency
+force:
 
 # Listing of phony targets.
 .PHONY : all begin end size gccversion \
