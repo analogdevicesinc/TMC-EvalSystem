@@ -9,6 +9,7 @@
 
 #include "TMCL.h"
 
+#include "ProjectConfig.h"
 #include "GitInfo.h"
 
 #include "BoardAssignment.h"
@@ -964,7 +965,7 @@ static void handleGetInfo(void)
         break;
 
     case 3: // FWReleaseType
-        ActualReply.Value.Int32 = GETINFO_FW_RELEASE_TYPE_PUBLIC; // Public
+        ActualReply.Value.Int32 = GETINFO_RELEASE_TYPE;
         break;
 
     case 20: // APIndexBitWidth

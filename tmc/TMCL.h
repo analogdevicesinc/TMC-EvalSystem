@@ -117,6 +117,7 @@
 #define GETINFO_FW_RELEASE_TYPE_PUBLIC   0
 #define GETINFO_FW_RELEASE_TYPE_INTERNAL 1
 #define GETINFO_FW_RELEASE_TYPE_CUSTOM   2
+#define GETINFO_FW_RELEASE_TYPE_LOCAL    3
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
     struct BootloaderConfig {
