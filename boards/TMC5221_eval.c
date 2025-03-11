@@ -1132,6 +1132,9 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         HAL.IOs->config->setLow(Pins.REFRN_LB);
         HAL.IOs->config->setHigh(Pins.REFRN_LB);
         break;
+    case 13:
+        qscMode = *value;
+        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
