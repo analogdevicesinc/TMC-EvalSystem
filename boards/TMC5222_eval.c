@@ -1,11 +1,11 @@
 /*******************************************************************************
-* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2025 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
 
+#include "../TMC-API/tmc/ic/TMC5222/TMC5222.h"
 #include "Board.h"
-#include "tmc/ic/TMC5221A/TMC5221A.h"
 
 
 #define ERRORS_VM        (1<<0)
@@ -22,8 +22,8 @@ typedef struct
     int32_t oldX;
     int32_t velocity;
     uint32_t oldTick;
-} TMC5221ATypeDef;
-static TMC5221ATypeDef TMC5221A;
+} TMC5222TypeDef;
+static TMC5222TypeDef TMC5222;
 
 typedef struct
 {
@@ -38,10 +38,10 @@ typedef struct
 } PinsTypeDef;
 static PinsTypeDef Pins;
 
-static TMC5221ABusType activeBus = IC_BUS_IIC;
-static IICTypeDef *TMC5221A_IIC;
+static TMC5222BusType activeBus = IC_BUS_IIC;
+static IICTypeDef *TMC5222_IIC;
 static bool vMaxModified = false;
-static uint32_t vmax_position[TMC5221A_MOTORS];
+static uint32_t vmax_position[TMC5222_MOTORS];
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
 static uint8_t deviceAddress = 0xC0;
@@ -57,7 +57,7 @@ static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value);
-static void init_comm(TMC5221ABusType mode);
+static void init_comm(TMC5222BusType mode);
 static void periodicJob(uint32_t tick);
 static void checkErrors(uint32_t tick);
 static void deInit(void);
@@ -66,7 +66,7 @@ static uint8_t reset();
 static void enableDriver(DriverState state);
 
 
-bool tmc5221A_readWriteIIC(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+bool tmc5222_readWriteIIC(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
     UNUSED(icID);
    if(IICMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))//Device address = 0b1100000W/R
@@ -75,14 +75,14 @@ bool tmc5221A_readWriteIIC(uint16_t icID, uint8_t *data, size_t writeLength, siz
     return false;
 }
 
-TMC5221ABusType tmc5221A_getBusType(uint16_t icID)
+TMC5222BusType tmc5222_getBusType(uint16_t icID)
 {
     UNUSED(icID);
 
     return activeBus;
 }
 
-uint8_t tmc5221A_getDeviceAddress(uint16_t icID)
+uint8_t tmc5222_getDeviceAddress(uint16_t icID)
 {
     UNUSED(icID);
 
@@ -91,11 +91,11 @@ uint8_t tmc5221A_getDeviceAddress(uint16_t icID)
 
 static uint32_t rotate(uint8_t motor, int32_t velocity)
 {
-    if(motor >= TMC5221A_MOTORS)
+    if(motor >= TMC5222_MOTORS)
         return TMC_ERROR_MOTOR;
 
-    tmc5221A_writeRegister(DEFAULT_ICID, TMC5221A_RGR_VMAX, abs(velocity));
-    tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_RAMPMODE_FIELD,  (velocity >= 0) ? TMC5221A_MODE_VELPOS : TMC5221A_MODE_VELNEG);
+    tmc5222_writeRegister(DEFAULT_ICID, TMC5222_RGR_VMAX, abs(velocity));
+    tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_RAMPMODE_FIELD,  (velocity >= 0) ? TMC5222_MODE_VELPOS : TMC5222_MODE_VELNEG);
 
     return TMC_ERROR_NONE;
 }
@@ -117,12 +117,12 @@ static uint32_t stop(uint8_t motor)
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
-    if(motor >= TMC5221A_MOTORS)
+    if(motor >= TMC5222_MOTORS)
         return TMC_ERROR_MOTOR;
 
-    tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_RAMPMODE_FIELD, TMC5221A_MODE_POSITION);
-    tmc5221A_writeRegister(DEFAULT_ICID, TMC5221A_RGR_VMAX, vmax_position[motor]);
-    tmc5221A_writeRegister(DEFAULT_ICID, TMC5221A_RGR_XTARGET, position);
+    tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_RAMPMODE_FIELD, TMC5222_MODE_POSITION);
+    tmc5222_writeRegister(DEFAULT_ICID, TMC5222_RGR_VMAX, vmax_position[motor]);
+    tmc5222_writeRegister(DEFAULT_ICID, TMC5222_RGR_XTARGET, position);
 
     return TMC_ERROR_NONE;
 }
@@ -130,7 +130,7 @@ static uint32_t moveTo(uint8_t motor, int32_t position)
 static uint32_t moveBy(uint8_t motor, int32_t *ticks)
 {
     // determine actual position and add numbers of ticks to move
-    *ticks += tmc5221A_readRegister(DEFAULT_ICID, TMC5221A_RGR_XACTUAL);
+    *ticks += tmc5222_readRegister(DEFAULT_ICID, TMC5222_RGR_XACTUAL);
 
     return moveTo(motor, *ticks);
 }
@@ -140,7 +140,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     int32_t buffer;
     uint32_t errors = TMC_ERROR_NONE;
 
-    if(motor >= TMC5221A_MOTORS)
+    if(motor >= TMC5222_MOTORS)
         return TMC_ERROR_MOTOR;
 
     switch(type)
@@ -148,38 +148,38 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 0:
         // Target position
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_XTARGET, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_XTARGET, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_XTARGET, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_XTARGET, *value);
         }
         break;
     case 1:
         // Actual position
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID,TMC5221A_RGR_XACTUAL, value);
+            readRegister(DEFAULT_ICID,TMC5222_RGR_XACTUAL, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID,TMC5221A_RGR_XACTUAL, *value);
+            writeRegister(DEFAULT_ICID,TMC5222_RGR_XACTUAL, *value);
         }
         break;
     case 2:
         // Target speed
         if(readWrite == READ) {
-            if (tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_RAMPMODE_FIELD ) == 2){
-                readRegister(DEFAULT_ICID,TMC5221A_RGR_VMAX, value);
+            if (tmc5222_fieldRead(DEFAULT_ICID, TMC5222_RAMPMODE_FIELD ) == 2){
+                readRegister(DEFAULT_ICID,TMC5222_RGR_VMAX, value);
                 *value = -(*value);
             }
             else
-                readRegister(DEFAULT_ICID,TMC5221A_RGR_VMAX, value);
+                readRegister(DEFAULT_ICID,TMC5222_RGR_VMAX, value);
         }
         else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID,TMC5221A_RGR_VMAX, abs(*value));
+            writeRegister(DEFAULT_ICID,TMC5222_RGR_VMAX, abs(*value));
             vMaxModified = true;
         }
         break;
     case 3:
         // Actual speed
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID,TMC5221A_RGR_VACTUAL, value);
+            readRegister(DEFAULT_ICID,TMC5222_RGR_VACTUAL, value);
             *value = CAST_Sn_TO_S32(*value, 24);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -192,38 +192,38 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         else if(readWrite == WRITE) {
             vmax_position[motor] = abs(*value);
-            if(tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_RAMPMODE_FIELD) == TMC5221A_MODE_POSITION)
-                writeRegister(DEFAULT_ICID,TMC5221A_RGR_VMAX, abs(*value));
+            if(tmc5222_fieldRead(DEFAULT_ICID, TMC5222_RAMPMODE_FIELD) == TMC5222_MODE_POSITION)
+                writeRegister(DEFAULT_ICID,TMC5222_RGR_VMAX, abs(*value));
         }
         break;
     case 5:
         // Maximum acceleration
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID,TMC5221A_RGR_AMAX, value);
+            readRegister(DEFAULT_ICID,TMC5222_RGR_AMAX, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID,TMC5221A_RGR_AMAX, *value);
+            writeRegister(DEFAULT_ICID,TMC5222_RGR_AMAX, *value);
         }
         break;
     case 6:
         // Maximum current
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_IRUN_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_IRUN_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_IRUN_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_IRUN_FIELD, *value);
         }
         break;
     case 7:
         // Standby current
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_IHOLD_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_IHOLD_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_IHOLD_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_IHOLD_FIELD, *value);
         }
         break;
     case 8:
         // Position reached flag
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_POSITION_REACHED_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_POSITION_REACHED_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -231,7 +231,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 10:
         // Right endstop
         if(readWrite == READ) {
-            *value = !tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_STATUS_STOP_R_FIELD);
+            *value = !tmc5222_fieldRead(DEFAULT_ICID, TMC5222_STATUS_STOP_R_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -239,7 +239,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 11:
         // Left endstop
         if(readWrite == READ) {
-            *value = !tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_STATUS_STOP_L_FIELD);
+            *value = !tmc5222_fieldRead(DEFAULT_ICID, TMC5222_STATUS_STOP_L_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -247,153 +247,153 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 12:
         // Automatic right stop
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_STOP_R_ENABLE_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_STOP_R_ENABLE_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_STOP_R_ENABLE_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_STOP_R_ENABLE_FIELD, *value);
         }
         break;
     case 13:
         // Automatic left stop
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_POL_STOP_L_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_POL_STOP_L_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_POL_STOP_L_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_POL_STOP_L_FIELD, *value);
         }
         break;
     case 14:
         // SW_MODE Register
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID,TMC5221A_RGDR_SW_MODE, value);
+            readRegister(DEFAULT_ICID,TMC5222_RGDR_SW_MODE, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID,TMC5221A_RGDR_SW_MODE, *value);
+            writeRegister(DEFAULT_ICID,TMC5222_RGDR_SW_MODE, *value);
         }
         break;
     case 15:
         // Maximum Deceleration
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID,TMC5221A_RGR_DMAX, value);
+            readRegister(DEFAULT_ICID,TMC5222_RGR_DMAX, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID,TMC5221A_RGR_DMAX, *value);
+            writeRegister(DEFAULT_ICID,TMC5222_RGR_DMAX, *value);
         }
         break;
     case 16:
         // Velocity VSTART
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_VSTART, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_VSTART, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_VSTART, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_VSTART, *value);
         }
         break;
     case 17:
         // Acceleration A1
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_A1, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_A1, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_A1, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_A1, *value);
         }
         break;
     case 18:
         // Velocity V1
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_V1, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_V1, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_V1, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_V1, *value);
         }
         break;
     case 19:
         // Deceleration D1
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_D1, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_D1, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_D1, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_D1, *value);
         }
         break;
     case 20:
         // Velocity VSTOP
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_VSTOP, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_VSTOP, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_VSTOP, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_VSTOP, *value);
         }
         break;
     case 21:
         // Waiting time after ramp down
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_TZEROWAIT, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_TZEROWAIT, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_TZEROWAIT, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_TZEROWAIT, *value);
         }
         break;
     case 22:
         // Velocity V2
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_V2, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_V2, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_V2, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_V2, *value);
         }
         break;
     case 23:
         // Deceleration D2
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_D2, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_D2, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_D2, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_D2, *value);
         }
         break;
     case 24:
         // Acceleration A2
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_A2, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_A2, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_A2, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_A2, *value);
         }
         break;
     case 25:
         // TVMAX
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_TVMAX, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_TVMAX, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGR_TVMAX, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGR_TVMAX, *value);
         }
         break;
     case 26:
         // Speed threshold for high speed mode
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGR_TVMAX, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGR_TVMAX, value);
             *value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value : 1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value:1));
-            writeRegister(DEFAULT_ICID, TMC5221A_VDR_THIGH, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_VDR_THIGH, *value);
         }
         break;
     case 27:
         // Minimum speed for switching to dcStep
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_RGDR_VDCMIN, value);
+            readRegister(DEFAULT_ICID, TMC5222_RGDR_VDCMIN, value);
         } else if(readWrite == WRITE) {
-            writeRegister(DEFAULT_ICID, TMC5221A_RGDR_VDCMIN, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_RGDR_VDCMIN, *value);
         }
         break;
     case 28:
         // High speed chopper mode
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_VHIGHCHM_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_VHIGHCHM_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_VHIGHCHM_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_VHIGHCHM_FIELD, *value);
         }
         break;
     case 29:
         // High speed fullstep mode
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_VHIGHFS_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_VHIGHFS_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_VHIGHFS_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_VHIGHFS_FIELD, *value);
         }
         break;
     case 30:
         // Measured Speed
         if(readWrite == READ) {
-            *value = (int32_t)TMC5221A.velocity;
+            *value = (int32_t)TMC5222.velocity;
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -403,25 +403,25 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 35:
         // Global current scaler A
         if(readWrite == READ) {
-                *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_GLOBALSCALER_A_FIELD);
+                *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_GLOBALSCALER_A_FIELD);
         } else if(readWrite == WRITE) {
             if(*value > 31)
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_GLOBALSCALER_A_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_GLOBALSCALER_A_FIELD, *value);
             else
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_GLOBALSCALER_A_FIELD, 0);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_GLOBALSCALER_A_FIELD, 0);
         }
         break;
     case 36:
         // Global current scaler B
         if(readWrite == READ) {
-                *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_GLOBALSCALER_B_FIELD);
+                *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_GLOBALSCALER_B_FIELD);
         }
         else if(readWrite == WRITE) {
 
             if(*value > 31)
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_GLOBALSCALER_B_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_GLOBALSCALER_B_FIELD, *value);
             else
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_GLOBALSCALER_B_FIELD, 0);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_GLOBALSCALER_B_FIELD, 0);
 
 
         }
@@ -429,7 +429,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 140:
         // Microstep Resolution
         if(readWrite == READ) {
-            *value = 0x100 >> tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_MRES_FIELD);
+            *value = 0x100 >> tmc5222_fieldRead(DEFAULT_ICID, TMC5222_MRES_FIELD);
         } else if(readWrite == WRITE) {
             switch(*value)
             {
@@ -447,7 +447,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
             if(*value != -1)
             {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_MRES_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_MRES_FIELD, *value);
             }
             else
             {
@@ -458,166 +458,166 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 162:
         // Chopper blank time
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_TBL_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_TBL_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_TBL_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_TBL_FIELD, *value);
         }
         break;
     case 163:
         // Constant TOff Mode
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_CHM_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_CHM_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_CHM_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_CHM_FIELD, *value);
         }
         break;
     case 164:
         // Disable fast decay comparator
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_DISFDCC_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_DISFDCC_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_DISFDCC_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_DISFDCC_FIELD, *value);
         }
         break;
     case 165:
         // Chopper hysteresis end / fast decay time
-        readRegister(DEFAULT_ICID, TMC5221A_MDR_CHOPCONF, &buffer);
+        readRegister(DEFAULT_ICID, TMC5222_MDR_CHOPCONF, &buffer);
         if(readWrite == READ) {
-            if(buffer & (1 << TMC5221A_CHM_SHIFT))
+            if(buffer & (1 << TMC5222_CHM_SHIFT))
             {
-                *value = (buffer >> TMC5221A_HEND_OFFSET_SHIFT) & TMC5221A_HEND_OFFSET_MASK;
+                *value = (buffer >> TMC5222_HEND_OFFSET_SHIFT) & TMC5222_HEND_OFFSET_MASK;
             }
             else
             {
-                *value = (buffer >> TMC5221A_HSTRT_TFD210_SHIFT) & TMC5221A_HSTRT_TFD210_MASK;
+                *value = (buffer >> TMC5222_HSTRT_TFD210_SHIFT) & TMC5222_HSTRT_TFD210_MASK;
 
-                if(buffer & TMC5221A_HSTRT_TFD210_SHIFT)
+                if(buffer & TMC5222_HSTRT_TFD210_SHIFT)
                     *value |= 1<<3; // MSB wird zu value dazugefügt
             }
         } else if(readWrite == WRITE) {
-            readRegister(DEFAULT_ICID, TMC5221A_MDR_CHOPCONF, &buffer);
+            readRegister(DEFAULT_ICID, TMC5222_MDR_CHOPCONF, &buffer);
             if(buffer & (1<<14))
             {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_HEND_OFFSET_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_HEND_OFFSET_FIELD, *value);
             }
             else
             {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_HSTRT_TFD210_FIELD, (*value & (1<<3))); // MSB wird zu value dazugefügt
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_HSTRT_TFD210_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_HSTRT_TFD210_FIELD, (*value & (1<<3))); // MSB wird zu value dazugefügt
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_HSTRT_TFD210_FIELD, *value);
             }
         }
         break;
     case 166:
         // Chopper hysteresis start / sine wave offset
-        readRegister(DEFAULT_ICID, TMC5221A_MDR_CHOPCONF, &buffer);
+        readRegister(DEFAULT_ICID, TMC5222_MDR_CHOPCONF, &buffer);
         if(readWrite == READ) {
-            if(buffer & (1 << TMC5221A_CHM_SHIFT))
+            if(buffer & (1 << TMC5222_CHM_SHIFT))
             {
-                *value = (buffer >> TMC5221A_HSTRT_TFD210_SHIFT) & TMC5221A_HSTRT_TFD210_MASK;
+                *value = (buffer >> TMC5222_HSTRT_TFD210_SHIFT) & TMC5222_HSTRT_TFD210_MASK;
             }
             else
             {
-                *value = (buffer >> TMC5221A_HEND_OFFSET_SHIFT) & TMC5221A_HEND_OFFSET_MASK;
-                if(buffer & (1 << TMC5221A_FD3_SHIFT))
+                *value = (buffer >> TMC5222_HEND_OFFSET_SHIFT) & TMC5222_HEND_OFFSET_MASK;
+                if(buffer & (1 << TMC5222_FD3_SHIFT))
                     *value |= 1<<3; // MSB wird zu value dazugefügt
             }
         } else if(readWrite == WRITE) {
-            if(buffer & (1 << TMC5221A_CHM_SHIFT))
+            if(buffer & (1 << TMC5222_CHM_SHIFT))
             {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_HSTRT_TFD210_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_HSTRT_TFD210_FIELD, *value);
             }
             else
             {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_HEND_OFFSET_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_HEND_OFFSET_FIELD, *value);
             }
         }
         break;
     case 167:
         // Chopper off time
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_TOFF_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_TOFF_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_TOFF_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_TOFF_FIELD, *value);
         }
         break;
     case 168:
         // smartEnergy current minimum (SEIMIN)
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SEIMIN_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SEIMIN_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SEIMIN_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SEIMIN_FIELD, *value);
         }
         break;
     case 169:
         // smartEnergy current down step
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SEDN_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SEDN_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SEDN_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SEDN_FIELD, *value);
         }
         break;
     case 170:
         // smartEnergy hysteresis
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SEMAX_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SEMAX_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SEMAX_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SEMAX_FIELD, *value);
         }
         break;
     case 171:
         // smartEnergy current up step
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SEUP_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SEUP_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SEUP_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SEUP_FIELD, *value);
         }
         break;
     case 172:
         // smartEnergy hysteresis start
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SEMIN_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SEMIN_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SEMIN_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SEMIN_FIELD, *value);
         }
         break;
     case 173:
         // stallGuard4 filter enable
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SG4_FILT_EN_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SG4_FILT_EN_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SG4_FILT_EN_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SG4_FILT_EN_FIELD, *value);
         }
         break;
     case 174:
         // stallGuard4 threshold
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SG4_THRS_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SG4_THRS_FIELD);
             *value = CAST_Sn_TO_S32(*value, 7);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SG4_THRS_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SG4_THRS_FIELD, *value);
         }
         break;
     case 175:
         // stallGuard2 filter enable
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SFILT_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SFILT_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SFILT_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SFILT_FIELD, *value);
         }
         break;
     case 176:
         // stallGuard2 threshold
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SGT_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SGT_FIELD);
             *value = CAST_Sn_TO_S32(*value, 7);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SGT_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SGT_FIELD, *value);
         }
         break;
     case 180:
         // smartEnergy actual current
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_CS_ACTUAL_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_CS_ACTUAL_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -626,9 +626,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // smartEnergy stall velocity
         //this function sort of doubles with 182 but is necessary to allow cross chip compliance
         if(readWrite == READ) {
-            if(tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SG_STOP_FIELD))
+            if(tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SG_STOP_FIELD))
             {
-                readRegister(DEFAULT_ICID, TMC5221A_VDR_TCOOLTHRS, &buffer);
+                readRegister(DEFAULT_ICID, TMC5222_VDR_TCOOLTHRS, &buffer);
                 *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
             }
             else
@@ -637,71 +637,71 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             }
         } else if(readWrite == WRITE) {
 
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_SG_STOP_FIELD, (*value)? 1:0);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_SG_STOP_FIELD, (*value)? 1:0);
             *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-            writeRegister(DEFAULT_ICID, TMC5221A_VDR_TCOOLTHRS, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_VDR_TCOOLTHRS, *value);
         }
         break;
     case 182:
         // smartEnergy threshold speed
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_VDR_TCOOLTHRS, &buffer);
+            readRegister(DEFAULT_ICID, TMC5222_VDR_TCOOLTHRS, &buffer);
             *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-            writeRegister(DEFAULT_ICID, TMC5221A_VDR_TCOOLTHRS, *value);
+            writeRegister(DEFAULT_ICID, TMC5222_VDR_TCOOLTHRS, *value);
         }
         break;
     case 185:
         // Chopper synchronization
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_MDR_CHOPCONF, value);
+            readRegister(DEFAULT_ICID, TMC5222_MDR_CHOPCONF, value);
             *value = (*value >> 20) & 0x0F;
         } else if(readWrite == WRITE) {
-            readRegister(DEFAULT_ICID, TMC5221A_MDR_CHOPCONF, &buffer);
+            readRegister(DEFAULT_ICID, TMC5222_MDR_CHOPCONF, &buffer);
             buffer &= ~(0x0F<<20);
             buffer |= (*value & 0x0F) << 20;
-            writeRegister(DEFAULT_ICID, TMC5221A_MDR_CHOPCONF, buffer);
+            writeRegister(DEFAULT_ICID, TMC5222_MDR_CHOPCONF, buffer);
         }
         break;
     case 186:
         // PWM threshold speed
         if(readWrite == READ) {
-            readRegister(DEFAULT_ICID, TMC5221A_VDR_TPWMTHRS, &buffer);
+            readRegister(DEFAULT_ICID, TMC5222_VDR_TPWMTHRS, &buffer);
             *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
-             writeRegister(DEFAULT_ICID, TMC5221A_VDR_TPWMTHRS, *value);
+             writeRegister(DEFAULT_ICID, TMC5222_VDR_TPWMTHRS, *value);
         }
         break;
     case 187:
         // PWM gradient
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_PWM_GRAD_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_PWM_GRAD_FIELD);
         } else if(readWrite == WRITE) {
             // Set gradient
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_PWM_GRAD_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_PWM_GRAD_FIELD, *value);
             // Enable/disable stealthChop accordingly
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_EN_PWM_MODE_FIELD, (*value) ? 1 : 0);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_EN_PWM_MODE_FIELD, (*value) ? 1 : 0);
 
         }
         break;
     case 188:
         // PWM amplitude
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_PWM_OFS_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_PWM_OFS_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_PWM_OFS_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_PWM_OFS_FIELD, *value);
         }
         break;
     case 191:
         // PWM frequency
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_PWM_FREQ_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_PWM_FREQ_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 4)
             {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_PWM_FREQ_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_PWM_FREQ_FIELD, *value);
             }
             else
             {
@@ -712,11 +712,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 192:
         // PWM autoscale
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_PWM_AUTOSCALE_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_PWM_AUTOSCALE_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 2)
             {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_PWM_AUTOSCALE_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_PWM_AUTOSCALE_FIELD, *value);
             }
             else
             {
@@ -727,7 +727,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 193:
         // PWM scale sum
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_PWM_SCALE_SUM_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_PWM_SCALE_SUM_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -735,7 +735,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 194:
         // MSCNT
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_MSCNT_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_MSCNT_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -743,10 +743,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 195:
         // MEAS_SD_EN
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_PWM_MEAS_SD_ENABLE_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_PWM_MEAS_SD_ENABLE_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 2)
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_PWM_MEAS_SD_ENABLE_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_PWM_MEAS_SD_ENABLE_FIELD, *value);
             else
                 errors |= TMC_ERROR_TYPE;
         }
@@ -754,10 +754,10 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 196:
         // DIS_REG_STST
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_PWM_DIS_REG_STST_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_PWM_DIS_REG_STST_FIELD);
         } else if(readWrite == WRITE) {
             if(*value >= 0 && *value < 2)
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_PWM_DIS_REG_STST_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_PWM_DIS_REG_STST_FIELD, *value);
             else
                 errors |= TMC_ERROR_TYPE;
         }
@@ -765,15 +765,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 204:
         // Freewheeling mode
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_FREEWHEEL_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_FREEWHEEL_FIELD);
         } else if(readWrite == WRITE) {
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_FREEWHEEL_FIELD, *value);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_FREEWHEEL_FIELD, *value);
         }
         break;
     case 206:
         // Load value
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SG_RESULT_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SG_RESULT_FIELD);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
         }
@@ -781,7 +781,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 213:
             // ADCTemperatur
             if(readWrite == READ) {
-                *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_TEMPERATURE_FIELD);
+                *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_TEMPERATURE_FIELD);
             } else if(readWrite == WRITE) {
                 errors |= TMC_ERROR_TYPE;
             }
@@ -789,7 +789,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 214:
         // ADCTemperatur Converted
         if(readWrite == READ) {
-            int32_t adc = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_TEMPERATURE_FIELD);
+            int32_t adc = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_TEMPERATURE_FIELD);
             *value = (int32_t)((1.017*adc)-259.2);
         } else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -817,109 +817,109 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 220:
         // MSLUT0
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT0, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT0, value);
 
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT0, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT0, *value);
             }
         break;
     case 221:
         // MSLUT1
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT1, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT1, value);
 
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT1, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT1, *value);
             }
         break;
 
     case 222:
         // MSLUT2
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT2, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT2, value);
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT2, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT2, *value);
             }
         break;
 
     case 223:
         // MSLUT3
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT3, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT3, value);
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT3, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT3, *value);
             }
         break;
 
     case 224:
         // MSLUT4
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT4, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT4, value);
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT4, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT4, *value);
             }
         break;
 
     case 225:
         // MSLUT5
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT5, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT5, value);
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT5, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT5, *value);
             }
         break;
     case 226:
         // MSLUT6
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT6, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT6, value);
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT6, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT6, *value);
             }
         break;
     case 227:
         // MSLUT7
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT7, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT7, value);
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT7, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT7, *value);
             }
         break;
     case 228:
         // MSLUT_START
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT_START, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT_START, value);
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT_START, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT_START, *value);
             }
         break;
     case 229:
         // MSLUT_SEL
         if(readWrite == READ) {
-                readRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT_SEL, value);
+                readRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT_SEL, value);
         } else if(readWrite == WRITE) {
-                writeRegister(DEFAULT_ICID, TMC5221A_MICROSTEP_LOOK_UP_TABLE_MSLUT_SEL, *value);
+                writeRegister(DEFAULT_ICID, TMC5222_MICROSTEP_LOOK_UP_TABLE_MSLUT_SEL, *value);
             }
         break;
     case 230:
         // START_SIN90
         if(readWrite == READ) {
-                *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_START_SIN90_FIELD);
+                *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_START_SIN90_FIELD);
         } else if(readWrite == WRITE) {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_START_SIN90_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_START_SIN90_FIELD, *value);
             }
         break;
     case 231:
         // OFFSET_SIN90
         if(readWrite == READ) {
-                *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_OFFSET_SIN90_FIELD);
+                *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_OFFSET_SIN90_FIELD);
         } else if(readWrite == WRITE) {
-                tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_OFFSET_SIN90_FIELD, *value);
+                tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_OFFSET_SIN90_FIELD, *value);
             }
         break;
     case 232:
         // SG4_IND_0
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SG4_IND_0_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SG4_IND_0_FIELD);
         }
         else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -928,7 +928,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 233:
         // SG4_IND_1
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SG4_IND_1_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SG4_IND_1_FIELD);
         }
         else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -937,7 +937,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 234:
         // SG4_IND_2
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SG4_IND_2_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SG4_IND_2_FIELD);
         }
         else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -946,7 +946,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 235:
         // SG4_IND_3
         if(readWrite == READ) {
-            *value = tmc5221A_fieldRead(DEFAULT_ICID, TMC5221A_SG4_IND_3_FIELD);
+            *value = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_SG4_IND_3_FIELD);
         }
         else if(readWrite == WRITE) {
             errors |= TMC_ERROR_TYPE;
@@ -971,10 +971,10 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
 
 static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 {
-    if(motor >= TMC5221A_MOTORS)
+    if(motor >= TMC5222_MOTORS)
         return TMC_ERROR_MOTOR;
 
-    *value = 0;//TMC5221A.velocity;
+    *value = 0;//TMC5222.velocity;
 
     return TMC_ERROR_NONE;
 }
@@ -982,13 +982,13 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
     UNUSED(motor);
-    tmc5221A_writeRegister(DEFAULT_ICID, address, value);
+    tmc5222_writeRegister(DEFAULT_ICID, address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
     UNUSED(motor);
-    *value = tmc5221A_readRegister(DEFAULT_ICID, address);
+    *value = tmc5222_readRegister(DEFAULT_ICID, address);
 }
 
 static void periodicJob(uint32_t tick)
@@ -998,24 +998,24 @@ static void periodicJob(uint32_t tick)
         //check if reset after nSLEEP to HIGH was performed
         uint32_t tickDiff;
 
-        if(TMC5221A.config->state != CONFIG_READY)
+        if(TMC5222.config->state != CONFIG_READY)
         {
-          TMC5221A.config->state = CONFIG_READY;
+          TMC5222.config->state = CONFIG_READY;
             return;
         }
 
         int32_t x;
 
         // Calculate velocity v = dx/dt
-        if((tickDiff = tick - TMC5221A.oldTick) >= 5)
+        if((tickDiff = tick - TMC5222.oldTick) >= 5)
         {
-            for(uint8_t motor = 0; motor < TMC5221A_MOTORS; motor++)
+            for(uint8_t motor = 0; motor < TMC5222_MOTORS; motor++)
             {
-                readRegister(DEFAULT_ICID, TMC5221A_RGR_XACTUAL, &x);
-                TMC5221A.velocity = (uint32_t) ((float32_t) ((x - TMC5221A.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
-                TMC5221A.oldX = x;
+                readRegister(DEFAULT_ICID, TMC5222_RGR_XACTUAL, &x);
+                TMC5222.velocity = (uint32_t) ((float32_t) ((x - TMC5222.oldX) / (float32_t) tickDiff) * (float32_t) 1048.576);
+                TMC5222.oldX = x;
             }
-            TMC5221A.oldTick  = tick;
+            TMC5222.oldTick  = tick;
         }
     }
     else
@@ -1025,7 +1025,7 @@ static void periodicJob(uint32_t tick)
         {
             noRegResetnSLEEP = false;
             enableDriver(DRIVER_ENABLE);
-            tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_TOFF_FIELD, 3);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_TOFF_FIELD, 3);
         }
     }
 }
@@ -1047,7 +1047,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     {
     case 0:  // simulate reference switches, set high to support external ref swiches
         /*
-         * The the TMC5221A ref switch input is pulled high by external resistor an can be pulled low either by
+         * The the TMC5222 ref switch input is pulled high by external resistor an can be pulled low either by
          * this µC or external signal. To use external signal make sure the signals from µC are high or floating.
          */
         if(!(*value & ~3))
@@ -1153,17 +1153,17 @@ static uint8_t reset()
     nSLEEPTick = systick_getTick();
     int32_t value = 0;
 
-    for(uint8_t motor = 0; motor < TMC5221A_MOTORS; motor++){
-        readRegister(DEFAULT_ICID, TMC5221A_RGR_VACTUAL, &value);
+    for(uint8_t motor = 0; motor < TMC5222_MOTORS; motor++){
+        readRegister(DEFAULT_ICID, TMC5222_RGR_VACTUAL, &value);
         if(value != 0)
             return 0;
     }
 
-    if(TMC5221A.config->state != CONFIG_READY)
+    if(TMC5222.config->state != CONFIG_READY)
         return false;
 
-    TMC5221A.config->state        = CONFIG_RESET;
-    TMC5221A.config->configIndex  = 0;
+    TMC5222.config->state        = CONFIG_RESET;
+    TMC5222.config->configIndex  = 0;
 
     return true;
 }
@@ -1180,27 +1180,27 @@ static void enableDriver(DriverState state)
 
     if(state ==  DRIVER_DISABLE){
         HAL.IOs->config->setLow(Pins.DRV_EN_LB);
-        tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_DRV_EN_SW_FIELD, 0);
+        tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_DRV_EN_SW_FIELD, 0);
     }
     else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
         HAL.IOs->config->setHigh(Pins.DRV_EN_LB);
-        tmc5221A_fieldWrite(DEFAULT_ICID, TMC5221A_DRV_EN_SW_FIELD, 1);
+        tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_DRV_EN_SW_FIELD, 1);
     }
 }
 
-static void init_comm(TMC5221ABusType mode)
+static void init_comm(TMC5222BusType mode)
 {
     switch(mode) {
     case IC_BUS_IIC:
     default:
         IIC.init();
         HAL.IOs->config->setLow(Pins.SEL_I2CN);
-        TMC5221A_IIC = HAL.IIC;
+        TMC5222_IIC = HAL.IIC;
         break;
     }
 }
 
-void TMC5221A_init(void)
+void TMC5222_init(void)
 {
     Pins.DRV_EN_LB      = &HAL.IOs->pins->DIO0; //Pin8
     Pins.REFLN_LB       = &HAL.IOs->pins->DIO6; //Pin17
@@ -1234,16 +1234,16 @@ void TMC5221A_init(void)
     Evalboards.ch1.config->restore      = restore;
     Evalboards.ch1.config->state        = CONFIG_RESET;
 
-    TMC5221A.velocity = 0;
-    TMC5221A.oldX = 0;
+    TMC5222.velocity = 0;
+    TMC5222.oldX = 0;
 
-    TMC5221A.config               = Evalboards.ch1.config;
-    TMC5221A.config->callback     = NULL;
-    TMC5221A.config->channel      = 0;
-    TMC5221A.config->configIndex  = 0;
-    TMC5221A.config->state        = CONFIG_READY;
+    TMC5222.config               = Evalboards.ch1.config;
+    TMC5222.config->callback     = NULL;
+    TMC5222.config->channel      = 0;
+    TMC5222.config->configIndex  = 0;
+    TMC5222.config->state        = CONFIG_READY;
 
-    for(uint8_t motor = 0; motor < TMC5221A_MOTORS; motor++)
+    for(uint8_t motor = 0; motor < TMC5222_MOTORS; motor++)
     {
         vmax_position[motor] = 0;
     }
@@ -1263,7 +1263,7 @@ void TMC5221A_init(void)
     Evalboards.ch1.getMeasuredSpeed     = getMeasuredSpeed;
     Evalboards.ch1.enableDriver         = enableDriver;
     Evalboards.ch1.checkErrors          = checkErrors;
-    Evalboards.ch1.numberOfMotors       = TMC5221A_MOTORS;
+    Evalboards.ch1.numberOfMotors       = TMC5222_MOTORS;
     Evalboards.ch1.VMMin                = VM_MIN;
     Evalboards.ch1.VMMax                = VM_MAX;
     Evalboards.ch1.deInit               = deInit;

@@ -61,7 +61,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC5271		   31
 #define ID_TMC5220         39
 #define ID_TMC5221         40
-#define ID_TMC5221A        41
+#define ID_TMC5222        41
 #define ID_TMC2130_TQFP48  0xFE
 #define ID_SELFTEST        255
 
@@ -135,7 +135,7 @@ extern void TMC8462_init_ch1();
 extern void TMC8462_init_ch2();
 extern void TMC2262_init();
 extern void TMC5221_init();
-extern void TMC5221A_init();
+extern void TMC5222_init();
 extern void SelfTest_init();
 
 #if defined(LandungsbrueckeV3)
@@ -164,7 +164,7 @@ static const init_assignment init_ch1[] =
 	{ .id = ID_TMC8462,     .init = TMC8462_init_ch1 },
     { .id = ID_TMC5262,     .init = TMC5262_init     },
     { .id = ID_TMC5221,     .init = TMC5221_init     },
-    { .id = ID_TMC5221A,    .init = TMC5221A_init    },
+    { .id = ID_TMC5222,    .init = TMC5222_init    },
 	{ .id = ID_SELFTEST,    .init = SelfTest_init    }
 };
 
