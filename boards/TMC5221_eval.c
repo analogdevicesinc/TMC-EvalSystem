@@ -1122,6 +1122,16 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 #endif
         }
         break;
+    case 11:  // Rising edge L
+        HAL.IOs->config->toOutput(Pins.REFLN_LB);
+        HAL.IOs->config->setLow(Pins.REFLN_LB);
+        HAL.IOs->config->setHigh(Pins.REFLN_LB);
+        break;
+    case 12:  // Rising edge R
+        HAL.IOs->config->toOutput(Pins.REFRN_LB);
+        HAL.IOs->config->setLow(Pins.REFRN_LB);
+        HAL.IOs->config->setHigh(Pins.REFRN_LB);
+        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
