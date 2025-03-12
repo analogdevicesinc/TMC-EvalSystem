@@ -65,14 +65,20 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint8_t reset();
 static void enableDriver(DriverState state);
 
+static void delayBlocking(uint32_t microseconds)
+{
+
+    uint32_t startTime = systick_getMicrosecondTick();
+    while(timeDiff(systick_getMicrosecondTick(), startTime)<=microseconds);
+
+}
 
 void tmc5221_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
     UNUSED(icID);
     if(qscMode)
     {
-        uint32_t startTime = systick_getMicrosecondTick();
-        while(timeDiff(systick_getMicrosecondTick(), startTime)<=10);
+        delayBlocking(10);
     }
     TMC5221_SPIChannel->readWriteArray(data, dataLength);
 }
@@ -1125,20 +1131,18 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     case 11:  // Rising edge L
         HAL.IOs->config->toOutput(Pins.REFLN_LB);
         HAL.IOs->config->setHigh(Pins.REFLN_LB);
-        {
-            uint32_t startTime = systick_getMicrosecondTick();
-            while(timeDiff(systick_getMicrosecondTick(), startTime)<=1);
-        }
+        delayBlocking(1);
         HAL.IOs->config->setLow(Pins.REFLN_LB);
+        delayBlocking(10);
+        HAL.IOs->config->setHigh(Pins.REFLN_LB);
         break;
     case 12:  // Rising edge R
         HAL.IOs->config->toOutput(Pins.REFRN_LB);
         HAL.IOs->config->setHigh(Pins.REFRN_LB);
-        {
-            uint32_t startTime = systick_getMicrosecondTick();
-            while(timeDiff(systick_getMicrosecondTick(), startTime)<=1);
-        }
+        delayBlocking(1);
         HAL.IOs->config->setLow(Pins.REFRN_LB);
+        delayBlocking(10);
+        HAL.IOs->config->setHigh(Pins.REFRN_LB);
         break;
     case 13:
         qscMode = *value;
