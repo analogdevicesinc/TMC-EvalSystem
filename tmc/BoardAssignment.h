@@ -2,7 +2,7 @@
 * Copyright © 2019 TRINAMIC Motion Control GmbH & Co. KG
 * (now owned by Analog Devices Inc.),
 *
-* Copyright © 2023 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2025 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
@@ -94,6 +94,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 #define ID_TMC2262        35
 #define ID_MAX22215       36
 #define ID_MAX22200_EVAL 42
+#define ID_TMC2241        41
 #define TM01       1414332417
 
 #define ID_GROUP_TMC9660_STEPPER(id) ((id) >= ID_TMC9660_STEPPER_BL_EVAL && (id) <= ID_TMC9660_STEPPER_PARAM_EVAL)
@@ -114,6 +115,7 @@ extern void TMC2224_init();
 extern void TMC2225_init();
 extern void TMC2226_init();
 extern void TMC2240_init();
+extern void TMC2241_init();
 extern void TMC2300_init();
 extern void TMC2660_init();
 extern void TMC4361A_init();
@@ -184,6 +186,7 @@ static const init_assignment init_ch2[] =
 	{ .id = ID_TMC2208,       .init = TMC2208_init     },
 	{ .id = ID_TMC2224,       .init = TMC2224_init     },
 	{ .id = ID_TMC2240,       .init = TMC2240_init     },
+    { .id = ID_TMC2241,       .init = TMC2241_init     },
 	{ .id = ID_TMC6100,       .init = TMC6100_init     },
 	{ .id = ID_TMC6100_BOB,   .init = TMC6100_BOB_init },
 	{ .id = ID_TMC6200,       .init = TMC6200_init     },
