@@ -1032,20 +1032,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x00);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x10);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x00);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x10);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1054,20 +1054,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x01);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x11);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x01);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x11);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1077,20 +1077,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x02);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x12);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x02);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x12);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1100,20 +1100,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x03);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x13);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x03);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x13);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1123,20 +1123,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x04);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x14);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x04);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x14);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1146,20 +1146,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x05);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x15);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x05);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x15);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1168,20 +1168,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x06);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x16);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x06);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x16);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1190,20 +1190,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x07);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x17);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x07);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x17);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1212,20 +1212,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x08);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x18);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x08);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x18);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
@@ -1234,20 +1234,20 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x09);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x19);
-				readRegister(motor, TMC5272_MSLUT_SEL_START, value);
+				readRegister(motor, TMC5272_MSLUT_DATA, value);
 			}
 		} else if(readWrite == WRITE) {
 			if(motor ==  0){
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x09);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 			else{
 				writeRegister(motor, TMC5272_MSLUT_ADDR, 0x19);
-				writeRegister(motor, TMC5272_MSLUT_SEL_START, *value);
+				writeRegister(motor, TMC5272_MSLUT_DATA, *value);
 			}
 		}
 		break;
