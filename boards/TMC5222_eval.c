@@ -12,7 +12,7 @@
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
 #define VM_MIN         21   // VM[V/10] min
-#define VM_MAX         240  // VM[V/10] max, ToDo: It should be 16V but ADC measurement is not precise. Find the right value.(AS)
+#define VM_MAX         176  // VM[V/10] max, It should be 16V but ADC measurement is not precise, so 10% extra
 #define DEFAULT_ICID  0
 
 // Typedefs
