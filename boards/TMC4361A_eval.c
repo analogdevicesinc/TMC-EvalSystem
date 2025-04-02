@@ -848,7 +848,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // CL correction velocity P
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_P, value);
+            *value = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_CL_VMAX_CALC_P];
         }
         else if (readWrite == WRITE)
         {
@@ -859,7 +859,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // CL correction velocity I
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_CL_VMAX_CALC_I, value);
+            *value = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_CL_VMAX_CALC_I];
         }
         else if (readWrite == WRITE)
         {
@@ -870,12 +870,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // CL correction velocity I clipping
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, &buffer);
-            *value = buffer & 0x7FFF;
+            *value = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_PID_I_CLIP];
+            *value &= 0x7FFF;
         }
         else if (readWrite == WRITE)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, &uvalue);
+            uvalue = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_PID_I_CLIP];
             uvalue &= ~(0x7FFF << 0);
             uvalue |= (*value & 0x7FFF) << 0;
             tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_PID_I_CLIP, uvalue);
@@ -885,13 +885,12 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // CL correction velocity DV clock
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, &buffer);
-            *value = buffer >> 16;
+            *value = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_PID_D_CLKDIV] >> 16;
             *value &= 0xFF;
         }
         else if (readWrite == WRITE)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, &uvalue);
+            uvalue = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_PID_D_CLKDIV];
             uvalue &= ~(0xFF << 16);
             uvalue |= (*value & 0xFF) << 16;
             tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_PID_D_CLKDIV, uvalue);
@@ -1038,7 +1037,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // Closed loop target reached tolerance
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_CL_TR_TOLERANCE, value);
+            *value = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_CL_TR_TOLERANCE];
         }
         else if (readWrite == WRITE)
         {
@@ -1049,12 +1048,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // Encoder Velocity Delay
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &buffer);
-            *value = (buffer >> 0) & 0xFF;
+            *value = ( tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_ENC_VMEAN_WAIT] >> 0) & 0xFF;
         }
         else if (readWrite == WRITE)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &uvalue);
+            uvalue = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_ENC_VMEAN_WAIT];
             uvalue &= ~(0xFF << 0);
             uvalue |= (*value & 0x0F) << 0;
             tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
@@ -1064,13 +1062,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // Encoder Velocity Filter
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &buffer);
-            *value = (buffer >> 8) & 0xF;
+            *value = ( tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_ENC_VMEAN_WAIT] >> 8) & 0xF;
         }
         else if (readWrite == WRITE)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &uvalue);
-            ;
+            uvalue = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_ENC_VMEAN_WAIT];
             uvalue &= ~(0xF << 8);
             uvalue |= (*value & 0x0F) << 8;
             tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
@@ -1080,12 +1076,11 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // Filter Update Time
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &buffer);
-            *value = (buffer >> 16) & 0xFF;
+            *value = ( tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_ENC_VMEAN_WAIT] >> 16) & 0xFF;
         }
         else if (readWrite == WRITE)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, &uvalue);
+            uvalue = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_ENC_VMEAN_WAIT];
             uvalue &= ~(0xFF << 16);
             uvalue |= (*value & 0x0FF) << 16;
             tmc4361A_writeRegister(DEFAULT_ICID, TMC4361A_ENC_VMEAN_WAIT, uvalue);
@@ -1131,7 +1126,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         // Maximum encoder deviation
         if (readWrite == READ)
         {
-            readRegister(DEFAULT_ICID, TMC4361A_ENC_POS_DEV_TOL, value);
+            *value = tmc4361A_shadowRegister[DEFAULT_ICID][TMC4361A_ENC_POS_DEV_TOL];
         }
         else if (readWrite == WRITE)
         {
