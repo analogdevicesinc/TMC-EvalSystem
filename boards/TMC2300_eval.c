@@ -457,7 +457,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_PWM_GRAD_FIELD, *value);
 
             // Enable/disable stealthChop accordingly
-            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_EN_SPREADCYCLE_SHIFT_FIELD, (*value > 0) ? 0 : 1);
+            tmc2300_fieldWrite(DEFAULT_ICID, TMC2300_EN_SPREADCYCLE_FIELD, (*value > 0) ? 0 : 1);
         }
         break;
     case 191:
