@@ -1,11 +1,11 @@
 ﻿/*******************************************************************************
-* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2025 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
 
-#ifndef IIC_H
-#define IIC_H
+#ifndef IIC_H_
+#define IIC_H_
 
 typedef struct
 {
@@ -14,9 +14,8 @@ typedef struct
 
 extern IICTypeDef IIC;
 
-void InitIIC(void);
-uint8_t IICMasterWrite(uint8_t Address, uint8_t *Data, uint8_t Size);
-uint8_t IICMasterRead(uint8_t Address, uint8_t *Data, uint8_t Size);
-uint8_t IICMasterWriteRead(uint8_t Address, uint8_t *WriteData, uint8_t WriteLength, uint8_t *ReadData, uint8_t ReadLength);
+uint8_t IICMasterWrite(uint8_t address, uint8_t *data, uint8_t size);
+uint8_t IICMasterRead(uint8_t address, uint8_t *data, uint8_t size);
+uint8_t IICMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLength, uint8_t *readData, uint8_t readLength);
 
-#endif /*IIC_H */
+#endif /*IIC_H_ */
