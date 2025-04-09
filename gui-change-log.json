@@ -1,8 +1,5 @@
 {
     "TMCL-IDE":{
-        "last_hint":[
-            "TM01 has a bug" 
-        ]
         "latest": "4.7.0",
         "ChangeLog":[
             {
@@ -15,7 +12,10 @@
                     "Notification for latest release version",
                     "general bugfixing",
                     "UblCli/TMC-9660 bugfixing"
-                ]
+                ],
+               "last_hint":[
+                    "TM01 has a bug" 
+        ]
             },
             {
                 "tag_name":   "4.6.0",
