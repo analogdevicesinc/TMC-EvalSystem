@@ -28,7 +28,7 @@ static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 bool max22215_readWriteIIC(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
     UNUSED(icID);
-   if(IICMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))//Device address = 0b1100000W/R
+   if(IICMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))
        return true;
 
     return false;
