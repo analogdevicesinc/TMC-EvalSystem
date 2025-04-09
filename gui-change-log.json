@@ -1,5 +1,8 @@
 {
     "TMCL-IDE":{
+        "last_hint":[
+            "TM01 has a bug"
+        ]
         "latest": "4.7.0",
         "ChangeLog":[
             {
