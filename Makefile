@@ -100,6 +100,7 @@ SRC             += TMC-API/tmc/ramp/LinearRamp.c
 SRC             += TMC-API/tmc/ramp/LinearRamp1.c
 SRC             += TMC-API/tmc/ramp/Ramp.c
 SRC             += TMC-API/tmc/ic/MAX22216/MAX22216.c
+SRC             += TMC-API/tmc/ic/MAX22215/MAX22215.c
 SRC             += TMC-API/tmc/ic/TMC2130/TMC2130.c
 SRC             += TMC-API/tmc/ic/TMC2160/TMC2160.c
 SRC             += TMC-API/tmc/ic/TMC2208/TMC2208.c
