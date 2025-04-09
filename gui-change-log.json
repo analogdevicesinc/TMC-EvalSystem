@@ -1,0 +1,53 @@
+{
+    "TMCL-IDE":{
+        "latest": "4.7.0",
+        "ChangeLog":[
+            {
+                "tag_name":   "4.7.0",
+                "created_at": "2025-03-28T18:22:22Z",
+                "updated_at": "2025-03-28T18:10:25Z",
+                "public_url": "https://www.analog.com/en/resources/evaluation-hardware-and-software/embedded-development-software/software-download.html?swpart=SD_W412B0M",
+                "topics": [
+                    "this changelog",
+                    "Notification for latest release version",
+                    "general bugfixing",
+                    "UblCli/TMC-9660 bugfixing"
+                ]
+            },
+            {
+                "tag_name":   "4.6.0",
+                "created_at": "2025-01-06T15:22:22Z",
+                "updated_at": "2025-01-10T16:10:25Z",
+                "public_url": "https://www.analog.com/en/resources/evaluation-hardware-and-software/embedded-development-software/software-download.html?swpart=SD_O1OMZSJ",
+                "topics": [
+                    "own installer with new installation folder",
+                    "general bugfixing",
+                    "UblCli support"
+                ]
+            },
+            {
+                "tag_name":   "4.5.0",
+                "created_at": "2024-11-14T15:22:22Z",
+                "updated_at": "2024-11-28T15:22:25Z",
+                "public_url": "https://www.analog.com/en/resources/evaluation-hardware-and-software/embedded-development-software/software-download.html?swpart=SD_QK87DQ1",
+                "topics": [
+                    "improved CANopen support",
+                    "add TMCM-3216",
+                    "add TMC9660"
+                ]
+            },
+            {
+                "tag_name":   "4.4.0",
+                "public_url": "https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_XV5BV4E"
+            },
+            {
+                "tag_name":   "4.3.0",
+                "public_url": "https://www.analog.com/en/design-center/evaluation-hardware-and-software/software/software-download.html?swpart=SD_GBX4062"
+            },
+            {
+                "tag_name":   "4.2.0",
+                "public_url": "https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_X4DKANQ"
+            }
+        ]
+    }
+}
