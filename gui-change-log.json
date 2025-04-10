@@ -1,8 +1,6 @@
 {
     "TMCL-IDE":{
-        "last_hint":[
-                    "TM01 has a bug" 
-        ],
+        "last_hint":"TMC9660 has a bug, do not run PI auto tuning" ,
         "latest": "4.7.0",
         "ChangeLog":[
             {
