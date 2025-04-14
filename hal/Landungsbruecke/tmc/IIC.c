@@ -119,18 +119,20 @@ void I2C0_IRQHandler(void)
     case IIC_READ_DATA:  //Read the data
         if(IICReadCount<IICReadLength)
         {
+
+            //Second last or last byte => prepare NAK
+            if(IICReadLength-IICReadCount<=2)
+                I2C0_C1|=I2C_C1_TXAK_MASK;
+
+            //Fetch one byte
+            IICReadData[IICReadCount++]=I2C0_D;
+
             //Last byte => generate stop condition
-            if(IICReadLength-IICReadCount==1)
+            if((IICReadLength-IICReadCount) == 1)
             {
                 I2C0_C1&= ~I2C_C1_MST_MASK;
                 IICState=IIC_IDLE;
             }
-
-            //Second last or last byte => prepare NAK
-            if(IICReadLength-IICReadCount<=2) I2C0_C1|=I2C_C1_TXAK_MASK;
-
-            //Fetch one byte
-            IICReadData[IICReadCount++]=I2C0_D;
         }
         else
         {
