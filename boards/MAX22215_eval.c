@@ -15,6 +15,8 @@ typedef struct
 	IOPinTypeDef  *PWM_INT;
     IOPinTypeDef  *A0;
     IOPinTypeDef  *A1;
+    IOPinTypeDef  *RLSBRK;
+    IOPinTypeDef  *DIAG;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -91,11 +93,16 @@ void MAX22215_init(void)
 	Pins.PWM_INT         = &HAL.IOs->pins->DIO9;
     Pins.A0              = &HAL.IOs->pins->DIO6;
     Pins.A1              = &HAL.IOs->pins->DIO7;
+    Pins.RLSBRK          = &HAL.IOs->pins->DIO14;
+    Pins.DIAG            = &HAL.IOs->pins->AIN0;
 
 
 	HAL.IOs->config->toOutput(Pins.SLEEPN);
     HAL.IOs->config->toOutput(Pins.A0);
     HAL.IOs->config->toOutput(Pins.A1);
+    HAL.IOs->config->toOutput(Pins.RLSBRK);
+    HAL.IOs->config->toOutput(Pins.DIAG);
+    HAL.IOs->config->toOutput(Pins.PWM_INT);
 
     IIC.init();
 	MAX22215_IIC = HAL.IIC;
@@ -104,11 +111,16 @@ void MAX22215_init(void)
     Evalboards.ch2.writeRegister                 = writeRegister;
     Evalboards.ch2.readRegister                  = readRegister;
 
-	HAL.IOs->config->setLow(Pins.SLEEPN);
+	HAL.IOs->config->setHigh(Pins.SLEEPN);
+	HAL.IOs->config->setLow(Pins.RLSBRK);
+	HAL.IOs->config->setLow(Pins.DIAG);
+	HAL.IOs->config->setLow(Pins.PWM_INT);
 
 	//Setting the slave ID to 0x10
     HAL.IOs->config->setLow(Pins.A0);
     HAL.IOs->config->setLow(Pins.A1);
+
+
 
 
 
