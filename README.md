@@ -37,6 +37,11 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
+### Version 3.11.0: (Released)
+ * Included MAX22215-Eval to the project.
+ * Added I2C functionality for both LB boards with Freescale and Giga device processors.
+ * Various bugfixes & cleanups.
+
 ### Version 3.10.10: (Released)
  * TMC9660: Fixed communication issues with LBV1.2 and LBV2.0.
  * Finished API rework and released TMC4361A.
