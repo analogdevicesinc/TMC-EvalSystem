@@ -19,8 +19,4 @@
 	uint32_t timeSince(uint32_t tick);
 	uint32_t timeDiff(uint32_t newTick, uint32_t oldTick);
 
-#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-	uint32_t systick_getMicrosecondTick();
-#endif
-
 #endif /* SysTick_H */

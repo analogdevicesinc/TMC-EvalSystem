@@ -351,6 +351,7 @@ static uint32_t getMax(uint8_t type, uint8_t motor, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
+    UNUSED(tick);
 	StepDir_periodicJob(MAX22204_DEFAULT_MOTOR);
 }
 

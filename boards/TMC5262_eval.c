@@ -155,6 +155,7 @@ static uint32_t stop(uint8_t motor)
 
 static uint32_t moveTo(uint8_t motor, int32_t position)
 {
+    UNUSED(motor);
     tmc5262_writeRegister(DEFAULT_ICID, TMC5262_RAMPMODE, TMC5262_MODE_POSITION);
 
     // VMAX also holds the target velocity in velocity mode.
@@ -396,7 +397,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 26:
 		// Speed threshold for high speed mode
 		if(readWrite == READ) {
-			readRegister(DEFAULT_ICID, TMC5262_THIGH, &buffer);
+			readRegister(DEFAULT_ICID, TMC5262_THIGH, (int32_t *)&buffer);
 			*value = MIN(0xFFFFF, (1 << 24) / ((buffer)? buffer : 1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value:1));
@@ -508,7 +509,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 165:
 		// Chopper hysteresis end / fast decay time
-		readRegister(DEFAULT_ICID, TMC5262_CHOPCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC5262_CHOPCONF, (int32_t *)&buffer);
 		if(readWrite == READ) {
 			if(buffer & (1 << TMC5262_CHM_SHIFT))
 			{
@@ -534,7 +535,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 166:
 		// Chopper hysteresis start / sine wave offset
-		readRegister(DEFAULT_ICID, TMC5262_CHOPCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC5262_CHOPCONF, (int32_t *)&buffer);
 		if(readWrite == READ) {
 			if(buffer & (1 << TMC5262_CHM_SHIFT))
 			{
@@ -653,7 +654,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		if(readWrite == READ) {
 			if(tmc5262_fieldRead(DEFAULT_ICID, TMC5262_SG_STOP_FIELD))
 			{
-				readRegister(DEFAULT_ICID, TMC5262_TCOOLTHRS, &buffer);
+				readRegister(DEFAULT_ICID, TMC5262_TCOOLTHRS, (int32_t *)&buffer);
 				*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
 			}
 			else
@@ -670,7 +671,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			readRegister(DEFAULT_ICID, TMC5262_TCOOLTHRS, &buffer);
+			readRegister(DEFAULT_ICID, TMC5262_TCOOLTHRS, (int32_t *)&buffer);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
@@ -679,7 +680,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 185:
 		// Chopper synchronization
-		readRegister(DEFAULT_ICID, TMC5262_CHOPCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC5262_CHOPCONF, (int32_t *)&buffer);
 		if(readWrite == READ) {
 			*value = (buffer >> 20) & 0x0F;
 		} else if(readWrite == WRITE) {
@@ -691,7 +692,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
-			readRegister(DEFAULT_ICID, TMC5262_TPWMTHRS, &buffer);
+			readRegister(DEFAULT_ICID, TMC5262_TPWMTHRS, (int32_t *)&buffer);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
@@ -910,11 +911,13 @@ static uint32_t getMeasuredSpeed(uint8_t motor, int32_t *value)
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
 {
+    UNUSED(motor);
     tmc5262_writeRegister(DEFAULT_ICID, address, value);
 }
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 {
+    UNUSED(motor);
     *value = tmc5262_readRegister(DEFAULT_ICID, address);
 }
 

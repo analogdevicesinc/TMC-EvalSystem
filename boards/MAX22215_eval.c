@@ -53,6 +53,7 @@ uint8_t max22215_getDeviceAddress(uint16_t icID)
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
 	UNUSED(motor);
+	UNUSED(*value);
 	uint32_t errors = TMC_ERROR_NONE;
     switch(type)
     {
@@ -83,14 +84,11 @@ void MAX22215_init(void)
     Pins.A0              = &HAL.IOs->pins->DIO6;
     Pins.A1              = &HAL.IOs->pins->DIO7;
     Pins.RLSBRK          = &HAL.IOs->pins->DIO14;
-    Pins.DIAG            = &HAL.IOs->pins->AIN0;
-
 
 	HAL.IOs->config->toOutput(Pins.SLEEPN);
     HAL.IOs->config->toOutput(Pins.A0);
     HAL.IOs->config->toOutput(Pins.A1);
     HAL.IOs->config->toOutput(Pins.RLSBRK);
-    HAL.IOs->config->toOutput(Pins.DIAG);
     HAL.IOs->config->toOutput(Pins.PWM_INT);
 
     IIC.init();
@@ -102,7 +100,6 @@ void MAX22215_init(void)
 
 	HAL.IOs->config->setHigh(Pins.SLEEPN);
 	HAL.IOs->config->setLow(Pins.RLSBRK);
-	HAL.IOs->config->setLow(Pins.DIAG);
 	HAL.IOs->config->setLow(Pins.PWM_INT);
 
 	//Setting the slave ID to 0x10

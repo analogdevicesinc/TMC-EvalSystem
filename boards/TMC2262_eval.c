@@ -286,7 +286,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 26:
 		// Speed threshold for high speed mode
 		if(readWrite == READ) {
-			readRegister(DEFAULT_ICID, TMC2262_THIGH, &buffer);
+			readRegister(DEFAULT_ICID, TMC2262_THIGH, (int32_t *)&buffer);
 			*value = MIN(0xFFFFF, (1 << 24) / ((buffer)? buffer : 1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value:1));
@@ -398,7 +398,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 165:
 		// Chopper hysteresis end / fast decay time
-		readRegister(DEFAULT_ICID, TMC2262_CHOPCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC2262_CHOPCONF, (int32_t *)&buffer);
 		if(readWrite == READ) {
 			if(buffer & (1 << TMC2262_CHM_SHIFT))
 			{
@@ -424,7 +424,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 166:
 		// Chopper hysteresis start / sine wave offset
-		readRegister(DEFAULT_ICID, TMC2262_CHOPCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC2262_CHOPCONF, (int32_t *)&buffer);
 		if(readWrite == READ) {
 			if(buffer & (1 << TMC2262_CHM_SHIFT))
 			{
@@ -564,7 +564,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 182:
 		// smartEnergy threshold speed
 		if(readWrite == READ) {
-			readRegister(DEFAULT_ICID, TMC2262_TCOOLTHRS, &buffer);
+			readRegister(DEFAULT_ICID, TMC2262_TCOOLTHRS, (int32_t *)&buffer);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
@@ -573,7 +573,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 		break;
 	case 185:
 		// Chopper synchronization
-		readRegister(DEFAULT_ICID, TMC2262_CHOPCONF, &buffer);
+		readRegister(DEFAULT_ICID, TMC2262_CHOPCONF, (int32_t *)&buffer);
 		if(readWrite == READ) {
 			*value = (buffer >> 20) & 0x0F;
 		} else if(readWrite == WRITE) {
@@ -585,7 +585,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 	case 186:
 		// PWM threshold speed
 		if(readWrite == READ) {
-			readRegister(DEFAULT_ICID, TMC2262_TPWMTHRS, &buffer);
+			readRegister(DEFAULT_ICID, TMC2262_TPWMTHRS, (int32_t *)&buffer);
 			*value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
 		} else if(readWrite == WRITE) {
 			*value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));

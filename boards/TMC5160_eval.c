@@ -270,7 +270,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             *value = vmax_position;
         } else if(readWrite == WRITE) {
             vmax_position = abs(*value);
-            readRegister(motor, TMC5160_RAMPMODE, &buffer);
+            readRegister(motor, TMC5160_RAMPMODE, (int32_t *)&buffer);
             if(buffer == TMC5160_MODE_POSITION)
                 writeRegister(motor, TMC5160_VMAX, abs(*value));
         }
@@ -406,7 +406,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 23:
         // Speed threshold for high speed mode
         if(readWrite == READ) {
-            readRegister(motor, TMC5160_THIGH, &buffer);
+            readRegister(motor, TMC5160_THIGH, (int32_t *)&buffer);
             *value = MIN(0xFFFFF, (1 << 24) / ((buffer)? buffer : 1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1 << 24) / ((*value)? *value:1));
@@ -524,7 +524,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         break;
     case 165:
         // Chopper hysteresis end / fast decay time
-        readRegister(motor, TMC5160_CHOPCONF, &buffer);
+        readRegister(motor, TMC5160_CHOPCONF, (int32_t *)&buffer);
         if(readWrite == READ) {
             if(buffer & (1 << TMC5160_CHM_SHIFT))
             {
@@ -550,7 +550,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         break;
     case 166:
         // Chopper hysteresis start / sine wave offset
-        readRegister(motor, TMC5160_CHOPCONF, &buffer);
+        readRegister(motor, TMC5160_CHOPCONF, (int32_t *)&buffer);
         if(readWrite == READ) {
             if(buffer & (1 << TMC5160_CHM_SHIFT))
             {
@@ -652,7 +652,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         if(readWrite == READ) {
             if(tmc5160_fieldRead(motor, TMC5160_SG_STOP_FIELD))
             {
-                readRegister(motor, TMC5160_TCOOLTHRS, &buffer);
+                readRegister(motor, TMC5160_TCOOLTHRS, (int32_t *)&buffer);
                 *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
             }
             else
@@ -669,7 +669,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 182:
         // smartEnergy threshold speed
         if(readWrite == READ) {
-            readRegister(motor, TMC5160_TCOOLTHRS, &buffer);
+            readRegister(motor, TMC5160_TCOOLTHRS, (int32_t *)&buffer);
             *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));
@@ -690,7 +690,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             readRegister(motor, TMC5160_CHOPCONF, value);
             *value = (*value >> 20) & 0x0F;
         } else if(readWrite == WRITE) {
-            readRegister(motor, TMC5160_CHOPCONF, &buffer);
+            readRegister(motor, TMC5160_CHOPCONF, (int32_t *)&buffer);
             buffer &= ~(0x0F<<20);
             buffer |= (*value & 0x0F) << 20;
             writeRegister(motor, TMC5160_CHOPCONF, buffer);
@@ -699,7 +699,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
     case 186:
         // PWM threshold speed
         if(readWrite == READ) {
-            readRegister(motor, TMC5160_TPWMTHRS, &buffer);
+            readRegister(motor, TMC5160_TPWMTHRS, (int32_t *)&buffer);
             *value = MIN(0xFFFFF, (1<<24) / ((buffer)? buffer:1));
         } else if(readWrite == WRITE) {
             *value = MIN(0xFFFFF, (1<<24) / ((*value)? *value:1));

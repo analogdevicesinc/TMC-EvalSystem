@@ -74,21 +74,25 @@ void USART6_IRQHandler(void)
 
 static void tx(uint8_t ch)
 {
-
+    UNUSED(ch);
 }
 
 static uint8_t rx(uint8_t *ch)
 {
-return 0;
+    UNUSED(ch);
+    return 0;
 }
 
 static void txN(uint8_t *str, unsigned char number)
 {
-
+    UNUSED(*str);
+    UNUSED(number);
 }
 
 static uint8_t rxN(uint8_t *str, unsigned char number)
 {
+    UNUSED(*str);
+    UNUSED(number);
 	return 0;
 
 }
