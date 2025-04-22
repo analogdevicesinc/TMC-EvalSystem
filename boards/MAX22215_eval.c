@@ -56,17 +56,6 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 	uint32_t errors = TMC_ERROR_NONE;
     switch(type)
     {
-    case 0:
-        uint8_t data[1],regAddr=0x08;
-//        if(IICMasterWriteRead(0x20,&regAddr,1,&data[0],1)) // slave address b0010000WR
-//        {
-//            *value = (int32_t)data[0];
-//        }
-//        else
-//        {
-//            *value = -1;
-//        }
-        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
@@ -119,9 +108,5 @@ void MAX22215_init(void)
 	//Setting the slave ID to 0x10
     HAL.IOs->config->setLow(Pins.A0);
     HAL.IOs->config->setLow(Pins.A1);
-
-
-
-
 
 }
