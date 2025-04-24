@@ -3,13 +3,40 @@
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
-
+#include <string.h> // for memcpy
 #include "hal/HAL.h"
 #include "hal/UART.h"
 
-#define BUFFER_SIZE  1024
 #define INTR_PRI     6
 #define UART_DEFAULT_TIMEOUT_VALUE 10 // [ms]
+
+// DMA0 assignments for the different UARTs
+// Note: This implementation assumes all channels use DMA0!
+// DMA0 Channel 1, Subperipheral 4: USART2_RX
+#define UART2_DMA_RX_CHANNEL    DMA_CH1
+#define UART2_DMA_RX_SUBPERIPH  DMA_SUBPERI4
+// DMA0 Channel 3, Subperipheral 4: USART2_TX
+#define UART2_DMA_TX_CHANNEL    DMA_CH3
+#define UART2_DMA_TX_SUBPERIPH  DMA_SUBPERI4
+
+// DMA0 Channel 2, Subperipheral 4: USART3_RX
+#define UART3_DMA_RX_CHANNEL    DMA_CH2
+#define UART3_DMA_RX_SUBPERIPH  DMA_SUBPERI4
+// DMA0 Channel 4, Subperipheral 4: USART3_TX
+#define UART3_DMA_TX_CHANNEL    DMA_CH4
+#define UART3_DMA_TX_SUBPERIPH  DMA_SUBPERI4
+
+// RX buffer: Maximum size dictates how much data can be held before losing bytes
+#define UART_RX_DMA_BUFFER_SIZE 32
+// TX buffer: Maximum size dictates how much data can be pushed to be transferred
+// without having to block
+#define UART_TX_DMA_BUFFER_SIZE 16
+
+static uint8_t uartTXDMABuffer[UART_TX_DMA_BUFFER_SIZE];
+static uint8_t uartRXDMABuffer[UART_RX_DMA_BUFFER_SIZE];
+static uint32_t uartRXReadIndex = 0;
+
+
 
 static void init();
 static void deInit();
@@ -20,14 +47,11 @@ static uint8_t rxN(uint8_t *ch, unsigned char number);
 static void clearBuffers(void);
 static uint32_t bytesAvailable();
 
-static uint8_t UARTSendFlag;
 
-static volatile uint8_t rxBuffer[BUFFER_SIZE];
-static volatile uint8_t txBuffer[BUFFER_SIZE];
 static volatile uint32_t usart_periph;
-uint8_t volatile nvic_irq;
+static dma_channel_enum dma_rx_channel, dma_tx_channel;
 
-static volatile uint32_t available = 0;
+uint8_t volatile nvic_irq;
 
 UART_Config UART =
 {
@@ -48,34 +72,23 @@ UART_Config UART =
     }
 };
 
-static RXTXBufferingTypeDef buffers =
-{
-    .rx =
-    {
-        .read    = 0,
-        .wrote   = 0,
-        .buffer  = rxBuffer
-    },
-
-    .tx =
-    {
-        .read    = 0,
-        .wrote   = 0,
-        .buffer  = txBuffer
-    }
-};
-
 void __attribute__ ((interrupt)) USART2_IRQHandler(void);
 void __attribute__ ((interrupt)) UART3_IRQHandler(void);
 
 
 static void init()
 {
+    dma_subperipheral_enum dma_rx_subperipheral, dma_tx_subperipheral;
 
     switch(UART.pinout) {
     case UART_PINS_2:
         //Set MUX_1 and MUX_2 to zero to connect DIO10 and DIO11 to UART pins DIO10_UART_TX and DIO11_UART_RX respectively.
         *HAL.IOs->pins->SW_UART_PWM.resetBitRegister     = HAL.IOs->pins->SW_UART_PWM.bitWeight;
+
+        dma_rx_channel = UART3_DMA_RX_CHANNEL;
+        dma_tx_channel = UART3_DMA_TX_CHANNEL;
+        dma_rx_subperipheral = UART3_DMA_RX_SUBPERIPH;
+        dma_tx_subperipheral = UART3_DMA_TX_SUBPERIPH;
 
         usart_periph = UART3;
         usart_deinit(usart_periph);
@@ -93,6 +106,11 @@ static void init()
         nvic_irq = UART3_IRQn;
         break;
     case UART_PINS_1:
+        dma_rx_channel = UART2_DMA_RX_CHANNEL;
+        dma_tx_channel = UART2_DMA_TX_CHANNEL;
+        dma_rx_subperipheral = UART2_DMA_RX_SUBPERIPH;
+        dma_tx_subperipheral = UART2_DMA_TX_SUBPERIPH;
+
         usart_periph = USART2;
         usart_deinit(usart_periph);
         //DIO17(TxD) with pull-up resistor
@@ -119,10 +137,10 @@ static void init()
     usart_parity_config(usart_periph, USART_PM_NONE);
     usart_receive_config(usart_periph, USART_RECEIVE_ENABLE);
     usart_transmit_config(usart_periph, USART_TRANSMIT_ENABLE);
+    usart_dma_receive_config(usart_periph, USART_DENR_ENABLE);
+    usart_dma_transmit_config(usart_periph, USART_DENT_ENABLE);
     usart_enable(usart_periph);
-    usart_interrupt_enable(usart_periph, USART_INT_TBE);
     usart_interrupt_enable(usart_periph, USART_INT_TC);
-    usart_interrupt_enable(usart_periph, USART_INT_RBNE);
 
     nvic_irq_enable(nvic_irq, INTR_PRI, 0);
 
@@ -137,11 +155,52 @@ static void init()
     usart_flag_clear(usart_periph, USART_FLAG_FERR);
     usart_flag_clear(usart_periph, USART_FLAG_PERR);
 
+    // --- DMA configuration ---
+    rcu_periph_clock_enable(RCU_DMA0);
+
+    // DMA: RX direction
+    // For receiving, we continuously have the DMA read any incoming bytes
+    // into the RX circular buffer.
+    // Note: If the circular buffer isn't drained fast enough, old bytes will be lost!
+    dma_deinit(DMA0, dma_rx_channel);
+    dma_single_data_parameter_struct dmaRXConfig;
+    dmaRXConfig.periph_addr         = (uint32_t) &USART_DATA(usart_periph);
+    dmaRXConfig.periph_inc          = DMA_PERIPH_INCREASE_DISABLE;
+    dmaRXConfig.memory0_addr        = (uint32_t) &uartRXDMABuffer[0];
+    dmaRXConfig.memory_inc          = DMA_MEMORY_INCREASE_ENABLE;
+    dmaRXConfig.periph_memory_width = DMA_PERIPH_WIDTH_8BIT;
+    dmaRXConfig.circular_mode       = DMA_CIRCULAR_MODE_ENABLE;
+    dmaRXConfig.direction           = DMA_PERIPH_TO_MEMORY;
+    dmaRXConfig.number              = UART_RX_DMA_BUFFER_SIZE;
+    dmaRXConfig.priority            = DMA_PRIORITY_LOW;
+    dma_single_data_mode_init(DMA0, dma_rx_channel, &dmaRXConfig);
+    dma_channel_subperipheral_select(DMA0, dma_rx_channel, dma_rx_subperipheral); // DMA0 Channel 1: USART2_RX
+    dma_channel_enable(DMA0, dma_rx_channel);
+
+    // DMA: TX direction
+    // For transmitting, every time we have data to send, we move it to the DMA buffer,
+    // then activate the DMA. If further write requests come in before the DMA is done,
+    // or if there is more data than the buffer size, we must wait for the DMA to complete.
+    dma_single_data_parameter_struct dmaTXConfig;
+    dmaTXConfig.periph_addr         = (uint32_t) &USART_DATA(usart_periph);
+    dmaTXConfig.periph_inc          = DMA_PERIPH_INCREASE_DISABLE;
+    dmaTXConfig.memory0_addr        = (uint32_t) &uartTXDMABuffer[0];
+    dmaTXConfig.memory_inc          = DMA_MEMORY_INCREASE_ENABLE;
+    dmaTXConfig.periph_memory_width = DMA_PERIPH_WIDTH_8BIT;
+    dmaTXConfig.circular_mode       = DMA_CIRCULAR_MODE_DISABLE;
+    dmaTXConfig.direction           = DMA_MEMORY_TO_PERIPH;
+    dmaTXConfig.number              = 0;
+    dmaTXConfig.priority            = DMA_PRIORITY_LOW;
+    dma_single_data_mode_init(DMA0, dma_tx_channel, &dmaTXConfig);
+    dma_channel_subperipheral_select(DMA0, dma_tx_channel, dma_tx_subperipheral);
 }
 
 static void deInit()
 {
     usart_disable(usart_periph);
+    dma_channel_disable(DMA0, dma_rx_channel);
+    dma_channel_disable(DMA0, dma_tx_channel);
+
     nvic_irq_disable(nvic_irq);
 
     usart_flag_clear(usart_periph, USART_FLAG_CTS);
@@ -160,50 +219,14 @@ static void deInit()
 
 void USART2_IRQHandler(void)
 {
-    uint8_t byte;
     usart_periph = USART2;
-    // Receive interrupt
-    if(USART_STAT0(usart_periph) & USART_STAT0_RBNE)
-    {
-        // One-wire UART communication:
-        // Ignore received byte when a byte has just been sent (echo).
-        byte = USART_DATA(usart_periph);
-
-        if(!UARTSendFlag)
-        {
-            // not sending, received real data instead of echo -> advance ring buffer index and available counter
-            buffers.rx.buffer[buffers.rx.wrote]=byte;
-            buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
-            available++;
-        }
-    }
-
-    // Transmit buffer empty interrupt => send next byte if there is something
-    // to be sent.
-    if(USART_STAT0(usart_periph) & USART_STAT0_TBE)
-    {
-        if(buffers.tx.read != buffers.tx.wrote)
-        {
-            UARTSendFlag = true;
-            USART_DATA(usart_periph)  = buffers.tx.buffer[buffers.tx.read];
-            buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
-        }
-        else
-        {
-            usart_interrupt_disable(usart_periph, USART_INT_TBE);
-        }
-    }
 
     // Transmission complete interrupt => do not ignore echo any more
     // after last bit has been sent.
     if(USART_STAT0(usart_periph) & USART_STAT0_TC)
     {
-        //Only if there are no more bytes left in the transmit buffer
-        if(buffers.tx.read == buffers.tx.wrote)
-        {
-            byte = USART_DATA(usart_periph);  //Ignore spurios echos of the last sent byte that sometimes occur.
-            UARTSendFlag = false;
-        }
+        // Re-enable the receiver to receive replies after requests
+        usart_receive_config(usart_periph, USART_RECEIVE_ENABLE);
 
         //USART_ClearITPendingBit(USART2, USART_IT_TC);
         usart_interrupt_flag_clear(usart_periph, USART_INT_FLAG_TC);
@@ -212,54 +235,17 @@ void USART2_IRQHandler(void)
 
 void UART3_IRQHandler(void)
 {
-    uint8_t byte;
     usart_periph = UART3;
-    // Receive interrupt
-    if(USART_STAT0(usart_periph) & USART_STAT0_RBNE)
-    {
-        // One-wire UART communication:
-        // Ignore received byte when a byte has just been sent (echo).
-        byte = USART_DATA(usart_periph);
-
-        if(!UARTSendFlag)
-        {
-            // not sending, received real data instead of echo -> advance ring buffer index and available counter
-            buffers.rx.buffer[buffers.rx.wrote]=byte;
-            buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
-            available++;
-        }
-    }
-
-    // Transmit buffer empty interrupt => send next byte if there is something
-    // to be sent.
-    if(USART_STAT0(usart_periph) & USART_STAT0_TBE)
-    {
-        if(buffers.tx.read != buffers.tx.wrote)
-        {
-            UARTSendFlag = true;
-            USART_DATA(usart_periph)  = buffers.tx.buffer[buffers.tx.read];
-            buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
-        }
-        else
-        {
-            usart_interrupt_disable(usart_periph, USART_INT_TBE);
-        }
-    }
 
     // Transmission complete interrupt => do not ignore echo any more
     // after last bit has been sent.
     if(USART_STAT0(usart_periph) & USART_STAT0_TC)
     {
-        //Only if there are no more bytes left in the transmit buffer
-        if(buffers.tx.read == buffers.tx.wrote)
-        {
-            byte = USART_DATA(usart_periph);  //Ignore spurios echos of the last sent byte that sometimes occur.
-            UARTSendFlag = false;
-        }
+        // Re-enable the receiver to receive replies after requests
+        usart_receive_config(usart_periph, USART_RECEIVE_ENABLE);
 
         //USART_ClearITPendingBit(USART2, USART_IT_TC);
         usart_interrupt_flag_clear(usart_periph, USART_INT_FLAG_TC);
-
     }
 }
 
@@ -391,33 +377,46 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
         }
         break;
     }
-
 }
 
 static void tx(uint8_t ch)
 {
-    buffers.tx.buffer[buffers.tx.wrote] = ch;
-    buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
-    usart_interrupt_enable(usart_periph, USART_INT_TBE);
-
+    txN(&ch, 1);
 }
 
 static uint8_t rx(uint8_t *ch)
 {
-    if(buffers.rx.read == buffers.rx.wrote)
-        return 0;
-
-    *ch = buffers.rx.buffer[buffers.rx.read];
-    buffers.rx.read = (buffers.rx.read + 1) % BUFFER_SIZE;
-    available--;
-
-    return 1;
+    return rxN(ch, 1);
 }
 
 static void txN(uint8_t *str, unsigned char number)
 {
-    for(int32_t i = 0; i < number; i++)
-        tx(str[i]);
+    while (number > 0)
+    {
+        // If DMA is active, wait until DMA is done
+        if (DMA_CHCTL(DMA0, dma_tx_channel) & DMA_CHXCTL_CHEN)
+        {
+            while (!dma_flag_get(DMA0, dma_tx_channel, DMA_FLAG_FTF));
+        }
+
+        // Clear the DMA Full transfer complete flag
+        dma_flag_clear(DMA0, dma_tx_channel, DMA_FLAG_FTF);
+
+        // Move data into DMA buffer
+        uint32_t byteCount = MIN(number, sizeof(uartTXDMABuffer));
+        memcpy(&uartTXDMABuffer[0], str, byteCount);
+        str += byteCount;
+        number -= byteCount;
+
+        // Disable the receiver while sending - this hides
+        // the echo of single-wire transmission.
+        // ToDo: Do this better
+        usart_receive_config(usart_periph, USART_RECEIVE_DISABLE);
+
+        // Trigger DMA transfer
+        DMA_CHCNT(DMA0, dma_tx_channel) = byteCount;
+        dma_channel_enable(DMA0, dma_tx_channel);
+    }
 }
 
 static uint8_t rxN(uint8_t *str, unsigned char number)
@@ -425,8 +424,20 @@ static uint8_t rxN(uint8_t *str, unsigned char number)
     if(bytesAvailable() < number)
         return 0;
 
-    for(int32_t i = 0; i < number; i++)
-        rx(&str[i]);
+    // Load data from DMA buffer
+    // Copy at most until the end of the buffer
+    uint32_t bytesUntilWraparound = UART_RX_DMA_BUFFER_SIZE - uartRXReadIndex;
+    uint32_t byteCount = MIN(number, bytesUntilWraparound);
+    memcpy(str, &uartRXDMABuffer[uartRXReadIndex], byteCount);
+    if (byteCount < number)
+    {
+        // If we didn't copy all bytes yet, the read wraps around the
+        // buffer. Do a second memcpy from the start of the buffer.
+        memcpy(&str[byteCount], &uartRXDMABuffer[0], number-byteCount);
+    }
+
+    // Move the read index
+    uartRXReadIndex = (uartRXReadIndex + number) % UART_RX_DMA_BUFFER_SIZE;
 
     return 1;
 }
@@ -434,17 +445,22 @@ static uint8_t rxN(uint8_t *str, unsigned char number)
 static void clearBuffers(void)
 {
     __disable_irq();
-    available         = 0;
-    buffers.rx.read   = 0;
-    buffers.rx.wrote  = 0;
+    // Set the UART read index equal to the write index
+    uartRXReadIndex = UART_RX_DMA_BUFFER_SIZE - dma_transfer_number_get(DMA0, dma_rx_channel);
 
-    buffers.tx.read   = 0;
-    buffers.tx.wrote  = 0;
+    // Stop the transmission
+    dma_channel_disable(DMA0, dma_tx_channel);
+
+    // Ensure the receiver is enabled again
+    usart_receive_config(usart_periph, USART_RECEIVE_ENABLE);
     __enable_irq();
 }
 
 static uint32_t bytesAvailable()
 {
-    return available;
+    uint32_t dmaCounter = dma_transfer_number_get(DMA0, dma_rx_channel);
+    uint32_t uartRXWriteIndex = UART_RX_DMA_BUFFER_SIZE - dmaCounter;
+
+    return (uartRXWriteIndex - uartRXReadIndex + UART_RX_DMA_BUFFER_SIZE) % UART_RX_DMA_BUFFER_SIZE;
 }
 
