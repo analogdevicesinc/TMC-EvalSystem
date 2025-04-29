@@ -11,6 +11,7 @@
 #include "hal/derivative.h"
 #include "hal/HAL.h"
 #include "tmc/IdDetection.h"
+#include "tmc/StepDir.h"
 #include "tmc/TMCL.h"
 #include "tmc/VitalSignsMonitor.h"
 #include "tmc/BoardAssignment.h"
