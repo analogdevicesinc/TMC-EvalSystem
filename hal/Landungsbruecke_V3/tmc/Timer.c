@@ -28,6 +28,11 @@ static void setPeriodMin(timer_channel channel, uint16_t period_min);
 static void setFrequency(timer_channel channel, float freq);
 static void setFrequencyMin(timer_channel channel, float freq_min);
 
+/*
+ * This function triggers AIN1 capture when TIMER0 value matches CH2
+ */
+static void setTimerAdcTrigger(void);
+
 static uint16_t period_min_buf[] = { 0, 0, 0 };
 static float freq_min_buf[] = { 0.0f, 0.0f, 0.0f };
 
@@ -43,7 +48,8 @@ TimerTypeDef Timer =
 	.setPeriodMin = setPeriodMin,
 	.setFrequency = setFrequency,
 	.setFrequencyMin = setFrequencyMin,
-	.overflow_callback = NULL
+	.overflow_callback = NULL,
+    .setTimerAdcTrigger = setTimerAdcTrigger
 };
 
 static void init(void)
@@ -310,7 +316,22 @@ static void setFrequency(timer_channel channel, float freq)
 	timer_autoreload_value_config(timer, period);
 }
 
+static void setTimerAdcTrigger(void)
+{
+    // Configure TIMER0 Channel 2 shadow output
+    timer_channel_output_shadow_config(TIMER0, TIMER_CH_2, TIMER_OC_SHADOW_ENABLE);
+
+    // Set TIMER0 master output trigger source
+    timer_master_output_trigger_source_select(TIMER0, TIMER_TRI_OUT_SRC_O2CPRE);
+
+    // Configure ADC0 to be triggered by TIMER0 Channel 2
+    adc_special_function_config(ADC0, ADC_CONTINUOUS_MODE, DISABLE);
+    adc_external_trigger_source_config(ADC0, ADC_ROUTINE_CHANNEL, ADC_EXTTRIG_ROUTINE_T0_CH2);
+    adc_external_trigger_config(ADC0, ADC_ROUTINE_CHANNEL, EXTERNAL_TRIGGER_FALLING);
+}
+
 void TIMER3_IRQHandler(void)
+
 {
 	if(timer_flag_get(TIMER3, TIMER_FLAG_UP) == SET)
 	{

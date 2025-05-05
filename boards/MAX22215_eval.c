@@ -6,35 +6,36 @@
 #include "Board.h"
 #include "../TMC-API/tmc/ic/MAX22215/MAX22215.h"
 
-#define DEFAULT_ICID  0
+#define DEFAULT_ICID    0
 #define MAX22215_MOTORS 1
-static timer_channel timerChannel1, timerChannel2;
-static float dutyCycle = 0.5;
-static float midPWM;
+#define VM_MIN          80  // VM[V/10] min
+#define VM_MAX          480 // VM[V/10] max
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
-    #define ADC_VM_RES 65535
+#define ADC_VM_RES 65535
 #elif defined(LandungsbrueckeV3)
-    #define ADC_VM_RES 4095
+#define ADC_VM_RES 4095
 #endif
+
+static float dutyCycle = 0.5;
+static uint8_t GAIN    = 50;
+static timer_channel timerChannel1, timerChannel2;
+static MAX22215BusType activeBus = IC_BUS_I2C;
+static I2CTypeDef *MAX22215_I2C;
+static uint8_t deviceAddress = 0x20;
 
 typedef struct
 {
 
-    IOPinTypeDef  *SLEEPN;
-    IOPinTypeDef  *PWM_INT;
-    IOPinTypeDef  *A0;
-    IOPinTypeDef  *A1;
-    IOPinTypeDef  *RLSBRK;
-    IOPinTypeDef  *DIAG;
-    IOPinTypeDef  *adcMid;
+    IOPinTypeDef *SLEEPN;
+    IOPinTypeDef *PWM_INT;
+    IOPinTypeDef *A0;
+    IOPinTypeDef *A1;
+    IOPinTypeDef *RLSBRK;
+    IOPinTypeDef *DIAG;
 } PinsTypeDef;
-
 static PinsTypeDef Pins;
-static MAX22215BusType activeBus = IC_BUS_I2C;
-static I2CTypeDef *MAX22215_I2C;
-static uint8_t deviceAddress = 0x20;
-static uint32_t getFrequency;
+
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value);
@@ -42,7 +43,19 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value);
 static uint32_t SAP(uint8_t type, uint8_t motor, int32_t value);
 static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value);
-static float midPoint_PWM(float dutyCycle);
+static uint32_t getVISEN();
+
+/*
+ * PWM signal at pin PWM_INT controls the current value at ISENS
+ * ISENS value is measured through ADC AIN1. We want to capture
+ * the ADC value at the center of PWM signal. IF DC > 50%, we
+ * will sample at the midPoint of the positive edge, and for
+ * DC < 50%, we will sample it at negative edge. We use two
+ * channels of the same TIMER, one for duty cycle control and
+ * other the value of the other channel set the ADC capture
+ * period through external trigger.
+ */
+static float midPoint_PWM(float dc);
 
 bool max22215_readWriteI2C(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
@@ -68,33 +81,49 @@ uint8_t max22215_getDeviceAddress(uint16_t icID)
     return deviceAddress;
 }
 
-static void setDutyCycle(float dutyCycle)
+static void setDutyCycle(float dc)
 {
+    Timer.setDuty(timerChannel1, dc);
 
-    Timer.setDuty(timerChannel1, dutyCycle);
-    midPWM = midPoint_PWM(dutyCycle);
-    timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, midPWM);
-
+    // Calculate the mid point of the timerChannerl 1 PWM
+    float midPWM = midPoint_PWM(dc);
+    // Set Timer channel to capture ADC value when timerChannel2 equals to midPoint value
+    Timer.setDuty(timerChannel2, midPWM);
 }
 
-static float midPoint_PWM(float dutyCycle)
+static uint32_t getVISEN()
 {
-    if(dutyCycle <= 0.5)
-        return (((dutyCycle+1)/2) * Timer.getPeriod(timerChannel2));
+
+    uint32_t i = 0, v1 = 0;
+    v1 = *HAL.ADCs->AIN1;
+
+    while (i < 1000)
+    {
+        // Reading raw ADC VISEN values
+        v1 += *HAL.ADCs->AIN1;
+        i++;
+    }
+    // 0.66 factor comes from the ISENS amplifier on MAX22215 IC and the resistor divider on LB
+    // Value return is multiple of 100 mV
+    return ((v1 / (i + 1)) * 1000 * 3.3 * 100) / (ADC_VM_RES * 0.66 * GAIN);
+}
+
+static float midPoint_PWM(float dc)
+{
+    if (dc <= 0.5)
+        return (dc + 1) / 2;
     else
-        return (((dutyCycle)/2) * Timer.getPeriod(timerChannel2));
+        return (dc) / 2;
 }
 
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value)
 {
     uint32_t errors = TMC_ERROR_NONE;
 
-    if(motor >= MAX22215_MOTORS)
+    if (motor >= MAX22215_MOTORS)
         return TMC_ERROR_MOTOR;
 
-    int32_t tempValue;
-
-    switch(type)
+    switch (type)
     {
     case 0:
         if (readWrite == READ)
@@ -107,14 +136,86 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         break;
 
-    case 9:
-        // DutyCycle
-        dutyCycle = ((float)*value) / 100.0;
-        setDutyCycle(dutyCycle);
-        timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_2, midPWM);
-
+    case 1:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_NSLEEP_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            max22215_fieldWrite(DEFAULT_ICID, MAX22215_NSLEEP_FIELD, *value);
+        }
+        break;
+    case 2:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_SW_HW_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            max22215_fieldWrite(DEFAULT_ICID, MAX22215_SW_HW_FIELD, *value);
+        }
+        break;
+    case 3:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_RESET_FIELD);
+        }
+        else if (readWrite == WRITE)
+        {
+            max22215_fieldWrite(DEFAULT_ICID, MAX22215_RESET_FIELD, *value);
+        }
+        break;
+    case 4:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_STATUS_SLEEP_FIELD);
+        }
+        break;
+    case 5:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_STATUS_BRK_FIELD);
+        }
+        break;
+    case 6:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_STATUS_RLS_FIELD);
+        }
+        break;
+    case 7:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_STATUS_DIAG_FIELD);
+        }
+        break;
+    case 8:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_STATUS_ENF_DMG_FIELD);
+        }
         break;
 
+    case 9:
+        // DutyCycle
+        dutyCycle = 1.0 - ((float) *value) / 100.0;
+        setDutyCycle(dutyCycle);
+        break;
+
+    case 10:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_STATUS_SAFE_DMG_FIELD);
+        }
+        break;
+
+    case 11:
+        if (readWrite == READ)
+        {
+            *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_STATUS_FLT_PWP_FIELD);
+        }
+        break;
     }
     return errors;
 }
@@ -122,16 +223,16 @@ static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
 {
     UNUSED(motor);
 
-    switch(type) {
+    switch (type)
+    {
 
-    case 0: // VISEN (mV)
-        uint32_t v1 = *HAL.ADCs->AIN0;
-        *value = ((v1)*1000)/ADC_VM_RES;
+    case 0: // VISEN (100 mV)
+        *value = getVISEN();
         break;
-    case 1: // Vm (mV)
-            uint32_t Vm = *HAL.ADCs->VM;
-            *value = ((((Vm)*73330)/ADC_VM_RES)+200);
-            break;
+
+    case 1: // RAWADC
+        *value = *HAL.ADCs->AIN1;
+        break;
 
     default:
         return TMC_ERROR_TYPE;
@@ -143,19 +244,43 @@ static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
     UNUSED(motor);
-    UNUSED(*value);
+
     uint32_t errors = TMC_ERROR_NONE;
 
-    switch(type)
+    switch (type)
     {
     case 5: // DutyCycle
-       dutyCycle = ((float)*value) / 100.0;
-       setDutyCycle(dutyCycle);
-       break;
+        dutyCycle = 1.0 - ((float) *value) / 100.0;
+        setDutyCycle(dutyCycle);
+        break;
+
+    case 6:// Read current duty cycle
+        *value = (int32_t) (dutyCycle * 100);
+        break;
+
+    case 8: // Gain
+        max22215_fieldWrite(DEFAULT_ICID, MAX22215_GAIN_FIELD, *value);
+        if (*value == 0)
+            GAIN = 25;
+        else if (*value == 1)
+            GAIN = 50;
+        else if (*value == 2)
+            GAIN = 100;
+        else if (*value == 3)
+            GAIN = 200;
+        break;
 
     case 10: // PWM Frequency
-        Timer.setFrequency(timerChannel1, (float)*value);
+        Timer.setFrequency(timerChannel1, (float) *value);
         setDutyCycle(dutyCycle);
+        break;
+
+    case 11: // ODM
+        max22215_fieldWrite(DEFAULT_ICID, MAX22215_ODM_FIELD, *value);
+        break;
+
+    case 12: // Slew rate
+        max22215_fieldWrite(DEFAULT_ICID, MAX22215_SR_FIELD, *value);
         break;
 
     default:
@@ -163,7 +288,6 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         break;
     }
     return errors;
-
 }
 
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value)
@@ -187,43 +311,42 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     return handleParameter(READ, motor, type, value);
 }
 
-static void timer_overflow(timer_channel channel)
-{
-    UNUSED(channel);
-
-    // RAMDebug
-    debug_nextProcess();
-}
+//static void timer_overflow(timer_channel channel)
+//{
+//    UNUSED(channel);
+//
+//    // RAMDebug
+//    debug_nextProcess();
+//}
 
 void MAX22215_init(void)
 {
-    Pins.SLEEPN          = &HAL.IOs->pins->DIO8;
-    Pins.PWM_INT         = &HAL.IOs->pins->DIO9;
-    Pins.A0              = &HAL.IOs->pins->DIO6;
-    Pins.A1              = &HAL.IOs->pins->DIO7;
-    Pins.RLSBRK          = &HAL.IOs->pins->DIO14;
-    Pins.adcMid          = &HAL.IOs->pins->DIO11_PWM_WH;
+    Pins.SLEEPN  = &HAL.IOs->pins->DIO8;
+    Pins.PWM_INT = &HAL.IOs->pins->DIO9;
+    Pins.A0      = &HAL.IOs->pins->DIO6;
+    Pins.A1      = &HAL.IOs->pins->DIO7;
+    Pins.RLSBRK  = &HAL.IOs->pins->DIO14;
 
     HAL.IOs->config->toOutput(Pins.SLEEPN);
     HAL.IOs->config->toOutput(Pins.A0);
     HAL.IOs->config->toOutput(Pins.A1);
     HAL.IOs->config->toOutput(Pins.RLSBRK);
     HAL.IOs->config->toOutput(Pins.PWM_INT);
-    HAL.IOs->config->toOutput(Pins.adcMid);
 
     I2C.init();
 	MAX22215_I2C = HAL.I2C;
 
-    Evalboards.ch2.userFunction                  = userFunction;
-    Evalboards.ch2.writeRegister                 = writeRegister;
-    Evalboards.ch2.readRegister                  = readRegister;
-    Evalboards.ch2.GAP                           = GAP;
-    Evalboards.ch2.SAP                           = SAP;
-    Evalboards.ch2.GIO                           = GIO;
+    Evalboards.ch2.userFunction  = userFunction;
+    Evalboards.ch2.writeRegister = writeRegister;
+    Evalboards.ch2.readRegister  = readRegister;
+    Evalboards.ch2.GAP           = GAP;
+    Evalboards.ch2.SAP           = SAP;
+    Evalboards.ch2.GIO           = GIO;
+    Evalboards.ch2.VMMin         = VM_MIN;
+    Evalboards.ch2.VMMax         = VM_MAX;
 
     HAL.IOs->config->setHigh(Pins.SLEEPN);
     HAL.IOs->config->setLow(Pins.RLSBRK);
-    HAL.IOs->config->setLow(Pins.PWM_INT);
 
     //Setting the slave ID to 0x10
     HAL.IOs->config->setLow(Pins.A0);
@@ -231,6 +354,7 @@ void MAX22215_init(void)
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
     timerChannel1 = TIMER_CHANNEL_3;
+    timerChannel2 = TIMER_CHANNEL_2;
 #elif defined(LandungsbrueckeV3)
     timerChannel1 = TIMER_CHANNEL_4;
     timerChannel2 = TIMER_CHANNEL_1;
@@ -239,17 +363,13 @@ void MAX22215_init(void)
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
     Pins.PWM_INT->configuration.GPIO_Mode = GPIO_Mode_AF4;
 #elif defined(LandungsbrueckeV3)
-    Pins.PWM_INT->configuration.GPIO_Mode  = GPIO_MODE_AF;
+    Pins.PWM_INT->configuration.GPIO_Mode = GPIO_MODE_AF;
     gpio_af_set(Pins.PWM_INT->port, GPIO_AF_1, Pins.PWM_INT->bitWeight);
-
-    Pins.adcMid->configuration.GPIO_Mode  = GPIO_MODE_AF;
-    gpio_af_set(Pins.adcMid->port, GPIO_AF_1, Pins.adcMid->bitWeight);
 #endif
 
     HAL.IOs->config->set(Pins.PWM_INT);
-    HAL.IOs->config->set(Pins.adcMid);
 
-    Timer.overflow_callback = timer_overflow;
+//    Timer.overflow_callback = timer_overflow;
     Timer.init();
 
     // For PWM generation
@@ -258,13 +378,5 @@ void MAX22215_init(void)
     Timer.setDuty(timerChannel1, 0.5);
 
     // For ADC Capture on PWM middle point
-    Timer.setDuty(timerChannel2, 0.5);
-
-    timer_channel_output_shadow_config(TIMER0, TIMER_CH_2, TIMER_OC_SHADOW_ENABLE);
-    timer_master_output_trigger_source_select(TIMER0, TIMER_TRI_OUT_SRC_O2CPRE);
-
-    adc_special_function_config(ADC0, ADC_CONTINUOUS_MODE, ENABLE);
-    adc_external_trigger_source_config(ADC0, ADC_ROUTINE_CHANNEL, ADC_EXTTRIG_ROUTINE_T0_CH2);
-    adc_external_trigger_config(ADC0, ADC_ROUTINE_CHANNEL, EXTERNAL_TRIGGER_DISABLE);
-
+    Timer.setTimerAdcTrigger();
 }

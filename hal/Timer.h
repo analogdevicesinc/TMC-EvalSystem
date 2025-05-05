@@ -39,6 +39,7 @@ typedef struct
 	void (*setFrequency) (timer_channel channel, float freq);
 	void (*setFrequencyMin) (timer_channel channel, float freq_min);
 	void (*overflow_callback) (timer_channel channel);
+	void (*setTimerAdcTrigger) (void);
 } TimerTypeDef;
 
 extern TimerTypeDef Timer;
