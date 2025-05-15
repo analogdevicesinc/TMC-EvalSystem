@@ -11,8 +11,8 @@
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
-#define VM_MIN         21   // VM[V/10] min
-#define VM_MAX         176  // VM[V/10] max, It should be 16V but ADC measurement is not precise, so 10% extra
+#define VM_MIN         19   // VM[V/10] min, It should be 2.1V but ADC measurement is not precise, so decreased the voltage limit by 10% below the original value.
+#define VM_MAX         176  // VM[V/10] max, It should be 16V but ADC measurement is not precise, so increased the voltage limit by 10% above the original value.
 #define DEFAULT_ICID  0
 
 // Typedefs
