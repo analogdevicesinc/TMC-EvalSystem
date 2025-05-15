@@ -1117,7 +1117,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         }
         break;
     case 10:  // Change device address
-        deviceAddress = *value & 0xFF;
+        deviceAddress = ((*value & 0xFF) << 1);
         break;
     case 11:  // Rising edge L
         HAL.IOs->config->toOutput(Pins.REFLN_LB);
