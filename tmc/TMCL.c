@@ -6,6 +6,7 @@
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
+#include <string.h>
 
 #include "TMCL.h"
 
@@ -103,6 +104,11 @@ uint8_t setTMCLStatus(uint8_t evalError);
 void rx(RXTXTypeDef *RXTX);
 void tx(RXTXTypeDef *RXTX);
 
+// ToDo: Move this to the USB HAL?
+#define USB_MAX_TX_DATA 256
+uint8_t replyBuffer[USB_MAX_TX_DATA];
+uint32_t extraDataSize = 0;
+
 static uint16_t getExtendedAddress(TMCLCommandTypeDef *tmclCommand)
 {
     return (((uint16_t) tmclCommand->Motor >> 4) << 8) | tmclCommand->Type;
@@ -134,7 +140,9 @@ TMCLCommandTypeDef ActualCommand;
 TMCLReplyTypeDef ActualReply;
 RXTXTypeDef interfaces[4];
 uint32_t numberOfInterfaces;
+uint32_t currentInterface = 0;
 uint32_t resetRequest = 0;
+
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
     extern struct BootloaderConfig BLConfig;
@@ -413,8 +421,6 @@ void tmcl_init()
 
 void tmcl_process()
 {
-    static int32_t currentInterface = 0;
-
     if(ActualCommand.Error != TMCL_RX_ERROR_NODATA)
         tx(&interfaces[currentInterface]);
 
@@ -435,16 +441,36 @@ void tmcl_process()
     }
 }
 
+uint32_t tmcl_getExtraDataLimit()
+{
+    if (currentInterface == 0) // USB
+    {
+        // 9 Bytes for the TMCL reply itself
+        return USB_MAX_TX_DATA - 9;
+    }
+
+    return 0;
+}
+
+bool tmcl_appendData(uint8_t *data, uint32_t length)
+{
+    if (length > tmcl_getExtraDataLimit())
+        return false;
+
+    memcpy(&replyBuffer[9], data, length);
+    extraDataSize = length;
+
+    return true;
+}
+
 void tx(RXTXTypeDef *RXTX)
 {
     uint8_t checkSum = 0;
 
-    uint8_t reply[9];
-
     if(ActualReply.IsSpecial)
     {
         for(uint8_t i = 0; i < 9; i++)
-            reply[i] = ActualReply.Special[i];
+            replyBuffer[i] = ActualReply.Special[i];
     }
     else
     {
@@ -457,18 +483,19 @@ void tx(RXTXTypeDef *RXTX)
         checkSum += ActualReply.Value.Byte[1];
         checkSum += ActualReply.Value.Byte[0];
 
-        reply[0] = SERIAL_HOST_ADDRESS;
-        reply[1] = ActualReply.ModuleId;
-        reply[2] = ActualReply.Status;
-        reply[3] = ActualReply.Opcode;
-        reply[4] = ActualReply.Value.Byte[3];
-        reply[5] = ActualReply.Value.Byte[2];
-        reply[6] = ActualReply.Value.Byte[1];
-        reply[7] = ActualReply.Value.Byte[0];
-        reply[8] = checkSum;
+        replyBuffer[0] = SERIAL_HOST_ADDRESS;
+        replyBuffer[1] = ActualReply.ModuleId;
+        replyBuffer[2] = ActualReply.Status;
+        replyBuffer[3] = ActualReply.Opcode;
+        replyBuffer[4] = ActualReply.Value.Byte[3];
+        replyBuffer[5] = ActualReply.Value.Byte[2];
+        replyBuffer[6] = ActualReply.Value.Byte[1];
+        replyBuffer[7] = ActualReply.Value.Byte[0];
+        replyBuffer[8] = checkSum;
     }
 
-    RXTX->txN(reply, 9);
+    RXTX->txN(replyBuffer, 9 + extraDataSize);
+    extraDataSize = 0;
 }
 
 void rx(RXTXTypeDef *RXTX)
@@ -1150,6 +1177,9 @@ static int handleRamDebug(uint8_t type, uint8_t motor, uint32_t *data)
     case 21:
         if (!debug_setTriggerAddress(*data))
             return REPLY_MAX_EXCEEDED;
+        break;
+    case 22:
+        *data = debug_bulkDownload(*data);
         break;
     default:
         return REPLY_INVALID_TYPE;

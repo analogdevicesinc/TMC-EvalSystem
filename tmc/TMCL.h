@@ -164,4 +164,7 @@ typedef struct
 void tmcl_init();
 void tmcl_process();
 
+uint32_t tmcl_getExtraDataLimit();
+bool tmcl_appendData(uint8_t *data, uint32_t length);
+
 #endif /* TMCL_H */

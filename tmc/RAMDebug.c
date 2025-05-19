@@ -665,3 +665,18 @@ void debug_setGlobalEnable(bool enable)
     global_enable = enable;
 }
 
+uint32_t debug_bulkDownload(uint32_t index)
+{
+    uint32_t indexInBuffer = (index + debug_start_index) % RAMDEBUG_BUFFER_ELEMENTS;
+    uint32_t samplesUntilWraparound = RAMDEBUG_BUFFER_ELEMENTS - indexInBuffer;
+    uint32_t leftSamples = sampleCount - index;
+
+    uint32_t samplesToSend = MIN(leftSamples, tmcl_getExtraDataLimit() / sizeof(uint32_t));
+    samplesToSend = MIN(samplesToSend, samplesUntilWraparound);
+
+    uint32_t extraBytes = samplesToSend * sizeof(uint32_t);
+
+    tmcl_appendData((uint8_t *) &debug_buffer[indexInBuffer], extraBytes);
+
+    return samplesToSend;
+}
