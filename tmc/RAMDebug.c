@@ -27,8 +27,8 @@ bool captureEnabled = false;
 // Sample Buffer
 uint32_t debug_buffer[RAMDEBUG_BUFFER_ELEMENTS] = { 0 };
 uint32_t debug_write_index = 0;
-uint32_t debug_read_index  = 0;
-uint32_t pre_index = 0;
+uint32_t debug_start_index = 0;
+
 
 RAMDebugState state = RAMDEBUG_IDLE;
 
@@ -140,6 +140,12 @@ void handleTriggering()
         break;
     }
 
+    if (state == RAMDEBUG_CAPTURE)
+    {
+        // Store the buffer index where we started capturing
+        debug_start_index = (debug_write_index - sampleCountPre) % RAMDEBUG_BUFFER_ELEMENTS;
+    }
+
     // Store the last threshold comparison value
     wasAboveSigned   = isAboveSigned;
     wasAboveUnsigned = isAboveUnsigned;
@@ -150,28 +156,41 @@ void handleDebugging()
 {
     int32_t i;
 
+    if (state == RAMDEBUG_IDLE)
+        return;
+
+    if (state == RAMDEBUG_COMPLETE)
+        return;
+
     for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
     {
         if (channels[i].type == CAPTURE_DISABLED)
             continue;
 
-        if(state == RAMDEBUG_CAPTURE)
-        {
-            // Add the sample value to the buffer
-            debug_buffer[debug_write_index++] = readChannel(channels[i]);
+        // Add the sample value to the buffer
+        debug_buffer[debug_write_index] = readChannel(channels[i]);
 
-            if (debug_write_index >= sampleCount)
+        if (++debug_write_index == RAMDEBUG_BUFFER_ELEMENTS)
+        {
+            debug_write_index = 0;
+
+            // If we filled the entire buffer, the pretrigger phase is finished
+            if (state == RAMDEBUG_PRETRIGGER)
+            {
+                state = RAMDEBUG_TRIGGER;
+            }
+        }
+
+        if (state == RAMDEBUG_CAPTURE)
+        {
+            uint32_t samplesWritten = (debug_write_index - debug_start_index + RAMDEBUG_BUFFER_ELEMENTS) % RAMDEBUG_BUFFER_ELEMENTS;
+            if (samplesWritten == 0 || samplesWritten >= sampleCount)
             {
                 // End the capture
                 state = RAMDEBUG_COMPLETE;
                 captureEnabled = false;
                 break;
             }
-        }
-        else if((state != RAMDEBUG_COMPLETE) && (sampleCountPre > 0))
-        {
-            debug_buffer[pre_index] = readChannel(channels[i]);
-            pre_index = (pre_index + 1) % sampleCountPre;
         }
     }
 }
@@ -193,6 +212,20 @@ void debug_process()
 
     if (captureEnabled == false)
         return;
+
+    if (state == RAMDEBUG_PRETRIGGER)
+    {
+        // Check if the requested pretrigger data has been captured
+        // Note that this does not cover the case when the amount of pretrigger
+        // samples equals the amount of possible samples. In that case the write
+        // index wraps back to zero and does not allow this check to succeed.
+        // For that case the moving write pointer logic takes care of updating
+        // the state.
+        if (debug_write_index >= sampleCountPre)
+        {
+            state = RAMDEBUG_TRIGGER;
+        }
+    }
 
     handleTriggering();
 
@@ -305,9 +338,7 @@ void debug_init()
     {
         debug_buffer[i] = 0;
     }
-    debug_read_index   = 0;
     debug_write_index  = 0;
-    pre_index = 0;
 
     // Set default values for the capture configuration
     prescaler   = 1;
@@ -525,7 +556,7 @@ int32_t debug_enableTrigger(uint8_t type, uint32_t threshold)
     wasAboveUnsigned = (uint32_t) triggerValue > (uint32_t) trigger.threshold;
 
     // Enable the trigger
-    state = RAMDEBUG_TRIGGER;
+    state = RAMDEBUG_PRETRIGGER;
 
     // Enable the capturing IRQ
     captureEnabled = true;
@@ -567,17 +598,21 @@ uint32_t debug_getPretriggerSampleCount()
 
 int32_t debug_getSample(uint32_t index, uint32_t *value)
 {
-    if (index >= debug_write_index)
+    if (index >= sampleCount)
         return 0;
 
-    if(index < sampleCountPre)
+    if (state != RAMDEBUG_COMPLETE)
     {
-        *value = debug_buffer[(pre_index + index) % sampleCountPre];
+        if (state != RAMDEBUG_CAPTURE)
+            return false;
+
+        // If we are in CAPTURE state and the user requested data
+        // thats already captured, allow the access
+        if (index > ((debug_write_index - debug_start_index) % RAMDEBUG_BUFFER_ELEMENTS))
+            return false;
     }
-    else
-    {
-        *value = debug_buffer[index];
-    }
+
+    *value = debug_buffer[(index + debug_start_index) % RAMDEBUG_BUFFER_ELEMENTS];
 
     return 1;
 }
