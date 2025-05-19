@@ -17,37 +17,37 @@
 
 // Capture state
 typedef enum {
-	RAMDEBUG_IDLE     = 0,
-	RAMDEBUG_TRIGGER  = 1,
-	RAMDEBUG_CAPTURE  = 2,
-	RAMDEBUG_COMPLETE = 3
+    RAMDEBUG_IDLE     = 0,
+    RAMDEBUG_TRIGGER  = 1,
+    RAMDEBUG_CAPTURE  = 2,
+    RAMDEBUG_COMPLETE = 3
 } RAMDebugState;
 
 // Capture channel configuration
 typedef enum {
-	CAPTURE_DISABLED            = 0,
+    CAPTURE_DISABLED            = 0,
 
-	CAPTURE_PARAMETER           = 1,
-	CAPTURE_REGISTER            = 2,
-	CAPTURE_STACKED_REGISTER    = 3,
-	CAPTURE_SYSTICK             = 4,
-	CAPTURE_RAMDEBUG_PARAMETER  = 5, // For modules that do not support registers
-	CAPTURE_ANALOG_INPUT        = 6,
+    CAPTURE_PARAMETER           = 1,
+    CAPTURE_REGISTER            = 2,
+    CAPTURE_STACKED_REGISTER    = 3,
+    CAPTURE_SYSTICK             = 4,
+    CAPTURE_RAMDEBUG_PARAMETER  = 5, // For modules that do not support registers
+    CAPTURE_ANALOG_INPUT        = 6,
 
-	CAPTURE_END
+    CAPTURE_END
 } RAMDebugSource;
 
 // Trigger configuration
 typedef enum {
-	TRIGGER_UNCONDITIONAL          = 0,
-	TRIGGER_RISING_EDGE_SIGNED     = 1,
-	TRIGGER_FALLING_EDGE_SIGNED    = 2,
-	TRIGGER_DUAL_EDGE_SIGNED       = 3,
-	TRIGGER_RISING_EDGE_UNSIGNED   = 4,
-	TRIGGER_FALLING_EDGE_UNSIGNED  = 5,
-	TRIGGER_DUAL_EDGE_UNSIGNED     = 6,
+    TRIGGER_UNCONDITIONAL          = 0,
+    TRIGGER_RISING_EDGE_SIGNED     = 1,
+    TRIGGER_FALLING_EDGE_SIGNED    = 2,
+    TRIGGER_DUAL_EDGE_SIGNED       = 3,
+    TRIGGER_RISING_EDGE_UNSIGNED   = 4,
+    TRIGGER_FALLING_EDGE_UNSIGNED  = 5,
+    TRIGGER_DUAL_EDGE_UNSIGNED     = 6,
 
-	TRIGGER_END
+    TRIGGER_END
 } RAMDebugTrigger;
 
 void debug_init();

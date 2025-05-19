@@ -39,24 +39,24 @@ static bool next_process = false;
 
 // Sampling options
 static uint32_t prescaler   = 1;
-static uint32_t frequency	= RAMDEBUG_FREQUENCY;
+static uint32_t frequency   = RAMDEBUG_FREQUENCY;
 static uint32_t sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
 static uint32_t sampleCountPre = 0;
 
 typedef struct {
-	RAMDebugSource type;
-	uint8_t eval_channel;
-	uint32_t address;
+    RAMDebugSource type;
+    uint8_t eval_channel;
+    uint32_t address;
 } Channel;
 
 Channel channels[RAMDEBUG_MAX_CHANNELS];
 
 typedef struct {
-	Channel          channel;
-	RAMDebugTrigger  type;
-	uint32_t         threshold;
-	uint32_t         mask;
-	uint8_t          shift;
+    Channel          channel;
+    RAMDebugTrigger  type;
+    uint32_t         threshold;
+    uint32_t         mask;
+    uint8_t          shift;
 } Trigger;
 
 Trigger trigger;
@@ -73,87 +73,87 @@ static uint32_t readChannel(Channel channel);
 // This function only gets called by the interrupt handler.
 void handleTriggering()
 {
-	// Abort if not in the right state
-	if (state != RAMDEBUG_TRIGGER)
-		return;
+    // Abort if not in the right state
+    if (state != RAMDEBUG_TRIGGER)
+        return;
 
-	// Read the trigger channel value and apply mask/shift values
-	uint32_t value_raw = readChannel(trigger.channel);
-	value_raw = (value_raw & trigger.mask) >> trigger.shift;
+    // Read the trigger channel value and apply mask/shift values
+    uint32_t value_raw = readChannel(trigger.channel);
+    value_raw = (value_raw & trigger.mask) >> trigger.shift;
 
-	// Create a signed version of the trigger value
-	int32_t value = value_raw;
-	// Create a mask with only the highest bit of the trigger channel mask set
-	uint32_t msbMask = (trigger.mask>>trigger.shift) ^ (trigger.mask>>(trigger.shift+1));
-	// Check if our value has that bit set.
-	if (value_raw & msbMask)
-	{
-	    // If yes, sign-extend it
-	    value |= ~(trigger.mask>>trigger.shift);
-	}
+    // Create a signed version of the trigger value
+    int32_t value = value_raw;
+    // Create a mask with only the highest bit of the trigger channel mask set
+    uint32_t msbMask = (trigger.mask>>trigger.shift) ^ (trigger.mask>>(trigger.shift+1));
+    // Check if our value has that bit set.
+    if (value_raw & msbMask)
+    {
+        // If yes, sign-extend it
+        value |= ~(trigger.mask>>trigger.shift);
+    }
 
-	bool isAboveSigned   = value > (int32_t)  trigger.threshold;
-	bool isAboveUnsigned = value_raw > (uint32_t) trigger.threshold;
+    bool isAboveSigned   = value > (int32_t)  trigger.threshold;
+    bool isAboveUnsigned = value_raw > (uint32_t) trigger.threshold;
 
-	switch(trigger.type)
-	{
-	case TRIGGER_UNCONDITIONAL:
-		state = RAMDEBUG_CAPTURE;
-		break;
-	case TRIGGER_RISING_EDGE_SIGNED:
-		if (!wasAboveSigned && isAboveSigned)
-		{
-			state = RAMDEBUG_CAPTURE;
-		}
-		break;
-	case TRIGGER_FALLING_EDGE_SIGNED:
-		if (wasAboveSigned && !isAboveSigned)
-		{
-			state = RAMDEBUG_CAPTURE;
-		}
-		break;
-	case TRIGGER_DUAL_EDGE_SIGNED:
-		if (wasAboveSigned != isAboveSigned)
-		{
-			state = RAMDEBUG_CAPTURE;
-		}
-		break;
-	case TRIGGER_RISING_EDGE_UNSIGNED:
-		if (!wasAboveUnsigned && isAboveUnsigned)
-		{
-			state = RAMDEBUG_CAPTURE;
-		}
-		break;
-	case TRIGGER_FALLING_EDGE_UNSIGNED:
-		if (wasAboveUnsigned && !isAboveUnsigned)
-		{
-			state = RAMDEBUG_CAPTURE;
-		}
-		break;
-	case TRIGGER_DUAL_EDGE_UNSIGNED:
-		if (wasAboveUnsigned != isAboveUnsigned)
-		{
-			state = RAMDEBUG_CAPTURE;
-		}
-		break;
-	default:
-		break;
-	}
+    switch(trigger.type)
+    {
+    case TRIGGER_UNCONDITIONAL:
+        state = RAMDEBUG_CAPTURE;
+        break;
+    case TRIGGER_RISING_EDGE_SIGNED:
+        if (!wasAboveSigned && isAboveSigned)
+        {
+            state = RAMDEBUG_CAPTURE;
+        }
+        break;
+    case TRIGGER_FALLING_EDGE_SIGNED:
+        if (wasAboveSigned && !isAboveSigned)
+        {
+            state = RAMDEBUG_CAPTURE;
+        }
+        break;
+    case TRIGGER_DUAL_EDGE_SIGNED:
+        if (wasAboveSigned != isAboveSigned)
+        {
+            state = RAMDEBUG_CAPTURE;
+        }
+        break;
+    case TRIGGER_RISING_EDGE_UNSIGNED:
+        if (!wasAboveUnsigned && isAboveUnsigned)
+        {
+            state = RAMDEBUG_CAPTURE;
+        }
+        break;
+    case TRIGGER_FALLING_EDGE_UNSIGNED:
+        if (wasAboveUnsigned && !isAboveUnsigned)
+        {
+            state = RAMDEBUG_CAPTURE;
+        }
+        break;
+    case TRIGGER_DUAL_EDGE_UNSIGNED:
+        if (wasAboveUnsigned != isAboveUnsigned)
+        {
+            state = RAMDEBUG_CAPTURE;
+        }
+        break;
+    default:
+        break;
+    }
 
-	// Store the last threshold comparison value
-	wasAboveSigned   = isAboveSigned;
-	wasAboveUnsigned = isAboveUnsigned;
+    // Store the last threshold comparison value
+    wasAboveSigned   = isAboveSigned;
+    wasAboveUnsigned = isAboveUnsigned;
 }
 
 // This function only gets called by the interrupt handler.
 void handleDebugging()
 {
-	int32_t i;
+    int32_t i;
 
-	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
-	{
-		if (channels[i].type == CAPTURE_DISABLED)
-			continue;
+    for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
+    {
+        if (channels[i].type == CAPTURE_DISABLED)
+            continue;
 
         if(state == RAMDEBUG_CAPTURE)
         {
@@ -173,388 +173,388 @@ void handleDebugging()
             debug_buffer[pre_index] = readChannel(channels[i]);
             pre_index = (pre_index + 1) % sampleCountPre;
         }
-	}
+    }
 }
 
 void debug_process()
 {
-	static uint32_t prescalerCount = 0;
+    static uint32_t prescalerCount = 0;
 
-	if(!global_enable)
-		return;
+    if(!global_enable)
+        return;
 
-	if(processing)
-		return;
+    if(processing)
+        return;
 
-	if(use_next_process && (!next_process))
-		return;
+    if(use_next_process && (!next_process))
+        return;
 
-	next_process = false;
+    next_process = false;
 
-	if (captureEnabled == false)
-		return;
+    if (captureEnabled == false)
+        return;
 
-	handleTriggering();
+    handleTriggering();
 
-	// Increment and check the prescaler counter
-	if (++prescalerCount < prescaler)
-		return;
+    // Increment and check the prescaler counter
+    if (++prescalerCount < prescaler)
+        return;
 
     processing = true;
 
-	// Reset the prescaler counter
-	prescalerCount = 0;
+    // Reset the prescaler counter
+    prescalerCount = 0;
 
-	handleDebugging();
-	processing = false;
+    handleDebugging();
+    processing = false;
 }
 
 static inline uint32_t readChannel(Channel channel)
 {
-	uint32_t sample = 0;
+    uint32_t sample = 0;
 
-	switch (channel.type)
-	{
-	case CAPTURE_PARAMETER:
-	{
-		uint8_t motor   = (channel.address >> 24) & 0xFF;
-		uint8_t type    = (channel.address >> 0) & 0xFF;
+    switch (channel.type)
+    {
+    case CAPTURE_PARAMETER:
+    {
+        uint8_t motor   = (channel.address >> 24) & 0xFF;
+        uint8_t type    = (channel.address >> 0) & 0xFF;
 
-		((channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1))->GAP(type, motor, (int32_t *)&sample);
+        ((channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1))->GAP(type, motor, (int32_t *)&sample);
 
-		break;
-	}
-	case CAPTURE_REGISTER:
-	{
-		uint8_t motor = channel.address >> 24;
+        break;
+    }
+    case CAPTURE_REGISTER:
+    {
+        uint8_t motor = channel.address >> 24;
 
-		((channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1))->readRegister(motor, channel.address, (int32_t *)&sample);
+        ((channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1))->readRegister(motor, channel.address, (int32_t *)&sample);
 
-		break;
-	}
-	case CAPTURE_STACKED_REGISTER:
-	{
-		uint8_t motor                  = channel.address >> 24;
-		uint8_t stackedRegisterValue   = channel.address >> 16;
-		uint8_t stackedRegisterAddress = channel.address >> 8;
-		uint8_t dataRegisterAddress    = channel.address >> 0;
+        break;
+    }
+    case CAPTURE_STACKED_REGISTER:
+    {
+        uint8_t motor                  = channel.address >> 24;
+        uint8_t stackedRegisterValue   = channel.address >> 16;
+        uint8_t stackedRegisterAddress = channel.address >> 8;
+        uint8_t dataRegisterAddress    = channel.address >> 0;
 
-		EvalboardFunctionsTypeDef *ch = (channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1);
+        EvalboardFunctionsTypeDef *ch = (channel.eval_channel == 1) ? (&Evalboards.ch2) : (&Evalboards.ch1);
 
-		// Backup the stacked address
-		uint32_t oldAddress = 0;
-		ch->readRegister(motor, stackedRegisterAddress, (int32_t *)&oldAddress);
+        // Backup the stacked address
+        uint32_t oldAddress = 0;
+        ch->readRegister(motor, stackedRegisterAddress, (int32_t *)&oldAddress);
 
-		// Write the new stacked address
-		ch->writeRegister(motor, stackedRegisterAddress, stackedRegisterValue);
+        // Write the new stacked address
+        ch->writeRegister(motor, stackedRegisterAddress, stackedRegisterValue);
 
-		// Read the stacked data register
-		ch->readRegister(motor, dataRegisterAddress, (int32_t *)&sample);
+        // Read the stacked data register
+        ch->readRegister(motor, dataRegisterAddress, (int32_t *)&sample);
 
-		// Restore the stacked address
-		ch->writeRegister(motor, stackedRegisterAddress, oldAddress);
-		break;
-	}
-	case CAPTURE_SYSTICK:
-		sample = systick_getTick();//systick_getTimer10ms();
-		break;
-	case CAPTURE_ANALOG_INPUT:
-		// Use same indices as in TMCL.c GetInput()
-		switch(channel.address) {
-		case 0:
-			sample = *HAL.ADCs->AIN0;
-			break;
-		case 1:
-			sample = *HAL.ADCs->AIN1;
-			break;
-		case 2:
-			sample = *HAL.ADCs->AIN2;
-			break;
-		case 3:
-			sample = *HAL.ADCs->DIO4;
-			break;
-		case 4:
-			sample = *HAL.ADCs->DIO5;
-			break;
-		case 6:
-			sample = *HAL.ADCs->VM;
-			break;
-		}
-		break;
-	default:
-		sample = 0;
-		break;
-	}
+        // Restore the stacked address
+        ch->writeRegister(motor, stackedRegisterAddress, oldAddress);
+        break;
+    }
+    case CAPTURE_SYSTICK:
+        sample = systick_getTick();//systick_getTimer10ms();
+        break;
+    case CAPTURE_ANALOG_INPUT:
+        // Use same indices as in TMCL.c GetInput()
+        switch(channel.address) {
+        case 0:
+            sample = *HAL.ADCs->AIN0;
+            break;
+        case 1:
+            sample = *HAL.ADCs->AIN1;
+            break;
+        case 2:
+            sample = *HAL.ADCs->AIN2;
+            break;
+        case 3:
+            sample = *HAL.ADCs->DIO4;
+            break;
+        case 4:
+            sample = *HAL.ADCs->DIO5;
+            break;
+        case 6:
+            sample = *HAL.ADCs->VM;
+            break;
+        }
+        break;
+    default:
+        sample = 0;
+        break;
+    }
 
-	return sample;
+    return sample;
 }
 
 // === Interfacing with the debugger ===========================================
 void debug_init()
 {
-	int32_t i;
+    int32_t i;
 
-	// Disable data capture before changing the configuration
-	captureEnabled = false;
+    // Disable data capture before changing the configuration
+    captureEnabled = false;
 
-	// Reset the RAMDebug state
-	state = RAMDEBUG_IDLE;
+    // Reset the RAMDebug state
+    state = RAMDEBUG_IDLE;
 
-	// Wipe the RAM debug buffer
-	for (i = 0; i < RAMDEBUG_BUFFER_ELEMENTS; i++)
-	{
-		debug_buffer[i] = 0;
-	}
-	debug_read_index   = 0;
-	debug_write_index  = 0;
-	pre_index = 0;
+    // Wipe the RAM debug buffer
+    for (i = 0; i < RAMDEBUG_BUFFER_ELEMENTS; i++)
+    {
+        debug_buffer[i] = 0;
+    }
+    debug_read_index   = 0;
+    debug_write_index  = 0;
+    pre_index = 0;
 
-	// Set default values for the capture configuration
-	prescaler   = 1;
-	sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
+    // Set default values for the capture configuration
+    prescaler   = 1;
+    sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
     sampleCountPre = 0;
 
-	// Reset the channel configuration
-	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
-	{
-		channels[i].type = CAPTURE_DISABLED;
-		channels[i].eval_channel = 0;
-		channels[i].address = 0;
-	}
+    // Reset the channel configuration
+    for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
+    {
+        channels[i].type = CAPTURE_DISABLED;
+        channels[i].eval_channel = 0;
+        channels[i].address = 0;
+    }
 
-	// Reset the trigger
-	trigger.channel.type     = CAPTURE_DISABLED;
-	trigger.channel.address  = 0;
-	trigger.mask             = 0xFFFFFFFF;
-	trigger.shift            = 0;
+    // Reset the trigger
+    trigger.channel.type     = CAPTURE_DISABLED;
+    trigger.channel.address  = 0;
+    trigger.mask             = 0xFFFFFFFF;
+    trigger.shift            = 0;
 
-	global_enable = true;
+    global_enable = true;
 }
 
 bool debug_setChannel(uint8_t type, uint32_t channel_value)
 {
-	return (
-		debug_setEvalChannel((channel_value >> 16) & 0x01) &&
-		debug_setAddress(channel_value) &&
-		debug_setType(type)
-	);
+    return (
+        debug_setEvalChannel((channel_value >> 16) & 0x01) &&
+        debug_setAddress(channel_value) &&
+        debug_setType(type)
+    );
 }
 
 bool debug_setTriggerChannel(uint8_t type, uint32_t channel_value)
 {
-	return (
-		debug_setTriggerType(type) &&
-		debug_setTriggerEvalChannel((channel_value >> 16) & 0x01) &&
-		debug_setTriggerAddress(channel_value)
-	);
+    return (
+        debug_setTriggerType(type) &&
+        debug_setTriggerEvalChannel((channel_value >> 16) & 0x01) &&
+        debug_setTriggerAddress(channel_value)
+    );
 }
 
 bool debug_setType(uint8_t type)
 {
-	int32_t i;
+    int32_t i;
 
-	if (type >= CAPTURE_END)
-		return false;
+    if (type >= CAPTURE_END)
+        return false;
 
-	if (state != RAMDEBUG_IDLE)
-		return false;
+    if (state != RAMDEBUG_IDLE)
+        return false;
 
-	// ToDo: Type-specific address verification logic?
+    // ToDo: Type-specific address verification logic?
 
-	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
-	{
-		if (channels[i].type != CAPTURE_DISABLED)
-			continue;
+    for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
+    {
+        if (channels[i].type != CAPTURE_DISABLED)
+            continue;
 
-		// Add the configuration to the found channel
-		channels[i].type     = type;
+        // Add the configuration to the found channel
+        channels[i].type     = type;
 
-		return true;
-	}
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 bool debug_setEvalChannel(uint8_t eval_channel)
 {
-	int32_t i;
+    int32_t i;
 
-	if (state != RAMDEBUG_IDLE)
-		return false;
+    if (state != RAMDEBUG_IDLE)
+        return false;
 
-	// ToDo: Type-specific address verification logic?
+    // ToDo: Type-specific address verification logic?
 
-	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
-	{
-		if (channels[i].type != CAPTURE_DISABLED)
-			continue;
+    for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
+    {
+        if (channels[i].type != CAPTURE_DISABLED)
+            continue;
 
-		// Add the configuration to the found channel
-		channels[i].eval_channel     = eval_channel;
+        // Add the configuration to the found channel
+        channels[i].eval_channel     = eval_channel;
 
-		return true;
-	}
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 bool debug_setAddress(uint32_t address)
 {
-	int32_t i;
+    int32_t i;
 
-	if (state != RAMDEBUG_IDLE)
-		return false;
+    if (state != RAMDEBUG_IDLE)
+        return false;
 
-	// ToDo: Type-specific address verification logic?
+    // ToDo: Type-specific address verification logic?
 
-	for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
-	{
-		if (channels[i].type != CAPTURE_DISABLED)
-			continue;
+    for (i = 0; i < RAMDEBUG_MAX_CHANNELS; i++)
+    {
+        if (channels[i].type != CAPTURE_DISABLED)
+            continue;
 
-		// Add the configuration to the found channel
-		channels[i].address  = address;
+        // Add the configuration to the found channel
+        channels[i].address  = address;
 
-		return true;
-	}
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 int32_t debug_getChannelType(uint8_t index, uint8_t *type)
 {
-	if (index == 0xFF)
-	{
-		*type = trigger.channel.type;
-		return 1;
-	}
+    if (index == 0xFF)
+    {
+        *type = trigger.channel.type;
+        return 1;
+    }
 
-	if (index >= RAMDEBUG_MAX_CHANNELS)
-		return 0;
+    if (index >= RAMDEBUG_MAX_CHANNELS)
+        return 0;
 
-	*type = channels[index].type;
+    *type = channels[index].type;
 
-	return 1;
+    return 1;
 }
 
 int32_t debug_getChannelAddress(uint8_t index, uint32_t *address)
 {
-	if (index == 0xFF)
-	{
-		*address = trigger.channel.address;
-		return 1;
-	}
+    if (index == 0xFF)
+    {
+        *address = trigger.channel.address;
+        return 1;
+    }
 
-	if (index >= RAMDEBUG_MAX_CHANNELS)
-		return 0;
+    if (index >= RAMDEBUG_MAX_CHANNELS)
+        return 0;
 
-	*address = channels[index].address;
+    *address = channels[index].address;
 
-	return 1;
+    return 1;
 }
 
 bool debug_setTriggerType(uint8_t type)
 {
-	if (type >= CAPTURE_END)
-		return false;
+    if (type >= CAPTURE_END)
+        return false;
 
-	if (state != RAMDEBUG_IDLE)
-		return false;
+    if (state != RAMDEBUG_IDLE)
+        return false;
 
-	// ToDo: Type-specific address verification logic?
+    // ToDo: Type-specific address verification logic?
 
-	// Store the trigger configuration
-	trigger.channel.type     = type;
+    // Store the trigger configuration
+    trigger.channel.type     = type;
 
-	return true;
+    return true;
 }
 
 bool debug_setTriggerEvalChannel(uint8_t eval_channel)
 {
-	if (state != RAMDEBUG_IDLE)
-		return false;
+    if (state != RAMDEBUG_IDLE)
+        return false;
 
-	// ToDo: Type-specific address verification logic?
+    // ToDo: Type-specific address verification logic?
 
-	// Store the trigger configuration
-	trigger.channel.eval_channel     = eval_channel;
+    // Store the trigger configuration
+    trigger.channel.eval_channel     = eval_channel;
 
-	return true;
+    return true;
 }
 
 bool debug_setTriggerAddress(uint32_t address)
 {
-	if (state != RAMDEBUG_IDLE)
-		return false;
+    if (state != RAMDEBUG_IDLE)
+        return false;
 
-	// ToDo: Type-specific address verification logic?
+    // ToDo: Type-specific address verification logic?
 
-	// Store the trigger configuration
-	trigger.channel.address     = address;
+    // Store the trigger configuration
+    trigger.channel.address     = address;
 
-	return true;
+    return true;
 }
 
 void debug_setTriggerMaskShift(uint32_t mask, uint8_t shift)
 {
-	trigger.mask  = mask;
-	trigger.shift = shift;
+    trigger.mask  = mask;
+    trigger.shift = shift;
 }
 
 int32_t debug_enableTrigger(uint8_t type, uint32_t threshold)
 {
-	// Parameter validation
-	if (type >= TRIGGER_END)
-		return 0;
+    // Parameter validation
+    if (type >= TRIGGER_END)
+        return 0;
 
-	if (state != RAMDEBUG_IDLE)
-		return 0;
+    if (state != RAMDEBUG_IDLE)
+        return 0;
 
-	// Do not allow the edge triggers with channel still missing
-	if (type != TRIGGER_UNCONDITIONAL && trigger.channel.type == CAPTURE_DISABLED)
-		return 0;
+    // Do not allow the edge triggers with channel still missing
+    if (type != TRIGGER_UNCONDITIONAL && trigger.channel.type == CAPTURE_DISABLED)
+        return 0;
 
-	// Store the trigger configuration
-	trigger.type = type;
-	trigger.threshold = threshold;
+    // Store the trigger configuration
+    trigger.type = type;
+    trigger.threshold = threshold;
 
-	// Initialize the trigger helper variable
-	// Read out the trigger value and apply the mask/shift
-	int32_t triggerValue = (readChannel(trigger.channel) & trigger.mask) >> trigger.shift;
-	wasAboveSigned   = (int32_t)  triggerValue > (int32_t)  trigger.threshold;
-	wasAboveUnsigned = (uint32_t) triggerValue > (uint32_t) trigger.threshold;
+    // Initialize the trigger helper variable
+    // Read out the trigger value and apply the mask/shift
+    int32_t triggerValue = (readChannel(trigger.channel) & trigger.mask) >> trigger.shift;
+    wasAboveSigned   = (int32_t)  triggerValue > (int32_t)  trigger.threshold;
+    wasAboveUnsigned = (uint32_t) triggerValue > (uint32_t) trigger.threshold;
 
-	// Enable the trigger
-	state = RAMDEBUG_TRIGGER;
+    // Enable the trigger
+    state = RAMDEBUG_TRIGGER;
 
-	// Enable the capturing IRQ
-	captureEnabled = true;
+    // Enable the capturing IRQ
+    captureEnabled = true;
 
-	return 1;
+    return 1;
 }
 
 void debug_setPrescaler(uint32_t divider)
 {
-	prescaler = divider;
+    prescaler = divider;
 }
 
 void debug_setSampleCount(uint32_t count)
 {
-	if (count > RAMDEBUG_BUFFER_ELEMENTS)
-		count = RAMDEBUG_BUFFER_ELEMENTS;
+    if (count > RAMDEBUG_BUFFER_ELEMENTS)
+        count = RAMDEBUG_BUFFER_ELEMENTS;
 
-	sampleCount = count;
+    sampleCount = count;
 }
 
 uint32_t debug_getSampleCount()
 {
-	return sampleCount;
+    return sampleCount;
 }
 
 void debug_setPretriggerSampleCount(uint32_t count)
 {
     if (count > sampleCount)
-		count = sampleCount;
+        count = sampleCount;
 
     sampleCountPre = count;
     debug_write_index = count;
@@ -567,8 +567,8 @@ uint32_t debug_getPretriggerSampleCount()
 
 int32_t debug_getSample(uint32_t index, uint32_t *value)
 {
-	if (index >= debug_write_index)
-		return 0;
+    if (index >= debug_write_index)
+        return 0;
 
     if(index < sampleCountPre)
     {
@@ -579,54 +579,54 @@ int32_t debug_getSample(uint32_t index, uint32_t *value)
         *value = debug_buffer[index];
     }
 
-	return 1;
+    return 1;
 }
 
 void debug_updateFrequency(uint32_t freq)
 {
-	frequency = freq;
+    frequency = freq;
 }
 
 int32_t debug_getState(void)
 {
-	return state;
+    return state;
 }
 
 int32_t debug_getInfo(uint32_t type)
 {
-	switch(type)
-	{
-	case 0:
-		return RAMDEBUG_MAX_CHANNELS;
-		break;
-	case 1:
-		return RAMDEBUG_BUFFER_ELEMENTS;
-		break;
-	case 2:
-		// PWM/Sampling Frequency
-		return frequency; // RAMDEBUG_FREQUENCY;
-		break;
-	case 3:
-		return debug_write_index;
-		break;
-	default:
-		break;
-	}
+    switch(type)
+    {
+    case 0:
+        return RAMDEBUG_MAX_CHANNELS;
+        break;
+    case 1:
+        return RAMDEBUG_BUFFER_ELEMENTS;
+        break;
+    case 2:
+        // PWM/Sampling Frequency
+        return frequency; // RAMDEBUG_FREQUENCY;
+        break;
+    case 3:
+        return debug_write_index;
+        break;
+    default:
+        break;
+    }
 
-	return -1;
+    return -1;
 }
 
 void debug_useNextProcess(bool enable)
 {
-	use_next_process = enable;
+    use_next_process = enable;
 }
 
 void debug_nextProcess(void)
 {
-	next_process = true;
+    next_process = true;
 }
 
 void debug_setGlobalEnable(bool enable)
 {
-	global_enable = enable;
+    global_enable = enable;
 }
