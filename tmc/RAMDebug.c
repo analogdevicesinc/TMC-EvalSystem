@@ -596,10 +596,10 @@ uint32_t debug_getPretriggerSampleCount()
     return sampleCountPre;
 }
 
-int32_t debug_getSample(uint32_t index, uint32_t *value)
+bool debug_getSample(uint32_t index, uint32_t *value)
 {
     if (index >= sampleCount)
-        return 0;
+        return false;
 
     if (state != RAMDEBUG_COMPLETE)
     {
@@ -614,7 +614,7 @@ int32_t debug_getSample(uint32_t index, uint32_t *value)
 
     *value = debug_buffer[(index + debug_start_index) % RAMDEBUG_BUFFER_ELEMENTS];
 
-    return 1;
+    return true;
 }
 
 void debug_updateFrequency(uint32_t freq)
@@ -622,7 +622,7 @@ void debug_updateFrequency(uint32_t freq)
     frequency = freq;
 }
 
-int32_t debug_getState(void)
+RAMDebugState debug_getState(void)
 {
     return state;
 }
