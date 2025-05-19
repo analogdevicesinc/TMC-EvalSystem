@@ -627,28 +627,28 @@ RAMDebugState debug_getState(void)
     return state;
 }
 
-int32_t debug_getInfo(uint32_t type)
+bool debug_getInfo(uint32_t type, uint32_t *infoValue)
 {
     switch(type)
     {
     case RAMDEBUG_INFO_MAX_CHANNELS:
-        return RAMDEBUG_MAX_CHANNELS;
+        *infoValue = RAMDEBUG_MAX_CHANNELS;
         break;
     case RAMDEBUG_INFO_BUFFER_SIZE:
-        return RAMDEBUG_BUFFER_ELEMENTS;
+        *infoValue = RAMDEBUG_BUFFER_ELEMENTS;
         break;
     case RAMDEBUG_INFO_SAMPLING_FREQ:
         // PWM/Sampling Frequency
-        return frequency; // RAMDEBUG_FREQUENCY;
+        *infoValue = frequency; // RAMDEBUG_FREQUENCY;
         break;
     case RAMDEBUG_INFO_SAMPLE_NUMBER:
-        return debug_write_index;
+        *infoValue = debug_write_index;
         break;
     default:
-        break;
+        return false;
     }
 
-    return -1;
+    return true;
 }
 
 void debug_useNextProcess(bool enable)

@@ -1122,7 +1122,8 @@ static void handleRamDebug(void)
             ActualReply.Status = REPLY_MAX_EXCEEDED;
         break;
     case 10:
-        ActualReply.Value.Int32 = debug_getInfo(ActualCommand.Value.Int32);
+        if (!debug_getInfo(ActualCommand.Value.UInt32, &ActualCommand.Value.UInt32))
+            ActualReply.Status = REPLY_MAX_EXCEEDED;
         break;
     case 11:
         if (!debug_getChannelType(ActualCommand.Motor, (uint8_t *) &ActualReply.Value.Int32))

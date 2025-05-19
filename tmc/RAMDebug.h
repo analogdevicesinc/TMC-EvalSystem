@@ -87,7 +87,7 @@ uint32_t debug_getPretriggerSampleCount();
 bool debug_getSample(uint32_t index, uint32_t *value);
 void debug_updateFrequency(uint32_t freq);
 RAMDebugState debug_getState(void);
-int32_t debug_getInfo(uint32_t type);
+bool debug_getInfo(uint32_t type, uint32_t *infoValue);
 
 void debug_useNextProcess(bool enable);
 void debug_nextProcess(void);
