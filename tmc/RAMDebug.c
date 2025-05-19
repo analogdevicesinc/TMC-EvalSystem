@@ -631,17 +631,17 @@ int32_t debug_getInfo(uint32_t type)
 {
     switch(type)
     {
-    case 0:
+    case RAMDEBUG_INFO_MAX_CHANNELS:
         return RAMDEBUG_MAX_CHANNELS;
         break;
-    case 1:
+    case RAMDEBUG_INFO_BUFFER_SIZE:
         return RAMDEBUG_BUFFER_ELEMENTS;
         break;
-    case 2:
+    case RAMDEBUG_INFO_SAMPLING_FREQ:
         // PWM/Sampling Frequency
         return frequency; // RAMDEBUG_FREQUENCY;
         break;
-    case 3:
+    case RAMDEBUG_INFO_SAMPLE_NUMBER:
         return debug_write_index;
         break;
     default:

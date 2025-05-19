@@ -51,6 +51,17 @@ typedef enum {
     TRIGGER_END
 } RAMDebugTrigger;
 
+// RAMDebug info parameters.
+typedef enum{
+    RAMDEBUG_INFO_MAX_CHANNELS,
+    RAMDEBUG_INFO_BUFFER_SIZE,
+    RAMDEBUG_INFO_SAMPLING_FREQ,
+    RAMDEBUG_INFO_SAMPLE_NUMBER,
+
+    RAMDEBUG_INFO_END_
+} RAMDebugInfo;
+
+
 void debug_init();
 void debug_process();
 bool debug_setChannel(uint8_t type, uint32_t channel_value);
