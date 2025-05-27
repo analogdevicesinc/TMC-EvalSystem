@@ -88,7 +88,7 @@ bool debug_getSample(uint32_t index, uint32_t *value);
 void debug_updateFrequency(uint32_t freq);
 RAMDebugState debug_getState(void);
 bool debug_getInfo(uint32_t type, uint32_t *infoValue);
-uint32_t debug_bulkDownload(uint32_t index);
+bool debug_bulkDownload(uint32_t index, uint32_t *samplesToSend);
 
 void debug_useNextProcess(bool enable);
 void debug_nextProcess(void);

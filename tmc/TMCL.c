@@ -1179,7 +1179,8 @@ static int handleRamDebug(uint8_t type, uint8_t motor, uint32_t *data)
             return REPLY_MAX_EXCEEDED;
         break;
     case 22:
-        *data = debug_bulkDownload(*data);
+        if (!debug_bulkDownload(*data, data))
+            return REPLY_CMD_NOT_AVAILABLE;
         break;
     default:
         return REPLY_INVALID_TYPE;
