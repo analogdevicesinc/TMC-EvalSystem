@@ -17,7 +17,7 @@
 #include "tmc/BoardAssignment.h"
 #include "tmc/RAMDebug.h"
 
-const char *VersionString = MODULE_ID "V310"; // module id and version of the firmware shown in the TMCL-IDE
+const char *VersionString = MODULE_ID "V311"; // module id and version of the firmware shown in the TMCL-IDE
 
 EvalboardsTypeDef Evalboards;
 
