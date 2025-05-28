@@ -15,6 +15,7 @@
 #include "IOMap.h"
 #include "SPI.h"
 #include "ADCs.h"
+#include "I2C.h"
 #include "USB.h"
 #include "LEDs.h"
 #include "RS232.h"
@@ -22,7 +23,6 @@
 #include "Timer.h"
 #include "SysTick.h"
 #include "UART.h"
-#include "IIC.h"
 
 
 typedef struct
@@ -45,7 +45,7 @@ typedef struct
 	RXTXTypeDef                *WLAN;
 	TimerTypeDef               *Timer;
 	UART_Config                *UART;
-    IICTypeDef                 *IIC;
+    I2CTypeDef                 *I2C;
 } HALTypeDef;
 
 extern const HALTypeDef HAL;

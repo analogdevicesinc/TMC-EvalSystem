@@ -9,17 +9,17 @@
 //#include "bits.h"
 
 #include "hal/HAL.h"
-#include "hal/IIC.h"
+#include "hal/I2C.h"
 
 #define FALSE 0
 #define TRUE  1
-#define IIC_TIMEOUT 10
+#define I2C_TIMEOUT 10
 
 static void init();
 
-volatile uint32_t IICTimeout;  //is decremented in the SysTick timer (see SysTick.c)
+volatile uint32_t I2CTimeout;  //is decremented in the SysTick timer (see SysTick.c)
 
-IICTypeDef IIC=
+I2CTypeDef I2C=
 {
         .init = init
 };
@@ -30,7 +30,7 @@ IICTypeDef IIC=
 
    Return value: ---
 
-   Purpose: Initialization of the IIC interface.
+   Purpose: Initialization of the I2C interface.
  ********************************************************************/
 static void init(void)
 {
@@ -59,18 +59,18 @@ static void init(void)
 
 
 /*******************************************************************
-   Function: IICMasterWrite
-   Parameters: address: IIC address of the slave
+   Function: I2CMasterWrite
+   Parameters: address: I2C address of the slave
                data: Array with the data to be written
                size: Number of bytes to be written
 
-   Return value: TRUE: IIC transfer successful
+   Return value: TRUE: I2C transfer successful
                  FALSE: Error
 
-   Purpose: Send data to an IIC slave and wait until
+   Purpose: Send data to an I2C slave and wait until
             the data transfer is complete.
  ********************************************************************/
-uint8_t IICMasterWrite(uint8_t address, uint8_t *data, uint8_t size)
+uint8_t I2CMasterWrite(uint8_t address, uint8_t *data, uint8_t size)
 {
     uint8_t i;
     uint8_t retval;
@@ -78,39 +78,39 @@ uint8_t IICMasterWrite(uint8_t address, uint8_t *data, uint8_t size)
     retval=TRUE;
 
     /* wait until I2C bus is idle */
-    IICTimeout=IIC_TIMEOUT;
-    while(i2c_flag_get(I2C0, I2C_FLAG_I2CBSY) && IICTimeout>0);
-    if(IICTimeout>0)
+    I2CTimeout=I2C_TIMEOUT;
+    while(i2c_flag_get(I2C0, I2C_FLAG_I2CBSY) && I2CTimeout>0);
+    if(I2CTimeout>0)
     {
         /* send a start condition to I2C bus */
         i2c_start_on_bus(I2C0);
         /* wait until SBSEND bit is set */
-        IICTimeout=IIC_TIMEOUT;
-        while(!i2c_flag_get(I2C0, I2C_FLAG_SBSEND) && IICTimeout>0);
-        if(IICTimeout>0)
+        I2CTimeout=I2C_TIMEOUT;
+        while(!i2c_flag_get(I2C0, I2C_FLAG_SBSEND) && I2CTimeout>0);
+        if(I2CTimeout>0)
         {
             /* send slave address to I2C bus */
             i2c_master_addressing(I2C0, address, I2C_TRANSMITTER);
             /* wait until ADDSEND bit is set */
-            IICTimeout=IIC_TIMEOUT;
-            while(!i2c_flag_get(I2C0, I2C_FLAG_ADDSEND) && IICTimeout>0);
-            if(IICTimeout>0)
+            I2CTimeout=I2C_TIMEOUT;
+            while(!i2c_flag_get(I2C0, I2C_FLAG_ADDSEND) && I2CTimeout>0);
+            if(I2CTimeout>0)
             {
                 /* clear ADDSEND bit */
                 i2c_flag_clear(I2C0, I2C_FLAG_ADDSEND);
                 /* wait until the transmit data buffer is empty */
-                IICTimeout=IIC_TIMEOUT;
-                while(!i2c_flag_get(I2C0, I2C_FLAG_TBE) && IICTimeout>0);
-                if(IICTimeout>0)
+                I2CTimeout=I2C_TIMEOUT;
+                while(!i2c_flag_get(I2C0, I2C_FLAG_TBE) && I2CTimeout>0);
+                if(I2CTimeout>0)
                 {
-                    IICTimeout=IIC_TIMEOUT;
+                    I2CTimeout=I2C_TIMEOUT;
                     for(i = 0; i < size; i++)
                     {
                         /* data transmission */
                         i2c_data_transmit(I2C0, data[i]);
                         /* wait until the TBE bit is set */
-                        while(!i2c_flag_get(I2C0, I2C_FLAG_TBE) && IICTimeout>0);
-                        if(IICTimeout==0)
+                        while(!i2c_flag_get(I2C0, I2C_FLAG_TBE) && I2CTimeout>0);
+                        if(I2CTimeout==0)
                         {
                             retval=FALSE;
                             break;
@@ -130,18 +130,18 @@ uint8_t IICMasterWrite(uint8_t address, uint8_t *data, uint8_t size)
 
 
 /*******************************************************************
-   Function: IICMasterRead
-   Parameters: address: IIC address of the slave
+   Function: I2CMasterRead
+   Parameters: address: I2C address of the slave
                data: Array for the read data
                size: Number of bytes to be read
 
-   Return value: TRUE: IIC transfer successful
+   Return value: TRUE: I2C transfer successful
                  FALSE: Error
 
-   Purpose: Read data from an IIC slave and wait until
+   Purpose: Read data from an I2C slave and wait until
             the data transfer is complete.
  ********************************************************************/
-uint8_t IICMasterRead(uint8_t address, uint8_t *data, uint8_t size)
+uint8_t I2CMasterRead(uint8_t address, uint8_t *data, uint8_t size)
 {
     uint8_t i;
     uint8_t retval;
@@ -149,36 +149,36 @@ uint8_t IICMasterRead(uint8_t address, uint8_t *data, uint8_t size)
     retval=TRUE;
 
     /* wait until I2C bus is idle */
-    IICTimeout=IIC_TIMEOUT;
-    while(i2c_flag_get(I2C0, I2C_FLAG_I2CBSY) && IICTimeout>0);
-    if(IICTimeout>0)
+    I2CTimeout=I2C_TIMEOUT;
+    while(i2c_flag_get(I2C0, I2C_FLAG_I2CBSY) && I2CTimeout>0);
+    if(I2CTimeout>0)
     {
         /* send a start condition to I2C bus */
         i2c_start_on_bus(I2C0);
         /* wait until SBSEND bit is set */
-        IICTimeout=IIC_TIMEOUT;
-        while(!i2c_flag_get(I2C0, I2C_FLAG_SBSEND) && IICTimeout>0);
-        if(IICTimeout>0)
+        I2CTimeout=I2C_TIMEOUT;
+        while(!i2c_flag_get(I2C0, I2C_FLAG_SBSEND) && I2CTimeout>0);
+        if(I2CTimeout>0)
         {
             /* send slave address to I2C bus */
             i2c_master_addressing(I2C0, address, I2C_RECEIVER);
 
             /* wait until ADDSEND bit is set */
-            IICTimeout=IIC_TIMEOUT;
-            while(!i2c_flag_get(I2C0, I2C_FLAG_ADDSEND) && IICTimeout>0);
-            if(IICTimeout>0)
+            I2CTimeout=I2C_TIMEOUT;
+            while(!i2c_flag_get(I2C0, I2C_FLAG_ADDSEND) && I2CTimeout>0);
+            if(I2CTimeout>0)
             {
                 /* clear ADDSEND bit */
                 i2c_flag_clear(I2C0, I2C_FLAG_ADDSEND);
 
-                IICTimeout=IIC_TIMEOUT;
+                I2CTimeout=I2C_TIMEOUT;
                 for(i = 0; i < size; i++)
                 {
                     if(size-3 == i)
                     {
                         /* wait until the second last data byte is received into the shift register */
-                        while(!i2c_flag_get(I2C0, I2C_FLAG_BTC) && IICTimeout>0);
-                        if(IICTimeout==0)
+                        while(!i2c_flag_get(I2C0, I2C_FLAG_BTC) && I2CTimeout>0);
+                        if(I2CTimeout==0)
                         {
                             retval=FALSE;
                             break;
@@ -187,8 +187,8 @@ uint8_t IICMasterRead(uint8_t address, uint8_t *data, uint8_t size)
                         i2c_ack_config(I2C0, I2C_ACK_DISABLE);
                     }
                     /* wait until the RBNE bit is set */
-                    while(!i2c_flag_get(I2C0, I2C_FLAG_RBNE) && IICTimeout>0);
-                    if(IICTimeout==0)
+                    while(!i2c_flag_get(I2C0, I2C_FLAG_RBNE) && I2CTimeout>0);
+                    if(I2CTimeout==0)
                     {
                         retval=FALSE;
                         break;
@@ -210,47 +210,47 @@ uint8_t IICMasterRead(uint8_t address, uint8_t *data, uint8_t size)
     return retval;
 }
 
-uint8_t IICMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLength, uint8_t *readData, uint8_t readLength)
+uint8_t I2CMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLength, uint8_t *readData, uint8_t readLength)
 {
     uint8_t retval;
 
     retval=TRUE;
 
     /* wait until I2C bus is idle */
-    IICTimeout=IIC_TIMEOUT;
-    while(i2c_flag_get(I2C0, I2C_FLAG_I2CBSY) && IICTimeout>0);
-    if(IICTimeout>0)
+    I2CTimeout=I2C_TIMEOUT;
+    while(i2c_flag_get(I2C0, I2C_FLAG_I2CBSY) && I2CTimeout>0);
+    if(I2CTimeout>0)
     {
         /* send a start condition to I2C bus */
         i2c_start_on_bus(I2C0);
         /* wait until SBSEND bit is set */
-        IICTimeout=IIC_TIMEOUT;
-        while(!i2c_flag_get(I2C0, I2C_FLAG_SBSEND) && IICTimeout>0);
-        if(IICTimeout>0)
+        I2CTimeout=I2C_TIMEOUT;
+        while(!i2c_flag_get(I2C0, I2C_FLAG_SBSEND) && I2CTimeout>0);
+        if(I2CTimeout>0)
         {
             address = address & 0xFE;  //Write bit
             /* send slave address to I2C bus */
             i2c_master_addressing(I2C0, address, I2C_TRANSMITTER);
             /* wait until ADDSEND bit is set */
-            IICTimeout=IIC_TIMEOUT;
-            while(!i2c_flag_get(I2C0, I2C_FLAG_ADDSEND) && IICTimeout>0);
-            if(IICTimeout>0)
+            I2CTimeout=I2C_TIMEOUT;
+            while(!i2c_flag_get(I2C0, I2C_FLAG_ADDSEND) && I2CTimeout>0);
+            if(I2CTimeout>0)
             {
                 /* clear ADDSEND bit */
                 i2c_flag_clear(I2C0, I2C_FLAG_ADDSEND);
                 /* wait until the transmit data buffer is empty */
-                IICTimeout=IIC_TIMEOUT;
-                while(!i2c_flag_get(I2C0, I2C_FLAG_TBE) && IICTimeout>0);
-                if(IICTimeout>0)
+                I2CTimeout=I2C_TIMEOUT;
+                while(!i2c_flag_get(I2C0, I2C_FLAG_TBE) && I2CTimeout>0);
+                if(I2CTimeout>0)
                 {
-                    IICTimeout=IIC_TIMEOUT;
+                    I2CTimeout=I2C_TIMEOUT;
                     for(uint8_t i = 0; i < writeLength; i++)
                     {
                         /* data transmission */
                         i2c_data_transmit(I2C0, writeData[i]);
                         /* wait until the TBE bit is set */
-                        while(!i2c_flag_get(I2C0, I2C_FLAG_TBE) && IICTimeout>0);
-                        if(IICTimeout==0)
+                        while(!i2c_flag_get(I2C0, I2C_FLAG_TBE) && I2CTimeout>0);
+                        if(I2CTimeout==0)
                         {
                             retval=FALSE;
                             break;
@@ -264,24 +264,24 @@ uint8_t IICMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLen
     //*******************************
 
     /* wait until I2C bus is idle */
-    IICTimeout=IIC_TIMEOUT;
-    if(IICTimeout>0)
+    I2CTimeout=I2C_TIMEOUT;
+    if(I2CTimeout>0)
     {
         /* send a start condition to I2C bus */
         i2c_start_on_bus(I2C0);
         /* wait until SBSEND bit is set */
-        IICTimeout=IIC_TIMEOUT;
-        while(!i2c_flag_get(I2C0, I2C_FLAG_SBSEND) && IICTimeout>0);
-        if(IICTimeout>0)
+        I2CTimeout=I2C_TIMEOUT;
+        while(!i2c_flag_get(I2C0, I2C_FLAG_SBSEND) && I2CTimeout>0);
+        if(I2CTimeout>0)
         {
             address = address|0x01;  //Adresse mit Read-Bit senden
             /* send slave address to I2C bus */
             i2c_master_addressing(I2C0, address, I2C_RECEIVER);
 
             /* wait until ADDSEND bit is set */
-            IICTimeout=IIC_TIMEOUT;
-            while(!i2c_flag_get(I2C0, I2C_FLAG_ADDSEND) && IICTimeout>0);
-            if(IICTimeout>0)
+            I2CTimeout=I2C_TIMEOUT;
+            while(!i2c_flag_get(I2C0, I2C_FLAG_ADDSEND) && I2CTimeout>0);
+            if(I2CTimeout>0)
             {
                 if(readLength==1 || readLength==2){
                     i2c_ack_config(I2C0, I2C_ACK_DISABLE);
@@ -292,11 +292,11 @@ uint8_t IICMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLen
                 if(readLength==1){
                     i2c_stop_on_bus(I2C0);
                 }
-                IICTimeout=IIC_TIMEOUT;
+                I2CTimeout=I2C_TIMEOUT;
                 for(uint8_t i = 0; i < readLength; i++)
                 {
                     if(readLength==2){
-                        while(!i2c_flag_get(I2C0, I2C_FLAG_BTC) && IICTimeout>0);
+                        while(!i2c_flag_get(I2C0, I2C_FLAG_BTC) && I2CTimeout>0);
                         i2c_stop_on_bus(I2C0);
                         readData[0] = i2c_data_receive(I2C0);
                         readData[1] = i2c_data_receive(I2C0);
@@ -306,8 +306,8 @@ uint8_t IICMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLen
                     if(readLength-3 == i)
                     {
                         /* wait until the second last data byte is received into the shift register */
-                        while(!i2c_flag_get(I2C0, I2C_FLAG_BTC) && IICTimeout>0);
-                        if(IICTimeout==0)
+                        while(!i2c_flag_get(I2C0, I2C_FLAG_BTC) && I2CTimeout>0);
+                        if(I2CTimeout==0)
                         {
                             retval=FALSE;
                             break;
@@ -316,8 +316,8 @@ uint8_t IICMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLen
                         i2c_ack_config(I2C0, I2C_ACK_DISABLE);
                     }
                     /* wait until the RBNE bit is set */
-                    while(!i2c_flag_get(I2C0, I2C_FLAG_RBNE) && IICTimeout>0);
-                    if(IICTimeout==0)
+                    while(!i2c_flag_get(I2C0, I2C_FLAG_RBNE) && I2CTimeout>0);
+                    if(I2CTimeout==0)
                     {
                         retval=FALSE;
                         break;

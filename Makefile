@@ -340,7 +340,7 @@ SRC 			+= $(TMC_HAL_SRC)/tmc/RS232.c
 SRC 			+= $(TMC_HAL_SRC)/tmc/WLAN.c
 SRC 			+= $(TMC_HAL_SRC)/tmc/Timer.c
 SRC 			+= $(TMC_HAL_SRC)/tmc/UART.c
-SRC 			+= $(TMC_HAL_SRC)/tmc/IIC.c
+SRC 			+= $(TMC_HAL_SRC)/tmc/I2C.c
 SRC 			+= $(TMC_HAL_SRC)/tmc/RXTX.c
 
 

@@ -20,17 +20,17 @@ typedef struct
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
-static MAX22215BusType activeBus = IC_BUS_IIC;
-static IICTypeDef *MAX22215_IIC;
+static MAX22215BusType activeBus = IC_BUS_I2C;
+static I2CTypeDef *MAX22215_I2C;
 static uint8_t deviceAddress = 0x20;
 
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 
-bool max22215_readWriteIIC(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+bool max22215_readWriteI2C(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
     UNUSED(icID);
-   if(IICMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))
+   if(I2CMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))
        return true;
 
     return false;
@@ -91,8 +91,8 @@ void MAX22215_init(void)
     HAL.IOs->config->toOutput(Pins.RLSBRK);
     HAL.IOs->config->toOutput(Pins.PWM_INT);
 
-    IIC.init();
-	MAX22215_IIC = HAL.IIC;
+    I2C.init();
+	MAX22215_I2C = HAL.I2C;
 
 	Evalboards.ch2.userFunction                  = userFunction;
     Evalboards.ch2.writeRegister                 = writeRegister;

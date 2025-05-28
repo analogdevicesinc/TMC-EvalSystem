@@ -35,7 +35,7 @@ const HALTypeDef HAL =
 	.WLAN         = &WLAN,
 	.Timer        = &Timer,
 	.UART         = &UART,
-    .IIC         = &IIC
+    .I2C         = &I2C
 };
 
 static void init(void)
@@ -54,7 +54,7 @@ static void init(void)
 	LEDs.init();
 	ADCs.init();
 	WLAN.init();
-    IIC.init();
+    I2C.init();
 }
 
 static void __attribute((noreturn)) reset(uint8_t ResetPeripherals)

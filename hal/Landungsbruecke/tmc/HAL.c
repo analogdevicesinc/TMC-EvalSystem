@@ -37,7 +37,7 @@ const HALTypeDef HAL =
     .WLAN         = &WLAN,
     .Timer        = &Timer,
     .UART         = &UART,
-    .IIC         = &IIC
+    .I2C         = &I2C
 };
 
 static void init(void)
@@ -58,7 +58,7 @@ static void init(void)
     WLAN.init();
     RS232.init();
     USB.init();
-    IIC.init();
+    I2C.init();
 
     // Determine HW version
     get_hwid();
