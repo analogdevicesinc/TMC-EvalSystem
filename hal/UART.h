@@ -29,6 +29,7 @@ typedef struct {
 	UART_Mode mode;
 	uint16_t timeout;
 	RXTXTypeDef rxtx;
+	bool hideSingleWireEcho;
 } UART_Config;
 
 extern UART_Config UART;

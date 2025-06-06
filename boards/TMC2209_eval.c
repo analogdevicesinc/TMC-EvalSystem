@@ -788,6 +788,7 @@ void TMC2209_init(void)
 
     TMC2209_UARTChannel = HAL.UART;
     TMC2209_UARTChannel->pinout = UART_PINS_2;
+    TMC2209_UARTChannel->hideSingleWireEcho = true;
     TMC2209_UARTChannel->rxtx.init();
 
     TMC2209.config = Evalboards.ch2.config;

@@ -404,6 +404,7 @@ void TMC2224_init(void)
     HAL.IOs->config->toInput(Pins.INDEX);
 
     TMC2224_UARTChannel = HAL.UART;
+    TMC2224_UARTChannel->hideSingleWireEcho = true;
     TMC2224_UARTChannel->rxtx.init();
 
     TMC2224.config = Evalboards.ch2.config;

@@ -35,6 +35,7 @@
 static uint8_t uartTXDMABuffer[UART_TX_DMA_BUFFER_SIZE];
 static uint8_t uartRXDMABuffer[UART_RX_DMA_BUFFER_SIZE];
 static uint32_t uartRXReadIndex = 0;
+static uint32_t uartRXEchoBytes = 0;
 
 
 
@@ -45,13 +46,12 @@ static uint8_t rx(uint8_t *ch);
 static void txN(uint8_t *str, unsigned char number);
 static uint8_t rxN(uint8_t *ch, unsigned char number);
 static void clearBuffers(void);
+static uint32_t rawBytesAvailable();
 static uint32_t bytesAvailable();
 
 
 static volatile uint32_t usart_periph;
 static dma_channel_enum dma_rx_channel, dma_tx_channel;
-
-uint8_t volatile nvic_irq;
 
 UART_Config UART =
 {
@@ -69,11 +69,9 @@ UART_Config UART =
         .clearBuffers    = clearBuffers,
         .baudRate        = 115200,
         .bytesAvailable  = bytesAvailable
-    }
+    },
+    .hideSingleWireEcho = false,
 };
-
-void __attribute__ ((interrupt)) USART2_IRQHandler(void);
-void __attribute__ ((interrupt)) UART3_IRQHandler(void);
 
 
 static void init()
@@ -103,7 +101,6 @@ static void init()
         gpio_af_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_AF_8, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
         gpio_af_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_AF_8, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
         rcu_periph_clock_enable(RCU_UART3);
-        nvic_irq = UART3_IRQn;
         break;
     case UART_PINS_1:
         dma_rx_channel = UART2_DMA_RX_CHANNEL;
@@ -126,7 +123,6 @@ static void init()
         rcu_periph_clock_enable(RCU_USART2);
         usart_hardware_flow_rts_config(usart_periph, USART_RTS_DISABLE);
         usart_hardware_flow_cts_config(usart_periph, USART_CTS_DISABLE);
-        nvic_irq = USART2_IRQn;
         break;
     }
 
@@ -140,9 +136,6 @@ static void init()
     usart_dma_receive_config(usart_periph, USART_DENR_ENABLE);
     usart_dma_transmit_config(usart_periph, USART_DENT_ENABLE);
     usart_enable(usart_periph);
-    usart_interrupt_enable(usart_periph, USART_INT_TC);
-
-    nvic_irq_enable(nvic_irq, INTR_PRI, 0);
 
     usart_flag_clear(usart_periph, USART_FLAG_CTS);
     usart_flag_clear(usart_periph, USART_FLAG_LBD);
@@ -201,8 +194,6 @@ static void deInit()
     dma_channel_disable(DMA0, dma_rx_channel);
     dma_channel_disable(DMA0, dma_tx_channel);
 
-    nvic_irq_disable(nvic_irq);
-
     usart_flag_clear(usart_periph, USART_FLAG_CTS);
     usart_flag_clear(usart_periph, USART_FLAG_LBD);
     usart_flag_clear(usart_periph, USART_FLAG_TBE);
@@ -215,38 +206,6 @@ static void deInit()
     usart_flag_clear(usart_periph, USART_FLAG_PERR);
 
     clearBuffers();
-}
-
-void USART2_IRQHandler(void)
-{
-    usart_periph = USART2;
-
-    // Transmission complete interrupt => do not ignore echo any more
-    // after last bit has been sent.
-    if(USART_STAT0(usart_periph) & USART_STAT0_TC)
-    {
-        // Re-enable the receiver to receive replies after requests
-        usart_receive_config(usart_periph, USART_RECEIVE_ENABLE);
-
-        //USART_ClearITPendingBit(USART2, USART_IT_TC);
-        usart_interrupt_flag_clear(usart_periph, USART_INT_FLAG_TC);
-    }
-}
-
-void UART3_IRQHandler(void)
-{
-    usart_periph = UART3;
-
-    // Transmission complete interrupt => do not ignore echo any more
-    // after last bit has been sent.
-    if(USART_STAT0(usart_periph) & USART_STAT0_TC)
-    {
-        // Re-enable the receiver to receive replies after requests
-        usart_receive_config(usart_periph, USART_RECEIVE_ENABLE);
-
-        //USART_ClearITPendingBit(USART2, USART_IT_TC);
-        usart_interrupt_flag_clear(usart_periph, USART_INT_FLAG_TC);
-    }
 }
 
 int32_t UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t readLength)
@@ -408,10 +367,12 @@ static void txN(uint8_t *str, unsigned char number)
         str += byteCount;
         number -= byteCount;
 
-        // Disable the receiver while sending - this hides
-        // the echo of single-wire transmission.
-        // ToDo: Do this better
-        usart_receive_config(usart_periph, USART_RECEIVE_DISABLE);
+        if (UART.hideSingleWireEcho)
+        {
+            // Store how many bytes are being sent to suppress their
+            // echo on the receive path
+            uartRXEchoBytes += byteCount;
+        }
 
         // Trigger DMA transfer
         DMA_CHCNT(DMA0, dma_tx_channel) = byteCount;
@@ -421,23 +382,38 @@ static void txN(uint8_t *str, unsigned char number)
 
 static uint8_t rxN(uint8_t *str, unsigned char number)
 {
+    uint32_t available = rawBytesAvailable();
+
+    // Skip past echo bytes
+    if (UART.hideSingleWireEcho && uartRXEchoBytes > 0)
+    {
+        uint32_t skipCount = MIN(available, uartRXEchoBytes);
+
+        uartRXReadIndex  = (uartRXReadIndex + skipCount) % UART_RX_DMA_BUFFER_SIZE;
+        uartRXEchoBytes -= skipCount;
+    }
+
     if(bytesAvailable() < number)
         return 0;
 
     // Load data from DMA buffer
-    // Copy at most until the end of the buffer
-    uint32_t bytesUntilWraparound = UART_RX_DMA_BUFFER_SIZE - uartRXReadIndex;
+    // Skip any remaining echo bytes
+    uint32_t readIndex = (uartRXReadIndex + uartRXEchoBytes) % UART_RX_DMA_BUFFER_SIZE;
+
+    // Make sure the copy doesn't overflow past the DMA buffer
+    uint32_t bytesUntilWraparound = UART_RX_DMA_BUFFER_SIZE - readIndex;
     uint32_t byteCount = MIN(number, bytesUntilWraparound);
-    memcpy(str, &uartRXDMABuffer[uartRXReadIndex], byteCount);
+    memcpy(str, &uartRXDMABuffer[readIndex], byteCount);
     if (byteCount < number)
     {
         // If we didn't copy all bytes yet, the read wraps around the
-        // buffer. Do a second memcpy from the start of the buffer.
+        // buffer. Do a second memcpy from the start of the buffer
+        // to grab the remaining bytes
         memcpy(&str[byteCount], &uartRXDMABuffer[0], number-byteCount);
     }
 
     // Move the read index
-    uartRXReadIndex = (uartRXReadIndex + number) % UART_RX_DMA_BUFFER_SIZE;
+    uartRXReadIndex = (readIndex + number) % UART_RX_DMA_BUFFER_SIZE;
 
     return 1;
 }
@@ -448,6 +424,9 @@ static void clearBuffers(void)
     // Set the UART read index equal to the write index
     uartRXReadIndex = UART_RX_DMA_BUFFER_SIZE - dma_transfer_number_get(DMA0, dma_rx_channel);
 
+    // Reset the echo counter
+    uartRXEchoBytes = 0;
+
     // Stop the transmission
     dma_channel_disable(DMA0, dma_tx_channel);
 
@@ -456,11 +435,22 @@ static void clearBuffers(void)
     __enable_irq();
 }
 
-static uint32_t bytesAvailable()
+// Total bytes available including echo bytes
+static uint32_t rawBytesAvailable()
 {
     uint32_t dmaCounter = dma_transfer_number_get(DMA0, dma_rx_channel);
     uint32_t uartRXWriteIndex = UART_RX_DMA_BUFFER_SIZE - dmaCounter;
 
     return (uartRXWriteIndex - uartRXReadIndex + UART_RX_DMA_BUFFER_SIZE) % UART_RX_DMA_BUFFER_SIZE;
+}
+
+// Bytes available - excluding echo bytes if echo suppression is enabled
+static uint32_t bytesAvailable()
+{
+    uint32_t bytes = rawBytesAvailable();
+    if (bytes < uartRXEchoBytes)
+        return 0;
+
+    return bytes - uartRXEchoBytes;
 }
 

@@ -727,6 +727,7 @@ void TMC2225_init(void)
 
     TMC2225_UARTChannel         = HAL.UART;
     TMC2225_UARTChannel->pinout = UART_PINS_2;
+    TMC2225_UARTChannel->hideSingleWireEcho = true;
     TMC2225_UARTChannel->rxtx.init();
 
     Evalboards.ch2.config->reset       = reset;

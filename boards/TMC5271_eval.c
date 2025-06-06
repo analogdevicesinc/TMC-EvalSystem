@@ -1360,6 +1360,7 @@ static void init_comm(TMC5271BusType mode)
         HAL.IOs->config->setHigh(Pins.UART_MODE);
         TMC5271_UARTChannel = HAL.UART;
         TMC5271_UARTChannel->pinout = UART_PINS_2;
+        TMC5271_UARTChannel->hideSingleWireEcho = true;
         TMC5271_UARTChannel->rxtx.init();
         break;
     case IC_BUS_SPI:

@@ -1089,6 +1089,7 @@ static void init_comm(TMC5160BusType mode)
 		HAL.IOs->config->setLow(Pins.SD_MODE);
 
 		TMC5160_UARTChannel = HAL.UART;
+		TMC5160_UARTChannel->hideSingleWireEcho = true;
 		TMC5160_UARTChannel->rxtx.init();
         break;
     case IC_BUS_SPI:

@@ -565,6 +565,7 @@ void TMC7300_init(void)
 
     TMC7300_UARTChannel = HAL.UART;
     TMC7300_UARTChannel->pinout = UART_PINS_2;
+    TMC7300_UARTChannel->hideSingleWireEcho = true;
     TMC7300_UARTChannel->rxtx.baudRate = 57600;
     TMC7300_UARTChannel->rxtx.init();
 

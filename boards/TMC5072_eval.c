@@ -869,6 +869,7 @@ static void init_comm(TMC5072BusType mode)
 		HAL.IOs->config->setHigh(Pins.SWSEL);
 		TMC5072_UARTChannel->mode = UART_MODE_SINGLE_WIRE;
 		TMC5072_UARTChannel = HAL.UART;
+		TMC5072_UARTChannel->hideSingleWireEcho = true;
 		TMC5072_UARTChannel->rxtx.init();
 		break;
 	case IC_BUS_SPI:
