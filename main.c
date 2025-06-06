@@ -7,6 +7,7 @@
 *******************************************************************************/
 
 
+#include "ProjectConfig.h"
 #include "boards/Board.h"
 #include "hal/derivative.h"
 #include "hal/HAL.h"
@@ -17,7 +18,20 @@
 #include "tmc/BoardAssignment.h"
 #include "tmc/RAMDebug.h"
 
-const char *VersionString = MODULE_ID "V311"; // module id and version of the firmware shown in the TMCL-IDE
+// Module ID and Version of the firmware shown in the TMCL-IDE
+const char VersionString[8] = {
+        // 3-digit module ID
+        '0' + (MODULE_ID / 1000)    % 10,
+        '0' + (MODULE_ID / 100)     % 10,
+        '0' + (MODULE_ID / 10)      % 10,
+        '0' + (MODULE_ID / 1)       % 10,
+        'V',
+        // 1-digit major firmware version
+        '0' + (VERSION_MAJOR)       % 10,
+        // 2-digit minor firmware version
+        '0' + (VERSION_MINOR / 10)  % 10,
+        '0' + (VERSION_MINOR / 1)   % 10,
+};
 
 EvalboardsTypeDef Evalboards;
 

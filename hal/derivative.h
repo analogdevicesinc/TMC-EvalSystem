@@ -26,20 +26,20 @@
 	#include "tmc/helpers/API_Header.h"
 
     #if defined(Landungsbruecke)
-        #define MODULE_ID "0012"
+        #define MODULE_ID 12
         #include <MK20D10.h>
         #include "hal/Landungsbruecke/freescale/Cpu.h"
         #include "hal/Landungsbruecke/freescale/nvic.h"
         #define CPU_LITTLE_ENDIAN
         #define __MK_xxx_H__
     #elif defined(LandungsbrueckeV3)
-        #define MODULE_ID "0026"
+        #define MODULE_ID 26
 		#include "gd32f4xx.h"
     #elif defined(LandungsbrueckeSmall)
         // The Landungsbruecke (Small) is a normal Landungsbruecke but with a MK20DX256VLL10 µC instead.
         // This other µC has less memory. We assign a different module ID, otherwise the functionality
         // is identical to the normal Landungsbruecke.
-        #define MODULE_ID "0016"
+        #define MODULE_ID 16
         #include <MK20D10.h>
         #include "hal/Landungsbruecke/freescale/Cpu.h"
         #include "hal/Landungsbruecke/freescale/nvic.h"

@@ -95,7 +95,7 @@
 #define TMCL_RX_ERROR_NODATA    1
 #define TMCL_RX_ERROR_CHECKSUM  2
 
-extern const char *VersionString;
+extern const char VersionString[8];
 extern void enterBootloader();
 
 void ExecuteActualCommand();
@@ -907,28 +907,17 @@ static void GetVersion(void)
     }
     else if(ActualCommand.Type == VERSION_FORMAT_BINARY)
     {
-        uint8_t tmpVal;
-
         // module version high
-        tmpVal = (uint8_t) VersionString[0] - '0';	// Ascii digit - '0' = digit value
-        tmpVal *= 10;
-        tmpVal += (uint8_t) VersionString[1] - '0';
-        ActualReply.Value.Byte[3] = tmpVal;
+        ActualReply.Value.Byte[3] = MODULE_ID / 100;
 
         // module version low
-        tmpVal = (uint8_t) VersionString[2] - '0';
-        tmpVal *= 10;
-        tmpVal += (uint8_t) VersionString[3] - '0';
-        ActualReply.Value.Byte[2] = tmpVal;
+        ActualReply.Value.Byte[2] = MODULE_ID % 100;
 
         // fw version high
-        ActualReply.Value.Byte[1] = (uint8_t) VersionString[5] - '0';
+        ActualReply.Value.Byte[1] = VERSION_MAJOR;
 
         // fw version low
-        tmpVal = (uint8_t) VersionString[6] - '0';
-        tmpVal *= 10;
-        tmpVal += (uint8_t) VersionString[7] - '0';
-        ActualReply.Value.Byte[0] = tmpVal;
+        ActualReply.Value.Byte[0] = VERSION_MINOR;
     }
     //how were the boards detected?	// todo CHECK 2: Doesn't fit into GetVersion. Move somewhere else? Or maybe change GetVersion to GetBoardInfo or something (LH)
     else if(ActualCommand.Type == VERSION_BOARD_DETECT_SRC)
@@ -946,30 +935,18 @@ static void GetVersion(void)
 
 static void handleGetInfo(void)
 {
-    uint32_t tmpVal;
-
     switch (ActualCommand.Type)
     {
     case 0: // FWModuleID
-        tmpVal = (uint8_t) VersionString[0] - '0';  // Ascii digit - '0' = digit value
-        tmpVal *= 10;
-        tmpVal += (uint8_t) VersionString[1] - '0';
-        tmpVal *= 10;
-        tmpVal += (uint8_t) VersionString[2] - '0';
-        tmpVal *= 10;
-        tmpVal += (uint8_t) VersionString[3] - '0';
-        ActualReply.Value.Int32 = tmpVal;
+        ActualReply.Value.Int32 = MODULE_ID;
         break;
 
     case 1: // FWVersion
         // Major version
-        ActualReply.Value.Byte[2] = (uint8_t) VersionString[5] - '0';
+        ActualReply.Value.Byte[2] = VERSION_MAJOR;
 
         // Minor version
-        tmpVal = (uint8_t) VersionString[6] - '0';
-        tmpVal *= 10;
-        tmpVal += (uint8_t) VersionString[7] - '0';
-        ActualReply.Value.Byte[0] = tmpVal;
+        ActualReply.Value.Byte[0] = VERSION_MINOR;
         break;
 
     case 2: // FWCapability
