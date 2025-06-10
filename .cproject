@@ -2605,10 +2605,10 @@
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
-			<target name="Landungsbruecke_BL_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-j8</buildArguments>
-				<buildTarget>clean DEVICE=Landungsbruecke LINK=BL</buildTarget>
+			<target name="Clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make</buildCommand>
+				<buildArguments>-s -j</buildArguments>
+				<buildTarget>clean</buildTarget>
 				<stopOnError>false</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
@@ -2617,14 +2617,6 @@
 				<buildCommand>cs-make</buildCommand>
 				<buildArguments>-s</buildArguments>
 				<buildTarget>all LINK=NOBL DEVICE=Landungsbruecke</buildTarget>
-				<stopOnError>false</stopOnError>
-				<useDefaultCommand>true</useDefaultCommand>
-				<runAllBuilders>true</runAllBuilders>
-			</target>
-			<target name="Landungsbruecke_NOBL_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-j8</buildArguments>
-				<buildTarget>clean DEVICE=Landungsbruecke LINK=NOBL</buildTarget>
 				<stopOnError>false</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
@@ -2653,22 +2645,6 @@
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
-			<target name="LandungsbrueckeSmall_BL_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
-				<buildTarget>clean DEVICE=LandungsbrueckeSmall LINK=BL</buildTarget>
-				<stopOnError>false</stopOnError>
-				<useDefaultCommand>true</useDefaultCommand>
-				<runAllBuilders>true</runAllBuilders>
-			</target>
-			<target name="LandungsbrueckeSmall_NOBL_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
-				<buildTarget>clean DEVICE=LandungsbrueckeSmall LINK=NOBL</buildTarget>
-				<stopOnError>false</stopOnError>
-				<useDefaultCommand>true</useDefaultCommand>
-				<runAllBuilders>true</runAllBuilders>
-			</target>
 			<target name="LandungsbrueckeV3_NOBL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>cs-make</buildCommand>
 				<buildArguments>-s</buildArguments>
@@ -2682,14 +2658,6 @@
 				<buildArguments>-s -j</buildArguments>
 				<buildTarget>all LINK=BL DEVICE=LandungsbrueckeV3 ENABLE_GIT_VERSION_INFO=1</buildTarget>
 				<stopOnError>true</stopOnError>
-				<useDefaultCommand>true</useDefaultCommand>
-				<runAllBuilders>true</runAllBuilders>
-			</target>
-			<target name="LandungsbrueckeV3_NOBL_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s</buildArguments>
-				<buildTarget>clean DEVICE=LandungsbrueckeV3 LINK=NOBL</buildTarget>
-				<stopOnError>false</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
