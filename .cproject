@@ -2598,8 +2598,8 @@
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
 		<buildTargets>
 			<target name="Landungsbruecke_BL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-j8</buildArguments>
+				<buildCommand>make</buildCommand>
+				<buildArguments>-s -j</buildArguments>
 				<buildTarget>all LINK=BL DEVICE=Landungsbruecke</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
@@ -2614,40 +2614,40 @@
 				<runAllBuilders>true</runAllBuilders>
 			</target>
 			<target name="Landungsbruecke_NOBL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s</buildArguments>
+				<buildCommand>make</buildCommand>
+				<buildArguments>-s -j</buildArguments>
 				<buildTarget>all LINK=NOBL DEVICE=Landungsbruecke</buildTarget>
 				<stopOnError>false</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
 			<target name="test" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
+				<buildCommand>make</buildCommand>
+				<buildArguments>-s -j</buildArguments>
 				<buildTarget>all LINK=BL DEVICE=Landungsbruecke</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
 			<target name="LandungsbrueckeSmall_BL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
+				<buildCommand>make</buildCommand>
+				<buildArguments>-s -j</buildArguments>
 				<buildTarget>all LINK=BL DEVICE=LandungsbrueckeSmall</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
 			<target name="LandungsbrueckeSmall_NOBL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s -j8</buildArguments>
+				<buildCommand>make</buildCommand>
+				<buildArguments>-s -j</buildArguments>
 				<buildTarget>all LINK=NOBL DEVICE=LandungsbrueckeSmall</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
 			<target name="LandungsbrueckeV3_NOBL" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>cs-make</buildCommand>
-				<buildArguments>-s</buildArguments>
+				<buildCommand>make</buildCommand>
+				<buildArguments>-s -j</buildArguments>
 				<buildTarget>all LINK=NOBL DEVICE=LandungsbrueckeV3</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>true</useDefaultCommand>
