@@ -92,6 +92,8 @@ int32_t Board_supported(IdAssignmentTypeDef *ids);  // ids and states of support
 #define ID_TMC8100        34
 #define ID_TMC2262          35
 
+// ToDo: Add all the low power ICs here whose Vmin < 7V
+#define ID_GROUP_LOW_POWER_IC(id) ((id) == ID_TMC5221 || (id)== ID_TMC5222 || (id)== ID_TMC5271 || (id)== ID_TMC5272)
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
 extern void MAX22216_init();
