@@ -12,6 +12,8 @@
 #include "hal/derivative.h"
 #include "boards/Board.h"
 #include "hal/HAL.h"
+#include "BoardAssignment.h"
+
 
 #define VM_MIN_INTERFACE_BOARD  70   // minimum motor supply voltage for system in [100mV]
 #define VM_MAX_INTERFACE_BOARD  700  // maximum motor supply voltage for system in [100mV]
@@ -87,8 +89,8 @@ void checkVM()
 		if(VM <	Evalboards.ch1.VMMin)    VitalSignsMonitor.brownOut  |= VSM_CHX | VSM_CH1;
 	if (Evalboards.ch2.VMMin > 0)
 		if(VM <	Evalboards.ch2.VMMin)    VitalSignsMonitor.brownOut  |= VSM_CHX | VSM_CH2;
-	// Global minimum voltage check (skipped if a minimum voltage of 0 is set by a board)
-	if(Evalboards.ch1.VMMin && Evalboards.ch2.VMMin)
+	// Global minimum voltage check (skipped if a minimum voltage of 0 is set by a board or if board contains low power IC)
+	if(Evalboards.ch1.VMMin && Evalboards.ch2.VMMin && !ID_GROUP_LOW_POWER_IC(Evalboards.ch1.id))
 		if(VM <	VM_MIN_INTERFACE_BOARD)  VitalSignsMonitor.brownOut  |= VSM_CHX;
 
 	if((VitalSignsMonitor.errors & VSM_ERRORS_CH1) || (VitalSignsMonitor.errors & VSM_ERRORS_CH2)) // VIO low in CH1
