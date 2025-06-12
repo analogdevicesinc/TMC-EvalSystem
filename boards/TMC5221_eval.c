@@ -1250,9 +1250,6 @@ void TMC5221_init(void)
     HAL.IOs->config->toOutput(&HAL.IOs->pins->CLK16);
     HAL.IOs->config->setLow(&HAL.IOs->pins->CLK16);
 
-    noRegResetnSLEEP = true;
-    nSLEEPTick = systick_getTick();
-
     HAL.IOs->config->toInput(Pins.REFLN_LB);
     HAL.IOs->config->toInput(Pins.REFRN_LB);
 
@@ -1297,6 +1294,5 @@ void TMC5221_init(void)
     Evalboards.ch1.deInit               = deInit;
 
     enableDriver(DRIVER_USE_GLOBAL_ENABLE);
-
 
 };
