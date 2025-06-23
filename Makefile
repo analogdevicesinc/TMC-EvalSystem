@@ -493,7 +493,7 @@ _CFLAGS += -DTMC_API_EXTERNAL_CRC_TABLE=1
 ##_CFLAGS += -mapcs-frame
 ##_CFLAGS += -fomit-frame-pointer
 #_CFLAGS += -ffunction-sections -fdata-sections
-_CFLAGS += -Wall -Wextra
+_CFLAGS += -Wall -Wextra -Werror
 _CFLAGS += -Wimplicit -Wcast-align -Wpointer-arith
 _CFLAGS += -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align
 #_CFLAGS += -pedantic
