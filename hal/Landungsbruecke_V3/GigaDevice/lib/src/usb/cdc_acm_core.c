@@ -253,9 +253,9 @@ const void *const usbd_cdc_strings[] =
 
 usb_desc cdc_desc =
 {
-    .dev_desc    = (uint8_t *) &cdc_dev_desc,
-    .config_desc = (uint8_t *) &cdc_config_desc,
-    .strings     = usbd_cdc_strings
+    .dev_desc    = (uint8_t *)(uint32_t) &cdc_dev_desc,
+    .config_desc = (uint8_t *)(uint32_t) &cdc_config_desc,
+    .strings     = (void * const *) (uint32_t) usbd_cdc_strings
 };
 
 /* local function prototypes ('static') */
@@ -343,6 +343,7 @@ void cdc_acm_data_receive (usb_dev *udev)
 */
 static uint8_t cdc_acm_init (usb_dev *udev, uint8_t config_index)
 {
+    (void)(config_index);
     static __ALIGN_BEGIN usb_cdc_handler cdc_handler __ALIGN_END;
 
     /* initialize the data Tx endpoint */
@@ -380,6 +381,7 @@ static uint8_t cdc_acm_init (usb_dev *udev, uint8_t config_index)
 */
 static uint8_t cdc_acm_deinit (usb_dev *udev, uint8_t config_index)
 {
+    (void)(config_index);
     /* deinitialize the data Tx/Rx endpoint */
     usbd_ep_clear (udev, CDC_DATA_IN_EP);
     usbd_ep_clear (udev, CDC_DATA_OUT_EP);

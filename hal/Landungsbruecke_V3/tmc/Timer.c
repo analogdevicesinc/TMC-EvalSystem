@@ -255,37 +255,31 @@ static void setFrequencyMin(timer_channel channel, float freq_min)
 
 static void setFrequency(timer_channel channel, float freq)
 {
-	float freq_min;
 	uint16_t period_min;
 	uint32_t timer;
 
 	switch(channel) {
 	case TIMER_CHANNEL_1:
-		freq_min = freq_min_buf[0];
 		period_min = period_min_buf[0];
 		timer = TIMER0;
 		timerBaseClk = 240000000;
 		break;
 	case TIMER_CHANNEL_2:
-		freq_min = freq_min_buf[1];
 		period_min = period_min_buf[1];
 		timer = TIMER3;
 		timerBaseClk = 120000000;
 		break;
 	case TIMER_CHANNEL_3:
-		freq_min = freq_min_buf[2];
 		period_min = period_min_buf[2];
 		timer = TIMER4;
 		timerBaseClk = 120000000;
 		break;
 	case TIMER_CHANNEL_4:
-		freq_min = freq_min_buf[0];
 		period_min = period_min_buf[0];
 		timer = TIMER0;
 		timerBaseClk = 240000000;
 		break;
 	case TIMER_CHANNEL_5:
-		freq_min = freq_min_buf[0];
 		period_min = period_min_buf[0];
 		timer = TIMER0;
 		timerBaseClk = 240000000;

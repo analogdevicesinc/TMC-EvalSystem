@@ -11,8 +11,14 @@
 #include "hal/HAL.h"
 #include "hal/I2C.h"
 
+#ifndef FALSE
 #define FALSE 0
+#endif
+
+#ifndef TRUE
 #define TRUE  1
+#endif
+
 #define I2C_TIMEOUT 10
 
 static void init();

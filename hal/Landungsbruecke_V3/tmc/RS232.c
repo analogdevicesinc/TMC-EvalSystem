@@ -59,7 +59,8 @@ void __attribute__ ((interrupt)) USART6_IRQHandler(void);
 
 static void init()
 {
-
+    UNUSED(buffers);
+    UNUSED(available);
 }
 
 static void deInit()
