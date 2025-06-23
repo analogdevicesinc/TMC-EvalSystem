@@ -37,8 +37,9 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
-### Version 3.11.1: (WIP)
+### Version 3.11.1: (Released)
 - Reworked MAX22216 CRC calculation to be more efficient. This is a backwards-incompatible change for anyone using the CRC calculation function max22216_CRC() from the TMC-API directly.
+- Code cleanup and bug fixes.
 
 ### Version 3.11.0: (Released)
  * Included MAX22215-Eval to the project.
