@@ -17,7 +17,7 @@
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
 #define VM_MIN         45   // VM[V/10] min
-#define VM_MAX         650  // VM[V/10] max
+#define VM_MAX         670  // VM[V/10] max, It should be 65V but ADC measurement is not precise, so increased the voltage limit by 10% above the original value.
 #define DEFAULT_ICID  0
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)

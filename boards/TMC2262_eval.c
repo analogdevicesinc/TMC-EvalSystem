@@ -12,7 +12,7 @@
 
 
 #define VM_MIN         45   // VM[V/10] min
-#define VM_MAX         650  // VM[V/10] max
+#define VM_MAX         670  // VM[V/10] max, It should be 65V but ADC measurement is not precise, so increased the voltage limit by 10% above the original value.
 #define TMC2262_MAX_VELOCITY  STEPDIR_MAX_VELOCITY
 
 // Stepdir precision: 2^17 -> 17 digits of precision
