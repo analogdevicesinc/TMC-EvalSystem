@@ -1,7 +1,18 @@
 {
     "TMCL-IDE":{
-        "latest": "4.7.1",
+        "latest": "4.7.2",
         "ChangeLog":[
+            {
+                "tag_name":   "4.7.2",
+                "created_at": "2025-06-27T16:22:22Z",
+                "updated_at": "2025-06-27T16:10:25Z",
+                "public_url": "https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_06G80EO",
+                "topics": [
+                    "Improvements MAX22215",
+                    "general bugfixing",
+                    "UblCli/TMC-9660 bugfixing"
+                ]
+            },
             {
                 "tag_name":   "4.7.1",
                 "created_at": "2025-03-28T18:22:22Z",
