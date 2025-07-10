@@ -108,6 +108,10 @@ static void writeConfiguration(uint32_t tick)
     case 3:
         // Write to GSTAT register to clear the flags
         tmc2262_writeRegister(DEFAULT_ICID, TMC2262_GSTAT, 0x3F);
+
+        // Set MRES to 4 and INTPOL to 1 in ChopConf register
+        tmc2262_writeRegister(DEFAULT_ICID, TMC2262_CHOPCONF, 0x14410153);
+
         TMC2262.config->state = CONFIG_READY;
         *ptr = 0;
         break;
