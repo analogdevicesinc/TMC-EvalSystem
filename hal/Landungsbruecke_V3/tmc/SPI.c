@@ -103,15 +103,6 @@ static void init(void)
 
 }
 
-void configure_MISO_pullup(SPIChannelTypeDef *SPIChannel)
-{
-    // Configure the MISO pin (e.g., PA6) as input with pull-up
-    if (SPIChannel->periphery == SPI0)
-    {
-        gpio_mode_set(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_PIN_6);
-    }
-}
-
 static void reset_ch1()
 {
 	SPI.ch1.CSN        = &IODummy;
