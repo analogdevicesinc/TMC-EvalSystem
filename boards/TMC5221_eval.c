@@ -43,6 +43,7 @@ static SPIChannelTypeDef *TMC5221_SPIChannel;
 static bool vMaxModified = false;
 static uint32_t vmax_position[TMC5221_MOTORS];
 static bool noRegResetnSLEEP = false;
+static bool drvError = true;
 static uint32_t nSLEEPTick;
 static bool qscMode = false;
 
@@ -1012,6 +1013,16 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
+    if(tmc5221_fieldRead(DEFAULT_ICID, TMC5221_DRV_ERR_FIELD) == 0 && drvError){
+        drvError = false;
+        noRegResetnSLEEP = true;
+        nSLEEPTick = systick_getTick();
+        return;
+    }
+    else if(tmc5221_fieldRead(DEFAULT_ICID, TMC5221_DRV_ERR_FIELD) == 1 && !drvError){
+        drvError = true;
+    }
+
     if(!noRegResetnSLEEP)
     {
         //check if reset after nSLEEP to HIGH was performed
