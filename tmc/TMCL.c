@@ -106,8 +106,10 @@ void rx(RXTXTypeDef *RXTX);
 void tx(RXTXTypeDef *RXTX);
 
 // ToDo: Move this to the USB HAL?
-#define USB_MAX_TX_DATA 256
-uint8_t replyBuffer[USB_MAX_TX_DATA];
+#define USB_BUFFER_SIZE 256
+// Maximum extra data to send, including the TMCL reply, excluding the CRC checksum
+#define USB_MAX_EXTRA_DATA (USB_BUFFER_SIZE - 9)
+uint8_t replyBuffer[USB_BUFFER_SIZE];
 uint32_t extraDataSize = 0;
 
 static uint16_t getExtendedAddress(TMCLCommandTypeDef *tmclCommand)
@@ -143,6 +145,7 @@ RXTXTypeDef interfaces[4];
 uint32_t numberOfInterfaces;
 uint32_t currentInterface = 0;
 uint32_t resetRequest = 0;
+uint32_t maxExtraData[ARRAY_SIZE(interfaces)];
 
 
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall) || defined(LandungsbrueckeV3)
@@ -418,6 +421,10 @@ void tmcl_init()
     interfaces[1]        = *HAL.RS232;
     interfaces[2]        = *HAL.WLAN;
     numberOfInterfaces   = 3;
+
+    maxExtraData[0] = USB_MAX_EXTRA_DATA;
+    maxExtraData[1] = 0;
+    maxExtraData[2] = 0;
 }
 
 void tmcl_process()
@@ -444,13 +451,11 @@ void tmcl_process()
 
 uint32_t tmcl_getExtraDataLimit()
 {
-    if (currentInterface == 0) // USB
-    {
-        // 9 Bytes for the TMCL reply itself, 4 bytes for the 32 bit CRC
-        return USB_MAX_TX_DATA - 9 - sizeof(uint32_t);
-    }
+    // 4 bytes are reserved for the CRC checksum
+    if (maxExtraData[currentInterface] < sizeof(uint32_t))
+        return 0;
 
-    return 0;
+    return maxExtraData[currentInterface] - sizeof(uint32_t);
 }
 
 bool tmcl_appendData(uint8_t *data, uint32_t length)
@@ -651,6 +656,44 @@ static void SetGlobalParameter()
             break;
         }
         break;
+    case 11: // Bulk download maximum transmission unit (MTU) config
+        if (ActualCommand.Motor >= numberOfInterfaces + 1)
+        {
+            ActualReply.Status = REPLY_MAX_EXCEEDED;
+            break;
+        }
+
+        // Motor argument selects what interface to configure.
+        // 0 refers to the interface used by the request.
+        switch ((ActualCommand.Motor == 0) ? currentInterface : ((uint32_t) ActualCommand.Motor - 1))
+        {
+        case 0: // USB
+            if (ActualCommand.Value.UInt32 > USB_MAX_EXTRA_DATA)
+            {
+                // Too much data requested - reply with error and how much is possible
+                ActualReply.Status = REPLY_INVALID_VALUE;
+                ActualReply.Value.UInt32 = USB_MAX_EXTRA_DATA;
+                break;
+            }
+
+            maxExtraData[0] = ActualCommand.Value.UInt32;
+            break;
+
+        default: // RS232, WLAN
+            // These interfaces currently don't support extra data,
+            // so anything beyond 0 is already requesting too much.
+            if (ActualCommand.Value.UInt32 > 0)
+            {
+                // Too much data requested - reply with error and how much is possible
+                ActualReply.Status = REPLY_INVALID_VALUE;
+                ActualReply.Value.UInt32 = 0;
+                break;
+            }
+
+            break;
+        }
+        break;
+
 
     default:
         ActualReply.Status = REPLY_INVALID_TYPE;
@@ -696,6 +739,26 @@ static void GetGlobalParameter()
         break;
     case 10:
         ActualReply.Value.UInt32 = spi_getMode(&HAL.SPI->ch2);
+        break;
+    case 11:
+        if (ActualCommand.Motor >= numberOfInterfaces + 1)
+        {
+            ActualReply.Status = REPLY_MAX_EXCEEDED;
+            break;
+        }
+
+        // Motor argument selects what interface to read out.
+        // 0 refers to the interface used by the request.
+        switch ((ActualCommand.Motor == 0) ? currentInterface : ((uint32_t) ActualCommand.Motor - 1))
+        {
+        case 0: // USB
+            ActualReply.Value.UInt32 = maxExtraData[0];
+            break;
+        default: // RS232, WLAN
+            // These interfaces currently don't support extra data
+            ActualReply.Value.UInt32 = 0;
+            break;
+        }
         break;
 
     default:
