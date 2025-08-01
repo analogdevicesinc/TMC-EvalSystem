@@ -678,15 +678,21 @@ bool debug_bulkDownload(uint32_t index, uint32_t *samplesToSend)
         return false;
 
     uint32_t indexInBuffer = (index + debug_start_index) % RAMDEBUG_BUFFER_ELEMENTS;
-    uint32_t samplesUntilWraparound = RAMDEBUG_BUFFER_ELEMENTS - indexInBuffer;
     uint32_t leftSamples = sampleCount - index;
 
     *samplesToSend = MIN(leftSamples, extraDataLimit / sizeof(uint32_t));
-    *samplesToSend = MIN(*samplesToSend, samplesUntilWraparound);
 
     uint32_t extraBytes = *samplesToSend * sizeof(uint32_t);
+    uint32_t bytesUntilWraparound = (RAMDEBUG_BUFFER_ELEMENTS - indexInBuffer) * 4;
 
-    tmcl_appendData((uint8_t *) &debug_buffer[indexInBuffer], extraBytes);
+    tmcl_appendData((uint8_t *) &debug_buffer[indexInBuffer], MIN(extraBytes, bytesUntilWraparound));
+
+    if (extraBytes > bytesUntilWraparound)
+    {
+        // We only copied data until the end of the ring buffer.
+        // Copy the rest in from the start of the ring buffer.
+        tmcl_appendData((uint8_t *) &debug_buffer[0], extraBytes - bytesUntilWraparound);
+    }
 
     return true;
 }
