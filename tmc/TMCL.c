@@ -626,34 +626,35 @@ static void SetGlobalParameter()
             break;
         }
         break;
-        case 6:
-            if(Evalboards.ch1.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32)
-                    && Evalboards.ch2.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32))
-                HAL.IOs->config->setToState(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32);
+    case 6:
+        if(Evalboards.ch1.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32)
+                && Evalboards.ch2.onPinChange(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32))
+            HAL.IOs->config->setToState(HAL.IOs->pins->pins[ActualCommand.Motor], ActualCommand.Value.UInt32);
+        break;
+    case 7:
+        ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch1, ActualCommand.Value.UInt32);
+        break;
+    case 8:
+        ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch2, ActualCommand.Value.UInt32);
+        break;
+    case 9:
+        if (!spi_setMode(&HAL.SPI->ch1, ActualCommand.Value.UInt32))
+        {
+            ActualReply.Status = REPLY_INVALID_VALUE;
             break;
-        case 7:
-            ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch1, ActualCommand.Value.UInt32);
+        }
+        break;
+    case 10:
+        if (!spi_setMode(&HAL.SPI->ch2, ActualCommand.Value.UInt32))
+        {
+            ActualReply.Status = REPLY_INVALID_VALUE;
             break;
-        case 8:
-            ActualReply.Value.UInt32 = spi_setFrequency(&HAL.SPI->ch2, ActualCommand.Value.UInt32);
-            break;
-        case 9:
-            if (!spi_setMode(&HAL.SPI->ch1, ActualCommand.Value.UInt32))
-            {
-                ActualReply.Status = REPLY_INVALID_VALUE;
-                break;
-            }
-            break;
-        case 10:
-            if (!spi_setMode(&HAL.SPI->ch2, ActualCommand.Value.UInt32))
-            {
-                ActualReply.Status = REPLY_INVALID_VALUE;
-                break;
-            }
-            break;
-        default:
-            ActualReply.Status = REPLY_INVALID_TYPE;
-            break;
+        }
+        break;
+
+    default:
+        ActualReply.Status = REPLY_INVALID_TYPE;
+        break;
     }
 }
 
@@ -696,6 +697,7 @@ static void GetGlobalParameter()
     case 10:
         ActualReply.Value.UInt32 = spi_getMode(&HAL.SPI->ch2);
         break;
+
     default:
         ActualReply.Status = REPLY_INVALID_TYPE;
         break;
