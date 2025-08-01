@@ -669,9 +669,12 @@ bool debug_bulkDownload(uint32_t index, uint32_t *samplesToSend)
 {
     uint32_t extraDataLimit = tmcl_getExtraDataLimit();
 
-    // If there isn't at least space for a sample,
+    // If there isn't at least space for two samples,
     // report that bulk download isn't supported.
-    if (extraDataLimit < sizeof(uint32_t))
+    // Since the bulk download mechanism uses a normal command
+    // plus the bulk data, just a single bulk data sample
+    // would only make things slower.
+    if (extraDataLimit < (2*sizeof(uint32_t)))
         return false;
 
     uint32_t indexInBuffer = (index + debug_start_index) % RAMDEBUG_BUFFER_ELEMENTS;
