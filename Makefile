@@ -83,6 +83,7 @@ endif
 
 # Control
 SRC             += main.c
+SRC             += tmc/CRC32.c
 SRC             += tmc/TMCL.c
 SRC             += tmc/RAMDebug.c
 SRC             += tmc/EEPROM.c
