@@ -460,15 +460,11 @@ uint32_t tmcl_getExtraDataLimit()
 
 bool tmcl_appendData(uint8_t *data, uint32_t length)
 {
-    if (length > tmcl_getExtraDataLimit())
+    if (extraDataSize + length > tmcl_getExtraDataLimit())
         return false;
 
-    memcpy(&replyBuffer[9], data, length);
-    extraDataSize = length + sizeof(uint32_t);
-
-    // Append CRC32 checksum
-    uint32_t crc = crc_crc32(&replyBuffer[9], length);
-    memcpy(&replyBuffer[9+length], (uint8_t *) &crc, sizeof(crc));
+    memcpy(&replyBuffer[9 + extraDataSize], data, length);
+    extraDataSize += length;
 
     return true;
 }
@@ -502,6 +498,14 @@ void tx(RXTXTypeDef *RXTX)
         replyBuffer[6] = ActualReply.Value.Byte[1];
         replyBuffer[7] = ActualReply.Value.Byte[0];
         replyBuffer[8] = checkSum;
+    }
+
+    if (extraDataSize > 0)
+    {
+        // Append CRC32 checksum
+        uint32_t crc = crc_crc32(&replyBuffer[9], extraDataSize);
+        memcpy(&replyBuffer[9+extraDataSize], (uint8_t *) &crc, sizeof(crc));
+        extraDataSize += 4;
     }
 
     RXTX->txN(replyBuffer, 9 + extraDataSize);
