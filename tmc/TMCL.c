@@ -17,6 +17,7 @@
 #include "hal/derivative.h"
 #include "IdDetection.h"
 #include "VitalSignsMonitor.h"
+#include "tmc/CRC32.h"
 #include "tmc/StepDir.h"
 #include "EEPROM.h"
 #include "RAMDebug.h"
@@ -445,8 +446,8 @@ uint32_t tmcl_getExtraDataLimit()
 {
     if (currentInterface == 0) // USB
     {
-        // 9 Bytes for the TMCL reply itself
-        return USB_MAX_TX_DATA - 9;
+        // 9 Bytes for the TMCL reply itself, 4 bytes for the 32 bit CRC
+        return USB_MAX_TX_DATA - 9 - sizeof(uint32_t);
     }
 
     return 0;
@@ -458,7 +459,11 @@ bool tmcl_appendData(uint8_t *data, uint32_t length)
         return false;
 
     memcpy(&replyBuffer[9], data, length);
-    extraDataSize = length;
+    extraDataSize = length + sizeof(uint32_t);
+
+    // Append CRC32 checksum
+    uint32_t crc = crc_crc32(&replyBuffer[9], length);
+    memcpy(&replyBuffer[9+length], (uint8_t *) &crc, sizeof(crc));
 
     return true;
 }
