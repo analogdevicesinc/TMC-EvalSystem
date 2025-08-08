@@ -200,10 +200,16 @@ bool spi_setMode(SPIChannelTypeDef *SPIChannel, uint8_t mode)
 	uint8_t cpol = (mode>>1) & 1;
 	uint8_t cpha = mode & 1;
 
+	// We must re-enable the SPI during this change, otherwise hardware
+	// data buffers get messed up, shifting around any future bits sent.
 	uint32_t tmp = SPI_CTL0(SPIChannel->periphery);
 	tmp &= ~(SPI_CTL0_CKPL | SPI_CTL0_CKPH);
 	tmp |= cpol ? SPI_CTL0_CKPL : 0;
 	tmp |= cpha ? SPI_CTL0_CKPH : 0;
+	// Update & disable the SPI
+	SPI_CTL0(SPIChannel->periphery) = tmp & ~(SPI_CTL0_SPIEN);
+
+	// If SPI was enabled before updating, re-enable it
 	SPI_CTL0(SPIChannel->periphery) = tmp;
 
 	return true;
