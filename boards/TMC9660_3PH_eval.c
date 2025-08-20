@@ -1,13 +1,17 @@
 /*******************************************************************************
-* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
+* Copyright © 2025 Analog Devices Inc. All Rights Reserved.
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
 #include "Board.h"
 #include "tmc/BoardAssignment.h" // For the Board IDs
+#include "tmc/ic/TMC9660/TMC9660.h"
+#include "tmc/ic/TMC9660/TMC9660_PARAM_HW_Abstraction.h"
 
 static SPIChannelTypeDef *TMC9660_3PH_SPIChannel;
-static UART_Config *TMC9660_3PH_UARTChannel;
+static TMC9660BusType activeBus = TMC9660_BUS_UART;
+static TMC9660BusAddresses busAddresses;
+UART_Config *TMC9660_UARTChannel;
 static uint8_t lastStatus;
 
 // Evalboard errors reported in Evalboards.ch1.errors
@@ -15,7 +19,7 @@ static uint8_t lastStatus;
 #define EVAL_ERROR_NOT_BOOTSTRAPPED  (1<<1)
 #define EVAL_ERROR_NOT_IN_BOOTLOADER (1<<2)
 
-extern const uint8_t tmcCRCTable_Poly7Reflected[256];
+#define DEFAULT_ICID  0
 
 typedef struct
 {
@@ -36,83 +40,30 @@ typedef struct
 
 static PinsTypeDef Pins;
 
-static uint8_t CRC8(uint8_t *data, uint32_t bytes)
+bool tmc9660_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
-    uint8_t result = 0;
-
-    while (bytes--) result = tmcCRCTable_Poly7Reflected[result ^ *data++];
-
-    // Flip the result around
-    // swap odd and even bits
-    result = ((result >> 1) & 0x55) | ((result & 0x55) << 1);
-    // swap consecutive pairs
-    result = ((result >> 2) & 0x33) | ((result & 0x33) << 2);
-    // swap nibbles ...
-    result = ((result >> 4) & 0x0F) | ((result & 0x0F) << 4);
-
-    return result;
+    UNUSED(icID);
+    int32_t status = UART_readWrite(TMC9660_UARTChannel, data, writeLength, readLength);
+    if(status == -1)
+        return false;
+    return true;
 }
 
-static int32_t processTunnelBL(uint8_t command, int32_t value)
+uint32_t tmc_getMicrosecondTimestamp()
 {
-    uint8_t data[8] = {0};
-
-    data[0] = 0x55;    // Sync byte
-    data[1] = 0x01;    // Device Address
-    data[2] = command; // Command
-    data[3] = (value >> 24) & 0xFF;
-    data[4] = (value >> 16) & 0xFF;
-    data[5] = (value >> 8) & 0xFF;
-    data[6] = (value) & 0xFF;
-    data[7] = CRC8(data, 7);
-
-    UART_readWrite(TMC9660_3PH_UARTChannel, &data[0], 8, 8);
-
-    lastStatus = data[2];
-
-    return ((uint32_t) data[3] << 24) | ((uint32_t) data[4] << 16) | ((uint32_t) data[5] << 8) | data[6];
+  return systick_getMicrosecondTick();
 }
 
-static uint8_t calcCheckSum(uint8_t *data, uint32_t bytes)
+TMC9660BusType tmc9660_getBusType(uint16_t icID)
 {
-    uint8_t checkSum = 0;
-
-    for (uint32_t i = 0; i < bytes; i++) { checkSum += data[i]; }
-    return checkSum;
+    UNUSED(icID);
+    return activeBus;
 }
 
-static int32_t processTunnelApp(uint8_t operation, uint8_t type, uint8_t motor, uint32_t *value, uint8_t *status)
+TMC9660BusAddresses tmc9660_getBusAddresses(uint16_t icID)
 {
-    uint8_t data[9] = {0};
-
-    data[0] = 0x01;      // Module Address
-    data[1] = operation; //Operation
-    data[2] = type;      //type
-    data[3] = motor;     //motor
-    data[4] = (*value >> 24) & 0xFF;
-    data[5] = (*value >> 16) & 0xFF;
-    data[6] = (*value >> 8) & 0xFF;
-    data[7] = (*value) & 0xFF;
-    data[8] = calcCheckSum(data, 8);
-
-    int32_t uartStatus = UART_readWrite(TMC9660_3PH_UARTChannel, &data[0], 9, 9);
-
-    // Timeout?
-    if (uartStatus == -1)
-        return -1;
-
-    // Byte 8: CRC correct?
-    if (data[8] != calcCheckSum(data, 8))
-        return -2;
-
-    if (status != 0)
-    {
-        *status = data[2];
-    }
-
-    *value = ((uint32_t) data[4] << 24) | ((uint32_t) data[5] << 16) | ((uint32_t) data[6] << 8) | data[7];
-
-    return 0;
+    UNUSED(icID);
+    return busAddresses;
 }
 
 static void deInit(void)
@@ -126,14 +77,14 @@ static void initTunnel(void)
     //Deinit SPI
     TMC9660_3PH_SPIChannel->setEnabled(0);
 
-    TMC9660_3PH_UARTChannel         = HAL.UART;
-    TMC9660_3PH_UARTChannel->pinout = UART_PINS_2;
-    TMC9660_3PH_UARTChannel->rxtx.init();
+    TMC9660_UARTChannel         = HAL.UART;
+    TMC9660_UARTChannel->pinout = UART_PINS_2;
+    TMC9660_UARTChannel->rxtx.init();
     // Some forwarded commands can take longer than the default 10ms timeout
     // like the TMCLScript download sequences. For now, we just greatly
     // increase this timeout, later we should make this a more fine-grained
     // selection.
-    TMC9660_3PH_UARTChannel->timeout = 250; // [ms]
+    TMC9660_UARTChannel->timeout = 250; // [ms]
 
     HAL.IOs->config->setHigh(Pins.HOLDN_FLASH);
     //    HAL.IOs->config->setHigh(Pins.SPI_EN);
@@ -145,12 +96,14 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
     UNUSED(motor);
     uint32_t errors = TMC_ERROR_NONE;
+    uint32_t readValue;
 
     switch (type)
     {
     case 0:
         // Process Tunnel Commands
-        *value = processTunnelBL(motor, *value);
+        lastStatus = tmc9660_bl_sendCommand(DEFAULT_ICID, motor, *value, &readValue);
+        *value = readValue;
         break;
     case 1:
         // Return status byte
@@ -158,8 +111,8 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         break;
     case 2:
         // Get Module ID of App
-        uint8_t status;
-        processTunnelApp(136, 1, 0, (uint32_t *) value, &status);
+        tmc9660_param_sendCommand(DEFAULT_ICID, TMC9660_CMD_GET_VERSION, 1, 0, *value, &readValue);
+        *value = readValue;
         // The module ID is the upper 16 bits of the reply
         *(uint32_t *)value >>= 16;
         break;
@@ -172,8 +125,11 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 
 static void verifyTMC9660Mode()
 {
+    uint32_t readValue;
+    tmc9660_bl_sendCommand(DEFAULT_ICID, TMC9660_BLCMD_GET_INFO, 0, &readValue);
+
     // Check if the TMC9660 bootloader is active
-    if (processTunnelBL(0, 0) == 0x544D0001)
+    if (readValue == 0x544D0001)
     {
         if (Evalboards.ch1.id != ID_TMC9660_3PH_BL_EVAL)
         {
@@ -184,15 +140,14 @@ static void verifyTMC9660Mode()
     // Bootloader did not respond -> Either the chip is inactive (no VM, reset, ...),
     // or the chip is waiting for TMCL commands
     uint32_t moduleID = 0;
-    uint8_t status = 0;
-    int32_t tunnelStatus = processTunnelApp(136, 1, 0, &moduleID, &status);
+    int32_t tunnelStatus = tmc9660_param_sendCommand(DEFAULT_ICID, TMC9660_CMD_GET_VERSION, 1, 0, moduleID, &moduleID);
     moduleID >>= 16;
 
-    if (tunnelStatus == -1)
+    if (tunnelStatus == -2)
     {
         // No response from TMC9660
     }
-    else if (tunnelStatus == -2)
+    else if (tunnelStatus == -5)
     {
         // Response with checksum error
         // We ignore this, we only seek to find definite mismatches
@@ -223,56 +178,85 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
         return false;
     }
 
-    uint8_t data[9] = { 0 };
+    uint32_t readValue;
+    int32_t status = 0;
 
-    data[0] = 0x01; // Module Address forced to 1 to reach the TMC9660-3PH-EVAL // ToDo: Make configurable
-    data[1] = ActualCommand->Opcode; //Operation
-    data[2] = ActualCommand->Type; //type
-    data[3] = ActualCommand->Motor; //motor
-    data[4] = (ActualCommand->Value.Int32 >> 24) & 0xFF;
-    data[5] = (ActualCommand->Value.Int32 >> 16) & 0xFF;
-    data[6] = (ActualCommand->Value.Int32 >> 8 ) & 0xFF;
-    data[7] = (ActualCommand->Value.Int32      ) & 0xFF;
-    data[8] = calcCheckSum(data, 8);
+    if (Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL)
+    {
+        uint8_t opcode = ActualCommand->Opcode;
+        uint16_t type  = ActualCommand->Type | (((uint16_t) ActualCommand->Motor >> 4) << 8);
+        uint8_t index  = ActualCommand->Motor & 0x0F;
+        uint32_t value = ActualCommand->Value.UInt32;
 
-    int32_t uartStatus = UART_readWrite(TMC9660_3PH_UARTChannel, &data[0], 9, 9);
+        if (opcode == TMC9660_CMD_GET_VERSION && ActualCommand->Type == 0)
+        {
+            // Special case handling: GetVersion ASCII command has a specific TMC-API function
+            //                        since this command returns a nonstandard response format.
+            ActualReply->IsSpecial   = 1;
+            ActualReply->Special[0]  = 2; // SERIAL_HOST_ADDRESS;
+            tmc9660_param_getVersionASCII(DEFAULT_ICID, &ActualReply->Special[1]);
+            return true;
+        }
+
+        if (opcode == TMC9660_CMD_BOOT && ActualCommand->Type == 0x81 && ActualCommand->Motor == 0x9F && value == 0xA3B4C5D6)
+        {
+            // Special case handling: Boot command has a specific TMC-API function
+            //                        since this command doesn't return a reply.
+            tmc9660_param_returnToBootloader(DEFAULT_ICID);
+            // Mark this request as invalid to suppress the Evalsystem TMCL stack sending a reply
+            ActualCommand->Error = 1; // TMCL_RX_ERROR_NODATA
+            return true;
+        }
+
+        status = tmc9660_param_sendCommand(DEFAULT_ICID, opcode, type, index, value, &readValue);
+    }
+    else if (Evalboards.ch1.id == ID_TMC9660_3PH_REG_EVAL)
+    {
+        uint8_t opcode          = ActualCommand->Opcode;
+        uint16_t registerOffset = ActualCommand->Type | (((uint16_t) ActualCommand->Motor >> 5) << 8);
+        uint8_t registerBlock   = ActualCommand->Motor & 0x1F;
+        uint32_t value          = ActualCommand->Value.UInt32;
+
+        if (opcode == TMC9660_CMD_GET_VERSION && ActualCommand->Type == 0)
+        {
+            // Special case handling: GetVersion ASCII command has a specific TMC-API function
+            //                        since this command returns a nonstandard response format.
+            ActualReply->IsSpecial   = 1;
+            ActualReply->Special[0]  = 2; // SERIAL_HOST_ADDRESS;
+            tmc9660_reg_getVersionASCII(DEFAULT_ICID, &ActualReply->Special[1]);
+            return true;
+        }
+
+        if (opcode == TMC9660_CMD_BOOT && ActualCommand->Type == 0x81 && ActualCommand->Motor == 0x9F && value == 0xA3B4C5D6)
+        {
+            // Special case handling: Boot command has a specific TMC-API function
+            //                        since this command doesn't return a reply.
+            tmc9660_reg_returnToBootloader(DEFAULT_ICID);
+            // Mark this request as invalid to suppress the Evalsystem TMCL stack sending a reply
+            ActualCommand->Error = 1; // TMCL_RX_ERROR_NODATA
+            return true;
+        }
+
+        status = tmc9660_reg_sendCommand(DEFAULT_ICID, opcode, registerOffset, registerBlock, value, &readValue);
+    }
 
     // Timeout?
-    if(uartStatus == -1)
+    if(status == -2)
     {
         // ToDo: Send back a different error code for timeouts?
         ActualReply->Status = 1; // REPLY_CHKERR
-        return 1;
-    }
-
-    if (ActualCommand->Opcode == 0x88 && ActualCommand->Type == 0)
-    {
-        // ASCII GetVersion special case
-        // ...
-        ActualReply->IsSpecial   = 1;
-        ActualReply->Special[0]  = 2; // SERIAL_HOST_ADDRESS
-
-        for(uint8_t i = 0; i < 8; i++)
-        {
-            ActualReply->Special[i+1] = data[i+1];
-        }
-
         return true;
     }
-    else
-    {
-        // Byte 8: CRC correct?
-        if (data[8] != calcCheckSum(data, 8))
-        {
-            ActualReply->Status = 1; // REPLY_CHKERR
-            return 1;
-        }
+    else if (status == -5)
+    {    // Byte 8: CRC correct?
+        ActualReply->Status = 1; // REPLY_CHKERR
+        return true;
     }
 
     // Normal datagrams: Fix up the adjusted module ID in the reply
     ActualReply->ModuleId = 3;
-    ActualReply->Status = data[2];
-    ActualReply->Value.Int32 = ((uint32_t)data[4] << 24) | ((uint32_t)data[5] << 16) | ((uint32_t)data[6] << 8) | data[7];
+    ActualReply->Status = status;
+    ActualReply->Value.Int32 = readValue;
 
     return true;
 }
@@ -314,6 +298,9 @@ void TMC9660_3PH_init(void)
     Evalboards.ch1.userFunction         = userFunction;
     Evalboards.ch1.fwdTmclCommand       = fwdTmclCommand;
     Evalboards.ch1.deInit               = deInit;
+
+    busAddresses.device = 1;
+    busAddresses.host = 255;
 
     // Pull the chip out of reset
     HAL.IOs->config->setLow(Pins.RESET_LB);

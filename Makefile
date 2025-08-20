@@ -129,6 +129,7 @@ SRC             += TMC-API/tmc/ic/TMC6200/TMC6200.c
 SRC             += TMC-API/tmc/ic/TMC7300/TMC7300.c
 SRC             += TMC-API/tmc/ic/TMC5262/TMC5262.c
 SRC             += TMC-API/tmc/ic/TMC2262/TMC2262.c
+SRC             += TMC-API/tmc/ic/TMC9660/TMC9660.c
 
 EXTRAINCDIRS    += $(TMC_HAL_SRC)
 
