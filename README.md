@@ -37,6 +37,12 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
+### Version 3.11.2: (Released)
+- Added TMC-API support for TMC9660 and MAX22200.
+- Integrated TMC-API TMC9660 support to TMC9660-based Evalboards.
+- Included MAX22200-Eval to the project.
+- Code cleanup and bug fixes.
+
 ### Version 3.11.1: (Released)
 - Reworked MAX22216 CRC calculation to be more efficient. This is a backwards-incompatible change for anyone using the CRC calculation function max22216_CRC() from the TMC-API directly.
 - Code cleanup and bug fixes.
