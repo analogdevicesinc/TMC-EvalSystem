@@ -9,8 +9,8 @@
 #include "tmc/ic/TMC9660/TMC9660_PARAM_HW_Abstraction.h"
 
 static SPIChannelTypeDef *TMC9660_3PH_SPIChannel;
-static TMC9660BusType activeBus = TMC9660_BUS_UART;
-static TMC9660BusAddresses busAddresses;
+TMC9660BusType activeBus = TMC9660_BUS_UART;
+TMC9660BusAddresses busAddresses;
 UART_Config *TMC9660_UARTChannel;
 static uint8_t lastStatus;
 

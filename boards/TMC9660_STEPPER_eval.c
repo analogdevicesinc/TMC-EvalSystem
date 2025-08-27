@@ -10,8 +10,8 @@
 
 
 static SPIChannelTypeDef *TMC9660_STEPPER_SPIChannel;
-static TMC9660BusType activeBus;
-static TMC9660BusAddresses busAddresses;
+extern TMC9660BusType activeBus;
+extern TMC9660BusAddresses busAddresses;
 extern UART_Config *TMC9660_UARTChannel;
 static uint8_t lastStatus;
 
