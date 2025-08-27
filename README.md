@@ -37,6 +37,9 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
+### Version 3.11.3: (Released)
+- Bug fix for TMC9660-STEPPER-EVAL: Failed to enter application mode even after the application was started.
+
 ### Version 3.11.2: (Released)
 - Added TMC-API support for TMC9660 and MAX22200.
 - Integrated TMC-API TMC9660 support to TMC9660-based Evalboards.
