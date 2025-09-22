@@ -588,7 +588,6 @@ void debug_setPretriggerSampleCount(uint32_t count)
         count = sampleCount;
 
     sampleCountPre = count;
-    debug_write_index = count;
 }
 
 uint32_t debug_getPretriggerSampleCount()
@@ -665,3 +664,4 @@ void debug_setGlobalEnable(bool enable)
 {
     global_enable = enable;
 }
+
