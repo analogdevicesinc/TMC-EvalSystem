@@ -16,6 +16,7 @@
 #define VM_MAX 360 // VM[V/10] max
 
 static SPIChannelTypeDef *MAX22200_SPIChannel;
+static uint8_t RREF = 60;
 
 static void readRegister(uint8_t icID, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t icID, uint16_t address, int32_t value);
@@ -83,6 +84,54 @@ static void deInit(void)
 {
 }
 
+static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
+{
+    uint32_t errors = 0;
+
+    UNUSED(motor);
+
+    switch(type)
+    {
+        case 0:  // IREF
+            if(*value == 0x0)
+            {
+                HAL.IOs->config->setLow(Pins.IREF_CFG1);
+                HAL.IOs->config->setLow(Pins.IREF_CFG2);
+                HAL.IOs->config->setLow(Pins.IREF_CFG3);
+                RREF = 60; // 60Kohm resistor (Refer to schematics)
+            }else if(*value == 0x1)
+            {
+                HAL.IOs->config->setLow(Pins.IREF_CFG1);
+                HAL.IOs->config->setLow(Pins.IREF_CFG2);
+                HAL.IOs->config->setHigh(Pins.IREF_CFG3);
+                RREF = 50; // 50Kohm resistor (Refer to schematics)
+            }else if(*value == 0x2)
+            {
+                HAL.IOs->config->setLow(Pins.IREF_CFG1);
+                HAL.IOs->config->setHigh(Pins.IREF_CFG2);
+                HAL.IOs->config->setLow(Pins.IREF_CFG3);
+                RREF = 30; // 30Kohm resistor (Refer to schematics)
+            }else if(*value == 0x3)
+            {
+                HAL.IOs->config->setHigh(Pins.IREF_CFG1);
+                HAL.IOs->config->setLow(Pins.IREF_CFG2);
+                HAL.IOs->config->setLow(Pins.IREF_CFG3);
+                RREF = 15; // 15Kohm resistor (Refer to schematics)
+            }
+            break;
+        case 1: // RREF
+            *value = RREF;
+            break;
+
+
+        default:
+            errors |= TMC_ERROR_TYPE;
+            break;
+    }
+    return errors;
+}
+
+
 void MAX22200_init(void)
 {
     Pins.CMD       = &HAL.IOs->pins->DIO14;
@@ -104,6 +153,10 @@ void MAX22200_init(void)
     HAL.IOs->config->toInput(Pins.FAULT_N);
 
     HAL.IOs->config->setHigh(Pins.EN);
+    // Set RREF to 60k Ohm (Refer to the schematic)
+    HAL.IOs->config->setLow(Pins.IREF_CFG1);
+    HAL.IOs->config->setLow(Pins.IREF_CFG2);
+    HAL.IOs->config->setLow(Pins.IREF_CFG3);
 
     Evalboards.ch2.config->reset       = reset;
     Evalboards.ch2.config->restore     = restore;
@@ -120,6 +173,7 @@ void MAX22200_init(void)
     Evalboards.ch2.VMMax          = VM_MAX;
     Evalboards.ch2.deInit         = deInit;
     Evalboards.ch2.periodicJob    = periodicJob;
+    Evalboards.ch2.userFunction   = userFunction;
 
     max22200_writeRegister(DEFAULT_ICID, 0x00, 0x01); // Active = 1
     max22200_readRegister(DEFAULT_ICID, 0x00);        // Read status register to clear UVM flag
