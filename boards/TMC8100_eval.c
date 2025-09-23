@@ -56,6 +56,36 @@ int32_t tmc8100_readInt(int32_t address)
     return value;
 }
 
+int8_t eepromRead(int32_t address)
+{
+    uint8_t data[4] = { 0 };
+
+    data[0] = 0xA0;// Control Byte
+    data[1] = (address >> 8) && 0xFF;  //address high byte
+    data[2] = address & 0xFF;  //address low byte
+    data[3] = 0;
+    if(I2CMasterWriteRead(data[0],&data[1],2,&data[3],1))
+    {
+         return (int8_t)data[3];
+    }
+
+    return -1;
+}
+
+int8_t eepromWrite(int8_t addressHigh, int8_t addressLow, int8_t value)
+{
+    uint8_t data[4] = { 0 };
+
+    data[0] = 0xA0;//Control byte
+    data[1] = addressHigh;  //address high byte
+    data[2] = addressLow;  //address low byte
+    data[3] = value;
+    if(I2CMasterWrite(data[0],&data[1],3))
+    {
+        return 1;
+    }
+    return -1;
+}
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
     UNUSED(motor);
@@ -140,6 +170,18 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         TMC8100_SPIChannel = &HAL.SPI->ch2;
         TMC8100_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN2;
         break;
+    case 11:
+        // read EEPROM via I2C
+        *value = eepromRead(*value);
+        break;
+    case 12:
+        // write EEPROM via I2C
+        *value = eepromWrite((*value>>16)&0xFF, (*value>>8)&0xFF, *value&0xFF);
+        break;
+    case 13:
+        // Enable I2C
+        I2C.init();
+        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
@@ -177,8 +219,11 @@ void TMC8100_init(void)
     HAL.IOs->config->reset(Pins.SPI_DATA_AVAILABLE);
 
     SPI.init();
+    I2C.init();
+
     TMC8100_SPIChannel = &HAL.SPI->ch2;
     TMC8100_SPIChannel->CSN = &HAL.IOs->pins->SPI2_CSN2;
+    HAL.IOs->config->setLow(Pins.RESETN);
 
     Evalboards.ch2.userFunction    = userFunction;
 }
