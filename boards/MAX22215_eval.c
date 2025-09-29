@@ -311,14 +311,6 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     return handleParameter(READ, motor, type, value);
 }
 
-//static void timer_overflow(timer_channel channel)
-//{
-//    UNUSED(channel);
-//
-//    // RAMDebug
-//    debug_nextProcess();
-//}
-
 void MAX22215_init(void)
 {
     Pins.SLEEPN  = &HAL.IOs->pins->DIO8;
@@ -369,7 +361,6 @@ void MAX22215_init(void)
 
     HAL.IOs->config->set(Pins.PWM_INT);
 
-//    Timer.overflow_callback = timer_overflow;
     Timer.init();
 
     // For PWM generation
