@@ -121,10 +121,6 @@ void I2C0_IRQHandler(void)
         if(I2CReadCount<I2CReadLength)
         {
 
-            //Second last or last byte => prepare NAK
-            if(I2CReadLength-I2CReadCount<=2)
-                I2C0_C1|=I2C_C1_TXAK_MASK;
-
             //Fetch one byte
             I2CReadData[I2CReadCount++]=I2C0_D;
 
@@ -134,6 +130,10 @@ void I2C0_IRQHandler(void)
                 I2C0_C1&= ~I2C_C1_MST_MASK;
                 I2CState=I2C_IDLE;
             }
+
+            //Second last or last byte => prepare NAK
+            if(I2CReadLength-I2CReadCount<=2)
+                I2C0_C1|=I2C_C1_TXAK_MASK;
         }
         else
         {
@@ -295,7 +295,12 @@ uint8_t I2CMasterWriteRead(uint8_t address, uint8_t *writeData, uint8_t writeLen
 
     //Initialization
     I2CErrorFlag=FALSE;
-    I2CUseRepeatedStart=TRUE;
+
+    if(!readLength)
+        I2CUseRepeatedStart=FALSE;
+    else
+        I2CUseRepeatedStart=TRUE;
+
     I2CWriteData=writeData;
     I2CWriteLength=writeLength;
     I2CWriteCount=0;
