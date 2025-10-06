@@ -75,6 +75,9 @@ local.properties
 .loadpath
 .recommenders
 
+# Locally QtCreator project file
+*.pro
+
 # External tool builders
 .externalToolBuilders/
 
