@@ -1,10 +1,11 @@
+
+<!--
+
 # First Level Heading
 
 Paragraph.
 
 ## Second Level Heading
-
-{::comment}
 
 Paragraph.
 
@@ -51,4 +52,5 @@ Second Level Heading in Alternate Style
 Paragraph.
 
 [1]: https://www.qt.io
-{:/comment}
+
+-->
