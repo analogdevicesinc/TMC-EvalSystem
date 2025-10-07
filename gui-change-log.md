@@ -1,9 +1,17 @@
 # TMCL-IDE Change-Log
 
-## Version 4.8.0
-### tbd
+### Version 4.8.0 released
+[1]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_0GC9QOH
+[2]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_HBRJGDT
+Download the latest TMCL-IDE installer from **Analog Devices**: [Win32][1] or [Linux][2].      
 
-<!-- <br>
+---
+
+* Add TMC5262 and TMC2262 Eval
+* Switch to Qt 5.15.19-64Bit framework
+
+
+<!--  <i>
 
 # First Level Heading
 
