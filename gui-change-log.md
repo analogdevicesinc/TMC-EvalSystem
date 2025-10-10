@@ -11,9 +11,7 @@ Download the latest TMCL-IDE installer from **Software Download|Analog Devices**
 * TMC9660: Wizard - add DC Motor Support
 * TMC4671: PI Tuning, Biquad - rework
 * Direct Mode: Add Binary, Hex view
-* General: Switch to Qt 5.15.19-64Bit framework
-- Add TMC5262 and TMC2262 Eval
-- Switch to Qt 5.15.19-64Bit framework
+- General: Switch to Qt 5.15.19-64Bit framework
 
 
 <!--  <i>
