@@ -49,10 +49,10 @@ static uint32_t getVISEN();
  * PWM signal at pin PWM_INT controls the current value at ISENS
  * ISENS value is measured through ADC AIN1. We want to capture
  * the ADC value at the center of PWM signal. IF DC > 50%, we
- * will sample at the midPoint of the positive edge, and for
- * DC < 50%, we will sample it at negative edge. We use two
+ * will sample at the midPoint of the HIGH level, and for
+ * DC < 50%, we will sample it at the midPoint of the LOW level. We use two
  * channels of the same TIMER, one for duty cycle control and
- * other the value of the other channel set the ADC capture
+ * value of the other channel set the ADC capture
  * period through external trigger.
  */
 static float midPoint_PWM(float dc);
@@ -369,5 +369,5 @@ void MAX22215_init(void)
     Timer.setDuty(timerChannel1, 0.5);
 
     // For ADC Capture on PWM middle point
-    Timer.setTimerAdcTrigger();
+    Timer.setTimerAdcTrigger(timerChannel2);
 }

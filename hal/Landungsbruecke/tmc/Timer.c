@@ -32,7 +32,8 @@ static float freq_min_buf = 0.0f;
 /*
  * This function triggers AIN1 capture when FTM0 value matches FTM0_C1V
  */
-static void setTimerAdcTrigger(void);
+static void setTimerAdcTrigger(timer_channel channel);
+
 
 TimerTypeDef Timer =
 {
@@ -262,18 +263,23 @@ static void setFrequency(timer_channel channel, float freq)
 	enable_irq(INT_FTM0-16);
 }
 
-static void setTimerAdcTrigger(void)
+static void setTimerAdcTrigger(timer_channel channel)
 {
-    // Enable trigger for FTM0 CH1
-    FTM0_EXTTRIG |= FTM_EXTTRIG_CH1TRIG_MASK;
+    switch (channel)
+    {
+    case TIMER_CHANNEL_2:
+    default:
+        // Enable trigger for FTM0 CH1
+        FTM0_EXTTRIG |= FTM_EXTTRIG_CH1TRIG_MASK;
 
-    // Configure ADC1 to use FTM0 as Trigger Source
-    SIM_SOPT7 = SIM_SOPT7_ADC1TRGSEL(8) | SIM_SOPT7_ADC1ALTTRGEN_MASK;
+        // Configure ADC1 to use FTM0 as Trigger Source
+        SIM_SOPT7 = SIM_SOPT7_ADC1TRGSEL(8) | SIM_SOPT7_ADC1ALTTRGEN_MASK;
 
-    // Start conversion on channel DP3
-    ADC1_SC1(1) = ADC_SC1_ADCH(3);
+        // Start conversion on channel DP3
+        ADC1_SC1(1) = ADC_SC1_ADCH(3);
+        break;
+    }
 }
-
 
 void FTM0_IRQHandler()
 {
