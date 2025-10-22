@@ -182,7 +182,7 @@ void TIMER_INTERRUPT()
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
 		bool isStallSignalHigh = (GPIO_PDIR_REG(currCh->stallGuardPin->GPIOBase) & currCh->stallGuardPin->bitWeight) != 0;
 #elif defined(LandungsbrueckeV3)
-		bool isStallSignalHigh = HAL.IOs->config->isHigh(currCh->stallGuardPin);
+		bool isStallSignalHigh = HAL.IOs->config->isHigh(currCh->stallGuardPin) == 1; // DUMMY_PIN gets interpreted as no stall
 #endif
 		checkStallguard(currCh, isStallSignalHigh);
 
