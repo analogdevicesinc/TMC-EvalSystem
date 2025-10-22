@@ -37,6 +37,12 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
+### Version 3.11.4: (Released)
+- Included TMC5241 and TMC2241 to the project.
+- Bug fixes for MAX22215-Eval.
+- Additional functionality added for MAX22200-Eval.
+- Code cleanup.
+
 ### Version 3.11.3: (Released)
 - Bug fix for TMC9660-STEPPER-EVAL: Failed to enter application mode even after the application was started.
 
