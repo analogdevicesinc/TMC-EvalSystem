@@ -22,7 +22,4 @@ Download the latest TMCL-IDE installer from **Software Download | Analog Devices
 - Direct Mode: Add Binary, Hex view
 - General: Switch to Qt 5.15.19-64Bit framework
 
-
-<!--  <i>
-
 -->
