@@ -1,4 +1,4 @@
 [submodule "TMC-API"]
 	path = TMC-API
-	url = https://github.com/adi-innersource/tmc-api-internal
-	branch = feature_tm11
+	url = ../TMC-API.git
+	branch = master
