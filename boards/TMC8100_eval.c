@@ -25,6 +25,14 @@ typedef struct
 
 static PinsTypeDef Pins;
 
+static void delayBlocking(uint32_t microseconds)
+{
+
+    uint32_t startTime = systick_getMicrosecondTick();
+    while(timeDiff(systick_getMicrosecondTick(), startTime)<=microseconds);
+
+}
+
 int32_t tmc8100_writeInt(int32_t value)
 {
     int32_t retval = spi_ch2_readWriteByte(TMC8100_SPIChannel, value>>24, false);
