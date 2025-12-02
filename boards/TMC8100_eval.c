@@ -183,6 +183,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         *value = eepromRead(*value);
         break;
     case 12:
+        delayBlocking(7000);
         // write EEPROM via I2C
         *value = eepromWrite((*value>>16)&0xFF, (*value>>8)&0xFF, *value&0xFF);
         break;
