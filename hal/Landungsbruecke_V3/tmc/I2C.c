@@ -40,6 +40,9 @@ I2CTypeDef I2C=
  ********************************************************************/
 static void init(void)
 {
+    rcu_periph_reset_enable(RCU_I2C0RST);
+    rcu_periph_reset_disable(RCU_I2C0RST);
+
     rcu_periph_clock_enable(RCU_I2C0);
     /* I2C0 GPIO ports */
     /* connect PB8 to I2C0_SCL */
