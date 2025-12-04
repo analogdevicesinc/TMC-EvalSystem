@@ -1081,6 +1081,17 @@ static void handleGetInfo(void)
         ActualReply.Value.UInt32 = VERSION_PATCH;
         break;
 
+    case 201: // DeviceSpecificArea: Attached Evalboard IDs
+        ActualReply.Value.UInt32 = Evalboards.ch1.id << 16 | Evalboards.ch2.id;
+        break;
+
+    case 202: // DeviceSpecificArea: Attached Evalboard hardware versions
+        ActualReply.Value.UInt32 = Evalboards.ch1.hwVersion.major << 24
+                                 | Evalboards.ch1.hwVersion.minor << 16
+                                 | Evalboards.ch2.hwVersion.major <<  8
+                                 | Evalboards.ch2.hwVersion.minor;
+        break;
+
     default:
         ActualReply.Status = REPLY_INVALID_TYPE;
         break;
