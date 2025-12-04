@@ -52,6 +52,8 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
             Evalboards.ch1.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #1
 
         Evalboards.ch1.id = ids->ch1.id;
+        Evalboards.ch1.hwVersion.major = ids->ch1.hasVersion ? ids->ch1.versionMajor : (uint8_t) ~0u;
+        Evalboards.ch1.hwVersion.minor = ids->ch1.hasVersion ? ids->ch1.versionMinor : (uint8_t) ~0u;
         if(ids->ch1.state == ID_STATE_DONE)
             ids->ch1.state = assignCh1(ids->ch1.id, false);
         Evalboards.ch1.config->reset();
@@ -66,6 +68,8 @@ int32_t Board_assign(IdAssignmentTypeDef *ids)
     {
         Evalboards.ch2.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #2
         Evalboards.ch2.id = ids->ch2.id;
+        Evalboards.ch2.hwVersion.major = ids->ch2.hasVersion ? ids->ch2.versionMajor : (uint8_t) ~0u;
+        Evalboards.ch2.hwVersion.minor = ids->ch2.hasVersion ? ids->ch2.versionMinor : (uint8_t) ~0u;
         if(ids->ch2.state == ID_STATE_DONE)
             ids->ch2.state = assignCh2(ids->ch2.id, false);
         Evalboards.ch2.config->reset();

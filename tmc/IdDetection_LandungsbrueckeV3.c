@@ -416,6 +416,7 @@ static int32_t detectID_EEPROM(IdAssignmentTypeDef *ids)
     // and in the IDE - once we deplete that ID pool, this needs to be extended
     // (uint8_t to uint16_t and change EEPROM read to read two bytes instead of one)
     uint8_t idBuffer[2];
+    uint8_t versionBuffer[EEPROM_SIZE_HW] = { 0 };
     // ====== CH1 ======
     if(ids->ch1.state != ID_STATE_DONE)
     {
@@ -427,6 +428,13 @@ static int32_t detectID_EEPROM(IdAssignmentTypeDef *ids)
             // ID was correctly detected via EEPROM
             if(ids->ch1.id)
             {
+                // Read out the version info
+                eeprom_read_array(&SPI.ch1, EEPROM_ADDR_HW, &versionBuffer[0], EEPROM_SIZE_HW);
+                ids->ch1.hasVersion = true;
+                ids->ch1.versionMajor = versionBuffer[0];
+                ids->ch1.versionMinor = versionBuffer[1];
+
+                // ID detection complete
                 ids->ch1.state = ID_STATE_DONE;
                 IdState.ch1.detectedBy = FOUND_BY_EEPROM;
             }
@@ -446,6 +454,13 @@ static int32_t detectID_EEPROM(IdAssignmentTypeDef *ids)
             // ID was correctly detected via EEPROM
             if(ids->ch2.id)
             {
+                // Read out the version info
+                eeprom_read_array(&SPI.ch2, EEPROM_ADDR_HW, &versionBuffer[0], EEPROM_SIZE_HW);
+                ids->ch2.hasVersion = true;
+                ids->ch2.versionMajor = versionBuffer[0];
+                ids->ch2.versionMinor = versionBuffer[1];
+
+                // ID detection complete
                 ids->ch2.state = ID_STATE_DONE;
                 IdState.ch2.detectedBy = FOUND_BY_EEPROM;
             }

@@ -44,6 +44,10 @@ typedef struct
 {
 	void *type;
 	uint8_t  id;
+	struct {
+		uint8_t major; // ~0u means Version Unknown.
+		uint8_t minor; // ~0u means Version Unknown.
+	} hwVersion; // Hardware revision number of the connected Evalboard.
 	uint32_t errors;
 	int32_t VMMax;
 	int32_t VMMin;
