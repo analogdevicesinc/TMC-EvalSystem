@@ -22,189 +22,189 @@ static void unassign(IdAssignmentTypeDef *ids);
 
 int32_t Board_assign(IdAssignmentTypeDef *ids)
 {
-	int32_t out = 0;
+    int32_t out = 0;
 
-	// Test mode // todo REM 2: still needed? (LH)
-	if((ids->ch1.id == 0xFF) || (ids->ch2.id == 0xFF))
-	{
-		if((Evalboards.ch1.id != 0) || (Evalboards.ch2.id != 0) || (ids->ch1.id != ids->ch2.id))
-		{
-			ids->ch1.state = ID_STATE_NOT_IN_FW;
-			ids->ch2.state = ID_STATE_NOT_IN_FW;
-			out |= ids->ch2.state  << 24;
-			out |= ids->ch2.id     << 16;
-			out |= ids->ch1.state  << 8;
-			out |= ids->ch1.id     << 0;
-			return out;
-		}
-	}
+    // Test mode // todo REM 2: still needed? (LH)
+    if((ids->ch1.id == 0xFF) || (ids->ch2.id == 0xFF))
+    {
+        if((Evalboards.ch1.id != 0) || (Evalboards.ch2.id != 0) || (ids->ch1.id != ids->ch2.id))
+        {
+            ids->ch1.state = ID_STATE_NOT_IN_FW;
+            ids->ch2.state = ID_STATE_NOT_IN_FW;
+            out |= ids->ch2.state  << 24;
+            out |= ids->ch2.id     << 16;
+            out |= ids->ch1.state  << 8;
+            out |= ids->ch1.id     << 0;
+            return out;
+        }
+    }
 
-	// Assign motion controller
-	if((Evalboards.ch1.id == ids->ch1.id) && (ids->ch1.id != 0))
-	{	// todo CHECK 2: Evalboards.ch_.id only gets written at the end of this function - so the only way we can reach this case by calling this function multiple times.
-	    //               Therefor, the else case always runs before, which means any information returned by the justCheck = true call here would have already been
-	    //               given by the previous call of this function. This entire ID detection procedure is kinda messy, maybe we can actually completely rework it (LH)
-	    ids->ch1.state = assignCh1(ids->ch1.id, true);
-	}
-	else
-	{
-	    if(!ID_GROUP_TMC9660_STEPPER(Evalboards.ch1.id) && !ID_GROUP_TMC9660_3PH(Evalboards.ch1.id))
-	        Evalboards.ch1.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #1
+    // Assign motion controller
+    if((Evalboards.ch1.id == ids->ch1.id) && (ids->ch1.id != 0))
+    {   // todo CHECK 2: Evalboards.ch_.id only gets written at the end of this function - so the only way we can reach this case by calling this function multiple times.
+        //               Therefor, the else case always runs before, which means any information returned by the justCheck = true call here would have already been
+        //               given by the previous call of this function. This entire ID detection procedure is kinda messy, maybe we can actually completely rework it (LH)
+        ids->ch1.state = assignCh1(ids->ch1.id, true);
+    }
+    else
+    {
+        if(!ID_GROUP_TMC9660_STEPPER(Evalboards.ch1.id) && !ID_GROUP_TMC9660_3PH(Evalboards.ch1.id))
+            Evalboards.ch1.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #1
 
-	    Evalboards.ch1.id = ids->ch1.id;
-	    if(ids->ch1.state == ID_STATE_DONE)
-	        ids->ch1.state = assignCh1(ids->ch1.id, false);
-	    Evalboards.ch1.config->reset();
-	}
+        Evalboards.ch1.id = ids->ch1.id;
+        if(ids->ch1.state == ID_STATE_DONE)
+            ids->ch1.state = assignCh1(ids->ch1.id, false);
+        Evalboards.ch1.config->reset();
+    }
 
-	// Assign driver
-	if((Evalboards.ch2.id == ids->ch2.id) && (ids->ch2.id != 0))
-	{
-	    ids->ch2.state = assignCh2(ids->ch2.id, true);
-	}
-	else
-	{
-	    Evalboards.ch2.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #2
-	    Evalboards.ch2.id = ids->ch2.id;
-	    if(ids->ch2.state == ID_STATE_DONE)
-	        ids->ch2.state = assignCh2(ids->ch2.id, false);
-	    Evalboards.ch2.config->reset();
-	}
+    // Assign driver
+    if((Evalboards.ch2.id == ids->ch2.id) && (ids->ch2.id != 0))
+    {
+        ids->ch2.state = assignCh2(ids->ch2.id, true);
+    }
+    else
+    {
+        Evalboards.ch2.deInit(); // todo REM 2: Hot-Unplugging is not maintained currently, should probably be removed (LH) #2
+        Evalboards.ch2.id = ids->ch2.id;
+        if(ids->ch2.state == ID_STATE_DONE)
+            ids->ch2.state = assignCh2(ids->ch2.id, false);
+        Evalboards.ch2.config->reset();
+    }
 
-	// Reroute SPI 2 (that the driver uses) to run through the motion controller if required
-	// This allows the chaining of a motion controller and a driver.
-	// Note that the motion controller has to invoke reset() or restore() of the driver
-	// in order to have settings sent through the hooked SPI.
-	// This is currently done on completed motion controller reset/restore
-	hookDriverSPI(ids);
+    // Reroute SPI 2 (that the driver uses) to run through the motion controller if required
+    // This allows the chaining of a motion controller and a driver.
+    // Note that the motion controller has to invoke reset() or restore() of the driver
+    // in order to have settings sent through the hooked SPI.
+    // This is currently done on completed motion controller reset/restore
+    hookDriverSPI(ids);
 
 
-	out |= (ids->ch2.state  << 24) & 0xFF;
-	out |= (ids->ch2.id     << 16) & 0xFF;
-	out |= (ids->ch1.state  << 8)  & 0xFF;
-	out |= (ids->ch1.id     << 0)  & 0xFF;
+    out |= (ids->ch2.state  << 24) & 0xFF;
+    out |= (ids->ch2.id     << 16) & 0xFF;
+    out |= (ids->ch1.state  << 8)  & 0xFF;
+    out |= (ids->ch1.id     << 0)  & 0xFF;
 
-	return out;
+    return out;
 }
 
 int32_t Board_supported(IdAssignmentTypeDef *ids)
 {
-	int32_t out = 0;
+    int32_t out = 0;
 
-	ids->ch1.state = assignCh1(ids->ch1.id, true);
-	ids->ch2.state = assignCh2(ids->ch2.id, true);
+    ids->ch1.state = assignCh1(ids->ch1.id, true);
+    ids->ch2.state = assignCh2(ids->ch2.id, true);
 
-	out |= ids->ch2.state  << 24;
-	out |= ids->ch2.id     << 16;
-	out |= ids->ch1.state  << 8;
-	out |= ids->ch1.id     << 0;
+    out |= ids->ch2.state  << 24;
+    out |= ids->ch2.id     << 16;
+    out |= ids->ch1.state  << 8;
+    out |= ids->ch1.id     << 0;
 
-	return out;
+    return out;
 }
 
 static uint8_t assignCh1(uint8_t id, uint8_t justCheck)
 {
-	uint8_t ok = ID_STATE_NOT_IN_FW;
-	if(!justCheck)
-		tmcmotioncontroller_init();
+    uint8_t ok = ID_STATE_NOT_IN_FW;
+    if(!justCheck)
+        tmcmotioncontroller_init();
 
-	for(size_t i = 0, sz = ARRAY_SIZE(init_ch1); i < sz; i++)
-	{
-		if(init_ch1[i].id == id)
-		{
-			if(!justCheck)
-			{
-				// Reset Evalboard errors, then init
-				Evalboards.ch1.errors = 0;
-				init_ch1[i].init();
-			}
-			ok = ID_STATE_DONE;
-			break;
-		}
-	}
+    for(size_t i = 0, sz = ARRAY_SIZE(init_ch1); i < sz; i++)
+    {
+        if(init_ch1[i].id == id)
+        {
+            if(!justCheck)
+            {
+                // Reset Evalboard errors, then init
+                Evalboards.ch1.errors = 0;
+                init_ch1[i].init();
+            }
+            ok = ID_STATE_DONE;
+            break;
+        }
+    }
 
-	return ok;
+    return ok;
 }
 
 static uint8_t assignCh2(uint8_t id, uint8_t justCheck)
 {
-	uint8_t ok = ID_STATE_NOT_IN_FW;
+    uint8_t ok = ID_STATE_NOT_IN_FW;
 
-//	if(!justCheck)
-//		tmcdriver_init();
+//    if(!justCheck)
+//        tmcdriver_init();
 
-	for(size_t i = 0, sz = ARRAY_SIZE(init_ch2); i < sz; i++)
-	{
-		if(init_ch2[i].id == id)
-		{
-			if(!justCheck)
-			{
-				// Reset Evalboard errors, then init
-				Evalboards.ch2.errors = 0;
-				init_ch2[i].init();
-			}
-			ok = ID_STATE_DONE;
-			break;
-		}
-	}
+    for(size_t i = 0, sz = ARRAY_SIZE(init_ch2); i < sz; i++)
+    {
+        if(init_ch2[i].id == id)
+        {
+            if(!justCheck)
+            {
+                // Reset Evalboard errors, then init
+                Evalboards.ch2.errors = 0;
+                init_ch2[i].init();
+            }
+            ok = ID_STATE_DONE;
+            break;
+        }
+    }
 
-	return ok;
+    return ok;
 }
 
 // Reroute the driver's SPI to run through the motion controller if required
 // This also handles special case logic for the motion controller + driver chain (different pins etc.)
 static void hookDriverSPI(IdAssignmentTypeDef *ids)
 {
-	if(ids->ch1.id == ID_TMC4361A)
-	{
-		// Redirect ch2 SPI to the SPI cover function of the TMC43XX Board
-		HAL.SPI->ch2.readWrite = Evalboards.ch1.cover;
-		HAL.SPI->ch2.readWriteArray = Evalboards.ch1.fullCover;
+    if(ids->ch1.id == ID_TMC4361A)
+    {
+        // Redirect ch2 SPI to the SPI cover function of the TMC43XX Board
+        HAL.SPI->ch2.readWrite = Evalboards.ch1.cover;
+        HAL.SPI->ch2.readWriteArray = Evalboards.ch1.fullCover;
 
-//		Evalboards.ch1.config->state        = CONFIG_RESET;
-		if(ids->ch2.id == ID_TMC2660)
-		{
-			// TMC2660: Disable the continuous mode via userFunction
-			int32_t value = 1;
-			Evalboards.ch2.userFunction(0, 0, &value);
-			Evalboards.ch1.config->reset();
-		}
-		else if(ids->ch2.id == ID_TMC2130)
-		{
-			Evalboards.ch2.userFunction(6, 0, NULL);
-			Evalboards.ch1.config->reset();
-		}
+//        Evalboards.ch1.config->state        = CONFIG_RESET;
+        if(ids->ch2.id == ID_TMC2660)
+        {
+            // TMC2660: Disable the continuous mode via userFunction
+            int32_t value = 1;
+            Evalboards.ch2.userFunction(0, 0, &value);
+            Evalboards.ch1.config->reset();
+        }
+        else if(ids->ch2.id == ID_TMC2130)
+        {
+            Evalboards.ch2.userFunction(6, 0, NULL);
+            Evalboards.ch1.config->reset();
+        }
         else if(ids->ch2.id == ID_TMC2240)
         {
             Evalboards.ch1.config->reset();
         }
-		else if((ids->ch2.id == ID_TMC2160) || (ids->ch2.id == ID_TMC2262))
-		{
-			Evalboards.ch1.config->reset();
-		}
-	}
+        else if((ids->ch2.id == ID_TMC2160) || (ids->ch2.id == ID_TMC2262))
+        {
+            Evalboards.ch1.config->reset();
+        }
+    }
 }
 
 static void unassign(IdAssignmentTypeDef *ids)
 {
-	UNUSED(ids);
+    UNUSED(ids);
 }
 
 void periodicJob(uint32_t tick)
 {
-	UNUSED(tick);
+    UNUSED(tick);
 }
 
 void deInit(void)
 {
-	IdAssignmentTypeDef ids;
-	Evalboards.ch1.deInit();
-	Evalboards.ch2.deInit();
+    IdAssignmentTypeDef ids;
+    Evalboards.ch1.deInit();
+    Evalboards.ch2.deInit();
 
-	ids.ch1.id = Evalboards.ch1.id;
-	ids.ch2.id = Evalboards.ch2.id;
-	unassign(&ids);
+    ids.ch1.id = Evalboards.ch1.id;
+    ids.ch2.id = Evalboards.ch2.id;
+    unassign(&ids);
 
-	tmcdriver_init();
-	tmcmotioncontroller_init();
+    tmcdriver_init();
+    tmcmotioncontroller_init();
 }
