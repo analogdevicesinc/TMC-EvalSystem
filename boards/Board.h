@@ -113,7 +113,8 @@ inline uint8_t error_index(uint8_t error)
 typedef enum {
 	TMC_ERROR_TYPE = 0x04,
 	TMC_ERROR_ADDRESS = 0x04,
-	TMC_ERROR_NOT_DONE = 0x20
+	TMC_ERROR_NOT_DONE = 0x20,
+	TMC_ERROR_NOT_AVAILABLE = 0x80,
 } EvalboardErrorBit;
 
 // Channel identifiers required to switch between channels in readWrite

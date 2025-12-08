@@ -155,13 +155,14 @@ uint32_t maxExtraData[ARRAY_SIZE(interfaces)];
 // Sets TMCL status from Evalboard error. Returns the parameter given to allow for compact error handling
 uint8_t setTMCLStatus(uint8_t evalError)
 {
-    if(evalError == TMC_ERROR_NONE)          ActualReply.Status = REPLY_OK;
-    else if(evalError & TMC_ERROR_FUNCTION)  ActualReply.Status = REPLY_INVALID_CMD;
-    else if(evalError & TMC_ERROR_TYPE)      ActualReply.Status = REPLY_INVALID_TYPE;
-    else if(evalError & TMC_ERROR_MOTOR)     ActualReply.Status = REPLY_INVALID_TYPE; // todo CHECK ADD 2: Different errors for Evalboard type/motor errors? (LH) #1
-    else if(evalError & TMC_ERROR_VALUE)     ActualReply.Status = REPLY_INVALID_VALUE;
-    else if(evalError & TMC_ERROR_NOT_DONE)  ActualReply.Status = REPLY_DELAYED;
-    else if(evalError & TMC_ERROR_CHIP)      ActualReply.Status = REPLY_EEPROM_LOCKED;
+    if(evalError == TMC_ERROR_NONE)               ActualReply.Status = REPLY_OK;
+    else if(evalError & TMC_ERROR_FUNCTION)       ActualReply.Status = REPLY_INVALID_CMD;
+    else if(evalError & TMC_ERROR_TYPE)           ActualReply.Status = REPLY_INVALID_TYPE;
+    else if(evalError & TMC_ERROR_MOTOR)          ActualReply.Status = REPLY_INVALID_TYPE; // todo CHECK ADD 2: Different errors for Evalboard type/motor errors? (LH) #1
+    else if(evalError & TMC_ERROR_VALUE)          ActualReply.Status = REPLY_INVALID_VALUE;
+    else if(evalError & TMC_ERROR_NOT_DONE)       ActualReply.Status = REPLY_DELAYED;
+    else if(evalError & TMC_ERROR_CHIP)           ActualReply.Status = REPLY_EEPROM_LOCKED;
+    else if(evalError & TMC_ERROR_NOT_AVAILABLE)  ActualReply.Status = REPLY_CMD_NOT_AVAILABLE;
     return evalError;
 }
 
