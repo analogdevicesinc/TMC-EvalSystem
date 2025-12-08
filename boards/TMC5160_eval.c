@@ -214,7 +214,7 @@ static uint32_t moveBy(uint8_t motor, int32_t *ticks)
     // determine actual position and add numbers of ticks to move
     *ticks += tmc5160_readRegister(motor, TMC5160_XACTUAL);
 
-    moveTo(motor, vmax_position);
+    moveTo(motor, *ticks);
 
     return 0;
 }
