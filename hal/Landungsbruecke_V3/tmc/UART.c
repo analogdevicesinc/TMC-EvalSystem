@@ -126,7 +126,19 @@ static void init()
         break;
     }
 
+    uint32_t uclk;
+    switch (usart_periph)
+    {
+    case USART0:
+    case USART5:
+        uclk = rcu_clock_freq_get(CK_APB2);
+        break;
+    default:
+        uclk = rcu_clock_freq_get(CK_APB1);
+        break;
+    }
 
+    usart_oversample_config(usart_periph, (UART.rxtx.baudRate > (uclk/16))? USART_OVSMOD_8 : USART_OVSMOD_16);
     usart_baudrate_set(usart_periph, UART.rxtx.baudRate);
     usart_word_length_set(usart_periph, USART_WL_8BIT);
     usart_stop_bit_set(usart_periph, USART_STB_1BIT);
@@ -453,4 +465,3 @@ static uint32_t bytesAvailable()
 
     return bytes - uartRXEchoBytes;
 }
-
