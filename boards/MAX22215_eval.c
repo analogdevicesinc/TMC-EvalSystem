@@ -36,6 +36,12 @@ typedef struct
 } PinsTypeDef;
 static PinsTypeDef Pins;
 
+typedef struct
+{
+    ConfigurationTypeDef *config;
+} MAX22215TypeDef;
+static MAX22215TypeDef MAX22215;
+
 static void readRegister(uint8_t motor, uint16_t address, int32_t *value);
 static void writeRegister(uint8_t motor, uint16_t address, int32_t value);
 static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, int32_t *value);
@@ -61,8 +67,8 @@ bool max22215_readWriteI2C(uint16_t icID, uint8_t *data, size_t writeLength, siz
 {
     UNUSED(icID);
 
-    if(I2CMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))
-       return true;
+    if (I2CMasterWriteRead(data[0], &data[1], writeLength, &data[2], readLength))
+        return true;
 
     return false;
 }
@@ -216,6 +222,16 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             *value = max22215_fieldRead(DEFAULT_ICID, MAX22215_STATUS_FLT_PWP_FIELD);
         }
         break;
+
+    case 12:
+        if (readWrite == READ)
+        {
+            *value = getVISEN();
+        }
+        break;
+    default:
+        errors |= TMC_ERROR_TYPE;
+        break;
     }
     return errors;
 }
@@ -254,7 +270,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         setDutyCycle(dutyCycle);
         break;
 
-    case 6:// Read current duty cycle
+    case 6: // Read current duty cycle
         *value = (int32_t) (dutyCycle * 100);
         break;
 
@@ -311,6 +327,52 @@ static uint32_t GAP(uint8_t type, uint8_t motor, int32_t *value)
     return handleParameter(READ, motor, type, value);
 }
 
+static uint8_t reset()
+{
+    max22215_fieldWrite(DEFAULT_ICID, MAX22215_SW_HW_FIELD, 1);
+    max22215_fieldWrite(DEFAULT_ICID, MAX22215_RESET_FIELD, 1);
+    max22215_fieldWrite(DEFAULT_ICID, MAX22215_NSLEEP_FIELD, 1);
+
+    MAX22215.config->state = CONFIG_RESET;
+
+    return true;
+}
+
+static uint8_t restore()
+{
+    max22215_fieldWrite(DEFAULT_ICID, MAX22215_SW_HW_FIELD, 1);
+    max22215_fieldWrite(DEFAULT_ICID, MAX22215_RESET_FIELD, 1);
+    max22215_fieldWrite(DEFAULT_ICID, MAX22215_NSLEEP_FIELD, 1);
+
+    MAX22215.config->state        = CONFIG_RESTORE;
+
+    return true;
+}
+static void max22215_writeConfiguration()
+{
+    if(MAX22215.config->state != CONFIG_READY)
+    {
+        max22215_fieldWrite(DEFAULT_ICID, MAX22215_SW_HW_FIELD, 1);
+        max22215_fieldWrite(DEFAULT_ICID, MAX22215_RESET_FIELD, 1);
+        max22215_fieldWrite(DEFAULT_ICID, MAX22215_NSLEEP_FIELD, 1);
+    }
+
+    MAX22215.config->state = CONFIG_READY;
+}
+
+// Call this periodically
+static void periodicJob(uint32_t tick)
+{
+    UNUSED(tick);
+    // Helper function: Configure the next register.
+    if(MAX22215.config->state != CONFIG_READY)
+    {
+        max22215_writeConfiguration();
+        return;
+    }
+
+}
+
 void MAX22215_init(void)
 {
     Pins.SLEEPN  = &HAL.IOs->pins->DIO8;
@@ -326,11 +388,18 @@ void MAX22215_init(void)
     HAL.IOs->config->toOutput(Pins.PWM_INT);
 
     I2C.init();
-	MAX22215_I2C = HAL.I2C;
+    MAX22215_I2C = HAL.I2C;
+
+    MAX22215.config        = Evalboards.ch2.config;
+    MAX22215.config->state = CONFIG_READY;
+
+    MAX22215.config->reset   = reset;
+    MAX22215.config->restore   = restore;
 
     Evalboards.ch2.userFunction  = userFunction;
     Evalboards.ch2.writeRegister = writeRegister;
     Evalboards.ch2.readRegister  = readRegister;
+    Evalboards.ch2.periodicJob   = periodicJob;
     Evalboards.ch2.GAP           = GAP;
     Evalboards.ch2.SAP           = SAP;
     Evalboards.ch2.GIO           = GIO;
