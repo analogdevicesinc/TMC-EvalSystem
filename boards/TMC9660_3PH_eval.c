@@ -12,7 +12,7 @@ static SPIChannelTypeDef *TMC9660_3PH_SPIChannel;
 TMC9660BusType activeBus = TMC9660_BUS_UART;
 TMC9660BusAddresses busAddresses;
 UART_Config *TMC9660_UARTChannel;
-static uint8_t lastStatus;
+static int32_t lastStatus;
 
 // Evalboard errors reported in Evalboards.ch1.errors
 #define EVAL_ERROR_WRONG_MODULE_ID   (1<<0)
@@ -96,7 +96,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
     UNUSED(motor);
     uint32_t errors = TMC_ERROR_NONE;
-    uint32_t readValue;
+    uint32_t readValue = 0;
 
     switch (type)
     {
@@ -106,7 +106,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         *value = readValue;
         break;
     case 1:
-        // Return status byte
+        // Return status from last tunnel command
         *value = lastStatus;
         break;
     case 2:
