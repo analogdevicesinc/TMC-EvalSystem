@@ -302,6 +302,10 @@ else
     endif
 endif
 
+### TMC-API build-time settings ################################################
+# General settings
+CDEFS += -DTMC_API_EXTERNAL_CRC_TABLE=1
+
 ### Git info for build image ###################################################
 # Output file location
 GIT_INFO_FILE := ./GitInfo.h
@@ -493,7 +497,6 @@ _CFLAGS += -O$(OPT)
 _CFLAGS += -mcpu=$(MCU) $(THUMB_IW)
 _CFLAGS += $(CDEFS)
 _CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
-_CFLAGS += -DTMC_API_EXTERNAL_CRC_TABLE=1
 # when using ".ramfunc"s without longcall:
 ##_CFLAGS += -mlong-calls
 # -mapcs-frame is important if gcc's interrupt attributes are used
