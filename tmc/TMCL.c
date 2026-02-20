@@ -1218,7 +1218,7 @@ static int handleRamDebug(uint8_t type, uint8_t motor, uint32_t *data)
         break;
     case 10:
         if (!debug_getInfo(*data, data))
-            ActualReply.Status = REPLY_MAX_EXCEEDED;
+            return REPLY_MAX_EXCEEDED;
         break;
     case 11:
         if (!debug_getChannelType(motor, (uint8_t *) data))
