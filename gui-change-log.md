@@ -7,6 +7,7 @@
 Download the latest TMCL-IDE installer from **Software Download | Analog Devices**: [Windows][1] or [Linux][2].      
 
 ---
+- Fixed instabilities when loading some EVAL-Boards
 
 
 <!--  <i>
