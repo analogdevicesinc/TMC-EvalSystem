@@ -1,6 +1,6 @@
 # TMCL-IDE Change-Log
 
-### Version 4.9.1 released
+### Version 4.10.0 released
 [1]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_KYC4128
 [2]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_XD2OTWG
 
@@ -8,10 +8,13 @@ Download the latest TMCL-IDE installer from **Software Download | Analog Devices
 
 ---
 
-- Fixed instabilities when loading some EVAL-Boards
-- Improvement of tab handling in the Register-Browser
 
 <!--  <i>
+
+### Version 4.9.1 released
+
+- Fixed instabilities when loading some EVAL-Boards
+- Improvement of tab handling in the Register-Browser
 
 ### Version 4.9.0 released
 [1]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_DI3KF0U
