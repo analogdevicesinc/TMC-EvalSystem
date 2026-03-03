@@ -17,11 +17,6 @@
 
 // === RAM debugging ===========================================================
 
-// Debug parameters
-#define RAMDEBUG_MAX_CHANNELS     4
-#define RAMDEBUG_BUFFER_SIZE      32768
-#define RAMDEBUG_BUFFER_ELEMENTS  (RAMDEBUG_BUFFER_SIZE / 4)
-
 bool captureEnabled = false;
 
 // Sample Buffer
