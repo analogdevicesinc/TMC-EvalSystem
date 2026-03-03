@@ -105,6 +105,22 @@
 #define TMCL_Boot                    242
 #define TMCL_SoftwareReset           255
 
+// TMCL Status codes
+#define REPLY_OK                     100
+#define REPLY_CMD_LOADED             101
+#define REPLY_CHKERR                 1
+#define REPLY_INVALID_CMD            2
+#define REPLY_INVALID_TYPE           3
+#define REPLY_INVALID_VALUE          4
+#define REPLY_EEPROM_LOCKED          5
+#define REPLY_CMD_NOT_AVAILABLE      6
+#define REPLY_CMD_LOAD_ERROR         7
+#define REPLY_WRITE_PROTECTED        8
+#define REPLY_MAX_EXCEEDED           9
+#define REPLY_DOWNLOAD_NOT_POSSIBLE  10
+#define REPLY_CHIP_READ_FAILED       11
+#define REPLY_DELAYED                128
+#define REPLY_ACTIVE_COMM            129
 
 // TMCL GetInfo firmware capabilities
 #define GETINFO_FW_CAPABILITY_BITMASK_BOOTLOADER 0x00000001
