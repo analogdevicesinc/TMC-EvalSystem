@@ -33,16 +33,16 @@
 #define ID_CHECKERROR_MAGICNUMBER 2
 
 typedef struct {
-	bool init;
-	uint8_t name[EEPROM_SIZE_NAME];
-	uint16_t id;
-	uint16_t hw;
-	uint16_t magic;
+    bool init;
+    uint8_t name[EEPROM_SIZE_NAME];
+    uint16_t id;
+    uint16_t hw;
+    uint16_t magic;
 } EEPROM_Data;
 
 typedef struct {
-	EEPROM_Data ch1;
-	EEPROM_Data ch2;
+    EEPROM_Data ch1;
+    EEPROM_Data ch2;
 } EEPROM_Channels;
 
 extern EEPROM_Channels EEPROM;
