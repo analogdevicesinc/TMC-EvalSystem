@@ -73,6 +73,10 @@ uint8_t eeprom_check(SPIChannelTypeDef *SPIChannel)
 
     IOs.toOutput(SPIChannel->CSN);
 
+    // Ensure we're in SPI mode 3
+    uint8_t prevMode = spi_getMode(SPIChannel);
+    spi_setMode(SPIChannel, 3);
+
     SPIChannel->readWrite(0x05, false);  // Befehl "Get Status"
     uint8_t out = SPIChannel->readWrite(0x00, true);
     // check whether bits 6, 5, 4 and 0 are cleared
@@ -99,6 +103,9 @@ end:
             || (SPIChannel == &SPI.ch2 && !EEPROM.ch2.init))) {
         eeprom_init(SPIChannel);
     }
+
+    // Restore the SPI mode
+    spi_setMode(SPIChannel, prevMode);
 
     return out;
 }
@@ -128,6 +135,10 @@ void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t 
 
     IOs.toOutput(SPIChannel->CSN);
 
+    // Ensure we're in SPI mode 3
+    uint8_t prevMode = spi_getMode(SPIChannel);
+    spi_setMode(SPIChannel, 3);
+
     // Schreiben erlauben
     SPIChannel->readWrite(0x06, true); // Befehl "Write Enable"
     do
@@ -153,6 +164,9 @@ void eeprom_write_byte(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t 
     {
         SPIChannel->readWrite(0x05, false); //Befehl "Get Status"
     } while((SPIChannel->readWrite(0x00, true) & 0x02) != 0x00); //Warte bis "Write Enable"-Bit zurückgesetzt wird
+
+    // Restore the SPI mode
+    spi_setMode(SPIChannel, prevMode);
 
     HAL.IOs->config->toInput(SPIChannel->CSN);
     SPIChannel->CSN = io;
@@ -188,6 +202,10 @@ void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t
     }
 
     IOs.toOutput(SPIChannel->CSN);
+
+    // Ensure we're in SPI mode 3
+    uint8_t prevMode = spi_getMode(SPIChannel);
+    spi_setMode(SPIChannel, 3);
 
     // Schreiben erlauben
     SPIChannel->readWrite(0x06, true); // Befehl "Write Enable"
@@ -246,6 +264,9 @@ void eeprom_write_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t
         SPIChannel->readWrite(0x05, false); // Befehl "Get Status"
     } while((SPIChannel->readWrite(0x00, true) & 0x02) != 0x00);  // Warte bis "Write Enable"-Bit zurückgesetzt wird
 
+    // Restore the SPI mode
+    spi_setMode(SPIChannel, prevMode);
+
     HAL.IOs->config->toInput(SPIChannel->CSN);
     SPIChannel->CSN = io;
 }
@@ -271,11 +292,18 @@ uint8_t eeprom_read_byte(SPIChannelTypeDef *SPIChannel, uint16_t address)
 
     IOs.toOutput(SPIChannel->CSN);
 
+    // Ensure we're in SPI mode 3
+    uint8_t prevMode = spi_getMode(SPIChannel);
+    spi_setMode(SPIChannel, 3);
+
     SPIChannel->readWrite(0x03, false); //Befehl "Read"
     SPIChannel->readWrite(address >> 8, false);
     SPIChannel->readWrite(address & 0xFF, false);
 
     uint8_t out = SPIChannel->readWrite(0, true);
+
+    // Restore the SPI mode
+    spi_setMode(SPIChannel, prevMode);
 
     HAL.IOs->config->toInput(SPIChannel->CSN);
     SPIChannel->CSN = io;
@@ -310,12 +338,19 @@ void eeprom_read_array(SPIChannelTypeDef *SPIChannel, uint16_t address, uint8_t 
 
     IOs.toOutput(SPIChannel->CSN);
 
+    // Ensure we're in SPI mode 3
+    uint8_t prevMode = spi_getMode(SPIChannel);
+    spi_setMode(SPIChannel, 3);
+
     SPIChannel->readWrite(0x03, false); // Befehl "Read"
     SPIChannel->readWrite(address >> 8, false);
     SPIChannel->readWrite(address & 0xFF, false);
 
     for(i = 0; i < size; i++)
         *(data+i) = SPIChannel->readWrite(0, i == size-1); // beim letzten Byte EEPROM deselektieren
+
+    // Restore the SPI mode
+    spi_setMode(SPIChannel, prevMode);
 
     HAL.IOs->config->toInput(SPIChannel->CSN);
     SPIChannel->CSN = io;
