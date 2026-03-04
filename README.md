@@ -38,7 +38,10 @@ The clean command deletes the whole build directory:
 For detailed changelog, see commit history.
 
 ### Version 3.11.5: (Released)
+- Included TMC6460 to the project.
 - Bug fixes for TMC8100-Eval.
+- Bug fixes for TMC5272.
+- Code cleanup.
 
 ### Version 3.11.4: (Released)
 - Included TMC5241 and TMC2241 to the project.
