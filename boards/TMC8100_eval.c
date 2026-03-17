@@ -69,7 +69,7 @@ int8_t eepromRead(int32_t address)
     uint8_t data[4] = { 0 };
 
     data[0] = 0xA0;// Control Byte
-    data[1] = (address >> 8) && 0xFF;  //address high byte
+    data[1] = (address >> 8) & 0xFF;  //address high byte
     data[2] = address & 0xFF;  //address low byte
     data[3] = 0;
     if(I2CMasterWriteRead(data[0],&data[1],2,&data[3],1))
