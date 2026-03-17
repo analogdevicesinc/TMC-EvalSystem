@@ -14,8 +14,8 @@
 #define ERRORS_VM        (1<<0)
 #define ERRORS_VM_UNDER  (1<<1)
 #define ERRORS_VM_OVER   (1<<2)
-#define VM_MIN         50   // VM[V/10] min
-#define VM_MAX         660  // VM[V/10] max
+#define VM_MIN         21   // VM[V/10] min
+#define VM_MAX         200  // VM[V/10] max
 #define DEFAULT_ICID  0
 
 // Typedefs
