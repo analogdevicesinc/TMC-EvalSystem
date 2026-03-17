@@ -191,6 +191,47 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         // Enable I2C
         I2C.init();
         break;
+    case 14:
+        //Reset I2C bus
+        //Set I2C_SDA and I2C_SCL to high-Z
+        HAL.IOs->config->reset(Pins.I2C_SDA);
+        HAL.IOs->config->reset(Pins.I2C_SCL);
+
+        if(HAL.IOs->config->getState(Pins.I2C_SDA)==IOS_LOW)  //I2C bus stuck?
+        {
+            //Set I2C_SCL as output and generate up to 9 pulses
+            HAL.IOs->config->toOutput(Pins.I2C_SCL);
+            HAL.IOs->config->setToState(Pins.I2C_SCL, IOS_HIGH);
+            delayBlocking(1000);
+            for(int i=0; i<9; i++)
+            {
+                HAL.IOs->config->setToState(Pins.I2C_SCL, IOS_LOW);
+                delayBlocking(1000);
+                HAL.IOs->config->setToState(Pins.I2C_SCL, IOS_HIGH);
+                delayBlocking(1000);
+
+                //Do not generate any more pulses if bus is not stuck anymore
+                if(HAL.IOs->config->getState(Pins.I2C_SDA)==IOS_HIGH) break;
+            }
+
+            //Generate STOP condition
+            delayBlocking(100);
+            HAL.IOs->config->toOutput(Pins.I2C_SDA);
+            delayBlocking(500);
+            HAL.IOs->config->setToState(Pins.I2C_SDA, IOS_LOW);
+            delayBlocking(500);
+
+            //Release bus
+            HAL.IOs->config->reset(Pins.I2C_SDA);
+            HAL.IOs->config->reset(Pins.I2C_SCL);
+        }
+
+        //Return state of bus
+        if(HAL.IOs->config->getState(Pins.I2C_SDA)==IOS_LOW)
+            *value=0;  //still stuck
+        else
+            *value=1;  //not stuck anymore
+        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
