@@ -247,8 +247,8 @@ void TMC8100_init(void)
     Pins.SPI_MISO              = &HAL.IOs->pins->SPI2_SDO; //Pin28
     Pins.SPI_CSN               = &HAL.IOs->pins->SPI2_CSN2; //Pin26
     Pins.RESETN                = &HAL.IOs->pins->DIO8; //Pin19
-    Pins.I2C_SDA               = &HAL.IOs->pins->DIO3; //Pin11
-    Pins.I2C_SCL               = &HAL.IOs->pins->DIO2; //Pin10
+    Pins.I2C_SDA               = &HAL.IOs->pins->DIO5; //Pin13
+    Pins.I2C_SCL               = &HAL.IOs->pins->DIO4; //Pin12
 
 #if defined(LandungsbrueckeV3)
     Pins.UART_RX               = &HAL.IOs->pins->DIO10_UART_TX; //Pin21
