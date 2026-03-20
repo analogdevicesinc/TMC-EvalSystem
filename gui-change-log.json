@@ -1,7 +1,19 @@
 {
     "TMCL-IDE":{
-        "latest": "4.10.0",
+        "latest": "4.11.0",
         "ChangeLog":[
+            {
+                "tag_name":   "4.11.0",
+                "created_at": "2026-03-20T16:22:22Z",
+                "updated_at": "2026-03-20T17:10:25Z",
+                "public_url": "https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_YBF4NVY",
+                "linux_url":  "https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_Y49EOOU",
+                "topics": [
+                    "Add TMC6460-EVAL tools",
+                    "Improvement of TMC9660 and TMC8100 tools",
+                    "Fixed path to CANopen tools"
+                ]
+            },
             {
                 "tag_name":   "4.10.0",
                 "created_at": "2026-02-27T16:22:22Z",

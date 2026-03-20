@@ -1,16 +1,21 @@
 # TMCL-IDE Change-Log
 
-### Version 4.10.0 released
+### Version 4.11.0 released
 [1]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_KYC4128
 [2]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_XD2OTWG
 
 Download the latest TMCL-IDE installer from **Software Download | Analog Devices**: [Windows][1] or [Linux][2].      
 
 ---
-- Fixed instabilities when loading some EVAL-Boards
-
+- Add <b>TMC6460-EVAL</b> tools
+- Improvement of TMC9660 and TMC8100 tools
+- Fixed path to CANopen tools
 
 <!--  <i>
+
+### Version 4.10.0 released
+
+- Fixed instabilities when loading some EVAL-Boards
 
 ### Version 4.9.1 released
 
