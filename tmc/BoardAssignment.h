@@ -61,6 +61,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 #define ID_TMC5272                     29
 #define ID_TMC5262                     30
 #define ID_TMC5271                     31
+#define ID_TMC6460                     32
 #define ID_TMC9660_3PH_BL_EVAL         33
 #define ID_TMC9660_3PH_REG_EVAL        34
 #define ID_TMC9660_3PH_PARAM_EVAL      35
@@ -139,6 +140,7 @@ extern void TMC6100_BOB_init();
 extern void TMC6140_init();
 extern void TMC6200_init();
 extern void TMC6300_init();
+extern void TMC6460_init();
 extern void TMC7300_init();
 extern void TMC8100_init();
 extern void TMC2262_init();
@@ -172,6 +174,9 @@ static const init_assignment init_ch1[] =
     { .id = ID_TMC5272,                    .init = TMC5272_init         },
     { .id = ID_TMC5062,                    .init = TMC5062_init         },
     { .id = ID_TMC5262,                    .init = TMC5262_init         },
+#if defined(LandungsbrueckeV3)
+    { .id = ID_TMC6460,                    .init = TMC6460_init         },
+#endif
     { .id = ID_TMC9660_3PH_BL_EVAL,        .init = TMC9660_3PH_init     },
     { .id = ID_TMC9660_3PH_REG_EVAL,       .init = TMC9660_3PH_init     },
     { .id = ID_TMC9660_3PH_PARAM_EVAL,     .init = TMC9660_3PH_init     },

@@ -13,7 +13,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// RAMDebug parameters
 #define RAMDEBUG_FREQUENCY 1000/*0*/
+#define RAMDEBUG_MAX_CHANNELS     4
+#define RAMDEBUG_BUFFER_SIZE      32768
+#define RAMDEBUG_BUFFER_ELEMENTS  (RAMDEBUG_BUFFER_SIZE / 4)
+
 
 // Capture state
 typedef enum {
@@ -22,6 +27,7 @@ typedef enum {
     RAMDEBUG_CAPTURE    = 2,
     RAMDEBUG_COMPLETE   = 3,
     RAMDEBUG_PRETRIGGER = 4,
+    RAMDEBUG_ERROR      = 5,
 } RAMDebugState;
 
 // Capture channel configuration
