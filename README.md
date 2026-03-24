@@ -41,7 +41,7 @@ For detailed changelog, see commit history.
 - ...
 
 ### Version 3.11.5: (Released)
-- Included TMC6460 to the project.
+- Included TMC6460 to the project. Currently TMC6460-Eval is only supported by LandungsbrueckeV3.
 - Bug fixes for TMC8100-Eval.
 - Bug fixes for TMC5272.
 - Code cleanup.
