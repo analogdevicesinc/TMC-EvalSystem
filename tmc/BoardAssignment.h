@@ -68,6 +68,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 #define ID_TMC9660_STEPPER_REG_EVAL    37
 #define ID_TMC9660_STEPPER_PARAM_EVAL  38
 #define ID_TMC6460_BOB                 42
+#define ID_TMC5262_BOB                 44
 #define ID_TMC2130_TQFP48              0xFE
 #define ID_SELFTEST                    255
 
@@ -99,6 +100,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 #define ID_MAX22215       36
 #define ID_MAX22200_EVAL  42
 #define ID_TMC2241        41
+#define ID_TMC2262_BOB    44
 #define TM01       1414332417
 
 #define ID_GROUP_TMC9660_STEPPER(id) ((id) >= ID_TMC9660_STEPPER_BL_EVAL && (id) <= ID_TMC9660_STEPPER_PARAM_EVAL)
@@ -174,6 +176,7 @@ static const init_assignment init_ch1[] =
     { .id = ID_TMC5272,                    .init = TMC5272_init         },
     { .id = ID_TMC5062,                    .init = TMC5062_init         },
     { .id = ID_TMC5262,                    .init = TMC5262_init         },
+    { .id = ID_TMC5262_BOB,                .init = TMC5262_init         },
 #if defined(LandungsbrueckeV3)
     { .id = ID_TMC6460,                    .init = TMC6460_init         },
     { .id = ID_TMC6460_BOB,                .init = TMC6460_init         },
@@ -215,6 +218,7 @@ static const init_assignment init_ch2[] =
     { .id = ID_TMC6140,       .init = TMC6140_init     },
     { .id = ID_TMC8100,       .init = TMC8100_init     },
     { .id = ID_TMC2262,       .init = TMC2262_init     },
+    { .id = ID_TMC2262_BOB,   .init = TMC2262_init     },
     { .id = ID_MAX22215,      .init = MAX22215_init    },
 };
 
