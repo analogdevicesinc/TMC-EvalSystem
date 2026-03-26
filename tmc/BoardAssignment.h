@@ -67,6 +67,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 #define ID_TMC9660_STEPPER_BL_EVAL     36
 #define ID_TMC9660_STEPPER_REG_EVAL    37
 #define ID_TMC9660_STEPPER_PARAM_EVAL  38
+#define ID_TMC6460_BOB                 42
 #define ID_TMC2130_TQFP48              0xFE
 #define ID_SELFTEST                    255
 
@@ -175,6 +176,7 @@ static const init_assignment init_ch1[] =
     { .id = ID_TMC5262,                    .init = TMC5262_init         },
 #if defined(LandungsbrueckeV3)
     { .id = ID_TMC6460,                    .init = TMC6460_init         },
+    { .id = ID_TMC6460_BOB,                .init = TMC6460_init         },
 #endif
     { .id = ID_TMC9660_3PH_BL_EVAL,        .init = TMC9660_3PH_init     },
     { .id = ID_TMC9660_3PH_REG_EVAL,       .init = TMC9660_3PH_init     },
