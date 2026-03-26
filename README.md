@@ -38,6 +38,8 @@ The clean command deletes the whole build directory:
 For detailed changelog, see commit history.
 
 ### Version 3.11.6 (WIP):
+- Included TMC2262-BOB, TMC5262-BOB and TMC6460-BOB to the project.
+- Updated copyright text of both TMC-API and TMC-EvalSystem.
 - ...
 
 ### Version 3.11.5: (Released)
