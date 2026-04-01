@@ -6,6 +6,7 @@
 
 #include "TMC-API/tmc/ic/TMC6460/TMC6460.h"
 #include "boards/Board.h"
+#include "tmc/BoardAssignment.h" // For the Board IDs
 #include "tmc/RAMDebug.h"
 
 #define DEFAULT_MOTOR   0
@@ -688,7 +689,7 @@ void TMC6460_init(void)
     spi_setFrequency(TMC6460_SPIChannel, 7500000);//7.5MHz
 
     TMC6460_UARTChannel = HAL.UART;
-    if (Evalboards.ch1.hwVersion.major == 0)
+    if (Evalboards.ch1.hwVersion.major == 0 && Evalboards.ch1.id == ID_TMC6460)
     {
         // Evalboard v0.X uses UART on DIO17/18
         TMC6460_UARTChannel->pinout = UART_PINS_1;
