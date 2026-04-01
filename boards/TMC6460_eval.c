@@ -58,7 +58,7 @@ static void rtmiramdebug_process();
 
 static uint32_t rtmiramdebug_divisor = 0;
 
-static enum TMC6460BusType activeBus = TMC6460_BUS_UART;
+static enum TMC6460BusType activeBus = TMC6460_BUS_SPI;
 
 // => TMC-API wrapper
 void tmc6460_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
