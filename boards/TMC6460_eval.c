@@ -58,7 +58,7 @@ static void rtmiramdebug_process();
 
 static uint32_t rtmiramdebug_divisor = 0;
 
-static enum TMC6460BusType activeBus = TMC6460_BUS_SPI;
+static enum TMC6460BusType activeBus = TMC6460_BUS_UART;
 
 // => TMC-API wrapper
 void tmc6460_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
@@ -697,6 +697,7 @@ void TMC6460_init(void)
     else
     {
         // Evalboard v1.0 switched UART to DIO10/11
+        // The BoB v0.1 also uses UART DIO10/11
         TMC6460_UARTChannel->pinout = UART_PINS_2;
     }
 
