@@ -2,6 +2,8 @@
 * Copyright © 2025 Analog Devices, Inc.
 *******************************************************************************/
 
+#include <string.h> // For memset
+
 #include "Board.h"
 #include "tmc/BoardAssignment.h" // For the Board IDs
 #include "tmc/ic/TMC9660/TMC9660.h"
@@ -170,6 +172,19 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
             ActualReply->IsSpecial   = 1;
             ActualReply->Special[0]  = 2; // SERIAL_HOST_ADDRESS;
             tmc9660_param_getVersionASCII(DEFAULT_ICID, &ActualReply->Special[1]);
+            return true;
+        }
+
+        if (opcode == TMC9660_CMD_READ_MEM)
+        {
+            // Special case handling: TMCL Memory read has a specific TMC-API function
+            //                        since this command returns a nonstandard response format.
+            if (tmc9660_param_readTMCLMemory(DEFAULT_ICID, ActualCommand->Value.UInt32, &ActualReply->ModuleId) < 0)
+            {
+                // This special-case command returns seven zero bytes if no command download occurred.
+                memset(&ActualReply->ModuleId, 0, 7);
+            }
+
             return true;
         }
 
