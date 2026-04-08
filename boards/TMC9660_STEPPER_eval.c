@@ -179,9 +179,20 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
         {
             // Special case handling: TMCL Memory read has a specific TMC-API function
             //                        since this command returns a nonstandard response format.
-            if (tmc9660_param_readTMCLMemory(DEFAULT_ICID, ActualCommand->Value.UInt32, &ActualReply->ModuleId) < 0)
+            int32_t err = tmc9660_param_readTMCLMemory(DEFAULT_ICID, ActualCommand->Value.UInt32, &ActualReply->ModuleId);
+
+            // When the external memory is configured, but either not reachable or not partitioned,
+            // the TMC9660 will reply with a standard TMCL reply with CMD_NOT_AVAILABLE status instead
+            // of the nonstandard reply that this command ought to send.
+            // Correct it here for proper TMCL-IDE operation.
+            bool isErroneousReply = ActualReply->ModuleId     == busAddresses.device
+                                 && ActualReply->Status       == TMC9660_PARAMSTATUS_CMD_NOT_AVAILABLE
+                                 && ActualReply->Opcode       == TMC9660_CMD_READ_MEM
+                                 && ActualReply->Value.UInt32 == 0;
+
+            if (err || isErroneousReply)
             {
-                // This special-case command returns seven zero bytes if no command download occurred.
+                // This special-case command returns seven zero bytes to signal download error
                 memset(&ActualReply->ModuleId, 0, 7);
             }
 
