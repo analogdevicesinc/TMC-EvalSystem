@@ -67,6 +67,13 @@ static uint32_t vmax_position[TMC5272_MOTORS];
 
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
+typedef enum {
+    UNKNOWN,
+    DRV_STILL_DISABLED,
+    DRV_ENABLED,
+} TMC5272DriverEnCodes;
+
+static TMC5272DriverEnCodes code = UNKNOWN;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -1372,6 +1379,10 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
+    if(code == DRV_STILL_DISABLED){
+        enableDriver(DRIVER_ENABLE);
+    }
+
     if(!noRegResetnSLEEP)
     {
         //check if reset after nSLEEP to HIGH was performed
@@ -1397,16 +1408,13 @@ static void periodicJob(uint32_t tick)
             TMC5272.oldTick  = tick;
         }
     }
-    else
+    else if(noRegResetnSLEEP || code == DRV_STILL_DISABLED)
     {
         //check if minimum time since chip activation passed. Then restore.
         if((systick_getTick()-nSLEEPTick)>20) //
         {
             noRegResetnSLEEP = false;
             enableDriver(DRIVER_ENABLE);
-            tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_CHOPCONF_TOFF_FIELD(0), 3);
-            tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_CHOPCONF_TOFF_FIELD(1), 3);
-            tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_IHOLD_IRUN_IHOLD_FIELD(1), 3);
         }
     }
 }
@@ -1576,8 +1584,26 @@ static void enableDriver(DriverState state)
 	}
 	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
 		HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
-		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD, 0);
-		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD, 0);
+
+		// First check if IC is active and we can write to it
+		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD, 1);
+		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD, 1);
+
+		uint8_t drvEnM0 = tmc5272_fieldRead(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD);
+		uint8_t drvEnM1 = tmc5272_fieldRead(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD);
+
+		if(drvEnM0 == 1 && drvEnM1 == 1){
+		    code = DRV_ENABLED;
+	        tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD, 0);
+	        tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD, 0);
+
+            tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_CHOPCONF_TOFF_FIELD(0), 3);
+            tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_CHOPCONF_TOFF_FIELD(1), 3);
+            tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_IHOLD_IRUN_IHOLD_FIELD(1), 3);
+		}
+		else if(drvEnM0 == 0 && drvEnM1 == 0){
+            code = DRV_STILL_DISABLED;
+        }
 	}
 }
 
