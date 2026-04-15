@@ -1408,7 +1408,7 @@ static void periodicJob(uint32_t tick)
             TMC5272.oldTick  = tick;
         }
     }
-    else if(noRegResetnSLEEP || code == DRV_STILL_DISABLED)
+    else if(noRegResetnSLEEP)
     {
         //check if minimum time since chip activation passed. Then restore.
         if((systick_getTick()-nSLEEPTick)>20) //
@@ -1585,14 +1585,10 @@ static void enableDriver(DriverState state)
 	else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
 		HAL.IOs->config->setLow(Pins.DRV_ENN_CFG6);
 
-		// First check if IC is active and we can write to it
-		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD, 1);
-		tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD, 1);
+		// check if the IC is active
+		uint8_t version = tmc5272_fieldRead(DEFAULT_ICID, TMC5272_IOIN_VERSION_FIELD);
 
-		uint8_t drvEnM0 = tmc5272_fieldRead(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD);
-		uint8_t drvEnM1 = tmc5272_fieldRead(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD);
-
-		if(drvEnM0 == 1 && drvEnM1 == 1){
+		if(version == 96){
 		    code = DRV_ENABLED;
 	        tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M0_DRV_ENN_FIELD, 0);
 	        tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_GCONF_M1_DRV_ENN_FIELD, 0);
@@ -1601,7 +1597,7 @@ static void enableDriver(DriverState state)
             tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_CHOPCONF_TOFF_FIELD(1), 3);
             tmc5272_fieldWrite(DEFAULT_ICID, TMC5272_IHOLD_IRUN_IHOLD_FIELD(1), 3);
 		}
-		else if(drvEnM0 == 0 && drvEnM1 == 0){
+		else if(version == 0){
             code = DRV_STILL_DISABLED;
         }
 	}
