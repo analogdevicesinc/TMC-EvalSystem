@@ -938,6 +938,7 @@ static void rtmiramdebug_init()
 
     // Set default values for the capture configuration
     rtmiramdebug_sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
+    rtmiramdebug_preTriggerSampleCount = 0;
     rtmiramdebug_divisor = 0;
 
     // Clear channel settings
