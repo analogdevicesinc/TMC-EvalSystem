@@ -172,6 +172,18 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 	switch(type)
 	{
+    case 0: // motor type
+        if(readWrite == READ)
+        {
+            *value  = tmc4671_fieldRead(DEFAULT_ICID, TMC4671_MOTOR_TYPE_FIELD);
+
+        }
+        else if(readWrite == WRITE)
+        {
+            tmc4671_fieldWrite(DEFAULT_ICID, TMC4671_MOTOR_TYPE_FIELD, *value);
+        }
+        break;
+
 	case 4: // max velocity
 		if(readWrite == READ)
 		{
