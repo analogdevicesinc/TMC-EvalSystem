@@ -23,12 +23,16 @@
 
 #define RTMI_MAX_CHANNELS 8
 
+// Evalboard errors reported in Evalboards.ch1.errors
+#define EVAL_ERROR_FAULT_PIN_ACTIVE   (1<<0)
+
 static bool useRTMIRAMDebug = true;
 
 typedef struct
 {
     IOPinTypeDef  *DRV_EN;
     IOPinTypeDef  *nSLEEP;
+    IOPinTypeDef  *nFAULT;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -660,7 +664,15 @@ static uint8_t restore()
 static void checkErrors(uint32_t tick)
 {
     UNUSED(tick);
-    Evalboards.ch1.errors = 0;
+
+    if(HAL.IOs->config->isHigh(Pins.nFAULT))
+    {
+        Evalboards.ch1.errors = 0;
+    }
+    else
+    {
+        Evalboards.ch1.errors |= EVAL_ERROR_FAULT_PIN_ACTIVE;
+    }
 }
 
 static void timer_overflow(timer_channel channel)
@@ -678,9 +690,11 @@ void TMC6460_init(void)
 {
     Pins.DRV_EN     = &HAL.IOs->pins->DIO0; //Pin8
     Pins.nSLEEP     = &HAL.IOs->pins->DIO8; //Pin19
+    Pins.nFAULT     = &HAL.IOs->pins->DIO1; //Pin9
 
     HAL.IOs->config->toOutput(Pins.DRV_EN);
     HAL.IOs->config->toOutput(Pins.nSLEEP);
+    HAL.IOs->config->toInput(Pins.nFAULT);
     HAL.IOs->config->setHigh(Pins.DRV_EN);
 
     TMC6460_SPIChannel = &HAL.SPI->ch1;
