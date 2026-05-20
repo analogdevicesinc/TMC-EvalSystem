@@ -62,6 +62,7 @@ static void rtmiramdebug_process();
 
 static uint32_t rtmiramdebug_hwDivisor = 1;
 static uint32_t rtmiramdebug_swDivisor = 1;
+static uint32_t rtmiramdebug_divisorCounter = 0;
 
 static enum TMC6460BusType activeBus = TMC6460_BUS_SPI;
 
@@ -866,7 +867,6 @@ bool hasTriggered(uint8_t register_index, uint32_t value)
 bool tmc6460_RTMIDataCallback(uint16_t icID, uint8_t status, uint32_t data)
 {
     UNUSED(icID);
-    static uint32_t swCounter = 0;
 
     // No measurement active -> Throw the data away
     if (rtmiramdebug_state == RAMDEBUG_IDLE)
@@ -878,12 +878,12 @@ bool tmc6460_RTMIDataCallback(uint16_t icID, uint8_t status, uint32_t data)
     //uint8_t write_counter  = (status >> 4) & 7;
     uint8_t register_index = (status >> 1) & 7;
 
-    bool dropPacket = swCounter != 0;
+    bool dropPacket = rtmiramdebug_divisorCounter != 0;
     if (register_index == RTMI_MAX_CHANNELS - 1)
     {
-        if (++swCounter >= rtmiramdebug_swDivisor)
+        if (++rtmiramdebug_divisorCounter >= rtmiramdebug_swDivisor)
         {
-            swCounter = 0;
+            rtmiramdebug_divisorCounter = 0;
         }
     }
 
@@ -978,6 +978,7 @@ static void rtmiramdebug_init()
     rtmiramdebug_preTriggerSampleCount = 0;
     rtmiramdebug_hwDivisor = 1;
     rtmiramdebug_swDivisor = 1;
+    rtmiramdebug_divisorCounter = 0;
 
     // Clear channel settings
     for (uint32_t i = 0; i < ARRAY_SIZE(rtmi_channels); i++)
