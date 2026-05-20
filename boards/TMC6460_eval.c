@@ -60,7 +60,7 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
 
 static void rtmiramdebug_process();
 
-static uint32_t rtmiramdebug_divisor = 0;
+static uint32_t rtmiramdebug_hwDivisor = 1;
 
 static enum TMC6460BusType activeBus = TMC6460_BUS_SPI;
 
@@ -561,7 +561,7 @@ static bool enableRTMI(bool enable)
         uartControlRegister = tmc6460_updateField(
                 uartControlRegister,
                 TMC6460_UART_CONTROL_RTMI_SAMPLING_FIELD,
-                rtmiramdebug_divisor
+                rtmiramdebug_hwDivisor-1
         );
 
         // Clear the RTMI_INTERRUPT flag
@@ -961,7 +961,7 @@ static void rtmiramdebug_init()
     // Set default values for the capture configuration
     rtmiramdebug_sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
     rtmiramdebug_preTriggerSampleCount = 0;
-    rtmiramdebug_divisor = 0;
+    rtmiramdebug_hwDivisor = 1;
 
     // Clear channel settings
     for (uint32_t i = 0; i < ARRAY_SIZE(rtmi_channels); i++)
@@ -1145,9 +1145,10 @@ static int32_t rtmiramdebug_enableTrigger(uint8_t type, uint32_t threshold)
 
 static void rtmiramdebug_setPrescaler(uint32_t divider)
 {
-    if (divider <= 255)
+    uint32_t requestedDivider = divider + 1;
+    if (requestedDivider <= 256)
     {
-        rtmiramdebug_divisor = divider;
+        rtmiramdebug_hwDivisor = requestedDivider;
     }
 }
 
