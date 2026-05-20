@@ -61,6 +61,7 @@ static bool fwdTmclCommand(TMCLCommandTypeDef *ActualCommand, TMCLReplyTypeDef *
 static void rtmiramdebug_process();
 
 static uint32_t rtmiramdebug_hwDivisor = 1;
+static uint32_t rtmiramdebug_swDivisor = 1;
 
 static enum TMC6460BusType activeBus = TMC6460_BUS_SPI;
 
@@ -865,6 +866,8 @@ bool hasTriggered(uint8_t register_index, uint32_t value)
 bool tmc6460_RTMIDataCallback(uint16_t icID, uint8_t status, uint32_t data)
 {
     UNUSED(icID);
+    static uint32_t swCounter = 0;
+
     // No measurement active -> Throw the data away
     if (rtmiramdebug_state == RAMDEBUG_IDLE)
         return false;
@@ -874,6 +877,18 @@ bool tmc6460_RTMIDataCallback(uint16_t icID, uint8_t status, uint32_t data)
     // Unpack the RTMI status
     //uint8_t write_counter  = (status >> 4) & 7;
     uint8_t register_index = (status >> 1) & 7;
+
+    bool dropPacket = swCounter != 0;
+    if (register_index == RTMI_MAX_CHANNELS - 1)
+    {
+        if (++swCounter >= rtmiramdebug_swDivisor)
+        {
+            swCounter = 0;
+        }
+    }
+
+    if (dropPacket == true)
+        return false;
 
     if (rtmiramdebug_state == RAMDEBUG_PRETRIGGER)
     {
@@ -962,6 +977,7 @@ static void rtmiramdebug_init()
     rtmiramdebug_sampleCount = RAMDEBUG_BUFFER_ELEMENTS;
     rtmiramdebug_preTriggerSampleCount = 0;
     rtmiramdebug_hwDivisor = 1;
+    rtmiramdebug_swDivisor = 1;
 
     // Clear channel settings
     for (uint32_t i = 0; i < ARRAY_SIZE(rtmi_channels); i++)
@@ -1142,13 +1158,28 @@ static int32_t rtmiramdebug_enableTrigger(uint8_t type, uint32_t threshold)
     return true;
 }
 
-
 static void rtmiramdebug_setPrescaler(uint32_t divider)
 {
     uint32_t requestedDivider = divider + 1;
+    uint32_t swFactor = 0;
     if (requestedDivider <= 256)
     {
         rtmiramdebug_hwDivisor = requestedDivider;
+        rtmiramdebug_swDivisor = 1;
+    }
+    else
+    {
+
+        for (uint32_t hwFactor = 256; hwFactor >= 1; hwFactor--)
+        {
+            if (requestedDivider % hwFactor == 0)
+            {
+                swFactor = requestedDivider / hwFactor;
+                rtmiramdebug_hwDivisor = hwFactor;
+                rtmiramdebug_swDivisor = swFactor;
+                break;
+            }
+        }
     }
 }
 
