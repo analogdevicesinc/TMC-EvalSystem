@@ -293,59 +293,6 @@ int32_t UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uin
     return 0;
 }
 
-void UART_readInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t *value)
-{
-    uint8_t readData[8], dataRequest[4];
-    uint32_t timeout;
-
-    dataRequest[0] = 0x05;                        // Sync byte
-    dataRequest[1] = slave;                       // Slave address
-    dataRequest[2] = address;                     // Register address
-    dataRequest[3] = tmc_CRC8(dataRequest, 3, 1); // Cyclic redundancy check
-
-    channel->rxtx.clearBuffers();
-    channel->rxtx.txN(dataRequest, ARRAY_SIZE(dataRequest));
-
-    // Wait for reply with timeout limit
-    timeout = systick_getTick();
-    while(channel->rxtx.bytesAvailable() < ARRAY_SIZE(readData))
-        if(timeSince(timeout) > channel->timeout) // Timeout
-            return;
-
-    channel->rxtx.rxN(readData, ARRAY_SIZE(readData));
-    // Check if the received data is correct (CRC, Sync, Slave address, Register address)
-    // todo CHECK 2: Only keep CRC check? Should be sufficient for wrong transmissions (LH) #1
-    if(readData[7] != tmc_CRC8(readData, 7, 1) || readData[0] != 0x05 || readData[1] != 0xFF || readData[2] != address)
-        return;
-
-    *value = readData[3] << 24 | readData[4] << 16 | readData[5] << 8 | readData[6];
-    return;
-}
-
-void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t value)
-{
-    uint8_t writeData[8];
-
-    writeData[0] = 0x05;                         // Sync byte
-    writeData[1] = slave;                        // Slave address
-    writeData[2] = address | TMC_WRITE_BIT;      // Register address with write bit set
-    writeData[3] = value >> 24;                  // Register Data
-    writeData[4] = value >> 16;                  // Register Data
-    writeData[5] = value >> 8;                   // Register Data
-    writeData[6] = value & 0xFF;                 // Register Data
-    writeData[7] = tmc_CRC8(writeData, 7, 1);    // Cyclic redundancy check
-
-    channel->rxtx.clearBuffers();
-    for(uint32_t i = 0; i < ARRAY_SIZE(writeData); i++)
-        channel->rxtx.tx(writeData[i]);
-
-    /* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
-     * before we're done. This currently is an issue with the IDE when using the Register browser and the
-     * periodic refresh of values gets requested right after the write request.
-     */
-    wait(WRITE_READ_DELAY);
-}
-
 void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 {
     switch(channel->pinout)
