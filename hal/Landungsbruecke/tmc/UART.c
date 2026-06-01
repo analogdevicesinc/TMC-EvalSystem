@@ -25,45 +25,45 @@ static void clearBuffers(void);
 static uint32_t bytesAvailable();
 
 static volatile uint8_t
-	rxBuffer[BUFFER_SIZE],
-	txBuffer[BUFFER_SIZE];
+    rxBuffer[BUFFER_SIZE],
+    txBuffer[BUFFER_SIZE];
 
 static volatile uint32_t available = 0;
 
 UART_Config UART =
 {
-	.mode = UART_MODE_DUAL_WIRE,
-	.pinout = UART_PINS_DIO17_18,
-	.timeout = UART_DEFAULT_TIMEOUT_VALUE,
-	.rxtx =
-	{
-		.init            = init,
-		.deInit          = deInit,
-		.rx              = rx,
-		.tx              = tx,
-		.rxN             = rxN,
-		.txN             = txN,
-		.clearBuffers    = clearBuffers,
-		.baudRate        = 115200,
-		.bytesAvailable  = bytesAvailable
-	}
+    .mode = UART_MODE_DUAL_WIRE,
+    .pinout = UART_PINS_DIO17_18,
+    .timeout = UART_DEFAULT_TIMEOUT_VALUE,
+    .rxtx =
+    {
+        .init            = init,
+        .deInit          = deInit,
+        .rx              = rx,
+        .tx              = tx,
+        .rxN             = rxN,
+        .txN             = txN,
+        .clearBuffers    = clearBuffers,
+        .baudRate        = 115200,
+        .bytesAvailable  = bytesAvailable
+    }
 };
 
 static RXTXBufferingTypeDef buffers =
 {
-	.rx =
-	{
-		.read    = 0,
-		.wrote   = 0,
-		.buffer  = rxBuffer
-	},
+    .rx =
+    {
+        .read    = 0,
+        .wrote   = 0,
+        .buffer  = rxBuffer
+    },
 
-	.tx =
-	{
-		.read    = 0,
-		.wrote   = 0,
-		.buffer  = txBuffer
-	}
+    .tx =
+    {
+        .read    = 0,
+        .wrote   = 0,
+        .buffer  = txBuffer
+    }
 };
 
 static void init()
@@ -151,326 +151,326 @@ static void init()
 
 static void deInit()
 {
-	switch(UART.pinout) {
-	case UART_PINS_DIO10_11:
-		SIM_SCGC4 &= ~(SIM_SCGC4_UART0_MASK);
-		HAL.IOs->pins->DIO10.configuration.GPIO_Mode = GPIO_Mode_IN;
-		HAL.IOs->pins->DIO11.configuration.GPIO_Mode = GPIO_Mode_IN;
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
-		disable_irq(INT_UART0_RX_TX-16);
-		break;
-	case UART_PINS_DIO17_18:
-	default:
-		SIM_SCGC4 &= ~(SIM_SCGC4_UART2_MASK);
-		HAL.IOs->pins->DIO17.configuration.GPIO_Mode = GPIO_Mode_IN;
-		HAL.IOs->pins->DIO18.configuration.GPIO_Mode = GPIO_Mode_IN;
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-		HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-		disable_irq(INT_UART2_RX_TX-16);
-		break;
-	}
+    switch(UART.pinout) {
+    case UART_PINS_DIO10_11:
+        SIM_SCGC4 &= ~(SIM_SCGC4_UART0_MASK);
+        HAL.IOs->pins->DIO10.configuration.GPIO_Mode = GPIO_Mode_IN;
+        HAL.IOs->pins->DIO11.configuration.GPIO_Mode = GPIO_Mode_IN;
+        HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
+        HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
+        disable_irq(INT_UART0_RX_TX-16);
+        break;
+    case UART_PINS_DIO17_18:
+    default:
+        SIM_SCGC4 &= ~(SIM_SCGC4_UART2_MASK);
+        HAL.IOs->pins->DIO17.configuration.GPIO_Mode = GPIO_Mode_IN;
+        HAL.IOs->pins->DIO18.configuration.GPIO_Mode = GPIO_Mode_IN;
+        HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+        HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+        disable_irq(INT_UART2_RX_TX-16);
+        break;
+    }
 
-	clearBuffers();
+    clearBuffers();
 }
 
 void UART0_RX_TX_IRQHandler_UART(void)
 {
-	static uint8_t isSending = false;
-	uint32_t status = UART0_S1;
+    static uint8_t isSending = false;
+    uint32_t status = UART0_S1;
 
-	// Receive interrupt
-	if(status & UART_S1_RDRF_MASK)
-	{
-		// One-wire UART communication:
-		buffers.rx.buffer[buffers.rx.wrote] = UART0_D;
-		if(!isSending) // Only move ring buffer index & available counter when the received byte wasn't the send echo
-		{
-			buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
-			available++;
-		}
-	}
+    // Receive interrupt
+    if(status & UART_S1_RDRF_MASK)
+    {
+        // One-wire UART communication:
+        buffers.rx.buffer[buffers.rx.wrote] = UART0_D;
+        if(!isSending) // Only move ring buffer index & available counter when the received byte wasn't the send echo
+        {
+            buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
+            available++;
+        }
+    }
 
-	// Transmission complete interrupt => do not ignore echo any more
-	// after last bit has been sent.
-	if(status & UART_S1_TC_MASK)
-	{
-		// Last bit has been sent
-		isSending = false;
-		UART0_C2 &= ~UART_C2_TCIE_MASK;
-	}
+    // Transmission complete interrupt => do not ignore echo any more
+    // after last bit has been sent.
+    if(status & UART_S1_TC_MASK)
+    {
+        // Last bit has been sent
+        isSending = false;
+        UART0_C2 &= ~UART_C2_TCIE_MASK;
+    }
 
-	// Transmit buffer empty interrupt => send next byte if there is something
-	// to be sent.
-	if(status & UART_S1_TDRE_MASK)
-	{
-		if(buffers.tx.read != buffers.tx.wrote)
-		{
-			UART0_D = buffers.tx.buffer[buffers.tx.read];
-			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
+    // Transmit buffer empty interrupt => send next byte if there is something
+    // to be sent.
+    if(status & UART_S1_TDRE_MASK)
+    {
+        if(buffers.tx.read != buffers.tx.wrote)
+        {
+            UART0_D = buffers.tx.buffer[buffers.tx.read];
+            buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
 
-			isSending = true; // Ignore echo
-			UART0_C2 |= UART_C2_TCIE_MASK; // Turn on transmission complete interrupt
-		}
-		else
-		{
-			UART0_C2 &= ~UART_C2_TIE_MASK; // empty buffer -> turn off transmit buffer empty interrupt
-		}
-	}
+            isSending = true; // Ignore echo
+            UART0_C2 |= UART_C2_TCIE_MASK; // Turn on transmission complete interrupt
+        }
+        else
+        {
+            UART0_C2 &= ~UART_C2_TIE_MASK; // empty buffer -> turn off transmit buffer empty interrupt
+        }
+    }
 }
 
 void UART2_RX_TX_IRQHandler(void)
 {
-	static uint8_t isSending = false;
-	uint32_t status = UART2_S1;
+    static uint8_t isSending = false;
+    uint32_t status = UART2_S1;
 
-	// Receive interrupt
-	if(status & UART_S1_RDRF_MASK)
-	{
-		// One-wire UART communication:
-		buffers.rx.buffer[buffers.rx.wrote] = UART2_D;
-		if(!isSending) // Only move ring buffer index & available counter when the received byte wasn't the send echo
-		{
-			buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
-			available++;
-		}
-	}
+    // Receive interrupt
+    if(status & UART_S1_RDRF_MASK)
+    {
+        // One-wire UART communication:
+        buffers.rx.buffer[buffers.rx.wrote] = UART2_D;
+        if(!isSending) // Only move ring buffer index & available counter when the received byte wasn't the send echo
+        {
+            buffers.rx.wrote = (buffers.rx.wrote + 1) % BUFFER_SIZE;
+            available++;
+        }
+    }
 
-	// Transmission complete interrupt => do not ignore echo any more
-	// after last bit has been sent.
-	if(status & UART_S1_TC_MASK)
-	{
-		// Last bit has been sent
-		isSending = false;
-		UART2_C2 &= ~UART_C2_TCIE_MASK;
-	}
+    // Transmission complete interrupt => do not ignore echo any more
+    // after last bit has been sent.
+    if(status & UART_S1_TC_MASK)
+    {
+        // Last bit has been sent
+        isSending = false;
+        UART2_C2 &= ~UART_C2_TCIE_MASK;
+    }
 
-	// Transmit buffer empty interrupt => send next byte if there is something
-	// to be sent.
-	if(status & UART_S1_TDRE_MASK)
-	{
-		if(buffers.tx.read != buffers.tx.wrote)
-		{
-			UART2_D = buffers.tx.buffer[buffers.tx.read];
-			buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
+    // Transmit buffer empty interrupt => send next byte if there is something
+    // to be sent.
+    if(status & UART_S1_TDRE_MASK)
+    {
+        if(buffers.tx.read != buffers.tx.wrote)
+        {
+            UART2_D = buffers.tx.buffer[buffers.tx.read];
+            buffers.tx.read = (buffers.tx.read + 1) % BUFFER_SIZE;
 
-			isSending = true; // Ignore echo
-			UART2_C2 |= UART_C2_TCIE_MASK; // Turn on transmission complete interrupt
-		}
-		else
-		{
-			UART2_C2 &= ~UART_C2_TIE_MASK; // empty buffer -> turn off transmit buffer empty interrupt
-		}
-	}
+            isSending = true; // Ignore echo
+            UART2_C2 |= UART_C2_TCIE_MASK; // Turn on transmission complete interrupt
+        }
+        else
+        {
+            UART2_C2 &= ~UART_C2_TIE_MASK; // empty buffer -> turn off transmit buffer empty interrupt
+        }
+    }
 }
 
 int32_t UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t readLength)
 {
-	uart->rxtx.clearBuffers();
-	uart->rxtx.txN(data, writeLength);
-	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
-	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
-	 * periodic refresh of values gets requested right after the write request.
-	 */
-	wait(WRITE_READ_DELAY);
+    uart->rxtx.clearBuffers();
+    uart->rxtx.txN(data, writeLength);
+    /* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
+     * before we're done. This currently is an issue with the IDE when using the Register browser and the
+     * periodic refresh of values gets requested right after the write request.
+     */
+    wait(WRITE_READ_DELAY);
 
-	// Abort early if no data needs to be read back
-	if (readLength <= 0)
-		return 0;
+    // Abort early if no data needs to be read back
+    if (readLength <= 0)
+        return 0;
 
-	// Wait for reply with timeout limit
-	uint32_t timestamp = systick_getTick();
-	while(uart->rxtx.bytesAvailable() < readLength)
-	{
-		if(timeSince(timestamp) > uart->timeout)
-		{
-			// Abort on timeout
-			return -1;
-		}
-	}
+    // Wait for reply with timeout limit
+    uint32_t timestamp = systick_getTick();
+    while(uart->rxtx.bytesAvailable() < readLength)
+    {
+        if(timeSince(timestamp) > uart->timeout)
+        {
+            // Abort on timeout
+            return -1;
+        }
+    }
 
-	uart->rxtx.rxN(data, readLength);
+    uart->rxtx.rxN(data, readLength);
 
-	return 0;
+    return 0;
 }
 
 void UART_readInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t *value)
 {
-	uint8_t readData[8], dataRequest[4];
-	uint32_t timeout;
+    uint8_t readData[8], dataRequest[4];
+    uint32_t timeout;
 
-	dataRequest[0] = 0x05;                        // Sync byte
-	dataRequest[1] = slave;                       // Slave address
-	dataRequest[2] = address;                     // Register address
-	dataRequest[3] = tmc_CRC8(dataRequest, 3, 1); // Cyclic redundancy check
+    dataRequest[0] = 0x05;                        // Sync byte
+    dataRequest[1] = slave;                       // Slave address
+    dataRequest[2] = address;                     // Register address
+    dataRequest[3] = tmc_CRC8(dataRequest, 3, 1); // Cyclic redundancy check
 
-	channel->rxtx.clearBuffers();
-	channel->rxtx.txN(dataRequest, ARRAY_SIZE(dataRequest));
+    channel->rxtx.clearBuffers();
+    channel->rxtx.txN(dataRequest, ARRAY_SIZE(dataRequest));
 
-	// Wait for reply with timeout limit
-	timeout = systick_getTick();
-	while(channel->rxtx.bytesAvailable() < ARRAY_SIZE(readData))
-		if(timeSince(timeout) > channel->timeout) // Timeout
-			return;
+    // Wait for reply with timeout limit
+    timeout = systick_getTick();
+    while(channel->rxtx.bytesAvailable() < ARRAY_SIZE(readData))
+        if(timeSince(timeout) > channel->timeout) // Timeout
+            return;
 
-	channel->rxtx.rxN(readData, ARRAY_SIZE(readData));
-	// Check if the received data is correct (CRC, Sync, Slave address, Register address)
-	// todo CHECK 2: Only keep CRC check? Should be sufficient for wrong transmissions (LH) #1
-	if(readData[7] != tmc_CRC8(readData, 7, 1) || readData[0] != 0x05 || readData[1] != 0xFF || readData[2] != address)
-		return;
+    channel->rxtx.rxN(readData, ARRAY_SIZE(readData));
+    // Check if the received data is correct (CRC, Sync, Slave address, Register address)
+    // todo CHECK 2: Only keep CRC check? Should be sufficient for wrong transmissions (LH) #1
+    if(readData[7] != tmc_CRC8(readData, 7, 1) || readData[0] != 0x05 || readData[1] != 0xFF || readData[2] != address)
+        return;
 
-	*value = readData[3] << 24 | readData[4] << 16 | readData[5] << 8 | readData[6];
-	return;
+    *value = readData[3] << 24 | readData[4] << 16 | readData[5] << 8 | readData[6];
+    return;
 }
 
 void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t value)
 {
-	uint8_t writeData[8];
+    uint8_t writeData[8];
 
-	writeData[0] = 0x05;                         // Sync byte
-	writeData[1] = slave;                        // Slave address
-	writeData[2] = address | TMC_WRITE_BIT;      // Register address with write bit set
-	writeData[3] = value >> 24;                  // Register Data
-	writeData[4] = value >> 16;                  // Register Data
-	writeData[5] = value >> 8;                   // Register Data
-	writeData[6] = value & 0xFF;                 // Register Data
-	writeData[7] = tmc_CRC8(writeData, 7, 1);    // Cyclic redundancy check
+    writeData[0] = 0x05;                         // Sync byte
+    writeData[1] = slave;                        // Slave address
+    writeData[2] = address | TMC_WRITE_BIT;      // Register address with write bit set
+    writeData[3] = value >> 24;                  // Register Data
+    writeData[4] = value >> 16;                  // Register Data
+    writeData[5] = value >> 8;                   // Register Data
+    writeData[6] = value & 0xFF;                 // Register Data
+    writeData[7] = tmc_CRC8(writeData, 7, 1);    // Cyclic redundancy check
 
-	channel->rxtx.clearBuffers();
-	for(uint32_t i = 0; i < ARRAY_SIZE(writeData); i++)
-		channel->rxtx.tx(writeData[i]);
+    channel->rxtx.clearBuffers();
+    for(uint32_t i = 0; i < ARRAY_SIZE(writeData); i++)
+        channel->rxtx.tx(writeData[i]);
 
-	/* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
-	 * before we're done. This currently is an issue with the IDE when using the Register browser and the
-	 * periodic refresh of values gets requested right after the write request.
-	 */
-	wait(WRITE_READ_DELAY);
+    /* Workaround: Give the UART time to send. Otherwise another write/readRegister can do clearBuffers()
+     * before we're done. This currently is an issue with the IDE when using the Register browser and the
+     * periodic refresh of values gets requested right after the write request.
+     */
+    wait(WRITE_READ_DELAY);
 }
 
 void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 {
-	switch(channel->pinout)
-	{
-	case UART_PINS_DIO10_11:
-		if (enabled)
-		{
-			HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
-			HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
-			HAL.IOs->pins->DIO10.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
-			HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
-		}
-		else
-		{
-			HAL.IOs->config->reset(&HAL.IOs->pins->DIO10);
-			HAL.IOs->config->reset(&HAL.IOs->pins->DIO11);
-		}
-		break;
-	case UART_PINS_DIO17_18:
-		if (enabled)
-		{
-			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
-			HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
+    switch(channel->pinout)
+    {
+    case UART_PINS_DIO10_11:
+        if (enabled)
+        {
+            HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
+            HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
+            HAL.IOs->pins->DIO10.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
+            HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
+        }
+        else
+        {
+            HAL.IOs->config->reset(&HAL.IOs->pins->DIO10);
+            HAL.IOs->config->reset(&HAL.IOs->pins->DIO11);
+        }
+        break;
+    case UART_PINS_DIO17_18:
+        if (enabled)
+        {
+            HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
+            HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
 
-			if (channel->mode == UART_MODE_SINGLE_WIRE)
-			{
-				HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // RxD as open drain output
-				HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // TxD with pull-up resistor
-			}
-			else
-			{
-				HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
-				HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-			}
+            if (channel->mode == UART_MODE_SINGLE_WIRE)
+            {
+                HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // RxD as open drain output
+                HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // TxD with pull-up resistor
+            }
+            else
+            {
+                HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
+                HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+            }
 
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-			HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-		}
-		else
-		{
-			HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
-			HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
-		}
-		break;
-	default:
-		break;
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+        }
+        else
+        {
+            HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
+            HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
+        }
+        break;
+    default:
+        break;
 
-	}
+    }
 }
 
 static void tx(uint8_t ch)
 {
-	buffers.tx.buffer[buffers.tx.wrote] = ch;
-	buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
+    buffers.tx.buffer[buffers.tx.wrote] = ch;
+    buffers.tx.wrote = (buffers.tx.wrote + 1) % BUFFER_SIZE;
 
-	// enable send interrupt
-	switch(UART.pinout) {
-	case UART_PINS_DIO10_11:
-		UART0_C2 |= UART_C2_TIE_MASK;
-		break;
-	case UART_PINS_DIO17_18:
-	default:
-		UART2_C2 |= UART_C2_TIE_MASK;
-		break;
-	}
+    // enable send interrupt
+    switch(UART.pinout) {
+    case UART_PINS_DIO10_11:
+        UART0_C2 |= UART_C2_TIE_MASK;
+        break;
+    case UART_PINS_DIO17_18:
+    default:
+        UART2_C2 |= UART_C2_TIE_MASK;
+        break;
+    }
 }
 
 static uint8_t rx(uint8_t *ch)
 {
-	if(buffers.rx.read == buffers.rx.wrote)
-		return 0;
+    if(buffers.rx.read == buffers.rx.wrote)
+        return 0;
 
-	*ch = buffers.rx.buffer[buffers.rx.read];
-	buffers.rx.read = (buffers.rx.read + 1) % BUFFER_SIZE;
-	available--;
+    *ch = buffers.rx.buffer[buffers.rx.read];
+    buffers.rx.read = (buffers.rx.read + 1) % BUFFER_SIZE;
+    available--;
 
-	return 1;
+    return 1;
 }
 
 static void txN(uint8_t *str, uint8_t number)
 {
-	for(int32_t i = 0; i < number; i++)
-		tx(str[i]);
+    for(int32_t i = 0; i < number; i++)
+        tx(str[i]);
 }
 
 static uint8_t rxN(uint8_t *str, uint8_t number)
 {
-	if(available < number)
-		return 0;
+    if(available < number)
+        return 0;
 
-	for(int32_t i = 0; i < number; i++)
-		rx(&str[i]);
+    for(int32_t i = 0; i < number; i++)
+        rx(&str[i]);
 
-	return 1;
+    return 1;
 }
 
 static void clearBuffers(void)
 {
-	switch(UART.pinout) {
-	case UART_PINS_DIO10_11:
-		disable_irq(INT_UART0_RX_TX-16);
-		available         = 0;
-		buffers.rx.read   = 0;
-		buffers.rx.wrote  = 0;
-		buffers.tx.read   = 0;
-		buffers.tx.wrote  = 0;
-		enable_irq(INT_UART0_RX_TX-16);
-		break;
-	case UART_PINS_DIO17_18:
-	default:
-		disable_irq(INT_UART2_RX_TX-16);
-		available         = 0;
-		buffers.rx.read   = 0;
-		buffers.rx.wrote  = 0;
-		buffers.tx.read   = 0;
-		buffers.tx.wrote  = 0;
-		enable_irq(INT_UART2_RX_TX-16);
-		break;
-	}
+    switch(UART.pinout) {
+    case UART_PINS_DIO10_11:
+        disable_irq(INT_UART0_RX_TX-16);
+        available         = 0;
+        buffers.rx.read   = 0;
+        buffers.rx.wrote  = 0;
+        buffers.tx.read   = 0;
+        buffers.tx.wrote  = 0;
+        enable_irq(INT_UART0_RX_TX-16);
+        break;
+    case UART_PINS_DIO17_18:
+    default:
+        disable_irq(INT_UART2_RX_TX-16);
+        available         = 0;
+        buffers.rx.read   = 0;
+        buffers.rx.wrote  = 0;
+        buffers.tx.read   = 0;
+        buffers.tx.wrote  = 0;
+        enable_irq(INT_UART2_RX_TX-16);
+        break;
+    }
 }
 
 static uint32_t bytesAvailable()
 {
-	return available;
+    return available;
 }
