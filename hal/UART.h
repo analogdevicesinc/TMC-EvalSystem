@@ -39,4 +39,7 @@ void UART_readInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t 
 void UART_writeInt(UART_Config *channel, uint8_t slave, uint8_t address, int32_t value);
 void UART_setEnabled(UART_Config *channel, uint8_t enabled);
 
+// Waits for the write buffer to drain
+void UART_flushWriteBuffer(UART_Config *channel);
+
 #endif /* __UART_H_ */

@@ -352,6 +352,21 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
     }
 }
 
+void UART_flushWriteBuffer(UART_Config *channel)
+{
+    UNUSED(channel);
+
+    // The write buffer is in the DMA layer
+    // Wait until DMA is done first
+    if (DMA_CHCTL(DMA0, dma_tx_channel) & DMA_CHXCTL_CHEN)
+    {
+        while (!dma_flag_get(DMA0, dma_tx_channel, DMA_FLAG_FTF));
+    }
+
+    // Then wait for the transmission to be complete
+    while (!usart_flag_get(usart_periph, USART_FLAG_TC));
+}
+
 static void tx(uint8_t ch)
 {
     txN(&ch, 1);
@@ -387,6 +402,9 @@ static void txN(uint8_t *str, unsigned char number)
             // echo on the receive path
             uartRXEchoBytes += byteCount;
         }
+
+        // Clear the Transmission complete flag
+        usart_flag_clear(usart_periph, USART_FLAG_TC);
 
         // Trigger DMA transfer
         DMA_CHCNT(DMA0, dma_tx_channel) = byteCount;

@@ -29,6 +29,7 @@ static volatile uint8_t
     txBuffer[BUFFER_SIZE];
 
 static volatile uint32_t available = 0;
+static uint8_t isSending = false;
 
 UART_Config UART =
 {
@@ -176,7 +177,6 @@ static void deInit()
 
 void UART0_RX_TX_IRQHandler_UART(void)
 {
-    static uint8_t isSending = false;
     uint32_t status = UART0_S1;
 
     // Receive interrupt
@@ -221,7 +221,6 @@ void UART0_RX_TX_IRQHandler_UART(void)
 
 void UART2_RX_TX_IRQHandler(void)
 {
-    static uint8_t isSending = false;
     uint32_t status = UART2_S1;
 
     // Receive interrupt
@@ -397,6 +396,14 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
         break;
 
     }
+}
+
+void UART_flushWriteBuffer(UART_Config *channel)
+{
+    UNUSED(channel);
+
+    // Wait for the interrupt to clear the isSending flag
+    while (ACCESS_ONCE(isSending));
 }
 
 static void tx(uint8_t ch)
