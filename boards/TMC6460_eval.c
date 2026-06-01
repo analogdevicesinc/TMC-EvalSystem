@@ -709,13 +709,13 @@ void TMC6460_init(void)
     if (Evalboards.ch1.hwVersion.major == 0 && Evalboards.ch1.id == ID_TMC6460)
     {
         // Evalboard v0.X uses UART on DIO17/18
-        TMC6460_UARTChannel->pinout = UART_PINS_1;
+        TMC6460_UARTChannel->pinout = UART_PINS_DIO17_18;
     }
     else
     {
         // Evalboard v1.0 switched UART to DIO10/11
         // The BoB v0.1 also uses UART DIO10/11
-        TMC6460_UARTChannel->pinout = UART_PINS_2;
+        TMC6460_UARTChannel->pinout = UART_PINS_DIO10_11;
     }
 
     TMC6460_UARTChannel->mode = UART_MODE_DUAL_WIRE_PushPull;

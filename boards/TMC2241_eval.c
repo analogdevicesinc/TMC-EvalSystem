@@ -1091,7 +1091,7 @@ static void init_comm(TMC2241BusType mode)
         HAL.IOs->config->setLow(Pins.SDO);
         HAL.IOs->config->setLow(Pins.CS);
         HAL.IOs->config->setHigh(Pins.UART_MODE);
-        TMC2241_UARTChannel->pinout = UART_PINS_2;
+        TMC2241_UARTChannel->pinout = UART_PINS_DIO10_11;
         TMC2241_UARTChannel->rxtx.init();
         break;
     case IC_BUS_SPI:

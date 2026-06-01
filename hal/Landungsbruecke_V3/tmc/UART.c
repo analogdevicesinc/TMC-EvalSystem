@@ -55,7 +55,7 @@ static dma_channel_enum dma_rx_channel, dma_tx_channel;
 UART_Config UART =
 {
     .mode = UART_MODE_DUAL_WIRE,
-    .pinout = UART_PINS_1,
+    .pinout = UART_PINS_DIO17_18,
     .timeout = UART_DEFAULT_TIMEOUT_VALUE,
     .rxtx =
     {
@@ -82,7 +82,7 @@ static void init()
     uartRXEchoBytes = 0;
 
     switch(UART.pinout) {
-    case UART_PINS_2:
+    case UART_PINS_DIO10_11:
         //Set MUX_1 and MUX_2 to zero to connect DIO10 and DIO11 to UART pins DIO10_UART_TX and DIO11_UART_RX respectively.
         *HAL.IOs->pins->SW_UART_PWM.resetBitRegister     = HAL.IOs->pins->SW_UART_PWM.bitWeight;
 
@@ -105,7 +105,7 @@ static void init()
         gpio_af_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_AF_8, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
         rcu_periph_clock_enable(RCU_UART3);
         break;
-    case UART_PINS_1:
+    case UART_PINS_DIO17_18:
         dma_rx_channel = UART2_DMA_RX_CHANNEL;
         dma_tx_channel = UART2_DMA_TX_CHANNEL;
         dma_rx_subperipheral = UART2_DMA_RX_SUBPERIPH;
@@ -311,7 +311,7 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
     UNUSED(channel);
     switch(channel->pinout)
     {
-    case UART_PINS_2:
+    case UART_PINS_DIO10_11:
         if (enabled)
         {
             //TxD as push-pull output
@@ -330,7 +330,7 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_UART_RX);
         }
         break;
-    case UART_PINS_1:
+    case UART_PINS_DIO17_18:
         if (enabled)
         {
             //TxD as open drain output

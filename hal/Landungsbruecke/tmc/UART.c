@@ -33,7 +33,7 @@ static volatile uint32_t available = 0;
 UART_Config UART =
 {
 	.mode = UART_MODE_DUAL_WIRE,
-	.pinout = UART_PINS_1,
+	.pinout = UART_PINS_DIO17_18,
 	.timeout = UART_DEFAULT_TIMEOUT_VALUE,
 	.rxtx =
 	{
@@ -73,7 +73,7 @@ static void init()
     // One wire UART communication needs the TxD pin to be in open drain mode
     // and a pull-up resistor on the RxD pin.
     switch(UART.pinout) {
-    case UART_PINS_2:
+    case UART_PINS_DIO10_11:
         HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
         HAL.IOs->pins->DIO10.configuration.GPIO_OType = GPIO_OType_PP;  // TxD as push-pull output
         HAL.IOs->pins->DIO10.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
@@ -97,7 +97,7 @@ static void init()
         UART_C2_REG(UART0_BASE_PTR) |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
         enable_irq(INT_UART0_RX_TX-16);
         break;
-    case UART_PINS_1:
+    case UART_PINS_DIO17_18:
     default:
         SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
         UART_C1_REG(UART2_BASE_PTR) = 0;
@@ -152,7 +152,7 @@ static void init()
 static void deInit()
 {
 	switch(UART.pinout) {
-	case UART_PINS_2:
+	case UART_PINS_DIO10_11:
 		SIM_SCGC4 &= ~(SIM_SCGC4_UART0_MASK);
 		HAL.IOs->pins->DIO10.configuration.GPIO_Mode = GPIO_Mode_IN;
 		HAL.IOs->pins->DIO11.configuration.GPIO_Mode = GPIO_Mode_IN;
@@ -160,7 +160,7 @@ static void deInit()
 		HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
 		disable_irq(INT_UART0_RX_TX-16);
 		break;
-	case UART_PINS_1:
+	case UART_PINS_DIO17_18:
 	default:
 		SIM_SCGC4 &= ~(SIM_SCGC4_UART2_MASK);
 		HAL.IOs->pins->DIO17.configuration.GPIO_Mode = GPIO_Mode_IN;
@@ -351,7 +351,7 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 {
 	switch(channel->pinout)
 	{
-	case UART_PINS_2:
+	case UART_PINS_DIO10_11:
 		if (enabled)
 		{
 			HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
@@ -367,7 +367,7 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 			HAL.IOs->config->reset(&HAL.IOs->pins->DIO11);
 		}
 		break;
-	case UART_PINS_1:
+	case UART_PINS_DIO17_18:
 		if (enabled)
 		{
 			HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
@@ -406,10 +406,10 @@ static void tx(uint8_t ch)
 
 	// enable send interrupt
 	switch(UART.pinout) {
-	case UART_PINS_2:
+	case UART_PINS_DIO10_11:
 		UART0_C2 |= UART_C2_TIE_MASK;
 		break;
-	case UART_PINS_1:
+	case UART_PINS_DIO17_18:
 	default:
 		UART2_C2 |= UART_C2_TIE_MASK;
 		break;
@@ -448,7 +448,7 @@ static uint8_t rxN(uint8_t *str, uint8_t number)
 static void clearBuffers(void)
 {
 	switch(UART.pinout) {
-	case UART_PINS_2:
+	case UART_PINS_DIO10_11:
 		disable_irq(INT_UART0_RX_TX-16);
 		available         = 0;
 		buffers.rx.read   = 0;
@@ -457,7 +457,7 @@ static void clearBuffers(void)
 		buffers.tx.wrote  = 0;
 		enable_irq(INT_UART0_RX_TX-16);
 		break;
-	case UART_PINS_1:
+	case UART_PINS_DIO17_18:
 	default:
 		disable_irq(INT_UART2_RX_TX-16);
 		available         = 0;

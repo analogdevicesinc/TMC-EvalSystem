@@ -766,7 +766,7 @@ void TMC2300_init(void)
     HAL.IOs->config->setLow(Pins.MODE);
 
     TMC2300_UARTChannel = HAL.UART;
-    TMC2300_UARTChannel->pinout = UART_PINS_2;
+    TMC2300_UARTChannel->pinout = UART_PINS_DIO10_11;
     TMC2300_UARTChannel->hideSingleWireEcho = true;
     TMC2300_UARTChannel->rxtx.baudRate = 57600;
     TMC2300_UARTChannel->rxtx.init();

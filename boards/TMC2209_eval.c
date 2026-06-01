@@ -786,7 +786,7 @@ void TMC2209_init(void)
     HAL.IOs->config->setLow(Pins.MS2_AD1);
 
     TMC2209_UARTChannel = HAL.UART;
-    TMC2209_UARTChannel->pinout = UART_PINS_2;
+    TMC2209_UARTChannel->pinout = UART_PINS_DIO10_11;
     TMC2209_UARTChannel->hideSingleWireEcho = true;
     TMC2209_UARTChannel->rxtx.init();
 

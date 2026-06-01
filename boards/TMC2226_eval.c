@@ -951,7 +951,7 @@ void TMC2226_init(void)
     HAL.IOs->config->setLow(Pins.MS2_AD1);
 
     TMC2226_UARTChannel         = HAL.UART;
-    TMC2226_UARTChannel->pinout = UART_PINS_2;
+    TMC2226_UARTChannel->pinout = UART_PINS_DIO10_11;
     TMC2226_UARTChannel->hideSingleWireEcho = true;
     TMC2226_UARTChannel->rxtx.init();
 

@@ -11,10 +11,10 @@
 
 #include "RXTX.h"
 
-// Switchable UART pin configuration due to pinout changes in TMC2208 v1.2 -> TMC2208 v1.3 aswell as TMC2209
+// Available Eselsbruecke UART pinouts
 typedef enum {
-    UART_PINS_1, // Default UART pinout (<= TMC2208 v1.2, UART_TXD = DIO17, UART_RXD = DIO18)
-    UART_PINS_2  // Alternate UART pinout (>= TMC2208 v1.3, UART_TXD = DIO10, UART_RXD = DIO11)
+    UART_PINS_DIO17_18, // Legacy UART pinout   (UART_TXD = DIO17, UART_RXD = DIO18)
+    UART_PINS_DIO10_11  // Standard UART pinout (UART_TXD = DIO10, UART_RXD = DIO11)
 } UART_Pins;
 
 typedef enum {

@@ -1094,7 +1094,7 @@ static void init_comm(TMC2240BusType mode)
         HAL.IOs->config->setLow(Pins.SDO);
         HAL.IOs->config->setLow(Pins.CS);
         HAL.IOs->config->setHigh(Pins.UART_MODE);
-        TMC2240_UARTChannel->pinout = UART_PINS_2;
+        TMC2240_UARTChannel->pinout = UART_PINS_DIO10_11;
         TMC2240_UARTChannel->hideSingleWireEcho = true;
         TMC2240_UARTChannel->rxtx.init();
         break;

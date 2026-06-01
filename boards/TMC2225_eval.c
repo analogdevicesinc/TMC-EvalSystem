@@ -725,7 +725,7 @@ void TMC2225_init(void)
     HAL.IOs->config->toInput(Pins.INDEX);
 
     TMC2225_UARTChannel         = HAL.UART;
-    TMC2225_UARTChannel->pinout = UART_PINS_2;
+    TMC2225_UARTChannel->pinout = UART_PINS_DIO10_11;
     TMC2225_UARTChannel->hideSingleWireEcho = true;
     TMC2225_UARTChannel->rxtx.init();
 
