@@ -1300,15 +1300,18 @@ static int32_t rtmiramdebug_getInfo(uint32_t type)
     case 4: // Communication speed upper limit (samples per second)
         // Tooling can use this value to ensure that we are not overwhelming the interface resulting in errors.
         // Calculate maximum samples per second based on UART bandwidth
-        
+
         uint32_t uart_baudrate = TMC6460_UARTChannel->rxtx.baudRate;
         uint32_t bytes_per_second = uart_baudrate / 10; // 10 bits per byte (8 + start/stop)
         uint32_t bytes_per_sample = uartIsRTMICRCEnabled? 6:5;
         uint32_t max_samples_per_second = bytes_per_second / bytes_per_sample;
 
         return max_samples_per_second;
-
         break;
+    case 5: // Maximum sample rate divisor - just the hardware downsampling part
+        return (TMC6460_UART_CONTROL_RTMI_SAMPLING_MASK >> TMC6460_UART_CONTROL_RTMI_SAMPLING_SHIFT) + 1;
+        break;
+
     default:
         break;
     }
