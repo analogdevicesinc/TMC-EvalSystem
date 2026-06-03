@@ -334,6 +334,9 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
             // Reset the error counter
             uartErrorCount = 0;
+
+            // Ensure communication buffers are empty
+            TMC6460_UARTChannel->rxtx.clearBuffers();
         }
         break;
     case 4: // UART error rate
