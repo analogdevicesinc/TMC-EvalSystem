@@ -255,24 +255,25 @@ int32_t UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uin
 
 void UART_setEnabled(UART_Config *channel, uint8_t enabled)
 {
-    UNUSED(channel);
     switch(channel->pinout)
     {
     case UART_PINS_DIO10_11:
         if (enabled)
         {
-            //TxD as push-pull output
+            // Set the UART alternate function
+            gpio_af_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_AF_8, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
+            gpio_af_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_AF_8, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
+
+            // TxD as push-pull output
             gpio_mode_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
             gpio_output_options_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
 
-            //RxD with pull-up resistor
+            // RxD with pull-up resistor
             gpio_mode_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
-            gpio_output_options_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
-
-            gpio_af_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_AF_8, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
-            gpio_af_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_AF_8, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
         }
-        else{
+        else
+        {
+            // Reset the IOs to their default (input) state
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO10_UART_TX);
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO11_UART_RX);
         }
@@ -280,18 +281,20 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
     case UART_PINS_DIO17_18:
         if (enabled)
         {
-            //TxD as open drain output
-            gpio_mode_set(HAL.IOs->pins->DIO17.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO17.bitWeight);
-            gpio_output_options_set(HAL.IOs->pins->DIO17.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO17.bitWeight);
-
-            //RxD with pull-up resistor
-            gpio_mode_set(HAL.IOs->pins->DIO18.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->DIO18.bitWeight);
-            gpio_output_options_set(HAL.IOs->pins->DIO18.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO18.bitWeight);
-
+            // Set the UART alternate function
             gpio_af_set(HAL.IOs->pins->DIO17.port, GPIO_AF_7, HAL.IOs->pins->DIO17.bitWeight);
             gpio_af_set(HAL.IOs->pins->DIO18.port, GPIO_AF_7, HAL.IOs->pins->DIO18.bitWeight);
+
+            // TxD as push-pull output
+            gpio_mode_set(HAL.IOs->pins->DIO17.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO17.bitWeight);
+            gpio_output_options_set(HAL.IOs->pins->DIO17.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO17.bitWeight);
+
+            // RxD with pull-up resistor
+            gpio_mode_set(HAL.IOs->pins->DIO18.port, GPIO_MODE_AF, GPIO_PUPD_PULLUP, HAL.IOs->pins->DIO18.bitWeight);
         }
-        else{
+        else
+        {
+            // Reset the IOs to their default (input) state
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
         }
