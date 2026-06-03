@@ -75,15 +75,7 @@ static void init()
     // and a pull-up resistor on the RxD pin.
     switch(UART.pinout) {
     case UART_PINS_DIO10_11:
-        HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
-        HAL.IOs->pins->DIO10.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
-        HAL.IOs->pins->DIO10.configuration.GPIO_PuPd  = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_PuPd_NOPULL : GPIO_PuPd_UP;
-
-        HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
-        HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-
-        HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
-        HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
+        UART_setEnabled(&UART, true);
 
         SIM_SCGC4 |= SIM_SCGC4_UART0_MASK;
         UART_C2_REG(UART0_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
@@ -96,34 +88,10 @@ static void init()
         break;
     case UART_PINS_DIO17_18:
     default:
+        UART_setEnabled(&UART, true);
+
         SIM_SCGC4 |= SIM_SCGC4_UART2_MASK;
         UART_C1_REG(UART2_BASE_PTR) = 0;
-        switch(UART.mode) {
-        case UART_MODE_SINGLE_WIRE:
-            HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
-            HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_PP;  // TxD as push-pull output
-            HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-
-            HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-            HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-
-            HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-            HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-            break;
-        case UART_MODE_DUAL_WIRE:
-        case UART_MODE_DUAL_WIRE_PushPull:
-        default:
-            HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
-            HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
-            HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_PuPd_NOPULL : GPIO_PuPd_UP;
-
-            HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
-            HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-
-            HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-            HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-            break;
-        }
         UART_C2_REG(UART2_BASE_PTR) &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
         UART_BDH_REG(UART2_BASE_PTR) = (ubd >> 8) & UART_BDH_SBR_MASK;
         UART_BDL_REG(UART2_BASE_PTR) = (ubd & UART_BDL_SBR_MASK);
@@ -153,19 +121,13 @@ static void deInit()
     switch(UART.pinout) {
     case UART_PINS_DIO10_11:
         SIM_SCGC4 &= ~(SIM_SCGC4_UART0_MASK);
-        HAL.IOs->pins->DIO10.configuration.GPIO_Mode = GPIO_Mode_IN;
-        HAL.IOs->pins->DIO11.configuration.GPIO_Mode = GPIO_Mode_IN;
-        HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
-        HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
+        UART_setEnabled(&UART, false);
         disable_irq(INT_UART0_RX_TX-16);
         break;
     case UART_PINS_DIO17_18:
     default:
         SIM_SCGC4 &= ~(SIM_SCGC4_UART2_MASK);
-        HAL.IOs->pins->DIO17.configuration.GPIO_Mode = GPIO_Mode_IN;
-        HAL.IOs->pins->DIO18.configuration.GPIO_Mode = GPIO_Mode_IN;
-        HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-        HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+        UART_setEnabled(&UART, false);
         disable_irq(INT_UART2_RX_TX-16);
         break;
     }
@@ -299,14 +261,18 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
         if (enabled)
         {
             HAL.IOs->pins->DIO10.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO10)
-            HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
             HAL.IOs->pins->DIO10.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
+            HAL.IOs->pins->DIO10.configuration.GPIO_PuPd  = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_PuPd_NOPULL : GPIO_PuPd_UP;
+
+            HAL.IOs->pins->DIO11.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO11)
             HAL.IOs->pins->DIO11.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+
             HAL.IOs->config->set(&HAL.IOs->pins->DIO10);
             HAL.IOs->config->set(&HAL.IOs->pins->DIO11);
         }
         else
         {
+            // Reset the IOs to their default (input) state
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO10);
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO11);
         }
@@ -317,22 +283,33 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
             HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
             HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
 
-            if (channel->mode == UART_MODE_SINGLE_WIRE)
+            switch(UART.mode)
             {
-                HAL.IOs->pins->DIO18.configuration.GPIO_OType = GPIO_OType_OD;  // RxD as open drain output
-                HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // TxD with pull-up resistor
-            }
-            else
-            {
-                HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
-                HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-            }
+            case UART_MODE_SINGLE_WIRE:
+                HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_PP;  // TxD as push-pull output
+                HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 
-            HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-            HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+                HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
+                HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+                HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+                break;
+            case UART_MODE_DUAL_WIRE:
+            case UART_MODE_DUAL_WIRE_PushPull:
+            default:
+                HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
+                HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_PuPd_NOPULL : GPIO_PuPd_UP;
+
+                HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
+
+                HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+                HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
+                break;
+            }
         }
         else
         {
+            // Reset the IOs to their default (input) state
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO17);
             HAL.IOs->config->reset(&HAL.IOs->pins->DIO18);
         }
