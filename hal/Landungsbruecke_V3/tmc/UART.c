@@ -93,16 +93,10 @@ static void init()
 
         usart_periph = UART3;
         usart_deinit(usart_periph);
-        //DIO10_UART_TX(TxD) with pull-up resistor
-        gpio_mode_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
-        gpio_output_options_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
 
-        //DIO11_UART_RX(RxD) with pull-up resistor
-        gpio_mode_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
-        gpio_output_options_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
+        // Configure the UART pins for operation
+        UART_setEnabled(&UART, true);
 
-        gpio_af_set(HAL.IOs->pins->DIO10_UART_TX.port, GPIO_AF_8, HAL.IOs->pins->DIO10_UART_TX.bitWeight);
-        gpio_af_set(HAL.IOs->pins->DIO11_UART_RX.port, GPIO_AF_8, HAL.IOs->pins->DIO11_UART_RX.bitWeight);
         rcu_periph_clock_enable(RCU_UART3);
         break;
     case UART_PINS_DIO17_18:
@@ -113,19 +107,11 @@ static void init()
 
         usart_periph = USART2;
         usart_deinit(usart_periph);
-        //DIO17(TxD) with pull-up resistor
-        gpio_mode_set(HAL.IOs->pins->DIO17.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO17.bitWeight);
-        gpio_output_options_set(HAL.IOs->pins->DIO17.port, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO17.bitWeight);
 
-        //DIO18(RxD) with pull-up resistor
-        gpio_mode_set(HAL.IOs->pins->DIO18.port, GPIO_MODE_AF, GPIO_PUPD_NONE, HAL.IOs->pins->DIO18.bitWeight);
-        gpio_output_options_set(HAL.IOs->pins->DIO18.port, GPIO_OTYPE_OD, GPIO_OSPEED_50MHZ, HAL.IOs->pins->DIO18.bitWeight);
+        // Configure the UART pins for operation
+        UART_setEnabled(&UART, true);
 
-        gpio_af_set(HAL.IOs->pins->DIO17.port, GPIO_AF_7, HAL.IOs->pins->DIO17.bitWeight);
-        gpio_af_set(HAL.IOs->pins->DIO18.port, GPIO_AF_7, HAL.IOs->pins->DIO18.bitWeight);
         rcu_periph_clock_enable(RCU_USART2);
-        usart_hardware_flow_rts_config(usart_periph, USART_RTS_DISABLE);
-        usart_hardware_flow_cts_config(usart_periph, USART_CTS_DISABLE);
         break;
     }
 
