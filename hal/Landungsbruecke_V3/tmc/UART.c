@@ -77,6 +77,10 @@ static void init()
 {
     dma_subperipheral_enum dma_rx_subperipheral, dma_tx_subperipheral;
 
+    // Reset DMA buffer counters
+    uartRXReadIndex = 0;
+    uartRXEchoBytes = 0;
+
     switch(UART.pinout) {
     case UART_PINS_2:
         //Set MUX_1 and MUX_2 to zero to connect DIO10 and DIO11 to UART pins DIO10_UART_TX and DIO11_UART_RX respectively.
