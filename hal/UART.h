@@ -18,13 +18,13 @@ typedef enum {
 } UART_Pins;
 
 typedef enum {
-    UART_MODE_DUAL_WIRE,
-    UART_MODE_DUAL_WIRE_PushPull, // Use PushPull for TX instead of OpenDrain
-} UART_Mode;
+    UART_TXMODE_PUSH_PULL, // Push Pull output, no pull resistor
+    UART_TXMODE_OPEN_DRAIN, // Open-Drain output with pull-up resistor
+} UART_TXMode;
 
 typedef struct {
     UART_Pins pinout;
-    UART_Mode mode;
+    UART_TXMode txMode;
     uint16_t timeout;
     RXTXTypeDef rxtx;
     bool hideSingleWireEcho;

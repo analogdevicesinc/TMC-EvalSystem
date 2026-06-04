@@ -54,8 +54,8 @@ static dma_channel_enum dma_rx_channel, dma_tx_channel;
 
 UART_Config UART =
 {
-    .mode = UART_MODE_DUAL_WIRE_PushPull,
     .pinout = UART_PINS_DIO17_18,
+    .txMode = UART_TXMODE_OPEN_DRAIN,
     .timeout = UART_DEFAULT_TIMEOUT_VALUE,
     .rxtx =
     {
@@ -268,7 +268,7 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
         gpio_af_set(txPin->port, alternateFunctionNumber, txPin->bitWeight);
         gpio_af_set(rxPin->port, alternateFunctionNumber, rxPin->bitWeight);
 
-        if (channel->mode == UART_MODE_DUAL_WIRE_PushPull)
+        if (channel->txMode == UART_TXMODE_PUSH_PULL)
         {
             // TxD as push-pull output
             gpio_mode_set(txPin->port, GPIO_MODE_AF, GPIO_PUPD_NONE, txPin->bitWeight);

@@ -718,7 +718,7 @@ void TMC6460_init(void)
         TMC6460_UARTChannel->pinout = UART_PINS_DIO10_11;
     }
 
-    TMC6460_UARTChannel->mode = UART_MODE_DUAL_WIRE_PushPull;
+    TMC6460_UARTChannel->txMode = UART_TXMODE_PUSH_PULL;
     TMC6460_UARTChannel->rxtx.baudRate = 6000000; // 6Mbps
     TMC6460_UARTChannel->rxtx.init();
     // Calculate the TMC6460 Mantissa setting for the target baudrate

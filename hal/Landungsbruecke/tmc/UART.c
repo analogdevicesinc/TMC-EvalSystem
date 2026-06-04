@@ -33,8 +33,8 @@ static uint8_t isSending = false;
 
 UART_Config UART =
 {
-    .mode = UART_MODE_DUAL_WIRE,
     .pinout = UART_PINS_DIO17_18,
+    .txMode = UART_TXMODE_OPEN_DRAIN,
     .timeout = UART_DEFAULT_TIMEOUT_VALUE,
     .rxtx =
     {
@@ -277,7 +277,7 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
     {
         // TxD configuration
         txPin->configuration.GPIO_Mode  = GPIO_Mode_AF3;
-        if (UART.mode == UART_MODE_DUAL_WIRE_PushPull)
+        if (channel->txMode == UART_TXMODE_PUSH_PULL)
         {
             // TxD as push-pull output
             txPin->configuration.GPIO_OType = GPIO_OType_PP;
