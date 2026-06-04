@@ -19,7 +19,6 @@ typedef enum {
 
 typedef enum {
     UART_MODE_DUAL_WIRE,
-    UART_MODE_SINGLE_WIRE,
     UART_MODE_DUAL_WIRE_PushPull, // Use PushPull for TX instead of OpenDrain
 } UART_Mode;
 

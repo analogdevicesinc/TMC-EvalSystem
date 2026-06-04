@@ -283,30 +283,13 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
             HAL.IOs->pins->DIO17.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // TxD (DIO17)
             HAL.IOs->pins->DIO18.configuration.GPIO_Mode  = GPIO_Mode_AF3;  // RxD (DIO18)
 
-            switch(UART.mode)
-            {
-            case UART_MODE_SINGLE_WIRE:
-                // ToDo: This mode is currently redundant with UART_MODE_DUAL_WIRE_PushPull. Review the relevant Evalboards for deprecating this mode.
-                HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_PP;  // TxD as push-pull output
-                HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+            HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
+            HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_PuPd_NOPULL : GPIO_PuPd_UP;
 
-                HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;
+            HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
 
-                HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-                HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-                break;
-            case UART_MODE_DUAL_WIRE:
-            case UART_MODE_DUAL_WIRE_PushPull:
-            default:
-                HAL.IOs->pins->DIO17.configuration.GPIO_OType = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_OType_PP : GPIO_OType_OD;
-                HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = (UART.mode == UART_MODE_DUAL_WIRE_PushPull)? GPIO_PuPd_NOPULL : GPIO_PuPd_UP;
-
-                HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;   // RxD with pull-up resistor
-
-                HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
-                HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
-                break;
-            }
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
+            HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
         }
         else
         {

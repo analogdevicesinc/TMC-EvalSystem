@@ -966,7 +966,6 @@ static void init_comm(TMC5062BusType mode)
 		HAL.IOs->config->setLow(Pins.CS);
 
 		HAL.IOs->config->setHigh(Pins.SWSEL);
-		TMC5062_UARTChannel -> mode = UART_MODE_SINGLE_WIRE;
 		TMC5062_UARTChannel = HAL.UART;
 		TMC5062_UARTChannel->hideSingleWireEcho = true;
 		TMC5062_UARTChannel->rxtx.init();
