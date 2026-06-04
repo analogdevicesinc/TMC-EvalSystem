@@ -286,10 +286,11 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
             switch(UART.mode)
             {
             case UART_MODE_SINGLE_WIRE:
+                // ToDo: This mode is currently redundant with UART_MODE_DUAL_WIRE_PushPull. Review the relevant Evalboards for deprecating this mode.
                 HAL.IOs->pins->DIO17.configuration.GPIO_OType = GPIO_OType_PP;  // TxD as push-pull output
                 HAL.IOs->pins->DIO17.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 
-                HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+                HAL.IOs->pins->DIO18.configuration.GPIO_PuPd  = GPIO_PuPd_UP;
 
                 HAL.IOs->config->set(&HAL.IOs->pins->DIO17);
                 HAL.IOs->config->set(&HAL.IOs->pins->DIO18);
