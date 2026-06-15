@@ -305,6 +305,49 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
     }
 }
 
+void UART_setBaudrate(UART_Config *channel, uint32_t baudrate)
+{
+    uint16_t ubd = (CPU_BUS_CLK_HZ / 16) / baudrate;
+
+    UART_MemMapPtr baseptr = (channel->pinout == UART_PINS_DIO10_11) ? UART0_BASE_PTR : UART2_BASE_PTR;
+    UART_BDH_REG(baseptr) = (ubd >> 8) & UART_BDH_SBR_MASK;
+    UART_BDL_REG(baseptr) = (ubd & UART_BDL_SBR_MASK);
+
+    channel->rxtx.baudRate = baudrate;
+}
+
+uint32_t UART_getActiveBaudrate()
+{
+    UART_MemMapPtr baseptr;
+
+    switch (UART.pinout)
+    {
+    case UART_PINS_DIO10_11:
+        // Check if UART is initialized first
+        if ((SIM_SCGC4 & SIM_SCGC4_UART0_MASK) == 0)
+            return 0;
+
+        baseptr = UART0_BASE_PTR;
+        break;
+    case UART_PINS_DIO17_18:
+    default:
+        // Check if UART is initialized first
+        if ((SIM_SCGC4 & SIM_SCGC4_UART2_MASK) == 0)
+            return 0;
+
+        baseptr = UART2_BASE_PTR;
+        break;
+    }
+
+    uint32_t div = (((UART_BDH_REG(baseptr) & UART_BDH_SBR_MASK) >> UART_BDH_SBR_SHIFT) << 8)
+                 | ((UART_BDL_REG(baseptr) & UART_BDL_SBR_MASK) >> UART_BDL_SBR_SHIFT);
+
+    if (div == 0)
+        return 0;
+
+    return (CPU_BUS_CLK_HZ / 16) / div;
+}
+
 void UART_flushWriteBuffer(UART_Config *channel)
 {
     UNUSED(channel);

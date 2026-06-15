@@ -292,6 +292,49 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
     }
 }
 
+void UART_setBaudrate(UART_Config *channel, uint32_t baudrate)
+{
+    uint32_t uclk;
+    switch (usart_periph)
+    {
+    case USART0:
+    case USART5:
+        uclk = rcu_clock_freq_get(CK_APB2);
+        break;
+    default:
+        uclk = rcu_clock_freq_get(CK_APB1);
+        break;
+    }
+
+    bool use8xOversampling = baudrate > (uclk/16);
+    usart_oversample_config(usart_periph, use8xOversampling? USART_OVSMOD_8 : USART_OVSMOD_16);
+    usart_baudrate_set(usart_periph, baudrate);
+
+    channel->rxtx.baudRate = baudrate;
+}
+
+uint32_t UART_getActiveBaudrate()
+{
+    uint32_t uclk;
+    switch (usart_periph)
+    {
+    case USART0:
+    case USART5:
+        uclk = rcu_clock_freq_get(CK_APB2);
+        break;
+    default:
+        uclk = rcu_clock_freq_get(CK_APB1);
+        break;
+    }
+
+    bool is8xSampling = (USART_CTL0(usart_periph) & USART_CTL0_OVSMOD);
+    uint32_t baudReg = USART_BAUD(usart_periph);
+    uint32_t div = (baudReg & USART_BAUD_FRADIV)
+        | ((baudReg & USART_BAUD_INTDIV) >> (is8xSampling? 1:0));
+
+    return uclk / div;
+}
+
 void UART_flushWriteBuffer(UART_Config *channel)
 {
     UNUSED(channel);

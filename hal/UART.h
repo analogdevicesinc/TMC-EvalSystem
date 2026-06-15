@@ -36,6 +36,9 @@ void UART0_RX_TX_IRQHandler_UART(void);
 int32_t UART_readWrite(UART_Config *uart, uint8_t *data, size_t writeLength, uint8_t readLength);
 void UART_setEnabled(UART_Config *channel, uint8_t enabled);
 
+void UART_setBaudrate(UART_Config *channel, uint32_t baudrate);
+uint32_t UART_getActiveBaudrate();
+
 // Waits for the write buffer to drain
 void UART_flushWriteBuffer(UART_Config *channel);
 
