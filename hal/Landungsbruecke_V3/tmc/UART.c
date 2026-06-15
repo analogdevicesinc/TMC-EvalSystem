@@ -286,9 +286,9 @@ void UART_setEnabled(UART_Config *channel, uint8_t enabled)
     }
     else
     {
-        // Reset the IOs to their default (input) state
-        HAL.IOs->config->reset(txPin);
-        HAL.IOs->config->reset(rxPin);
+        // Put the IOs to High-Z (Input) state
+        HAL.IOs->config->toInput(txPin);
+        HAL.IOs->config->toInput(rxPin);
     }
 }
 
