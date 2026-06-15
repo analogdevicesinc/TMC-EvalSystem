@@ -681,6 +681,10 @@ static void SetGlobalParameter()
         }
         break;
 
+    case 12:
+        UART_setBaudrate(&UART, ActualCommand.Value.UInt32);
+        ActualReply.Value.UInt32 = UART_getActiveBaudrate();
+        break;
 
     default:
         ActualReply.Status = REPLY_INVALID_TYPE;
@@ -746,6 +750,10 @@ static void GetGlobalParameter()
             ActualReply.Value.UInt32 = 0;
             break;
         }
+        break;
+
+    case 12:
+        ActualReply.Value.UInt32 = UART_getActiveBaudrate();
         break;
 
     default:
