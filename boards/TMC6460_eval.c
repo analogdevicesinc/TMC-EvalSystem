@@ -326,9 +326,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
             // Update the Landungsbruecke UART settings
             uint32_t baudrate = 60000000 / *value;
-            // ToDo: Get a dedicated baudrate setter function?
-            TMC6460_UARTChannel->rxtx.baudRate = baudrate;
-            TMC6460_UARTChannel->rxtx.init();
+            UART_setBaudrate(TMC6460_UARTChannel, baudrate);
 
             uartBaudrateSetting = *value;
 
