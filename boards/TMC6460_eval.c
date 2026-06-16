@@ -85,6 +85,9 @@ bool tmc6460_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, siz
     if (readLength <= 0)
         return true;
 
+    // Wait for send completion before measuring reply timeout
+    UART_flushWriteBuffer(TMC6460_UARTChannel);
+
     // Wait for reply with timeout limit
     uint32_t timestamp = systick_getTick();
     while(TMC6460_UARTChannel->rxtx.bytesAvailable() < readLength)
@@ -716,7 +719,11 @@ void TMC6460_init(void)
         TMC6460_UARTChannel->pinout = UART_PINS_DIO10_11;
     }
 
+    // Slowest IC baudrate is 60MHz / 8191 = ~7325 baud
+    // At that baudrate, a CRC-enabled reply takes:
+    //     7 bytes * 10 symbols / byte / 7325 = ~9.5ms
     TMC6460_UARTChannel->txMode = UART_TXMODE_PUSH_PULL;
+    TMC6460_UARTChannel->timeout = 10; // [ms]
     TMC6460_UARTChannel->rxtx.baudRate = 6000000; // 6Mbps
     TMC6460_UARTChannel->rxtx.init();
     // Calculate the TMC6460 Mantissa setting for the target baudrate
