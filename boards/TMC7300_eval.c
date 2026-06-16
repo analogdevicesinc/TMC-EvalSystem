@@ -562,8 +562,11 @@ void TMC7300_init(void)
     HAL.IOs->config->setLow(Pins.MS1);
     HAL.IOs->config->setLow(Pins.MS2);
 
+    // The TMC7300-EVAL connects TX and RX together through a resistor.
+    // Operate TX in open-drain mode with pullup and suppress the echo from the TX->RX connection.
     TMC7300_UARTChannel = HAL.UART;
     TMC7300_UARTChannel->pinout = UART_PINS_DIO10_11;
+    TMC7300_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
     TMC7300_UARTChannel->hideSingleWireEcho = true;
     TMC7300_UARTChannel->rxtx.baudRate = 57600;
     TMC7300_UARTChannel->rxtx.init();

@@ -765,8 +765,11 @@ void TMC2300_init(void)
     HAL.IOs->config->setLow(Pins.MS2);
     HAL.IOs->config->setLow(Pins.MODE);
 
+    // The TMC2300-EVAL connects TX and RX together through a resistor.
+    // Operate TX in open-drain mode with pullup and suppress the echo from the TX->RX connection.
     TMC2300_UARTChannel = HAL.UART;
     TMC2300_UARTChannel->pinout = UART_PINS_DIO10_11;
+    TMC2300_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
     TMC2300_UARTChannel->hideSingleWireEcho = true;
     TMC2300_UARTChannel->rxtx.baudRate = 57600;
     TMC2300_UARTChannel->rxtx.init();

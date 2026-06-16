@@ -1357,8 +1357,11 @@ static void init_comm(TMC5271BusType mode)
         HAL.IOs->config->setLow(Pins.CS);
 
         HAL.IOs->config->setHigh(Pins.UART_MODE);
+        // The TMC5271-EVAL connects TX and RX together through a resistor.
+        // Operate TX in open-drain mode with pullup and suppress the echo from the TX->RX connection.
         TMC5271_UARTChannel = HAL.UART;
         TMC5271_UARTChannel->pinout = UART_PINS_DIO10_11;
+        TMC5271_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
         TMC5271_UARTChannel->hideSingleWireEcho = true;
         TMC5271_UARTChannel->rxtx.init();
         break;

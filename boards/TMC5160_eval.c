@@ -1087,7 +1087,10 @@ static void init_comm(TMC5160BusType mode)
 		HAL.IOs->config->setLow(Pins.SPI_MODE);
 		HAL.IOs->config->setLow(Pins.SD_MODE);
 
+		// The TMC5160-EVAL connects TX and RX together through a resistor.
+		// Operate TX in open-drain mode with pullup and suppress the echo from the TX->RX connection.
 		TMC5160_UARTChannel = HAL.UART;
+		TMC5160_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
 		TMC5160_UARTChannel->hideSingleWireEcho = true;
 		TMC5160_UARTChannel->rxtx.init();
         break;

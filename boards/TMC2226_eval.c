@@ -950,8 +950,11 @@ void TMC2226_init(void)
     HAL.IOs->config->setLow(Pins.MS1_AD0);
     HAL.IOs->config->setLow(Pins.MS2_AD1);
 
-    TMC2226_UARTChannel         = HAL.UART;
+    // The TMC2226-EVAL connects TX and RX together through a resistor.
+    // Operate TX in open-drain mode with pullup and suppress the echo from the TX->RX connection.
+    TMC2226_UARTChannel = HAL.UART;
     TMC2226_UARTChannel->pinout = UART_PINS_DIO10_11;
+    TMC2226_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
     TMC2226_UARTChannel->hideSingleWireEcho = true;
     TMC2226_UARTChannel->rxtx.init();
 

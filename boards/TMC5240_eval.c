@@ -1266,7 +1266,10 @@ static void init_comm(TMC5240BusType mode)
             HAL.IOs->config->setLow(Pins.CS);
 
             HAL.IOs->config->setHigh(Pins.UART_MODE);
+            // The TMC5240-EVAL connects TX and RX together through a resistor.
+            // Operate TX in open-drain mode with pullup and suppress the echo from the TX->RX connection.
             TMC5240_UARTChannel->pinout = UART_PINS_DIO10_11;
+            TMC5240_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
             TMC5240_UARTChannel->hideSingleWireEcho = true;
             TMC5240_UARTChannel->rxtx.init();
             break;

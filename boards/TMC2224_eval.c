@@ -402,7 +402,10 @@ void TMC2224_init(void)
     HAL.IOs->config->toInput(Pins.DIAG);
     HAL.IOs->config->toInput(Pins.INDEX);
 
+    // The TMC2224-EVAL connects TX and RX together through a resistor.
+    // Operate TX in open-drain mode with pullup and suppress the echo from the TX->RX connection.
     TMC2224_UARTChannel = HAL.UART;
+    TMC2224_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
     TMC2224_UARTChannel->hideSingleWireEcho = true;
     TMC2224_UARTChannel->rxtx.init();
 
