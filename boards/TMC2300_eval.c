@@ -771,7 +771,7 @@ void TMC2300_init(void)
     TMC2300_UARTChannel->pinout = UART_PINS_DIO10_11;
     TMC2300_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
     TMC2300_UARTChannel->hideSingleWireEcho = true;
-    TMC2300_UARTChannel->rxtx.baudRate = 57600;
+    TMC2300_UARTChannel->rxtx.baudRate = 115200;
     TMC2300_UARTChannel->rxtx.init();
 
     Evalboards.ch2.config->reset        = reset;

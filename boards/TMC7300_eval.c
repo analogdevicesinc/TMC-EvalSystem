@@ -568,7 +568,7 @@ void TMC7300_init(void)
     TMC7300_UARTChannel->pinout = UART_PINS_DIO10_11;
     TMC7300_UARTChannel->txMode = UART_TXMODE_OPEN_DRAIN;
     TMC7300_UARTChannel->hideSingleWireEcho = true;
-    TMC7300_UARTChannel->rxtx.baudRate = 57600;
+    TMC7300_UARTChannel->rxtx.baudRate = 115200;
     TMC7300_UARTChannel->rxtx.init();
 
     Evalboards.ch2.config->reset        = reset;
