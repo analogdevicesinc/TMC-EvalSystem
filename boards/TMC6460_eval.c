@@ -33,6 +33,7 @@ typedef struct
     IOPinTypeDef  *DRV_EN;
     IOPinTypeDef  *nSLEEP;
     IOPinTypeDef  *nFAULT;
+    IOPinTypeDef *PWM_IN_LB;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -40,6 +41,7 @@ static PinsTypeDef Pins;
 static ConfigurationTypeDef *TMC6460_config;
 static SPIChannelTypeDef *TMC6460_SPIChannel;
 static UART_Config *TMC6460_UARTChannel;
+static timer_channel timerChannelPWM;
 
 static bool isRTMIEnabled = false;
 static uint32_t uartControlRegister = 0;
@@ -413,6 +415,31 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
             updateCRCSettings(uartIsNormalCRCEnabled, (*value) != 0);
         }
         break;
+    case 8: // Enable/Disable the PWM signal
+        if (*value == 1)
+        {
+            //Enable PWM_IN
+            HAL.IOs->config->toOutput(Pins.PWM_IN_LB);
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+            Pins.PWM_IN_LB->configuration.GPIO_Mode = GPIO_Mode_AF4;
+#elif defined(LandungsbrueckeV3)
+            Pins.PWM_IN_LB->configuration.GPIO_Mode  = GPIO_MODE_AF;
+            gpio_af_set(Pins.PWM_IN_LB->port, GPIO_AF_1, Pins.PWM_IN_LB->bitWeight);
+#endif
+            HAL.IOs->config->set(Pins.PWM_IN_LB);
+        }
+        else if (*value == 0)
+        {
+            //Disable PWM_IN
+            HAL.IOs->config->reset(Pins.PWM_IN_LB);
+            HAL.IOs->config->toInput(Pins.PWM_IN_LB);
+        }
+        break;
+    case 9:
+        //Set DutyCycle for PWM signal
+        Timer.setDuty(timerChannelPWM, ((float)*value) / 100);
+        break;
     default:
         errors |= TMC_ERROR_TYPE;
         break;
@@ -694,14 +721,25 @@ static void timer_overflow(timer_channel channel)
 
 void TMC6460_init(void)
 {
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+    timerChannelPWM = TIMER_CHANNEL_3;
+
+#elif defined(LandungsbrueckeV3)
+    timerChannelPWM = TIMER_CHANNEL_4;
+#endif
+
     Pins.DRV_EN     = &HAL.IOs->pins->DIO0; //Pin8
     Pins.nSLEEP     = &HAL.IOs->pins->DIO8; //Pin19
     Pins.nFAULT     = &HAL.IOs->pins->DIO1; //Pin9
+    Pins.PWM_IN_LB   = &HAL.IOs->pins->DIO9; //Pin20
+    Pins.TEMP_LB_IN   = &HAL.IOs->pins->DIO9; //Pin20
 
     HAL.IOs->config->toOutput(Pins.DRV_EN);
     HAL.IOs->config->toOutput(Pins.nSLEEP);
     HAL.IOs->config->toInput(Pins.nFAULT);
     HAL.IOs->config->setHigh(Pins.DRV_EN);
+    HAL.IOs->config->reset(Pins.PWM_IN_LB);
+    HAL.IOs->config->toInput(Pins.PWM_IN_LB);
 
     TMC6460_SPIChannel = &HAL.SPI->ch1;
     TMC6460_SPIChannel->CSN = &HAL.IOs->pins->SPI1_CSN;
@@ -770,6 +808,7 @@ void TMC6460_init(void)
     Timer.overflow_callback = timer_overflow;
     Timer.init();
     Timer.setFrequency(TIMER_CHANNEL_2, RAMDEBUG_FREQUENCY);
+    Timer.setFrequency(timerChannelPWM, 1000);
     debug_updateFrequency(RAMDEBUG_FREQUENCY);
 };
 
