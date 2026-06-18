@@ -141,7 +141,6 @@ static void init()
     usart_flag_clear(usart_periph, USART_FLAG_CTS);
     usart_flag_clear(usart_periph, USART_FLAG_LBD);
     usart_flag_clear(usart_periph, USART_FLAG_TBE);
-    usart_flag_clear(usart_periph, USART_FLAG_TC);
     usart_flag_clear(usart_periph, USART_FLAG_RBNE);
     usart_flag_clear(usart_periph, USART_FLAG_IDLE);
     usart_flag_clear(usart_periph, USART_FLAG_ORERR);
@@ -198,7 +197,6 @@ static void deInit()
     usart_flag_clear(usart_periph, USART_FLAG_CTS);
     usart_flag_clear(usart_periph, USART_FLAG_LBD);
     usart_flag_clear(usart_periph, USART_FLAG_TBE);
-    usart_flag_clear(usart_periph, USART_FLAG_TC);
     usart_flag_clear(usart_periph, USART_FLAG_RBNE);
     usart_flag_clear(usart_periph, USART_FLAG_IDLE);
     usart_flag_clear(usart_periph, USART_FLAG_ORERR);
