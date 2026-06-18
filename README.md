@@ -40,6 +40,7 @@ For detailed changelog, see commit history.
 ### Version 3.11.6 (WIP):
 - Included TMC2262-BOB, TMC5262-BOB and TMC6460-BOB to the project.
 - Updated copyright text of both TMC-API and TMC-EvalSystem.
+- TMC6460-Eval: Added APs to control PWM_IN pin from LB side and an option to read raw ADC value from TEMP_LB_IN pin.
 - ...
 
 ### Version 3.11.5: (Released)
