@@ -34,6 +34,7 @@ typedef struct
     IOPinTypeDef  *nSLEEP;
     IOPinTypeDef  *nFAULT;
     IOPinTypeDef *PWM_IN_LB;
+    IOPinTypeDef *TEMP_LB_IN;
 } PinsTypeDef;
 
 static PinsTypeDef Pins;
@@ -719,6 +720,21 @@ static void timer_overflow(timer_channel channel)
     debug_nextProcess();
 }
 
+static uint32_t GIO(uint8_t type, uint8_t motor, int32_t *value)
+{
+    UNUSED(motor);
+
+    switch(type) {
+    case 0: // TEMP_LB_IN(raw ADC value)
+        *value = *HAL.ADCs->AIN1;
+        break;
+    default:
+        return TMC_ERROR_TYPE;
+    }
+
+    return TMC_ERROR_NONE;
+}
+
 void TMC6460_init(void)
 {
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
@@ -793,6 +809,7 @@ void TMC6460_init(void)
     Evalboards.ch1.checkErrors          = checkErrors;
     Evalboards.ch1.numberOfMotors       = TMC6460_MOTORS;
     Evalboards.ch1.deInit               = deInit;
+    Evalboards.ch1.GIO                  = GIO;
     Evalboards.ch1.VMMin                = TMC6460_VM_MIN;
     Evalboards.ch1.VMMax                = TMC6460_VM_MAX;
 
