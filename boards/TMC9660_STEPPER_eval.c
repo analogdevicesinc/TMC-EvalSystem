@@ -55,6 +55,7 @@ static void initTunnel(void)
 
     TMC9660_UARTChannel         = HAL.UART;
     TMC9660_UARTChannel->pinout = UART_PINS_DIO10_11;
+    TMC9660_UARTChannel->txMode = UART_TXMODE_PUSH_PULL;
     TMC9660_UARTChannel->rxtx.init();
     // Some forwarded commands can take longer than the default 10ms timeout
     // like the TMCLScript download sequences. For now, we just greatly
