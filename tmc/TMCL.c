@@ -443,7 +443,8 @@ uint32_t tmcl_getExtraDataLimit()
 
 bool tmcl_appendData(uint8_t *data, uint32_t length)
 {
-    if (extraDataSize + length > tmcl_getExtraDataLimit())
+    uint32_t limit = tmcl_getExtraDataLimit();
+    if (length > limit || extraDataSize > limit - length)
         return false;
 
     memcpy(&replyBuffer[9 + extraDataSize], data, length);
