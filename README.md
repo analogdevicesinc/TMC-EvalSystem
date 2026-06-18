@@ -37,7 +37,10 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
-### Version 3.11.6 (Released)
+### Version 3.11.7: (WIP)
+- ...
+
+### Version 3.11.6: (Released)
 - Included TMC2262-BOB, TMC5262-BOB and TMC6460-BOB to the project.
 - Updated copyright text of both TMC-API and TMC-EvalSystem.
 - TMC6460-Eval: Added APs to control PWM_IN pin from LB side, an option to read raw ADC value from TEMP_LB_IN pin and supported higher RTMI RAMDebug downsampling via SW prescaling.
