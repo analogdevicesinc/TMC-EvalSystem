@@ -443,9 +443,17 @@ uint32_t tmcl_getExtraDataLimit()
 
 bool tmcl_appendData(uint8_t *data, uint32_t length)
 {
-    if (extraDataSize + length > tmcl_getExtraDataLimit())
+    uint32_t total = extraDataSize + length;
+
+    // Overflow?
+    if (total < length)
         return false;
 
+    // Enough space?
+    if (total > tmcl_getExtraDataLimit())
+        return false;
+
+    // Append the data
     memcpy(&replyBuffer[9 + extraDataSize], data, length);
     extraDataSize += length;
 
