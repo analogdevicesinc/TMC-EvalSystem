@@ -122,6 +122,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
         break;
     case 5:
         // Pull down I2C_SDA & I2C_SCL
+        // For evalboard v1.1
 #if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
         Pins.I2C_SDA->configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
         Pins.I2C_SCL->configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
@@ -131,11 +132,26 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 #endif
         HAL.IOs->config->toOutput(Pins.I2C_SDA);
         HAL.IOs->config->toOutput(Pins.I2C_SCL);
+
+        // For evalboard v1.0, I2C lines are connected to DIO2 & DIO3
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+        HAL.IOs->pins->DIO2.configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
+        HAL.IOs->pins->DIO3.configuration.GPIO_PuPd  = GPIO_PuPd_DOWN;
+#elif defined(LandungsbrueckeV3)
+        HAL.IOs->pins->DIO2.configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
+        HAL.IOs->pins->DIO3.configuration.GPIO_PuPd  = GPIO_PUPD_PULLDOWN;
+#endif
+        HAL.IOs->config->toOutput(&HAL.IOs->pins->DIO2);
+        HAL.IOs->config->toOutput(&HAL.IOs->pins->DIO3);
         break;
     case 6:
-        // Set I2C_SDA and I2C_SCL to high-Z
+        // Set I2C_SDA and I2C_SCL to high-Z for evalbaord v1.1
         HAL.IOs->config->reset(Pins.I2C_SDA);
         HAL.IOs->config->reset(Pins.I2C_SCL);
+
+        // For evalboard v1.0, I2C lines are connected to DIO2 & DIO3
+        HAL.IOs->config->reset(&HAL.IOs->pins->DIO2);
+        HAL.IOs->config->reset(&HAL.IOs->pins->DIO3);
         break;
     case 7:
         // Pull down UART pins
