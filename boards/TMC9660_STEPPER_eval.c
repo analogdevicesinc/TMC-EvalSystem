@@ -42,10 +42,37 @@ typedef struct
 
 static PinsTypeDef Pins;
 
+static void verifyTMC9660Mode(bool updateID);
+
 static void deInit(void)
 {
     HAL.IOs->config->setHigh(Pins.RESET_LB);
     TMC9660_STEPPER_SPIChannel->setEnabled(1);
+}
+
+static uint8_t reset()
+{
+    // Toggle the reset signal
+    HAL.IOs->config->setHigh(Pins.RESET_LB);
+    wait(1);
+    HAL.IOs->config->setLow(Pins.RESET_LB);
+
+    // Wait long enough for the chip to begin its startup sequence
+    wait(1);
+
+    // Wait for the nFAULT signal to de-assert
+    while (!HAL.IOs->config->isHigh(Pins.FAULTN_LB))
+    {
+        if (VitalSignsMonitor.brownOut)
+        {
+            return 1;
+        }
+    }
+
+    // Update the mode the TMC9660 is in
+    verifyTMC9660Mode(true);
+
+    return 1;
 }
 
 static void initTunnel(void)
@@ -101,7 +128,7 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
     return errors;
 }
 
-static void verifyTMC9660Mode()
+static void verifyTMC9660Mode(bool updateID)
 {
     uint32_t readValue;
     tmc9660_bl_sendCommand(DEFAULT_ICID, TMC9660_BLCMD_GET_INFO, 0, &readValue);
@@ -110,9 +137,16 @@ static void verifyTMC9660Mode()
     {
         if (Evalboards.ch1.id != ID_TMC9660_STEPPER_BL_EVAL)
         {
-            Evalboards.ch1.errors |= EVAL_ERROR_NOT_BOOTSTRAPPED;
-            return;
+            if (updateID)
+            {
+                Evalboards.ch1.id = ID_TMC9660_STEPPER_BL_EVAL;
+            }
+            else
+            {
+                Evalboards.ch1.errors |= EVAL_ERROR_NOT_BOOTSTRAPPED;
+            }
         }
+        return;
     }
     // Bootloader did not respond -> Either the chip is inactive (no VM, reset, ...),
     // or the chip is waiting for TMCL commands
@@ -135,9 +169,24 @@ static void verifyTMC9660Mode()
         // TMC9660 responded -> Check if mode is right
         if (Evalboards.ch1.id == ID_TMC9660_STEPPER_BL_EVAL)
         {
-            // Bootloader mode expected -> Raise an error
-            Evalboards.ch1.errors |= EVAL_ERROR_NOT_IN_BOOTLOADER;
-            return;
+            if (!updateID)
+            {
+                // Bootloader mode expected -> Raise an error
+                Evalboards.ch1.errors |= EVAL_ERROR_NOT_IN_BOOTLOADER;
+                return;
+            }
+        }
+
+        if (updateID)
+        {
+            bool expectedModeIsParam = (Evalboards.ch1.id == ID_TMC9660_3PH_PARAM_EVAL);
+            bool actualModeIsParam   = (moduleID == 51);
+
+            if (expectedModeIsParam != actualModeIsParam)
+            {
+                Evalboards.ch1.id = actualModeIsParam? ID_TMC9660_3PH_PARAM_EVAL:ID_TMC9660_3PH_REG_EVAL;
+                return;
+            }
         }
 
         // Verify correct module ID
@@ -286,6 +335,8 @@ void TMC9660_STEPPER_init(void)
     Pins.UART_TX = &HAL.IOs->pins->DIO11; //Pin22
 #endif
 
+    HAL.IOs->config->toInput(Pins.FAULTN_LB);
+
     HAL.IOs->config->toOutput(Pins.HOLDN_FLASH);
     HAL.IOs->config->toOutput(Pins.RESET_LB);
     //    HAL.IOs->config->toOutput(Pins.WAKEN_LB);
@@ -297,6 +348,7 @@ void TMC9660_STEPPER_init(void)
 
     initTunnel();
 
+    Evalboards.ch1.config->reset        = reset;
     Evalboards.ch1.userFunction         = userFunction;
     Evalboards.ch1.fwdTmclCommand       = fwdTmclCommand;
     Evalboards.ch1.deInit               = deInit;
@@ -311,5 +363,5 @@ void TMC9660_STEPPER_init(void)
     // Wait a bit - letting the fault pin assert as part of the TMC9660 boot sequence
     wait(100);
     // Check if we have a mode mismatch with the running TMC9660 (bootloader or wrong app mode)
-    verifyTMC9660Mode();
+    verifyTMC9660Mode(false);
 }
