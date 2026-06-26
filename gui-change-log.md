@@ -10,12 +10,16 @@ Download the latest TMCL-IDE installer from **Software Download | Analog Devices
 
 - TMC9660
 >   Bugfix in the Velocity/Position autotuning
+
 >   UBLToolsIntegrator now uses version 1.2.0 and supports addons
 
 - TMC6460
 >   Register scope tool updated selection
+
 >   Flags tool update
+
 >   Minor bugfixes
+
 >   Support for secondary encoders in the TMC6460 Wizard
 
 - TMC8100: new RAM tool
