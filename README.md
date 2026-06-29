@@ -37,8 +37,11 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
-### Version 3.11.7: (WIP)
-- ...
+### Version 3.11.7: (Released)
+- TMC9660: Added support for Evalsystem reset function.
+- TMCL: Hardened `tmcl_appendData` to prevent integer overflow in size calculation that could lead to buffer overflow and crash.
+- TMC8100-Eval: Added pin configuration for Eval v1.0 to maintain firmware compatibility.
+- TMC-API update.
 
 ### Version 3.11.6: (Released)
 - Included TMC2262-BOB, TMC5262-BOB and TMC6460-BOB to the project.
