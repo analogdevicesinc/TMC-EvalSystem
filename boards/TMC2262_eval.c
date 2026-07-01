@@ -109,7 +109,7 @@ static void writeConfiguration(uint32_t tick)
         tmc2262_writeRegister(DEFAULT_ICID, TMC2262_GSTAT, 0x3F);
 
         // Set MRES to 4 and INTPOL to 1 in ChopConf register
-        tmc2262_writeRegister(DEFAULT_ICID, TMC2262_CHOPCONF, 0x14410153);
+        tmc2262_writeRegister(DEFAULT_ICID, TMC2262_CHOPCONF, 0x10410153);
 
         TMC2262.config->state = CONFIG_READY;
         *ptr = 0;
