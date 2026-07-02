@@ -37,8 +37,8 @@ typedef struct
 } PinsTypeDef;
 static PinsTypeDef Pins;
 
-static TMC5222BusType activeBus = IC_BUS_IIC;
-static IICTypeDef *TMC5222_IIC;
+static TMC5222BusType activeBus = IC_BUS_I2C;
+static I2CTypeDef *TMC5222_I2C;
 static bool vMaxModified = false;
 static uint32_t vmax_position[TMC5222_MOTORS];
 static bool noRegResetnSLEEP = false;
@@ -73,7 +73,7 @@ static void delayBlocking(uint32_t microseconds)
 
 }
 
-bool tmc5222_readWriteIIC(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+bool tmc5222_readWriteI2C(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
     UNUSED(icID);
     if(I2CMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))//Device address = 0b1100000W/R
@@ -1214,11 +1214,11 @@ static void enableDriver(DriverState state)
 static void init_comm(TMC5222BusType mode)
 {
     switch(mode) {
-    case IC_BUS_IIC:
+    case IC_BUS_I2C:
     default:
-        IIC.init();
+        I2C.init();
         HAL.IOs->config->setLow(Pins.SEL_I2CN);
-        TMC5222_IIC = HAL.IIC;
+        TMC5222_I2C = HAL.I2C;
         break;
     }
 }
