@@ -67,10 +67,13 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 #define ID_TMC9660_STEPPER_BL_EVAL     36
 #define ID_TMC9660_STEPPER_REG_EVAL    37
 #define ID_TMC9660_STEPPER_PARAM_EVAL  38
+#define ID_TMC5221                     40
+#define ID_TMC5222                     41
 #define ID_TMC6460_BOB                 42
 #define ID_TMC5262_BOB                 44
 #define ID_TMC2130_TQFP48              0xFE
 #define ID_SELFTEST                    255
+
 
 // ids for channel 1
 #define ID_TMC2660         1
@@ -105,6 +108,8 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 
 #define ID_GROUP_TMC9660_STEPPER(id) ((id) >= ID_TMC9660_STEPPER_BL_EVAL && (id) <= ID_TMC9660_STEPPER_PARAM_EVAL)
 #define ID_GROUP_TMC9660_3PH(id) ((id) >= ID_TMC9660_3PH_BL_EVAL && (id) <= ID_TMC9660_3PH_PARAM_EVAL)
+// ToDo: Add all the low power ICs here whose Vmin < 7V
+#define ID_GROUP_LOW_POWER_IC(id) ((id) == ID_TMC5221 || (id)== ID_TMC5222 || (id)== ID_TMC5271 || (id)== ID_TMC5272)
 
 // init() functions for all boards - function definitions are in the respective _eval file of a chip
 extern void MAX22200_init();
@@ -149,6 +154,8 @@ extern void TMC2262_init();
 extern void TMC9660_3PH_init();
 extern void TMC9660_STEPPER_init();
 extern void MAX22215_init();
+extern void TMC5221_init();
+extern void TMC5222_init();
 extern void SelfTest_init();
 
 #if defined(LandungsbrueckeV3)
@@ -177,6 +184,8 @@ static const init_assignment init_ch1[] =
     { .id = ID_TMC5062,                    .init = TMC5062_init         },
     { .id = ID_TMC5262,                    .init = TMC5262_init         },
     { .id = ID_TMC5262_BOB,                .init = TMC5262_init         },
+    { .id = ID_TMC5221,                    .init = TMC5221_init         },
+    { .id = ID_TMC5222,                    .init = TMC5222_init         },
 #if defined(LandungsbrueckeV3)
     { .id = ID_TMC6460,                    .init = TMC6460_init         },
     { .id = ID_TMC6460_BOB,                .init = TMC6460_init         },
@@ -187,7 +196,7 @@ static const init_assignment init_ch1[] =
     { .id = ID_TMC9660_STEPPER_BL_EVAL,    .init = TMC9660_STEPPER_init },
     { .id = ID_TMC9660_STEPPER_REG_EVAL,   .init = TMC9660_STEPPER_init },
     { .id = ID_TMC9660_STEPPER_PARAM_EVAL, .init = TMC9660_STEPPER_init },
-    { .id = ID_SELFTEST,                   .init = SelfTest_init        }
+    { .id = ID_SELFTEST,                   .init = SelfTest_init        },
 };
 
 static const init_assignment init_ch2[] =

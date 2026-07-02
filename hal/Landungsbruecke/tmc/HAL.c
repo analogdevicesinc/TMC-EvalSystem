@@ -36,7 +36,7 @@ const HALTypeDef HAL =
     .WLAN         = &WLAN,
     .Timer        = &Timer,
     .UART         = &UART,
-    .I2C         = &I2C
+    .I2C         = &I2C,
 };
 
 static void init(void)

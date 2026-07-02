@@ -79,6 +79,8 @@ SRC             += boards/TMC9660_3PH_eval.c
 SRC             += boards/TMC9660_STEPPER_eval.c
 SRC				+= boards/MAX22215_eval.c
 SRC             += boards/TMC6460_eval.c
+SRC				+= boards/TMC5221_eval.c
+SRC				+= boards/TMC5222_eval.c
 
 endif
 
@@ -137,6 +139,8 @@ SRC             += TMC-API/tmc/ic/TMC7300/TMC7300.c
 SRC             += TMC-API/tmc/ic/TMC5262/TMC5262.c
 SRC             += TMC-API/tmc/ic/TMC2262/TMC2262.c
 SRC             += TMC-API/tmc/ic/TMC9660/TMC9660.c
+SRC 			+= TMC-API/tmc/ic/TMC5221/TMC5221.c
+SRC 			+= TMC-API/tmc/ic/TMC5222/TMC5222.c
 
 EXTRAINCDIRS    += $(TMC_HAL_SRC)
 

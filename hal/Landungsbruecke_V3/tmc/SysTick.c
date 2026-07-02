@@ -28,6 +28,13 @@ void SysTick_Handler(void)
 {
 	systick++;
     if(I2CTimeout>0) I2CTimeout--;
+
+}
+
+uint32_t systick_getMicrosecondTick()
+{
+	// 240 MHz CYCCNT / 240 -> µs counter
+	return DWT->CYCCNT / 240;
 }
 
 uint32_t systick_getTick(void)
