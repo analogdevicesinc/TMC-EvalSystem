@@ -1,6 +1,5 @@
 /*******************************************************************************
-* Copyright © 2024 Analog Devices Inc. All Rights Reserved.
-* This software is proprietary to Analog Devices, Inc. and its licensors.
+* Copyright © 2024 Analog Devices, Inc.
 *******************************************************************************/
 
 
@@ -1261,8 +1260,10 @@ void TMC5221_init(void)
     HAL.IOs->config->toOutput(&HAL.IOs->pins->CLK16);
     HAL.IOs->config->setLow(&HAL.IOs->pins->CLK16);
 
-    HAL.IOs->config->toInput(Pins.REFLN_LB);
-    HAL.IOs->config->toInput(Pins.REFRN_LB);
+    HAL.IOs->config->toOutput(Pins.REFLN_LB);
+    HAL.IOs->config->toOutput(Pins.REFRN_LB);
+    HAL.IOs->config->setHigh(Pins.REFLN_LB);
+    HAL.IOs->config->setHigh(Pins.REFRN_LB);
 
     init_comm(activeBus);
 
