@@ -42,9 +42,16 @@ static I2CTypeDef *TMC5222_I2C;
 static bool vMaxModified = false;
 static uint32_t vmax_position[TMC5222_MOTORS];
 static bool noRegResetnSLEEP = false;
-static bool drvError = true;
 static uint32_t nSLEEPTick;
 static uint8_t deviceAddress = 0xC0;
+
+typedef enum {
+    UNKNOWN,
+    DRV_STILL_DISABLED,
+    DRV_ENABLED,
+} TMC5222DriverEnCodes;
+
+static TMC5222DriverEnCodes code = UNKNOWN;
 
 static uint32_t right(uint8_t motor, int32_t velocity);
 static uint32_t left(uint8_t motor, int32_t velocity);
@@ -1008,14 +1015,8 @@ static void readRegister(uint8_t motor, uint16_t address, int32_t *value)
 
 static void periodicJob(uint32_t tick)
 {
-    if(tmc5222_fieldRead(DEFAULT_ICID, TMC5222_DRV_ERR_FIELD) == 0 && drvError){
-        drvError = false;
-        noRegResetnSLEEP = true;
-        nSLEEPTick = systick_getTick();
-        return;
-    }
-    else if(tmc5222_fieldRead(DEFAULT_ICID, TMC5222_DRV_ERR_FIELD) == 1 && !drvError){
-        drvError = true;
+    if(code == DRV_STILL_DISABLED){
+        enableDriver(DRIVER_ENABLE);
     }
 
     if(!noRegResetnSLEEP)
@@ -1043,14 +1044,13 @@ static void periodicJob(uint32_t tick)
             TMC5222.oldTick  = tick;
         }
     }
-    else
+    else if(noRegResetnSLEEP)
     {
         //check if minimum time since chip activation passed. Then restore.
         if((systick_getTick()-nSLEEPTick)>20) //
         {
             noRegResetnSLEEP = false;
             enableDriver(DRIVER_ENABLE);
-            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_TOFF_FIELD, 3);
         }
     }
 }
@@ -1214,7 +1214,18 @@ static void enableDriver(DriverState state)
     }
     else if((state == DRIVER_ENABLE) && (Evalboards.driverEnable == DRIVER_ENABLE)){
         HAL.IOs->config->setHigh(Pins.DRV_EN_LB);
-        tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_DRV_EN_SW_FIELD, 1);
+
+        // check if the IC is active
+        uint8_t version = tmc5222_fieldRead(DEFAULT_ICID, TMC5222_VERSION_FIELD);
+
+        if(version == 3){
+            code = DRV_ENABLED;
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_DRV_EN_SW_FIELD, 1);
+            tmc5222_fieldWrite(DEFAULT_ICID, TMC5222_TOFF_FIELD, 3);
+        }
+        else if(version == 0){
+            code = DRV_STILL_DISABLED;
+        }
     }
 }
 
