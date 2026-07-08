@@ -26,7 +26,6 @@ static TMC5222TypeDef TMC5222;
 
 typedef struct
 {
-    IOPinTypeDef  *SEL_I2CN;
     IOPinTypeDef  *CLK_LB;
     IOPinTypeDef  *DIAG0_LB;
     IOPinTypeDef  *DIAG1_LB;
@@ -1162,13 +1161,11 @@ static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 static void deInit(void)
 {
     HAL.IOs->config->setLow(Pins.DRV_EN_LB);
-    HAL.IOs->config->setHigh(Pins.SEL_I2CN);
     HAL.IOs->config->reset(Pins.REFLN_LB);
     HAL.IOs->config->reset(Pins.REFRN_LB);
     HAL.IOs->config->reset(Pins.DIAG0_LB);
     HAL.IOs->config->reset(Pins.DIAG1_LB);
     HAL.IOs->config->reset(Pins.DRV_EN_LB);
-    HAL.IOs->config->reset(Pins.SEL_I2CN);
     HAL.IOs->config->reset(Pins.SLEEPN_LB);
 };
 
@@ -1235,7 +1232,6 @@ static void init_comm(TMC5222BusType mode)
     case IC_BUS_I2C:
     default:
         I2C.init();
-        HAL.IOs->config->setLow(Pins.SEL_I2CN);
         TMC5222_I2C = HAL.I2C;
         break;
     }
@@ -1247,12 +1243,10 @@ void TMC5222_init(void)
     Pins.REFLN_LB       = &HAL.IOs->pins->DIO6; //Pin17
     Pins.REFRN_LB       = &HAL.IOs->pins->DIO7; //Pin18
     Pins.SLEEPN_LB      = &HAL.IOs->pins->DIO8; //Pin19
-    Pins.SEL_I2CN       = &HAL.IOs->pins->DIO9;//Pin20
     Pins.DIAG1_LB       = &HAL.IOs->pins->DIO15; //Pin37
     Pins.DIAG0_LB       = &HAL.IOs->pins->DIO16; //Pin38
 
     HAL.IOs->config->toOutput(Pins.DRV_EN_LB);
-    HAL.IOs->config->toOutput(Pins.SEL_I2CN);
     HAL.IOs->config->toOutput(Pins.SLEEPN_LB);
 
     HAL.IOs->config->setLow(Pins.SLEEPN_LB);
