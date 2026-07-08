@@ -76,8 +76,16 @@ static void delayBlocking(uint32_t microseconds)
 bool tmc5222_readWriteI2C(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
     UNUSED(icID);
-    if(I2CMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))//Device address = 0b1100000W/R
-        return true;
+    if (readLength == 0)
+    {
+        if(I2CMasterWrite(data[0],&data[1],writeLength))
+            return true;
+    }
+    else
+    {
+        if(I2CMasterWriteRead(data[0],&data[1],writeLength,&data[2],readLength))//Device address = 0b1100000W/R
+            return true;
+    }
 
     return false;
 }
