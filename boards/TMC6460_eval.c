@@ -438,8 +438,15 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
         }
         break;
     case 9:
-        //Set DutyCycle for PWM signal
-        Timer.setDuty(timerChannelPWM, ((float)*value) / 100);
+        if (readWrite == WRITE)
+        {
+            //Set DutyCycle for PWM signal
+            Timer.setDuty(timerChannelPWM, ((float)*value) / 100);
+        }
+        else if (readWrite == READ)
+        {
+            *value = Timer.getDuty(timerChannelPWM) * 100;
+        }
         break;
     default:
         errors |= TMC_ERROR_TYPE;
