@@ -23,8 +23,24 @@ void systick_init()
     SYST_RVR  = 48000;
     SYST_CSR  = 7;
 
-    // Enable the DWT CYCCNT for the µs counter
-    DWT_CTRL |= 0x00000001;
+    // --- Use a chain of PIT blocks to get a microsecond timer ---
+    // The PIT is fed by the Bus clock
+
+    // Enable clock gating for PIT block
+    SIM_SCGC6 |= SIM_SCGC6_PIT_MASK;
+
+    // Enable the PIT and keep it running in Debug mode
+    PIT_MCR = 0;
+
+    // Set PIT timer 1 to cycle every microsecond
+    PIT_LDVAL1 = (CPU_BUS_CLK_HZ / 1000000) - 1;
+    PIT_TCTRL1 = PIT_TCTRL_TEN_MASK;
+
+    // Set PIT timer 2 to count the full 32-bit period
+    // and chain it after timer 1. This makes it count down
+    // by one every microsecond.
+    PIT_LDVAL2 = ~0u;
+    PIT_TCTRL2 = PIT_TCTRL_TEN_MASK | PIT_TCTRL_CHN_MASK;
 }
 
 uint32_t systick_getTick()
@@ -34,8 +50,10 @@ uint32_t systick_getTick()
 
 uint32_t systick_getMicrosecondTick()
 {
-    // 48 MHz CYCCNT / 48 -> µs counter
-    return DWT_CYCCNT / 48;
+    // Return the microsecond timestamp from the PIT timer chain
+    // This timer counts downwards, so invert the bits here to
+    // get an up-counting value.
+    return ~PIT_CVAL2;
 }
 
 /* Systick values are in milliseconds, accessing the value is faster. As a result
