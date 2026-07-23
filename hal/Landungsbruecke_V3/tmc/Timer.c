@@ -14,6 +14,12 @@ TIMER_CHANNEL_2 = TIMER 3 Channel 0, RAMDebug
 TIMER_CHANNEL_3 = TIMER 11 Channel 0
 TIMER_CHANNEL_4 = TIMER 0 Channel 1, PWM output DIO9
 TIMER_CHANNEL_5 = TIMER 0 Channel 0, PWM output DIO7
+
+Other timer uses:
+TIMER0: BLDC PWM output
+TIMER2: SysTick microsecond timer
+TIMER5: StepDir periodic interrupt
+TIMER6: USB periodic interrupt
 */
 static uint32_t timerBaseClk;
 
