@@ -17,10 +17,24 @@ void systick_init(void)
     SysTick_Config(SystemCoreClock/(1000));
     NVIC_SetPriority(SysTick_IRQn, SYSTICK_PRE_EMPTION_PRIORITY);
 
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->CYCCNT = 0;
-    // Enable the DWT CYCCNT for the µs counter
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    // Set up TIMER4 for microsecond timestamps
+    rcu_periph_clock_enable(RCU_TIMER4);
+    timer_deinit(TIMER4);
+
+    // TIMER4 runs off of ABP1 clock and
+    // the CK_TIMER clock is 2x the APB1 clock.
+    uint32_t timerFrequency = rcu_clock_freq_get(CK_APB1)*2;
+
+    timer_parameter_struct timer_config = { 0 };
+    timer_struct_para_init(&timer_config);
+    timer_config.prescaler = (timerFrequency / 1000000) - 1;
+    timer_config.period = 0xFFFFFFFF;
+    timer_config.counterdirection = TIMER_COUNTER_UP;
+    timer_config.alignedmode = TIMER_COUNTER_EDGE;
+    timer_config.clockdivision = TIMER_CKDIV_DIV1;
+    timer_config.repetitioncounter = 0;
+    timer_init(TIMER4, &timer_config);
+    timer_enable(TIMER4);
 }
 
 
@@ -33,8 +47,7 @@ void SysTick_Handler(void)
 
 uint32_t systick_getMicrosecondTick()
 {
-    // 240 MHz CYCCNT / 240 -> µs counter
-    return DWT->CYCCNT / 240;
+    return TIMER_CNT(TIMER4);
 }
 
 uint32_t systick_getTick(void)
