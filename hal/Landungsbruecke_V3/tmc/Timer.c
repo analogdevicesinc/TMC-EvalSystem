@@ -11,7 +11,7 @@ HAL Timer channels
 
 TIMER_CHANNEL_1 = TIMER 0 Channel 2, PWM output DIO11
 TIMER_CHANNEL_2 = TIMER 3 Channel 0, RAMDebug
-TIMER_CHANNEL_3 = TIMER 4 Channel 0
+TIMER_CHANNEL_3 = TIMER 11 Channel 0
 TIMER_CHANNEL_4 = TIMER 0 Channel 1, PWM output DIO9
 TIMER_CHANNEL_5 = TIMER 0 Channel 0, PWM output DIO7
 */
@@ -55,10 +55,10 @@ static void init(void)
 {
 	rcu_periph_clock_enable(RCU_TIMER0);
 	rcu_periph_clock_enable(RCU_TIMER3);
-	rcu_periph_clock_enable(RCU_TIMER4);
+	rcu_periph_clock_enable(RCU_TIMER11);
 	timer_deinit(TIMER0);
 	timer_deinit(TIMER3);
-	timer_deinit(TIMER4);
+	timer_deinit(TIMER11);
 
 	timer_parameter_struct params;
 	timer_oc_parameter_struct oc_params;
@@ -133,11 +133,11 @@ static void init(void)
 	params.period = TIMER_MAX;
 	params.clockdivision = TIMER_CKDIV_DIV1;
 	params.repetitioncounter = 0;
-	timer_init(TIMER4, &params);
+	timer_init(TIMER11, &params);
 
-	timer_auto_reload_shadow_enable(TIMER4);
+	timer_auto_reload_shadow_enable(TIMER11);
 
-	timer_enable(TIMER4);
+	timer_enable(TIMER11);
 
 	Timer.initialized = true;
 }
@@ -146,7 +146,7 @@ static void deInit(void)
 {
 	timer_deinit(TIMER0);
 	timer_deinit(TIMER3);
-	timer_deinit(TIMER4);
+	timer_deinit(TIMER11);
 }
 
 static void setDuty(timer_channel channel, float duty)
@@ -162,7 +162,7 @@ static void setDuty(timer_channel channel, float duty)
 		timer_channel_output_pulse_value_config(TIMER3, TIMER_CH_0, duty * TIMER_CAR(TIMER3));
 		break;
 	case TIMER_CHANNEL_3:
-		timer_channel_output_pulse_value_config(TIMER4, TIMER_CH_0, duty * TIMER_CAR(TIMER4));
+		timer_channel_output_pulse_value_config(TIMER11, TIMER_CH_0, duty * TIMER_CAR(TIMER11));
 		break;
 	case TIMER_CHANNEL_4:
 		timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_1, duty * TIMER_CAR(TIMER0));
@@ -181,7 +181,7 @@ static float getDuty(timer_channel channel)
 	case TIMER_CHANNEL_2:
 		return (((float) timer_channel_capture_value_register_read(TIMER3, TIMER_CH_0)) / TIMER_CAR(TIMER3));
 	case TIMER_CHANNEL_3:
-		return (((float) timer_channel_capture_value_register_read(TIMER4, TIMER_CH_0)) / TIMER_CAR(TIMER4));
+		return (((float) timer_channel_capture_value_register_read(TIMER11, TIMER_CH_0)) / TIMER_CAR(TIMER11));
 	case TIMER_CHANNEL_4:
 		return (((float) timer_channel_capture_value_register_read(TIMER0, TIMER_CH_1)) / TIMER_CAR(TIMER0));
 	case TIMER_CHANNEL_5:
@@ -203,7 +203,7 @@ static void setPeriod(timer_channel channel, uint16_t period)
 		timer_autoreload_value_config(TIMER3, period);
 		break;
 	case TIMER_CHANNEL_3:
-		timer_autoreload_value_config(TIMER4, period);
+		timer_autoreload_value_config(TIMER11, period);
 		break;
 	}
 }
@@ -218,7 +218,7 @@ static uint16_t getPeriod(timer_channel channel)
 	case TIMER_CHANNEL_2:
 		return TIMER_CAR(TIMER3);
 	case TIMER_CHANNEL_3:
-		return TIMER_CAR(TIMER4);
+		return TIMER_CAR(TIMER11);
 	default:
 	    return 0xFFFF;
 	}
@@ -276,7 +276,7 @@ static void setFrequency(timer_channel channel, float freq)
 		break;
 	case TIMER_CHANNEL_3:
 		period_min = period_min_buf[2];
-		timer = TIMER4;
+		timer = TIMER11;
 		timerBaseClk = 120000000;
 		break;
 	case TIMER_CHANNEL_4:
