@@ -37,9 +37,11 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
-### Version 3.11.8: (WIP)
+### Version 3.11.8: (Released)
 - Included TMC5221-Eval and TMC5222-Eval to the project.
-- ...
+- Refreshed license and notice files.
+- LBV2 & LBV3 SysTick: Replaced the microsecond time source with a PIT timer block. The previous DWT-based implementation could not reliably provide a 32-bit microsecond timer.
+- LBV3 Timer: Reassigned the unused TIMER_CHANNEL_3 to a different timer, freeing up TIMER4, one of the only two available 32-bit timers.
 
 ### Version 3.11.7: (Released)
 - TMC9660: Added support for Evalsystem reset function.
