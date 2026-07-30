@@ -37,6 +37,9 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
+### Version 3.11.9: (WIP)
+- ...
+
 ### Version 3.11.8: (Released)
 - Included TMC5221-Eval and TMC5222-Eval to the project.
 - Refreshed license and notice files.
