@@ -1,12 +1,32 @@
 # TMCL-IDE Change-Log
 
-### Version 4.12.0 released
+### Version 4.13.0 released
 [1]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_KYC4128
 [2]: https://www.analog.com/en/resources/evaluation-hardware-and-software/software/software-download.html?swpart=SD_XD2OTWG
 
 Download the latest TMCL-IDE installer from **Software Download | Analog Devices**: [Windows][1] or [Linux][2].      
 
 ---
+
+- **TMC6460 Wizard**
+>   Added new automatic velocity and position loop autotuning to the Wizard.
+
+>   Added automatic ABN count detection to the Wizard page for ABN encoders.
+
+>   Fixed an issue in the feedback configuration.
+
+>   Fixed tuning page behavior in case of abort. 
+
+>   Updated guide texts.
+
+- **TMC6460 Flags Overview**
+>   Design reworked.
+
+- **TMC6460 Scaling Settings**
+>   Now offers an offline mode that can be used to calculate scaling values.
+
+<!--  <i>
+### Version 4.12.0 released
 
 - TMC9660
 >   Bugfix in the Velocity/Position autotuning
@@ -23,8 +43,6 @@ Download the latest TMCL-IDE installer from **Software Download | Analog Devices
 >   Support for secondary encoders in the TMC6460 Wizard
 
 - TMC8100: new RAM tool
-
-<!--  <i>
 
 ### Version 4.11.0 released
 
