@@ -5,6 +5,7 @@
 
 #include "../TMC-API/tmc/ic/TMC5222/TMC5222.h"
 #include "Board.h"
+#include "tmc/RAMDebug.h"
 
 
 #define ERRORS_VM        (1<<0)
@@ -13,6 +14,12 @@
 #define VM_MIN         19   // VM[V/10] min, It should be 2.1V but ADC measurement is not precise, so decreased the voltage limit by 10% below the original value.
 #define VM_MAX         176  // VM[V/10] max, It should be 16V but ADC measurement is not precise, so increased the voltage limit by 10% above the original value.
 #define DEFAULT_ICID  0
+
+#if defined(Landungsbruecke) || defined(LandungsbrueckeSmall)
+#define TMC5222_RAMDEBUG_TIMER TIMER_CHANNEL_1
+#elif defined(LandungsbrueckeV3)
+#define TMC5222_RAMDEBUG_TIMER TIMER_CHANNEL_2
+#endif
 
 // Typedefs
 typedef struct
@@ -70,6 +77,7 @@ static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint8_t reset();
 static void enableDriver(DriverState state);
+static void timer_overflow(timer_channel channel);
 
 static void delayBlocking(uint32_t microseconds)
 {
@@ -1060,6 +1068,13 @@ static void checkErrors(uint32_t tick)
     Evalboards.ch1.errors = 0;
 }
 
+static void timer_overflow(timer_channel channel)
+{
+    UNUSED(channel);
+    // RAMDebug
+    debug_nextProcess();
+}
+
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value)
 {
     uint32_t errors = 0;
@@ -1302,6 +1317,11 @@ void TMC5222_init(void)
     Evalboards.ch1.VMMin                = VM_MIN;
     Evalboards.ch1.VMMax                = VM_MAX;
     Evalboards.ch1.deInit               = deInit;
+
+    Timer.overflow_callback = timer_overflow;
+    Timer.init();
+    Timer.setFrequency(TMC5222_RAMDEBUG_TIMER, 10000);
+    debug_updateFrequency(10000);
 
     enableDriver(DRIVER_USE_GLOBAL_ENABLE);
 };
