@@ -10,7 +10,7 @@
 #include "tmc/ic/TMC9660/TMC9660_PARAM_HW_Abstraction.h"
 
 static SPIChannelTypeDef *TMC9660_3PH_SPIChannel;
-TMC9660BusType activeBus = TMC9660_BUS_UART;
+TMC9660BusType activeBus = TMC9660_BUS_UART; // ToDo: Add proper TMC9660 SPI support to the Evalsystem
 TMC9660BusAddresses busAddresses;
 UART_Config *TMC9660_UARTChannel;
 static int32_t lastStatus;
@@ -42,6 +42,16 @@ typedef struct
 static PinsTypeDef Pins;
 
 static void verifyTMC9660Mode(bool updateID);
+
+void tmc9660_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength, bool keepCSNAsserted)
+{
+    // ToDo: Add proper TMC9660 SPI support to the Evalsystem
+
+    UNUSED(icID);
+    UNUSED(data);
+    UNUSED(dataLength);
+    UNUSED(keepCSNAsserted);
+}
 
 bool tmc9660_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
