@@ -37,8 +37,12 @@ The clean command deletes the whole build directory:
 
 For detailed changelog, see commit history.
 
-### Version 3.11.9: (WIP)
+### Version 3.11.10: (WIP)
 - ...
+
+### Version 3.11.9: (Released)
+- Added TMC9660 SPI support (based on the TMC9660 addon) to TMC-API.
+- Included TMC3241-Eval to the project.
 
 ### Version 3.11.8: (Released)
 - Included TMC5221-Eval and TMC5222-Eval to the project.
