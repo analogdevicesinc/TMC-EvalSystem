@@ -515,7 +515,7 @@ _CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS)) -I.
 # (at least from my eabi tests), not needed if assembler-wrapper is used
 ##_CFLAGS += -mapcs-frame
 ##_CFLAGS += -fomit-frame-pointer
-#_CFLAGS += -ffunction-sections -fdata-sections
+_CFLAGS += -ffunction-sections -fdata-sections
 _CFLAGS += -Wall -Wextra -Werror
 _CFLAGS += -Wimplicit -Wcast-align -Wpointer-arith
 _CFLAGS += -Wredundant-decls -Wshadow -Wcast-qual -Wcast-align
