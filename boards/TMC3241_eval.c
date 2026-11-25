@@ -245,7 +245,7 @@ static uint32_t handleParameter(uint8_t readWrite, uint8_t motor, uint8_t type, 
 
 		} else if (readWrite == WRITE) {
             if(internalRamp)
-                readRegister(motor, TMC3241_XACTUAL, value);
+                writeRegister(motor, TMC3241_XACTUAL, value);
             else
                 StepDir_setActualPosition(motor, *value);
 		}
