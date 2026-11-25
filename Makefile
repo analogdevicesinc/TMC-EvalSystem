@@ -61,6 +61,7 @@ SRC             += boards/TMC6100_eval.c
 SRC             += boards/TMC6200_eval.c
 SRC             += boards/TMC7300_eval.c
 SRC				+= boards/TMC2241_eval.c
+SRC				+= boards/TMC3241_eval.c
 ifeq ($(DEVICE),$(filter $(DEVICE),Landungsbruecke LandungsbrueckeSmall LandungsbrueckeV3))
 SRC				+= boards/MAX22216_eval.c
 SRC				+= boards/MAX22204_eval.c
@@ -118,6 +119,7 @@ SRC             += TMC-API/tmc/ic/TMC2225/TMC2225.c
 SRC             += TMC-API/tmc/ic/TMC2226/TMC2226.c
 SRC             += TMC-API/tmc/ic/TMC2240/TMC2240.c
 SRC 			+= TMC-API/tmc/ic/TMC2241/TMC2241.c
+SRC 			+= TMC-API/tmc/ic/TMC3241/TMC3241.c
 SRC             += TMC-API/tmc/ic/TMC2660/TMC2660.c
 SRC             += TMC-API/tmc/ic/TMC2300/TMC2300.c
 SRC             += TMC-API/tmc/ic/TMC4361A/TMC4361A.c

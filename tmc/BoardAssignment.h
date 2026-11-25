@@ -101,6 +101,7 @@ int32_t Board_supported(IdAssignmentTypeDef *ids); // ids and states of supporte
 #define ID_TMC8100        34
 #define ID_TMC2262        35
 #define ID_MAX22215       36
+#define ID_TMC3241        40
 #define ID_MAX22200_EVAL  42
 #define ID_TMC2241        41
 #define ID_TMC2262_BOB    44
@@ -156,6 +157,7 @@ extern void TMC9660_STEPPER_init();
 extern void MAX22215_init();
 extern void TMC5221_init();
 extern void TMC5222_init();
+extern void TMC3241_init();
 extern void SelfTest_init();
 
 #if defined(LandungsbrueckeV3)
@@ -229,6 +231,8 @@ static const init_assignment init_ch2[] =
     { .id = ID_TMC2262,       .init = TMC2262_init     },
     { .id = ID_TMC2262_BOB,   .init = TMC2262_init     },
     { .id = ID_MAX22215,      .init = MAX22215_init    },
+    { .id = ID_TMC3241,       .init = TMC3241_init     },
+
 };
 
 #endif /* BOARD_ASSIGNMENT_H */
